@@ -1,0 +1,117 @@
+name: sheraccerp
+description: A new SherSoft Flutter project.
+
+publish_to: "none"
+
+version: 1.0.16+22
+
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.2
+  # splashscreen:
+  http:
+  shared_preferences:
+  device_info_plus:
+  # intl:
+  flutter_multi_formatter:
+  flutter_staggered_grid_view:
+  flutter_sparkline:
+  animated_text_kit:
+  # rxdart:
+  # carousel_pro:
+  provider:
+  fluttertoast: ^8.0.3
+  scoped_model:
+  path_provider: ^2.0.9
+  share:
+  json_table:
+  flutter_awesome_alert_box:
+  open_file: ^3.2.1
+  pdf: 3.6.4
+  # -flutter_full_pdf_viewer:
+  # syncfusion_flutter_pdfviewer:
+  pdf_viewer_plugin:
+  printing:
+  esc_pos_utils: ^1.0.0
+  esc_pos_bluetooth:
+  dio:
+  #  data_tables:
+  #  image: ^2.1.4
+  image: ^3.0.2
+  firebase_messaging: 10.0.7
+  firebase_in_app_messaging: 0.5.0+9
+  flutter_settings_screens: 0.2.2+1
+  hive_flutter:
+  flutter_speed_dial:
+  # -ota_update:
+  dropdown_search: ^3.0.1
+  firebase_core:
+  cloud_firestore: ^3.1.7
+  firebase_crashlytics:
+  autocomplete_textfield:
+  # syncfusion_flutter_datagrid:
+  local_auth:
+  charts_flutter: ^0.12.0
+  webview_flutter:
+  flutter_sunmi_printer:
+  sunmi_printer_service: ^0.1.1
+  qr_code_scanner: ^1.0.1
+  zxing2: ^0.1.0
+  url_launcher:
+  contactus:
+  flutter_phone_direct_caller: 1.0.1
+  flutter_colorpicker:
+  sqflite:
+  charset_converter: ^2.1.0
+  #  printer problem solving
+  blue_thermal_printer: ^1.2.0
+  blue_print_pos:
+  csv: ^5.0.1
+  form_field_validator: ^1.1.0
+  permission_handler: ^10.2.0
+  firebase_core_platform_interface: 4.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^1.0.0
+  flutter_launcher_icons:
+
+flutter_icons:
+  image_path: "assets/launch.png"
+  android: true
+  ios: true
+  web: true
+  windows: true
+  macos: true
+  linux: true
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/
+    - assets/images/
+    - assets/icons/
+
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+    - family: Holyfat
+      fonts:
+        - asset: assets/fonts/Holyfat.ttf
+    - family: Raleway
+      fonts:
+        - asset: assets/fonts/Raleway-Regular.ttf
+        - asset: assets/fonts/Raleway-Italic.ttf
+          style: italic

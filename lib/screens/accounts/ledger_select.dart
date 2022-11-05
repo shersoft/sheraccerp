@@ -1,0 +1,1931 @@
+// @dart = 2.11
+import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/material.dart';
+import 'package:sheraccerp/util/dateUtil.dart';
+import 'package:sheraccerp/screens/report_view.dart';
+import 'package:sheraccerp/service/api_dio.dart';
+import 'package:sheraccerp/shared/constants.dart';
+import 'package:sheraccerp/util/res_color.dart';
+
+class LedgerSelect extends StatefulWidget {
+  const LedgerSelect({Key key}) : super(key: key);
+
+  @override
+  _LedgerSelectState createState() => _LedgerSelectState();
+}
+
+class _LedgerSelectState extends State<LedgerSelect> {
+  TextEditingController editingController = TextEditingController();
+  List<dynamic> items = [];
+  List<dynamic> itemDisplay = [];
+  DioService api = DioService();
+  bool _loading = true, _ob = true, _gAll = true, _0b = false;
+  var _ledger, _id, locationId, _dropDownBranchId;
+  String fromDate, toDate, sType = 'Summery';
+  var statement = '';
+  var salesMan = '0';
+  var mode = '';
+  DateTime now = DateTime.now();
+  String radioButtonItem = 'All';
+  int rdId = 1;
+  String selectedGroupValues = '', selectedStockValue = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fromDate = DateUtil.datePickerDMY(now);
+    toDate = DateUtil.datePickerDMY(now);
+    // final arguments = ModalRoute.of(context).settings.arguments as Map;
+    Map arguments = argumentsPass;
+    if (locationList.isNotEmpty) {
+      _dropDownBranchId = locationList
+          .where((element) => element.value == 'SHOP')
+          .map((e) => e.key)
+          .first;
+    }
+
+    if (arguments != null) {
+      mode = arguments['mode'];
+      if (mode == "ledger") {
+        _loading = true;
+        statement = 'Ledger_Report';
+        api.getLedgerAll().then((value) {
+          setState(() {
+            items.addAll(value);
+            itemDisplay = items;
+          });
+        });
+      } else if (mode == "billByBill") {
+        statement = 'InvoiceWiseBalanceCustomers';
+        _loading = false;
+      } else if (mode == "DayBook") {
+        statement = 'Day_Book';
+        _loading = false;
+        _ledger = 'CASH';
+        _id = 0;
+      } else if (mode == "CashBook") {
+        statement = 'Ledger_Report';
+        _loading = false;
+        _ledger = 'CASH';
+        _id = 0;
+        mode = 'ledger';
+        api.getLedger('CASH').then((value) {
+          setState(() {
+            // items.addAll(value);
+            // itemDisplay = items;
+            _ledger = value[0]['LedName'];
+            _id = value[0]['Ledcode'];
+          });
+        });
+      } else if (mode == "TrialBalance") {
+        statement = 'Trial_Balance';
+        _loading = false;
+        _ledger = 'CASH';
+        _id = 0;
+      } else if (mode == "CashFlow") {
+        api.getLedgerAll().then((value) {
+          setState(() {
+            items.addAll(value);
+            itemDisplay = items;
+          });
+        });
+        statement = 'Cash Flow';
+      } else if (mode == "FundFlow") {
+        statement = 'Fund Flow';
+        _loading = false;
+        _ledger = 'CASH';
+        _id = 0;
+      } else if (mode == "InvoiceWiseBalanceCustomers") {
+        statement = 'InvoiceWiseBalanceCustomers';
+        _loading = false;
+        _ledger = 'CASH';
+        _id = 0;
+      } else if (mode == "InvoiceWiseBalanceSuppliers") {
+        statement = 'InvoiceWiseBalanceSuppliers';
+        _loading = false;
+        _ledger = 'CASH';
+        _id = 0;
+      } else if (mode == "GroupList") {
+        api.getLedgerGroupAll().then((value) {
+          setState(() {
+            items.addAll(value);
+            itemDisplay = items;
+          });
+        });
+        statement = 'SummeryAll';
+        _loading = true;
+        _id = 0;
+        _ob = false;
+      } else if (mode == "LedgerList") {
+        _ledger = '';
+        statement = 'SummeryAll';
+        _loading = false;
+        _id = 0;
+        _ob = false;
+      } else if (mode == "closingReport") {
+        statement = 'Closing Report';
+        _loading = false;
+      } else if (mode == "P&LAccount") {
+        statement = 'LAccount';
+        _loading = false;
+        List<dynamic> groupValues = [
+          {'id': '1', 'name': 'Group'},
+          {'id': '2', 'name': 'Group & Ledger'}
+        ];
+        List<dynamic> stockValue = [
+          {'id': '1', 'name': 'Prate'},
+          {'id': '2', 'name': 'RealPrate'}
+        ];
+        setState(() {
+          items.addAll(groupValues);
+          itemDisplay.addAll(stockValue);
+          selectedGroupValues = items[0]['name'];
+          selectedStockValue = itemDisplay[0]['name'];
+        });
+      } else if (mode == "BalanceSheet") {
+        statement = 'BalanceSheet';
+        _loading = false;
+        List<dynamic> groupValues = [
+          {'id': '1', 'name': 'Group'},
+          {'id': '2', 'name': 'Detailed'}
+        ];
+        List<dynamic> stockValue = [
+          {'id': '1', 'name': 'Prate'},
+          {'id': '2', 'name': 'RealPrate'}
+        ];
+        setState(() {
+          items.addAll(groupValues);
+          itemDisplay.addAll(stockValue);
+          selectedGroupValues = items[0]['name'];
+          selectedStockValue = itemDisplay[0]['name'];
+        });
+      } else if (mode == 'Payable') {
+        statement = 'ReceivblesCreditOnly';
+        _loading = false;
+        List<dynamic> groupValues = [
+          {'id': '1', 'name': 'Normal'},
+          {'id': '2', 'name': 'Invoice Wise'}
+        ];
+        List<dynamic> stockValue = [
+          {'id': '1', 'name': 'SUPPLIERS'},
+          {'id': '2', 'name': 'ACCOUNTS PAYABLE'}
+        ];
+        setState(() {
+          items.addAll(groupValues);
+          itemDisplay.addAll(stockValue);
+          selectedGroupValues = items[0]['name'];
+          selectedStockValue = itemDisplay[0]['name'];
+        });
+      } else if (mode == 'Receivable') {
+        statement = 'ReceivblesDebitOnly';
+        _loading = false;
+        List<dynamic> groupValues = [
+          {'id': '1', 'name': 'Normal'},
+          {'id': '2', 'name': 'Invoice Wise'}
+        ];
+        List<dynamic> stockValue = [
+          {'id': '1', 'name': 'CUSTOMERS'},
+          {'id': '2', 'name': 'ACCOUNTS RECEIVABLE'}
+        ];
+        setState(() {
+          items.addAll(groupValues);
+          itemDisplay.addAll(stockValue);
+          selectedGroupValues = items[0]['name'];
+          selectedStockValue = itemDisplay[0]['name'];
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        actions: [
+          IconButton(
+              onPressed: () {
+                setState(() {
+                  _loading = true;
+                });
+              },
+              icon: const Icon(Icons.clear))
+        ],
+        title: Text(mode == 'ledger'
+            ? 'Ledger Report'
+            : mode == 'billByBill'
+                ? 'Bill By Bill'
+                : mode == 'closingReport'
+                    ? 'Closing Report'
+                    : mode == 'DayBook'
+                        ? 'Day Book'
+                        : mode == 'TrialBalance'
+                            ? 'Trial Balance'
+                            : mode == 'CashFlow'
+                                ? 'Cash Flow'
+                                : mode == 'FundFlow'
+                                    ? 'Fund Flow'
+                                    : mode == 'InvoiceWiseBalanceCustomers'
+                                        ? 'Invoice Wise Balance Customers'
+                                        : mode == 'InvoiceWiseBalanceSuppliers'
+                                            ? 'Invoice Wise Balance Suppliers'
+                                            : mode == 'GroupList'
+                                                ? 'Group List'
+                                                : mode == 'LedgerList'
+                                                    ? 'Ledger List'
+                                                    : mode == 'P&LAccount'
+                                                        ? 'P&L Account'
+                                                        : mode == 'BalanceSheet'
+                                                            ? 'Balance Sheet'
+                                                            : mode == 'Payable'
+                                                                ? 'Payable'
+                                                                : mode ==
+                                                                        'Receivable'
+                                                                    ? 'Receivable'
+                                                                    : 'Select'),
+      ),
+      body: _loading ? _loadLedger() : _loadWidget(),
+    );
+  }
+
+  _loadLedger() {
+    return ListView.builder(
+      // shrinkWrap: true,
+      itemBuilder: (context, index) {
+        return index == 0 ? _searchBar() : _listItem(index - 1);
+      },
+      itemCount: itemDisplay.length + 1,
+    );
+  }
+
+  var stmtType = 'Closing Report';
+
+  _loadWidget() {
+    return mode == "ledger"
+        ? Container(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                Text(
+                  _ledger,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                Card(
+                  elevation: 0.5,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      const Text(
+                        'From : ',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      InkWell(
+                        child: Text(
+                          fromDate,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 22),
+                        ),
+                        onTap: () => _selectDate('f'),
+                      ),
+                      const Text(
+                        'To : ',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      InkWell(
+                        child: Text(
+                          toDate,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 22),
+                        ),
+                        onTap: () => _selectDate('t'),
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  children: [
+                    const Text('Opening Balance'),
+                    Checkbox(
+                      value: _ob,
+                      onChanged: (value) {
+                        setState(() {
+                          _ob = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                // Card(
+                //   elevation: 2,
+                //   child: DropDownSettingsTile<int>(
+                //     title: 'Branch',
+                //     settingKey: 'key-dropdown-default-location-view',
+                //     values: locationList.isNotEmpty
+                //         ? {for (var e in locationList) e.key + 1: e.value}
+                //         : {
+                //             2: '',
+                //           },
+                //     selected: 2,
+                //     onChange: (value) {
+                //       debugPrint('key-dropdown-default-location-view: $value');
+                //       dropDownBranchId = value - 1;
+                //     },
+                //   ),
+                // ),
+                DropdownSearch<dynamic>(
+                  maxHeight: 300,
+                  onFind: (String filter) =>
+                      api.getSalesListData(filter, 'sales_list/location'),
+                  dropdownSearchDecoration:
+                      const InputDecoration(hintText: 'Select Branch'),
+                  onChanged: (dynamic data) {
+                    locationId = data;
+                  },
+                  showSearchBox: true,
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (BuildContext context) => ReportView(
+                                _id.toString(),
+                                '1',
+                                DateUtil.dateDMY2YMD(fromDate),
+                                DateUtil.dateDMY2YMD(toDate),
+                                'ledger',
+                                _ledger,
+                                statement,
+                                salesMan,
+                                locationId != null
+                                    ? locationId.id
+                                    : _dropDownBranchId)));
+                  },
+                  child: const Text('Show'),
+                  style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all<Color>(kPrimaryColor),
+                    foregroundColor:
+                        MaterialStateProperty.all<Color>(Colors.white),
+                  ),
+                )
+              ],
+            ),
+          )
+        : mode == "DayBook"
+            ? Container(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Text(
+                      _ledger,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                    Card(
+                      elevation: 0.5,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          const Text(
+                            'From : ',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          InkWell(
+                            child: Text(
+                              fromDate,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 22),
+                            ),
+                            onTap: () => _selectDate('f'),
+                          ),
+                          const Text(
+                            'To : ',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          InkWell(
+                            child: Text(
+                              toDate,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 22),
+                            ),
+                            onTap: () => _selectDate('t'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Card(
+                    //   elevation: 2,
+                    //   child: DropDownSettingsTile<int>(
+                    //     title: 'Branch',
+                    //     settingKey: 'key-dropdown-default-location-view',
+                    //     values: locationList.isNotEmpty
+                    //         ? {for (var e in locationList) e.key + 1: e.value}
+                    //         : {
+                    //             2: '',
+                    //           },
+                    //     selected: 2,
+                    //     onChange: (value) {
+                    //       debugPrint(
+                    //           'key-dropdown-default-location-view: $value');
+                    //       dropDownBranchId = value - 1;
+                    //     },
+                    //   ),
+                    // ),
+                    DropdownSearch<dynamic>(
+                      maxHeight: 300,
+                      onFind: (String filter) =>
+                          api.getSalesListData(filter, 'sales_list/location'),
+                      dropdownSearchDecoration:
+                          const InputDecoration(hintText: 'Select Branch'),
+                      onChanged: (dynamic data) {
+                        locationId = data;
+                      },
+                      showSearchBox: true,
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (BuildContext context) => ReportView(
+                                    _id.toString(),
+                                    '1',
+                                    DateUtil.dateDMY2YMD(fromDate),
+                                    DateUtil.dateDMY2YMD(toDate),
+                                    'Day Book',
+                                    _ledger,
+                                    statement,
+                                    salesMan,
+                                    locationId != null
+                                        ? locationId.id
+                                        : _dropDownBranchId)));
+                      },
+                      child: const Text('Show'),
+                      style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.all<Color>(kPrimaryColor),
+                        foregroundColor:
+                            MaterialStateProperty.all<Color>(Colors.white),
+                      ),
+                    )
+                  ],
+                ),
+              )
+            : mode == "TrialBalance"
+                ? Container(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: [
+                        // Text(
+                        //   _ledger,
+                        //   style: TextStyle(
+                        //       fontWeight: FontWeight.bold, fontSize: 18),
+                        // ),
+                        Card(
+                          elevation: 0.5,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              const Text(
+                                'From : ',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                              InkWell(
+                                child: Text(
+                                  fromDate,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 22),
+                                ),
+                                onTap: () => _selectDate('f'),
+                              ),
+                              const Text(
+                                'To : ',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                              InkWell(
+                                child: Text(
+                                  toDate,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 22),
+                                ),
+                                onTap: () => _selectDate('t'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Card(
+                        //   elevation: 2,
+                        //   child: DropDownSettingsTile<int>(
+                        //     title: 'Branch',
+                        //     settingKey: 'key-dropdown-default-location-view',
+                        //     values: locationList.isNotEmpty
+                        //         ? {
+                        //             for (var e in locationList)
+                        //               e.key + 1: e.value
+                        //           }
+                        //         : {
+                        //             2: '',
+                        //           },
+                        //     selected: 2,
+                        //     onChange: (value) {
+                        //       debugPrint(
+                        //           'key-dropdown-default-location-view: $value');
+                        //       dropDownBranchId = value - 1;
+                        //     },
+                        //   ),
+                        // ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        ReportView(
+                                            _id.toString(),
+                                            '1',
+                                            DateUtil.dateDMY2YMD(fromDate),
+                                            DateUtil.dateDMY2YMD(toDate),
+                                            'Trial Balance',
+                                            _ledger,
+                                            statement,
+                                            salesMan,
+                                            locationId != null
+                                                ? locationId.id
+                                                : _dropDownBranchId)));
+                          },
+                          child: const Text('Show'),
+                          style: ButtonStyle(
+                            backgroundColor:
+                                MaterialStateProperty.all<Color>(kPrimaryColor),
+                            foregroundColor:
+                                MaterialStateProperty.all<Color>(Colors.white),
+                          ),
+                        )
+                      ],
+                    ),
+                  )
+                : mode == 'CashFlow'
+                    ? Container(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            Text(
+                              _ledger,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 18),
+                            ),
+                            Card(
+                              elevation: 0.5,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  const Text(
+                                    'From : ',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16),
+                                  ),
+                                  InkWell(
+                                    child: Text(
+                                      fromDate,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 22),
+                                    ),
+                                    onTap: () => _selectDate('f'),
+                                  ),
+                                  const Text(
+                                    'To : ',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16),
+                                  ),
+                                  InkWell(
+                                    child: Text(
+                                      toDate,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 22),
+                                    ),
+                                    onTap: () => _selectDate('t'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (BuildContext context) =>
+                                            ReportView(
+                                                _id.toString(),
+                                                '1',
+                                                DateUtil.dateDMY2YMD(fromDate),
+                                                DateUtil.dateDMY2YMD(toDate),
+                                                'Cash Flow',
+                                                _ledger,
+                                                statement,
+                                                salesMan,
+                                                locationId != null
+                                                    ? locationId.id
+                                                    : _dropDownBranchId)));
+                              },
+                              child: const Text('Show'),
+                              style: ButtonStyle(
+                                backgroundColor:
+                                    MaterialStateProperty.all<Color>(
+                                        kPrimaryColor),
+                                foregroundColor:
+                                    MaterialStateProperty.all<Color>(
+                                        Colors.white),
+                              ),
+                            )
+                          ],
+                        ),
+                      )
+                    : mode == 'FundFlow'
+                        ? Container(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              children: [
+                                Card(
+                                  elevation: 0.5,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
+                                    children: [
+                                      const Text(
+                                        'From : ',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16),
+                                      ),
+                                      InkWell(
+                                        child: Text(
+                                          fromDate,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 22),
+                                        ),
+                                        onTap: () => _selectDate('f'),
+                                      ),
+                                      const Text(
+                                        'To : ',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16),
+                                      ),
+                                      InkWell(
+                                        child: Text(
+                                          toDate,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 22),
+                                        ),
+                                        onTap: () => _selectDate('t'),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Row(
+                                //   children: [
+                                //     Text('Opening Balance'),
+                                //     Checkbox(
+                                //       value: _ob,
+                                //       onChanged: (value) {
+                                //         setState(() {
+                                //           _ob = value;
+                                //         });
+                                //       },
+                                //     ),
+                                //   ],
+                                // ),
+                                // Card(
+                                //   elevation: 2,
+                                //   child: DropDownSettingsTile<int>(
+                                //     title: 'Branch',
+                                //     settingKey:
+                                //         'key-dropdown-default-location-view',
+                                //     values: locationList.isNotEmpty
+                                //         ? Map.fromIterable(locationList,
+                                //             key: (e) => e.key + 1,
+                                //             value: (e) => e.value)
+                                //         : {
+                                //             2: '',
+                                //           },
+                                //     selected: 2,
+                                //     onChange: (value) {
+                                //       debugPrint(
+                                //           'key-dropdown-default-location-view: $value');
+                                //       dropDownBranchId = value - 1;
+                                //     },
+                                //   ),
+                                // ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (BuildContext context) =>
+                                                ReportView(
+                                                    _id.toString(),
+                                                    '1',
+                                                    DateUtil.dateDMY2YMD(
+                                                        fromDate),
+                                                    DateUtil.dateDMY2YMD(
+                                                        toDate),
+                                                    'Fund Flow',
+                                                    _ledger,
+                                                    statement,
+                                                    salesMan,
+                                                    locationId != null
+                                                        ? locationId.id
+                                                        : _dropDownBranchId)));
+                                  },
+                                  child: const Text('Show'),
+                                  style: ButtonStyle(
+                                    backgroundColor:
+                                        MaterialStateProperty.all<Color>(
+                                            kPrimaryColor),
+                                    foregroundColor:
+                                        MaterialStateProperty.all<Color>(
+                                            Colors.white),
+                                  ),
+                                )
+                              ],
+                            ),
+                          )
+                        : mode == 'InvoiceWiseBalanceCustomers'
+                            ? Container(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  children: [
+                                    Card(
+                                      elevation: 0.5,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceAround,
+                                        children: [
+                                          const Text(
+                                            'From : ',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16),
+                                          ),
+                                          InkWell(
+                                            child: Text(
+                                              fromDate,
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 22),
+                                            ),
+                                            onTap: () => _selectDate('f'),
+                                          ),
+                                          const Text(
+                                            'To : ',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16),
+                                          ),
+                                          InkWell(
+                                            child: Text(
+                                              toDate,
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 22),
+                                            ),
+                                            onTap: () => _selectDate('t'),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (BuildContext
+                                                        context) =>
+                                                    ReportView(
+                                                        _id.toString(),
+                                                        '1',
+                                                        DateUtil.dateDMY2YMD(
+                                                            fromDate),
+                                                        DateUtil.dateDMY2YMD(
+                                                            toDate),
+                                                        'Invoice Wise Balance Customers',
+                                                        _ledger,
+                                                        statement,
+                                                        salesMan,
+                                                        locationId != null
+                                                            ? locationId.id
+                                                            : _dropDownBranchId)));
+                                      },
+                                      child: const Text('Show'),
+                                      style: ButtonStyle(
+                                        backgroundColor:
+                                            MaterialStateProperty.all<Color>(
+                                                kPrimaryColor),
+                                        foregroundColor:
+                                            MaterialStateProperty.all<Color>(
+                                                Colors.white),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              )
+                            : mode == 'InvoiceWiseBalanceSuppliers'
+                                ? Container(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Column(
+                                      children: [
+                                        Card(
+                                          elevation: 0.5,
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceAround,
+                                            children: [
+                                              const Text(
+                                                'From : ',
+                                                style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16),
+                                              ),
+                                              InkWell(
+                                                child: Text(
+                                                  fromDate,
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 22),
+                                                ),
+                                                onTap: () => _selectDate('f'),
+                                              ),
+                                              const Text(
+                                                'To : ',
+                                                style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16),
+                                              ),
+                                              InkWell(
+                                                child: Text(
+                                                  toDate,
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 22),
+                                                ),
+                                                onTap: () => _selectDate('t'),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (BuildContext
+                                                            context) =>
+                                                        ReportView(
+                                                            _id.toString(),
+                                                            '1',
+                                                            DateUtil
+                                                                .dateDMY2YMD(
+                                                                    fromDate),
+                                                            DateUtil
+                                                                .dateDMY2YMD(
+                                                                    toDate),
+                                                            'Invoice Wise Balance Suppliers',
+                                                            _ledger,
+                                                            statement,
+                                                            salesMan,
+                                                            locationId != null
+                                                                ? locationId.id
+                                                                : _dropDownBranchId)));
+                                          },
+                                          child: const Text('Show'),
+                                          style: ButtonStyle(
+                                            backgroundColor:
+                                                MaterialStateProperty.all<
+                                                    Color>(kPrimaryColor),
+                                            foregroundColor:
+                                                MaterialStateProperty.all<
+                                                    Color>(Colors.white),
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  )
+                                : mode == 'GroupList'
+                                    ? Container(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              _ledger,
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 18),
+                                            ),
+                                            Card(
+                                              elevation: 0.5,
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceAround,
+                                                children: [
+                                                  const Text(
+                                                    'From : ',
+                                                    style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 16),
+                                                  ),
+                                                  InkWell(
+                                                    child: Text(
+                                                      fromDate,
+                                                      style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 22),
+                                                    ),
+                                                    onTap: () =>
+                                                        _selectDate('f'),
+                                                  ),
+                                                  const Text(
+                                                    'To : ',
+                                                    style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 16),
+                                                  ),
+                                                  InkWell(
+                                                    child: Text(
+                                                      toDate,
+                                                      style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 22),
+                                                    ),
+                                                    onTap: () =>
+                                                        _selectDate('t'),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Radio(
+                                                  value: 1,
+                                                  onChanged: (value) {
+                                                    setState(() {
+                                                      rdId = 1;
+                                                      radioButtonItem = 'All';
+                                                      _gAll = true;
+                                                      _ob = false;
+                                                      _0b = false;
+                                                    });
+                                                  },
+                                                  groupValue: rdId,
+                                                ),
+                                                const Text('All'),
+                                                Radio(
+                                                  value: 2,
+                                                  groupValue: rdId,
+                                                  onChanged: (value) {
+                                                    setState(() {
+                                                      rdId = 2;
+                                                      radioButtonItem =
+                                                          'Balance';
+                                                      _ob = true;
+                                                      _gAll = false;
+                                                      _0b = false;
+                                                    });
+                                                  },
+                                                ),
+                                                const Text('Balance'),
+                                                Radio(
+                                                  value: 3,
+                                                  groupValue: rdId,
+                                                  onChanged: (value) {
+                                                    setState(() {
+                                                      rdId = 3;
+                                                      radioButtonItem =
+                                                          '0 Balance';
+                                                      _0b = true;
+                                                      _gAll = false;
+                                                      _ob = false;
+                                                    });
+                                                  },
+                                                ),
+                                                const Text('0 Balance'),
+                                              ],
+                                            ),
+                                            DropdownSearch<dynamic>(
+                                              maxHeight: 300,
+                                              onFind: (String filter) =>
+                                                  api.getSalesListData(filter,
+                                                      'sales_list/location'),
+                                              dropdownSearchDecoration:
+                                                  const InputDecoration(
+                                                      hintText:
+                                                          'Select Branch'),
+                                              onChanged: (dynamic data) {
+                                                locationId = data;
+                                              },
+                                              showSearchBox: true,
+                                            ),
+                                            Card(
+                                              elevation: 2,
+                                              child: DropdownButton(
+                                                icon: const Icon(
+                                                    Icons.keyboard_arrow_down),
+                                                items: [
+                                                  'Summery',
+                                                  'Simple',
+                                                  'Ledger Model',
+                                                  'Summery Area Wise',
+                                                  'Group & Ledger',
+                                                  'PV/RV Report',
+                                                  'Group Wise PV/RV Report',
+                                                  'Group List All Groups'
+                                                ].map((String items) {
+                                                  return DropdownMenuItem(
+                                                    value: items,
+                                                    child: Text(items),
+                                                  );
+                                                }).toList(),
+                                                value: sType,
+                                                onChanged: (value) {
+                                                  setState(() {
+                                                    sType = value;
+                                                    statement = value ==
+                                                            'Summery'
+                                                        ? 'SalesmanGroupList'
+                                                        : value == 'Simple'
+                                                            ? 'SimpleGList'
+                                                            : value ==
+                                                                    'Ledger Model'
+                                                                ? 'Ledger_Model'
+                                                                : value ==
+                                                                        'Summery Area Wise'
+                                                                    ? 'SummeryAreaWise'
+                                                                    : value ==
+                                                                            'Group & Ledger'
+                                                                        ? 'Group_Ledger'
+                                                                        : value ==
+                                                                                'PV/RV Report'
+                                                                            ? 'PV/RV Report'
+                                                                            : value == 'Group List All Groups'
+                                                                                ? 'GroupListAllGroups'
+                                                                                : 'SalesmanGroupList';
+                                                  });
+                                                },
+                                              ),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                statement = _ob
+                                                    ? sType == 'Summery'
+                                                        ? 'SummeryBalanceOnly'
+                                                        : 'SummeryZeroBalanceOnly'
+                                                    : statement;
+                                                statement = _gAll
+                                                    ? sType == 'Summery'
+                                                        ? 'SalesmanGroupList'
+                                                        : statement
+                                                    : statement;
+                                                Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (BuildContext
+                                                                context) =>
+                                                            ReportView(
+                                                                _id.toString(),
+                                                                '1',
+                                                                DateUtil
+                                                                    .dateDMY2YMD(
+                                                                        fromDate),
+                                                                DateUtil
+                                                                    .dateDMY2YMD(
+                                                                        toDate),
+                                                                'GroupList',
+                                                                _ledger,
+                                                                statement,
+                                                                salesMan,
+                                                                locationId !=
+                                                                        null
+                                                                    ? locationId
+                                                                        .id
+                                                                    : _dropDownBranchId)));
+                                              },
+                                              child: const Text('Show'),
+                                              style: ButtonStyle(
+                                                backgroundColor:
+                                                    MaterialStateProperty.all<
+                                                        Color>(kPrimaryColor),
+                                                foregroundColor:
+                                                    MaterialStateProperty.all<
+                                                        Color>(Colors.white),
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                      )
+                                    : mode == 'LedgerList'
+                                        ? const Center(child: Text('empty'))
+                                        : mode == 'closingReport'
+                                            ? Container(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Column(
+                                                  children: [
+                                                    Card(
+                                                      elevation: 0.5,
+                                                      child: Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceAround,
+                                                        children: [
+                                                          const Text(
+                                                            'From : ',
+                                                            style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize: 16),
+                                                          ),
+                                                          InkWell(
+                                                            child: Text(
+                                                              fromDate,
+                                                              style: const TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  fontSize: 22),
+                                                            ),
+                                                            onTap: () =>
+                                                                _selectDate(
+                                                                    'f'),
+                                                          ),
+                                                          const Text(
+                                                            'To : ',
+                                                            style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize: 16),
+                                                          ),
+                                                          InkWell(
+                                                            child: Text(
+                                                              toDate,
+                                                              style: const TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  fontSize: 22),
+                                                            ),
+                                                            onTap: () =>
+                                                                _selectDate(
+                                                                    't'),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    Card(
+                                                      elevation: 2,
+                                                      child: DropdownButton(
+                                                        icon: const Icon(Icons
+                                                            .keyboard_arrow_down),
+                                                        items: [
+                                                          'Closing Report',
+                                                          'Style1',
+                                                          'Style2',
+                                                          'Daily / Monthly'
+                                                        ].map((String items) {
+                                                          return DropdownMenuItem(
+                                                            value: items,
+                                                            child: Text(items),
+                                                          );
+                                                        }).toList(),
+                                                        value: stmtType,
+                                                        onChanged: (value) {
+                                                          setState(() {
+                                                            stmtType = value;
+                                                            statement = value;
+                                                          });
+                                                        },
+                                                      ),
+                                                    ),
+                                                    DropdownSearch<dynamic>(
+                                                      maxHeight: 300,
+                                                      onFind: (String filter) =>
+                                                          api.getSalesListData(
+                                                              filter,
+                                                              'sales_list/location'),
+                                                      dropdownSearchDecoration:
+                                                          const InputDecoration(
+                                                              hintText:
+                                                                  'Select Branch'),
+                                                      onChanged:
+                                                          (dynamic data) {
+                                                        locationId = data;
+                                                      },
+                                                      showSearchBox: true,
+                                                    ),
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                                builder: (BuildContext context) => ReportView(
+                                                                    '0',
+                                                                    '1',
+                                                                    DateUtil.dateDMY2YMD(
+                                                                        fromDate),
+                                                                    DateUtil.dateDMY2YMD(
+                                                                        toDate),
+                                                                    'Closing Report',
+                                                                    '',
+                                                                    statement,
+                                                                    salesMan,
+                                                                    locationId !=
+                                                                            null
+                                                                        ? locationId
+                                                                            .id
+                                                                        : _dropDownBranchId)));
+                                                      },
+                                                      child: const Text('Show'),
+                                                      style: ButtonStyle(
+                                                        backgroundColor:
+                                                            MaterialStateProperty
+                                                                .all<Color>(
+                                                                    kPrimaryColor),
+                                                        foregroundColor:
+                                                            MaterialStateProperty
+                                                                .all<Color>(
+                                                                    Colors
+                                                                        .white),
+                                                      ),
+                                                    )
+                                                  ],
+                                                ),
+                                              )
+                                            : mode == 'P&LAccount'
+                                                ? Container(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Column(
+                                                      children: [
+                                                        Card(
+                                                          elevation: 0.5,
+                                                          child: Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .spaceAround,
+                                                            children: [
+                                                              const Text(
+                                                                'From : ',
+                                                                style: TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    fontSize:
+                                                                        16),
+                                                              ),
+                                                              InkWell(
+                                                                child: Text(
+                                                                  fromDate,
+                                                                  style: const TextStyle(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                      fontSize:
+                                                                          22),
+                                                                ),
+                                                                onTap: () =>
+                                                                    _selectDate(
+                                                                        'f'),
+                                                              ),
+                                                              const Text(
+                                                                'To : ',
+                                                                style: TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    fontSize:
+                                                                        16),
+                                                              ),
+                                                              InkWell(
+                                                                child: Text(
+                                                                  toDate,
+                                                                  style: const TextStyle(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                      fontSize:
+                                                                          22),
+                                                                ),
+                                                                onTap: () =>
+                                                                    _selectDate(
+                                                                        't'),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            const Text(
+                                                                'Report Type      '),
+                                                            const SizedBox(
+                                                                width: 10),
+                                                            Expanded(
+                                                              child:
+                                                                  DropdownButton(
+                                                                      items: items.map(
+                                                                          (dynamic
+                                                                              items) {
+                                                                        return DropdownMenuItem(
+                                                                          value:
+                                                                              items['name'],
+                                                                          child:
+                                                                              Text(items['name'].toString()),
+                                                                        );
+                                                                      }).toList(),
+                                                                      value:
+                                                                          selectedGroupValues,
+                                                                      onChanged:
+                                                                          ((value) {
+                                                                        setState(
+                                                                            () {
+                                                                          selectedGroupValues =
+                                                                              value;
+                                                                        });
+                                                                      })),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            const Text(
+                                                                'Stock Valuation'),
+                                                            const SizedBox(
+                                                                width: 10),
+                                                            Expanded(
+                                                              child:
+                                                                  DropdownButton(
+                                                                      items: itemDisplay.map(
+                                                                          (dynamic
+                                                                              items) {
+                                                                        return DropdownMenuItem(
+                                                                          value:
+                                                                              items['name'],
+                                                                          child:
+                                                                              Text(items['name'].toString()),
+                                                                        );
+                                                                      }).toList(),
+                                                                      value:
+                                                                          selectedStockValue,
+                                                                      onChanged:
+                                                                          ((value) {
+                                                                        setState(
+                                                                            () {
+                                                                          selectedStockValue =
+                                                                              value;
+                                                                        });
+                                                                      })),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () {
+                                                            Navigator.push(
+                                                                context,
+                                                                MaterialPageRoute(
+                                                                    builder: (BuildContext context) => ReportView(
+                                                                        '0',
+                                                                        '1',
+                                                                        DateUtil.dateDMY2YMD(
+                                                                            fromDate),
+                                                                        DateUtil.dateDMY2YMD(
+                                                                            toDate),
+                                                                        'P&L Account',
+                                                                        selectedStockValue,
+                                                                        selectedGroupValues,
+                                                                        salesMan,
+                                                                        locationId !=
+                                                                                null
+                                                                            ? locationId.id
+                                                                            : _dropDownBranchId)));
+                                                          },
+                                                          child: const Text(
+                                                              'Show'),
+                                                          style: ButtonStyle(
+                                                            backgroundColor:
+                                                                MaterialStateProperty
+                                                                    .all<Color>(
+                                                                        kPrimaryColor),
+                                                            foregroundColor:
+                                                                MaterialStateProperty
+                                                                    .all<Color>(
+                                                                        Colors
+                                                                            .white),
+                                                          ),
+                                                        )
+                                                      ],
+                                                    ),
+                                                  )
+                                                : mode == 'BalanceSheet'
+                                                    ? Container(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(8.0),
+                                                        child: Column(
+                                                          children: [
+                                                            Card(
+                                                              elevation: 0.5,
+                                                              child: Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .spaceAround,
+                                                                children: [
+                                                                  const Text(
+                                                                    'From : ',
+                                                                    style: TextStyle(
+                                                                        fontWeight:
+                                                                            FontWeight
+                                                                                .bold,
+                                                                        fontSize:
+                                                                            16),
+                                                                  ),
+                                                                  InkWell(
+                                                                    child: Text(
+                                                                      fromDate,
+                                                                      style: const TextStyle(
+                                                                          fontWeight: FontWeight
+                                                                              .bold,
+                                                                          fontSize:
+                                                                              22),
+                                                                    ),
+                                                                    onTap: () =>
+                                                                        _selectDate(
+                                                                            'f'),
+                                                                  ),
+                                                                  const Text(
+                                                                    'To : ',
+                                                                    style: TextStyle(
+                                                                        fontWeight:
+                                                                            FontWeight
+                                                                                .bold,
+                                                                        fontSize:
+                                                                            16),
+                                                                  ),
+                                                                  InkWell(
+                                                                    child: Text(
+                                                                      toDate,
+                                                                      style: const TextStyle(
+                                                                          fontWeight: FontWeight
+                                                                              .bold,
+                                                                          fontSize:
+                                                                              22),
+                                                                    ),
+                                                                    onTap: () =>
+                                                                        _selectDate(
+                                                                            't'),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            Row(
+                                                              children: [
+                                                                const Text(
+                                                                    'Report Type      '),
+                                                                const SizedBox(
+                                                                    width: 10),
+                                                                Expanded(
+                                                                  child: DropdownButton(
+                                                                      items: items.map((dynamic items) {
+                                                                        return DropdownMenuItem(
+                                                                          value:
+                                                                              items['name'],
+                                                                          child:
+                                                                              Text(items['name'].toString()),
+                                                                        );
+                                                                      }).toList(),
+                                                                      value: selectedGroupValues,
+                                                                      onChanged: ((value) {
+                                                                        setState(
+                                                                            () {
+                                                                          selectedGroupValues =
+                                                                              value;
+                                                                        });
+                                                                      })),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            Row(
+                                                              children: [
+                                                                const Text(
+                                                                    'Stock Valuation'),
+                                                                const SizedBox(
+                                                                    width: 10),
+                                                                Expanded(
+                                                                  child: DropdownButton(
+                                                                      items: itemDisplay.map((dynamic items) {
+                                                                        return DropdownMenuItem(
+                                                                          value:
+                                                                              items['name'],
+                                                                          child:
+                                                                              Text(items['name'].toString()),
+                                                                        );
+                                                                      }).toList(),
+                                                                      value: selectedStockValue,
+                                                                      onChanged: ((value) {
+                                                                        setState(
+                                                                            () {
+                                                                          selectedStockValue =
+                                                                              value;
+                                                                        });
+                                                                      })),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            TextButton(
+                                                              onPressed: () {
+                                                                Navigator.push(
+                                                                    context,
+                                                                    MaterialPageRoute(
+                                                                        builder: (BuildContext context) => ReportView(
+                                                                            '0',
+                                                                            '1',
+                                                                            DateUtil.dateDMY2YMD(
+                                                                                fromDate),
+                                                                            DateUtil.dateDMY2YMD(
+                                                                                toDate),
+                                                                            'BalanceSheet',
+                                                                            selectedStockValue,
+                                                                            selectedGroupValues,
+                                                                            salesMan,
+                                                                            locationId != null
+                                                                                ? locationId.id
+                                                                                : _dropDownBranchId)));
+                                                              },
+                                                              child: const Text(
+                                                                  'Show'),
+                                                              style:
+                                                                  ButtonStyle(
+                                                                backgroundColor:
+                                                                    MaterialStateProperty.all<
+                                                                            Color>(
+                                                                        kPrimaryColor),
+                                                                foregroundColor:
+                                                                    MaterialStateProperty.all<
+                                                                            Color>(
+                                                                        Colors
+                                                                            .white),
+                                                              ),
+                                                            )
+                                                          ],
+                                                        ),
+                                                      )
+                                                    : mode == 'Payable' ||
+                                                            mode == 'Receivable'
+                                                        ? Container(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(8.0),
+                                                            child: Column(
+                                                              children: [
+                                                                Card(
+                                                                  elevation:
+                                                                      0.5,
+                                                                  child: Row(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .spaceAround,
+                                                                    children: [
+                                                                      const Text(
+                                                                        'From : ',
+                                                                        style: TextStyle(
+                                                                            fontWeight:
+                                                                                FontWeight.bold,
+                                                                            fontSize: 16),
+                                                                      ),
+                                                                      InkWell(
+                                                                        child:
+                                                                            Text(
+                                                                          fromDate,
+                                                                          style: const TextStyle(
+                                                                              fontWeight: FontWeight.bold,
+                                                                              fontSize: 22),
+                                                                        ),
+                                                                        onTap: () =>
+                                                                            _selectDate('f'),
+                                                                      ),
+                                                                      const Text(
+                                                                        'To : ',
+                                                                        style: TextStyle(
+                                                                            fontWeight:
+                                                                                FontWeight.bold,
+                                                                            fontSize: 16),
+                                                                      ),
+                                                                      InkWell(
+                                                                        child:
+                                                                            Text(
+                                                                          toDate,
+                                                                          style: const TextStyle(
+                                                                              fontWeight: FontWeight.bold,
+                                                                              fontSize: 22),
+                                                                        ),
+                                                                        onTap: () =>
+                                                                            _selectDate('t'),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                                Row(
+                                                                  children: [
+                                                                    const Text(
+                                                                        'Report Type'),
+                                                                    const SizedBox(
+                                                                        width:
+                                                                            10),
+                                                                    Expanded(
+                                                                      child: DropdownButton(
+                                                                          items: items.map((dynamic items) {
+                                                                            return DropdownMenuItem(
+                                                                              value: items['name'],
+                                                                              child: Text(items['name'].toString()),
+                                                                            );
+                                                                          }).toList(),
+                                                                          value: selectedGroupValues,
+                                                                          onChanged: ((value) {
+                                                                            setState(() {
+                                                                              selectedGroupValues = value;
+                                                                            });
+                                                                          })),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                                Row(
+                                                                  children: [
+                                                                    const Text(
+                                                                        'Group          '),
+                                                                    const SizedBox(
+                                                                        width:
+                                                                            10),
+                                                                    Expanded(
+                                                                      child: DropdownButton(
+                                                                          items: itemDisplay.map((dynamic items) {
+                                                                            return DropdownMenuItem(
+                                                                              value: items['name'],
+                                                                              child: Text(items['name'].toString()),
+                                                                            );
+                                                                          }).toList(),
+                                                                          value: selectedStockValue,
+                                                                          onChanged: ((value) {
+                                                                            setState(() {
+                                                                              selectedStockValue = value;
+                                                                            });
+                                                                          })),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                                TextButton(
+                                                                  onPressed:
+                                                                      () {
+                                                                    Navigator.push(
+                                                                        context,
+                                                                        MaterialPageRoute(
+                                                                            builder: (BuildContext context) => ReportView(
+                                                                                '0',
+                                                                                '1',
+                                                                                DateUtil.dateDMY2YMD(fromDate),
+                                                                                DateUtil.dateDMY2YMD(toDate),
+                                                                                mode,
+                                                                                selectedStockValue,
+                                                                                mode == 'Payable' ? 'ReceivblesCreditOnly' : 'ReceivblesDebitOnly',
+                                                                                // selectedGroupValues == '' ? '' : '',
+                                                                                salesMan,
+                                                                                locationId != null ? locationId.id : _dropDownBranchId)));
+                                                                  },
+                                                                  child:
+                                                                      const Text(
+                                                                          'Show'),
+                                                                  style:
+                                                                      ButtonStyle(
+                                                                    backgroundColor:
+                                                                        MaterialStateProperty.all<Color>(
+                                                                            kPrimaryColor),
+                                                                    foregroundColor: MaterialStateProperty.all<
+                                                                            Color>(
+                                                                        Colors
+                                                                            .white),
+                                                                  ),
+                                                                )
+                                                              ],
+                                                            ),
+                                                          )
+                                                        : Container(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(8.0),
+                                                            child: Column(
+                                                              children: [
+                                                                Card(
+                                                                  elevation:
+                                                                      0.5,
+                                                                  child: Row(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .spaceAround,
+                                                                    children: [
+                                                                      const Text(
+                                                                        'From : ',
+                                                                        style: TextStyle(
+                                                                            fontWeight:
+                                                                                FontWeight.bold,
+                                                                            fontSize: 16),
+                                                                      ),
+                                                                      InkWell(
+                                                                        child:
+                                                                            Text(
+                                                                          fromDate,
+                                                                          style: const TextStyle(
+                                                                              fontWeight: FontWeight.bold,
+                                                                              fontSize: 22),
+                                                                        ),
+                                                                        onTap: () =>
+                                                                            _selectDate('f'),
+                                                                      ),
+                                                                      const Text(
+                                                                        'To : ',
+                                                                        style: TextStyle(
+                                                                            fontWeight:
+                                                                                FontWeight.bold,
+                                                                            fontSize: 16),
+                                                                      ),
+                                                                      InkWell(
+                                                                        child:
+                                                                            Text(
+                                                                          toDate,
+                                                                          style: const TextStyle(
+                                                                              fontWeight: FontWeight.bold,
+                                                                              fontSize: 22),
+                                                                        ),
+                                                                        onTap: () =>
+                                                                            _selectDate('t'),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                                // Card(
+                                                                //   elevation: 2,
+                                                                //   child:
+                                                                //       DropDownSettingsTile<int>(
+                                                                //     title: 'Branch',
+                                                                //     settingKey:
+                                                                //         'key-dropdown-default-location-view',
+                                                                //     values: locationList
+                                                                //             .isNotEmpty
+                                                                //         ? {
+                                                                //             for (var e
+                                                                //                 in locationList)
+                                                                //               e.key + 1: e.value
+                                                                //           }
+                                                                //         : {
+                                                                //             2: '',
+                                                                //           },
+                                                                //     selected: 2,
+                                                                //     onChange: (value) {
+                                                                //       debugPrint(
+                                                                //           'key-dropdown-default-location-view: $value');
+                                                                //       dropDownBranchId =
+                                                                //           value - 1;
+                                                                //     },
+                                                                //   ),
+                                                                // ),
+                                                                DropdownSearch<
+                                                                    dynamic>(
+                                                                  maxHeight:
+                                                                      300,
+                                                                  onFind: (String
+                                                                          filter) =>
+                                                                      api.getSalesListData(
+                                                                          filter,
+                                                                          'sales_list/location'),
+                                                                  dropdownSearchDecoration:
+                                                                      const InputDecoration(
+                                                                          hintText:
+                                                                              'Select Branch'),
+                                                                  onChanged:
+                                                                      (dynamic
+                                                                          data) {
+                                                                    locationId =
+                                                                        data;
+                                                                  },
+                                                                  showSearchBox:
+                                                                      true,
+                                                                ),
+                                                                TextButton(
+                                                                  onPressed:
+                                                                      () {
+                                                                    Navigator.push(
+                                                                        context,
+                                                                        MaterialPageRoute(
+                                                                            builder: (BuildContext context) => ReportView(
+                                                                                '0',
+                                                                                '1',
+                                                                                DateUtil.dateDMY2YMD(fromDate),
+                                                                                DateUtil.dateDMY2YMD(toDate),
+                                                                                'Bill By Bill',
+                                                                                '',
+                                                                                statement,
+                                                                                salesMan,
+                                                                                locationId != null ? locationId.id : _dropDownBranchId)));
+                                                                  },
+                                                                  child:
+                                                                      const Text(
+                                                                          'Show'),
+                                                                  style:
+                                                                      ButtonStyle(
+                                                                    backgroundColor:
+                                                                        MaterialStateProperty.all<Color>(
+                                                                            kPrimaryColor),
+                                                                    foregroundColor: MaterialStateProperty.all<
+                                                                            Color>(
+                                                                        Colors
+                                                                            .white),
+                                                                  ),
+                                                                )
+                                                              ],
+                                                            ),
+                                                          );
+  }
+
+  _listItem(index) {
+    return InkWell(
+      child: Card(
+        child: ListTile(
+          title: Text(itemDisplay[index].name),
+        ),
+      ),
+      onTap: () {
+        setState(() {
+          _loading = false;
+          _ledger = itemDisplay[index].name;
+          _id = itemDisplay[index].id;
+        });
+      },
+    );
+  }
+
+  _searchBar() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextField(
+        decoration: const InputDecoration(hintText: 'Search...'),
+        onChanged: (text) {
+          text = text.toLowerCase();
+          setState(() {
+            itemDisplay = items.where((item) {
+              var itemName = item.name.toString().toLowerCase();
+              return itemName.contains(text);
+            }).toList();
+          });
+        },
+      ),
+    );
+  }
+
+  Future _selectDate(String type) async {
+    DateTime picked = await showDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2100));
+    if (picked != null) {
+      setState(() => {
+            if (type == 'f')
+              {fromDate = DateUtil.datePickerDMY(picked)}
+            else
+              {toDate = DateUtil.datePickerDMY(picked)}
+          });
+    }
+  }
+}

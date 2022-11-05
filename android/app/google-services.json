@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "990122522024",
+    "project_id": "sheraccerp-8495a",
+    "storage_bucket": "sheraccerp-8495a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:990122522024:android:153bc28453cc2d5f59199d",
+        "android_client_info": {
+          "package_name": "com.shersoft.sheraccerp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "990122522024-6ulsdd2ihjdo81noftcjricvdaoge6fp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOWunn7CUMArpzfMyjEILcn6jnC-g8IUY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "990122522024-6ulsdd2ihjdo81noftcjricvdaoge6fp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
