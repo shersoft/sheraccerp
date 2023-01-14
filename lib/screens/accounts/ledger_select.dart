@@ -39,7 +39,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
     Map arguments = argumentsPass;
     if (locationList.isNotEmpty) {
       _dropDownBranchId = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first;
     }
@@ -1215,7 +1215,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                           'Closing Report',
                                                           'Style1',
                                                           'Style2',
-                                                          'Daily / Monthly'
+                                                          'Daily / Monthly',
+                                                          'AsperMart'
                                                         ].map((String items) {
                                                           return DropdownMenuItem(
                                                             value: items,

@@ -45,7 +45,7 @@ class _ExpenseState extends State<Expense> {
     formattedDate = DateFormat('yyyy-MM-dd').format(now);
     if (locationList.isNotEmpty) {
       dropDownBranchId = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first;
       _fetchData(dropDownBranchId);

@@ -15,6 +15,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/rp_model.dart';
+import 'package:sheraccerp/models/sales_bill.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/bt_print.dart';
@@ -141,10 +142,9 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
 
         _isLoading = false;
 
-        // data['Particulars'] = dataParticulars;
-        // _createPDF(title + '_ref_${dataInformation['RealEntryNo']}',
-        //         companySettings, settings, data, customerBalance)
-        //     .then((value) => pdfPath = value);
+        _createPDF(title + '_ref_$eNo', companySettings, settings, bill,
+                dataParticulars, invoiceHead)
+            .then((value) => pdfPath = value);
       });
     }
   }
@@ -234,14 +234,14 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
                         setState(() {
                           byteImage = value;
 
-                          // askPrintDevice(
-                          //     context,
-                          //     title + '_ref_${dataInformation['RealEntryNo']}',
-                          //     companySettings,
-                          //     settings,
-                          //     data,
-                          //     byteImage,
-                          //     customerBalance);
+                          askPrintDevice(
+                              context,
+                              title + '_ref_${bill['entryNo']}',
+                              companySettings,
+                              settings,
+                              data,
+                              byteImage,
+                              '');
                         })
                       });
                 })
@@ -711,6 +711,7 @@ askPrintDevice(
       ComSettings.appSettings('int', 'key-dropdown-printer-type-view', 0);
   int printerDevice =
       ComSettings.appSettings('int', 'key-dropdown-printer-device-view', 0);
+
   if (printerType == 2) {
     //2: 'Bluetooth',
     if (printerDevice == 2) {
@@ -788,6 +789,8 @@ askPrintDevice(
   } else if (printerType == 8) {
     // 8: 'USB,
     //
+  } else {
+    printDocument(title, companySettings, settings, data, customerModel);
   }
 }
 
@@ -1435,9 +1438,15 @@ void printSunmiV2Test(dataAll) async {
   SunmiPrinter.emptyLines(3);
 }
 
-Future<String> _createPDF(String title, CompanyInformation companySettings,
-    List<CompanySettings> settings, var data, var customerBalance) async {
-  return makePDF(title, companySettings, settings, data, customerBalance)
+Future<String> _createPDF(
+    String title,
+    CompanyInformation companySettings,
+    List<CompanySettings> settings,
+    var information,
+    var particular,
+    String invoiceHead) async {
+  return makePDF(title, companySettings, settings, information, particular,
+          invoiceHead)
       .then((value) => savePreviewPDF(value, title));
 }
 
@@ -1448,1202 +1457,264 @@ Future<String> savePreviewPDF(pw.Document pdf, var title) async {
   return file.path.toString();
 }
 
-Future<pw.Document> makePDF(String title, CompanyInformation companySettings,
-    List<CompanySettings> settings, var data, var customerBalance) async {
-  var dataInformation = data['Information'][0];
-  var dataParticulars = data['Particulars'];
-  // var dataSerialNO = data['SerialNO'];
-  // var dataDeliveryNote = data['DeliveryNote'];
-  var otherAmount = data['otherAmount'];
-
-  // var invoiceHead = salesTypeData.type == 'SALES-ES'
-  //     ? Settings.getValue<String>('key-sales-estimate-head', 'ESTIMATE')
-  //     : salesTypeData.type == 'SALES-Q'
-  //         ? Settings.getValue<String>('key-sales-quotation-head', 'QUOTATION')
-  //         : salesTypeData.type == 'SALES-O'
-  //             ? Settings.getValue<String>('key-sales-order-head', 'ORDER')
-  //             : Settings.getValue<String>('key-sales-invoice-head', 'INVOICE');
-  // int decimal = ComSettings.getValue('DECIMAL', settings).toString().isNotEmpty
-  //     ? int.tryParse(ComSettings.getValue('DECIMAL', settings).toString())
-  //     : 2;
-  // var tableHeaders = taxSale
-  //     ? companyTaxMode == 'INDIA'
-  //         ? [
-  //             "No",
-  //             "Description",
-  //             "Unit Price",
-  //             "Qty",
-  //             "SKU",
-  //             "Rate",
-  //             "NetAmount",
-  //             "Tax % ",
-  //             "CGST",
-  //             "SGST",
-  //             "Total"
-  //           ]
-  //         : [
-  //             "No",
-  //             "Description",
-  //             "Unit Price",
-  //             "Qty",
-  //             "SKU",
-  //             "Rate",
-  //             "NetAmount",
-  //             "Tax % ",
-  //             "VAT",
-  //             "Total"
-  //           ]
-  //     : ["No", "Description", "Unit Price", "Qty", "SKU", "Total"];
-
-  // final imageQr = byteImageQr != null
-  //     ? pw.MemoryImage(Uint8List.fromList(byteImageQr))
-  //     : null;
-
+Future<pw.Document> makePDF(
+    String title,
+    CompanyInformation companySettings,
+    List<CompanySettings> settings,
+    var information,
+    var particular,
+    String invoiceHead) async {
+  double oldBalance = 0, balance = 0, a = 0;
+  var bal = information['oldBalance'].toString().split(' ');
+  if (bal[1] == 'Dr') {
+    oldBalance = double.tryParse(bal[0].toString()) ?? 0;
+    balance = oldBalance - information['total'];
+  } else {
+    oldBalance = (double.tryParse(bal[0].toString())! * (-1));
+    balance = oldBalance - information['total'];
+  }
   final pdf = pw.Document();
-  // taxSale
-  //     ? pdf.addPage(pw.MultiPage(
-  //         /*company*/
-  //         maxPages: 100,
-  //         header: (context) => pw.Column(children: [
-  //               pw.Row(
-  //                   crossAxisAlignment: pw.CrossAxisAlignment.center,
-  //                   children: [
-  //                     pw.Expanded(
-  //                         child: pw.Column(children: [
-  //                       pw.Container(
-  //                         height: 20,
-  //                         padding: const pw.EdgeInsets.all(8),
-  //                         alignment: pw.Alignment.center,
-  //                         child: pw.Text(
-  //                           invoiceHead,
-  //                           style: pw.TextStyle(
-  //                             fontWeight: pw.FontWeight.bold,
-  //                             fontSize: 25,
-  //                           ),
-  //                         ),
-  //                       ),
-  //                       pw.Container(
-  //                           height: 80,
-  //                           padding: const pw.EdgeInsets.all(8),
-  //                           alignment: pw.Alignment.center,
-  //                           child: pw.RichText(
-  //                               textAlign: pw.TextAlign.center,
-  //                               text: pw.TextSpan(
-  //                                   text: '${companySettings.name}\n',
-  //                                   style: pw.TextStyle(
-  //                                     // color: _darkColor,
-  //                                     fontWeight: pw.FontWeight.bold,
-  //                                     fontSize: 15,
-  //                                   ),
-  //                                   children: [
-  //                                     const pw.TextSpan(
-  //                                       text: '\n',
-  //                                       style: pw.TextStyle(
-  //                                         fontSize: 5,
-  //                                       ),
-  //                                     ),
-  //                                     pw.TextSpan(
-  //                                         text: companySettings.add2
-  //                                                 .toString()
-  //                                                 .isEmpty
-  //                                             ? companySettings.add1
-  //                                             : companySettings.add1 +
-  //                                                 '\n' +
-  //                                                 companySettings.add2,
-  //                                         style: pw.TextStyle(
-  //                                           fontWeight: pw.FontWeight.bold,
-  //                                           fontSize: 10,
-  //                                         ),
-  //                                         children: [
-  //                                           companySettings.telephone
-  //                                                   .toString()
-  //                                                   .isNotEmpty
-  //                                               ? pw.TextSpan(
-  //                                                   text: companySettings
-  //                                                       .telephone,
-  //                                                   children: [
-  //                                                       companySettings.mobile
-  //                                                               .toString()
-  //                                                               .isNotEmpty ??
-  //                                                           pw.TextSpan(
-  //                                                               text: ', ' +
-  //                                                                   companySettings
-  //                                                                       .mobile),
-  //                                                     ])
-  //                                               : const pw.TextSpan(
-  //                                                   text: '\n',
-  //                                                   style: pw.TextStyle(
-  //                                                     fontSize: 5,
-  //                                                   ),
-  //                                                 ),
-  //                                         ]),
-  //                                     pw.TextSpan(
-  //                                       text:
-  //                                           '${ComSettings.getValue('GST-NO', settings)}',
-  //                                       style: pw.TextStyle(
-  //                                         fontWeight: pw.FontWeight.bold,
-  //                                         fontSize: 10,
-  //                                       ),
-  //                                     ),
-  //                                   ]))),
-  //                       pw.Container(
-  //                         padding: const pw.EdgeInsets.all(10),
-  //                         alignment: pw.Alignment.center,
-  //                         height: 10,
-  //                         child: pw.GridView(
-  //                           crossAxisCount: 2,
-  //                           children: [
-  //                             pw.Text(
-  //                                 'Voucher: ' + dataInformation['InvoiceNo'],
-  //                                 style: pw.TextStyle(
-  //                                   fontWeight: pw.FontWeight.bold,
-  //                                   fontSize: 10,
-  //                                 ),
-  //                                 textAlign: pw.TextAlign.left),
-  //                             pw.Text(
-  //                                 'Date : ' +
-  //                                     DateUtil.dateDMY(
-  //                                         dataInformation['DDate']),
-  //                                 style: pw.TextStyle(
-  //                                   fontWeight: pw.FontWeight.bold,
-  //                                   fontSize: 10,
-  //                                 ),
-  //                                 textAlign: pw.TextAlign.right),
-  //                           ],
-  //                         ),
-  //                       ),
-  //                     ])),
-  //                   ]),
-  //               if (context.pageNumber > 1) pw.SizedBox(height: 20)
-  //             ]),
-  //         build: (context) => [
-  //               /*customer*/
-  //               pw.Row(
-  //                   crossAxisAlignment: pw.CrossAxisAlignment.start,
-  //                   children: [
-  //                     pw.Container(
-  //                       margin: const pw.EdgeInsets.only(left: 10, right: 10),
-  //                       height: 70,
-  //                       child: pw.Text(
-  //                         'Bill to:',
-  //                         style: pw.TextStyle(
-  //                           fontWeight: pw.FontWeight.bold,
-  //                           fontSize: 12,
-  //                         ),
-  //                       ),
-  //                     ),
-  //                     pw.Expanded(
-  //                       child: pw.Container(
-  //                         height: 70,
-  //                         child: pw.RichText(
-  //                             text: pw.TextSpan(
-  //                                 text: '${dataInformation['ToName']}\n',
-  //                                 style: pw.TextStyle(
-  //                                   // color: _darkColor,
-  //                                   fontWeight: pw.FontWeight.bold,
-  //                                   fontSize: 12,
-  //                                 ),
-  //                                 children: [
-  //                               const pw.TextSpan(
-  //                                 text: '\n',
-  //                                 style: pw.TextStyle(
-  //                                   fontSize: 5,
-  //                                 ),
-  //                               ),
-  //                               pw.TextSpan(
-  //                                   text: dataInformation['Add2']
-  //                                           .toString()
-  //                                           .isEmpty
-  //                                       ? dataInformation['Add1']
-  //                                       : dataInformation['Add1'] +
-  //                                           '\n' +
-  //                                           dataInformation['Add2'],
-  //                                   style: pw.TextStyle(
-  //                                     fontWeight: pw.FontWeight.normal,
-  //                                     fontSize: 10,
-  //                                   ),
-  //                                   children: const [
-  //                                     pw.TextSpan(
-  //                                       text: '\n',
-  //                                       style: pw.TextStyle(
-  //                                         fontSize: 5,
-  //                                       ),
-  //                                     )
-  //                                   ]),
-  //                               companyTaxMode == 'INDIA'
-  //                                   ? pw.TextSpan(
-  //                                       text: dataInformation['Add4'],
-  //                                       style: pw.TextStyle(
-  //                                         fontWeight: pw.FontWeight.normal,
-  //                                         fontSize: 10,
-  //                                       ),
-  //                                       children: const [
-  //                                           pw.TextSpan(
-  //                                             text: '\n',
-  //                                             style: pw.TextStyle(
-  //                                               fontSize: 5,
-  //                                             ),
-  //                                           )
-  //                                         ])
-  //                                   : pw.TextSpan(
-  //                                       text:
-  //                                           'T-No :${dataInformation['gstno']}',
-  //                                       style: pw.TextStyle(
-  //                                         fontWeight: pw.FontWeight.normal,
-  //                                         fontSize: 10,
-  //                                       ),
-  //                                       children: const [
-  //                                           pw.TextSpan(
-  //                                             text: '\n',
-  //                                             style: pw.TextStyle(
-  //                                               fontSize: 5,
-  //                                             ),
-  //                                           )
-  //                                         ]),
-  //                               pw.TextSpan(
-  //                                 text: dataInformation['Add3'],
-  //                                 style: pw.TextStyle(
-  //                                   fontWeight: pw.FontWeight.normal,
-  //                                   fontSize: 10,
-  //                                 ),
-  //                               )
-  //                             ])),
-  //                       ),
-  //                     ),
-  //                   ]),
-  //               pw.Table(
-  //                 border: pw.TableBorder.all(width: 0.2),
-  //                 defaultColumnWidth: pw.IntrinsicColumnWidth(),
-  //                 children: [
-  //                   companyTaxMode == 'INDIA'
-  //                       ? pw.TableRow(children: [
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[0],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[1],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[2],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[3],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[4],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[5],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[6],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[7],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[8],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[9],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[10],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                         ])
-  //                       : pw.TableRow(children: [
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[0],
-  //                                     style: pw.TextStyle(
-  //                                         fontSize: 9,
-  //                                         fontWeight: pw.FontWeight.bold)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[1],
-  //                                     style: pw.TextStyle(
-  //                                         fontSize: 9,
-  //                                         fontWeight: pw.FontWeight.bold)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[2],
-  //                                     style: pw.TextStyle(
-  //                                         fontSize: 9,
-  //                                         fontWeight: pw.FontWeight.bold)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[3],
-  //                                     style: pw.TextStyle(
-  //                                         fontSize: 9,
-  //                                         fontWeight: pw.FontWeight.bold)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[4],
-  //                                     style: pw.TextStyle(
-  //                                         fontSize: 9,
-  //                                         fontWeight: pw.FontWeight.bold)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[5],
-  //                                     style: pw.TextStyle(
-  //                                         fontSize: 9,
-  //                                         fontWeight: pw.FontWeight.bold)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[6],
-  //                                     style: pw.TextStyle(
-  //                                         fontSize: 9,
-  //                                         fontWeight: pw.FontWeight.bold)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[7],
-  //                                     style: pw.TextStyle(
-  //                                         fontSize: 9,
-  //                                         fontWeight: pw.FontWeight.bold)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[8],
-  //                                     style: pw.TextStyle(
-  //                                         fontSize: 9,
-  //                                         fontWeight: pw.FontWeight.bold)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                           pw.Column(
-  //                               crossAxisAlignment:
-  //                                   pw.CrossAxisAlignment.center,
-  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                               children: [
-  //                                 pw.Text(tableHeaders[9],
-  //                                     style: pw.TextStyle(
-  //                                         fontSize: 9,
-  //                                         fontWeight: pw.FontWeight.bold)),
-  //                                 // pw.Divider(thickness: 1)
-  //                               ]),
-  //                         ]),
-  //                   for (var i = 0; i < dataParticulars.length; i++)
-  //                     // dataParticulars
-  //                     companyTaxMode == 'INDIA'
-  //                         ? pw.TableRow(children: [
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         '${dataParticulars[i]['slno']}',
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment:
-  //                                     pw.CrossAxisAlignment.start,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         dataParticulars[i]['itemname'],
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         double.tryParse(dataParticulars[i]
-  //                                                     ['RealRate']
-  //                                                 .toString())
-  //                                             .toStringAsFixed(decimal),
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         '${dataParticulars[i]['Qty']}',
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         '${dataParticulars[i]['unitName']}',
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         double.tryParse(dataParticulars[i]
-  //                                                     ['Rate']
-  //                                                 .toString())
-  //                                             .toStringAsFixed(decimal),
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         double.tryParse(dataParticulars[i]
-  //                                                     ['Net']
-  //                                                 .toString())
-  //                                             .toStringAsFixed(decimal),
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         '${dataParticulars[i]['igst']} %',
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         double.tryParse(dataParticulars[i]
-  //                                                     ['CGST']
-  //                                                 .toString())
-  //                                             .toStringAsFixed(decimal),
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         double.tryParse(dataParticulars[i]
-  //                                                     ['SGST']
-  //                                                 .toString())
-  //                                             .toStringAsFixed(decimal),
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         double.tryParse(dataParticulars[i]
-  //                                                     ['Total']
-  //                                                 .toString())
-  //                                             .toStringAsFixed(decimal),
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                           ])
-  //                         : pw.TableRow(children: [
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         '${dataParticulars[i]['slno']}',
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   ),
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment:
-  //                                     pw.CrossAxisAlignment.start,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         dataParticulars[i]['itemname'],
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   ),
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         double.tryParse(dataParticulars[i]
-  //                                                     ['RealRate']
-  //                                                 .toString())
-  //                                             .toStringAsFixed(decimal),
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         '${dataParticulars[i]['Qty']}',
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         '${dataParticulars[i]['unitName']}',
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         double.tryParse(dataParticulars[i]
-  //                                                     ['Rate']
-  //                                                 .toString())
-  //                                             .toStringAsFixed(decimal),
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         double.tryParse(dataParticulars[i]
-  //                                                     ['Net']
-  //                                                 .toString())
-  //                                             .toStringAsFixed(decimal),
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         '${dataParticulars[i]['igst']} %',
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         double.tryParse(dataParticulars[i]
-  //                                                     ['IGST']
-  //                                                 .toString())
-  //                                             .toStringAsFixed(decimal),
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                             pw.Column(
-  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                                 mainAxisAlignment:
-  //                                     pw.MainAxisAlignment.center,
-  //                                 children: [
-  //                                   pw.Padding(
-  //                                     padding: const pw.EdgeInsets.all(2.0),
-  //                                     child: pw.Text(
-  //                                         double.tryParse(dataParticulars[i]
-  //                                                     ['Total']
-  //                                                 .toString())
-  //                                             .toStringAsFixed(decimal),
-  //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
-  //                                     // pw.Divider(thickness: 1)
-  //                                   )
-  //                                 ]),
-  //                           ])
-  //                 ],
-  //               ),
-  //               pw.SizedBox(
-  //                 height: 40.0,
-  //               ),
-  //               pw.Column(
-  //                 children: [
-  //                   pw.Row(
-  //                     mainAxisAlignment: pw.MainAxisAlignment.end,
-  //                     children: [
-  //                       pw.Text(
-  //                           'SUB TOTAL : ${double.tryParse(dataInformation['GrossValue'].toString()).toStringAsFixed(decimal)}'),
-  //                     ],
-  //                   ),
-  //                   companyTaxMode == 'INDIA'
-  //                       ? pw.Row(
-  //                           mainAxisAlignment: pw.MainAxisAlignment.end,
-  //                           children: [
-  //                             pw.Text(
-  //                                 'CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
-  //                           ],
-  //                         )
-  //                       : pw.Row(
-  //                           mainAxisAlignment: pw.MainAxisAlignment.end,
-  //                           children: [
-  //                             pw.Text(
-  //                                 'VAT : ${double.tryParse(dataInformation['IGST'].toString()).toStringAsFixed(decimal)}'),
-  //                           ],
-  //                         ),
-  //                   /**other amount**/
-  //                   // otherAmount.length>0 ?
-  //                   _addOtherAmountPDF(otherAmount),
-  //                   pw.Row(
-  //                     mainAxisAlignment: pw.MainAxisAlignment.end,
-  //                     children: [
-  //                       pw.Text(
-  //                           'PAID : ${double.tryParse(dataInformation['CashReceived'].toString()).toStringAsFixed(decimal)}'),
-  //                     ],
-  //                   ),
-  //                   pw.Row(
-  //                     mainAxisAlignment: pw.MainAxisAlignment.end,
-  //                     children: [
-  //                       pw.Text(
-  //                           'TOTAL DUE : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}',
-  //                           style: pw.TextStyle(
-  //                               // color: Colors.black,
-  //                               fontSize: 19,
-  //                               fontWeight: pw.FontWeight.bold)),
-  //                     ],
-  //                   ),
-  //                   pw.Row(
-  //                     children: [
-  //                       pw.Text(
-  //                         'Bill Balance : ${double.tryParse((double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString())).toString()).toStringAsFixed(decimal)}',
-  //                       ),
-  //                     ],
-  //                   ),
-  //                   pw.Row(
-  //                     children: [
-  //                       pw.Text(
-  //                         'Old Balance : ${double.tryParse(customerBalance.toString()).toStringAsFixed(decimal)}',
-  //                       ),
-  //                     ],
-  //                   ),
-  //                   pw.Row(
-  //                     children: [
-  //                       pw.Text(
-  //                         'Balance : ${double.tryParse(((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toString()).toStringAsFixed(decimal)}',
-  //                       ),
-  //                     ],
-  //                   ),
-  //                 ],
-  //               ),
-  //               byteImageQr != null
-  //                   ? pw.Image(imageQr,
-  //                       height: 100,
-  //                       width:
-  //                           100) //Image.provider(imageQr, width: 100, height: 100)
-  //                   : pw.Header(text: ''),
-  //               pw.Container(
-  //                   alignment: pw.Alignment.center,
-  //                   child: pw.Text(data['message'],
-  //                       textAlign: pw.TextAlign.center))
-  //             ],
-  //         footer: _buildFooter))
-  //     : pdf.addPage(pw.MultiPage(
-  //         maxPages: 100,
-  //         header: (context) => pw.Column(children: [
-  //               pw.Container(
-  //                 height: 20,
-  //                 padding: const pw.EdgeInsets.all(10),
-  //                 alignment: pw.Alignment.center,
-  //                 child: pw.Text(
-  //                   invoiceHead,
-  //                   style: pw.TextStyle(
-  //                     fontWeight: pw.FontWeight.bold,
-  //                     fontSize: 25,
-  //                   ),
-  //                 ),
-  //               ),
-  //               pw.SizedBox(height: 20),
-  //               pw.Container(
-  //                 padding: const pw.EdgeInsets.all(10),
-  //                 alignment: pw.Alignment.center,
-  //                 height: 10,
-  //                 child: pw.GridView(
-  //                   crossAxisCount: 2,
-  //                   children: [
-  //                     pw.Text('EntryNo : ' + dataInformation['InvoiceNo'],
-  //                         style: pw.TextStyle(
-  //                           fontWeight: pw.FontWeight.bold,
-  //                           fontSize: 10,
-  //                         ),
-  //                         textAlign: pw.TextAlign.left),
-  //                     pw.Text(
-  //                         'Date : ' +
-  //                             DateUtil.dateDMY(dataInformation['DDate']),
-  //                         style: pw.TextStyle(
-  //                           fontWeight: pw.FontWeight.bold,
-  //                           fontSize: 10,
-  //                         ),
-  //                         textAlign: pw.TextAlign.right),
-  //                   ],
-  //                 ),
-  //               ),
-  //               if (context.pageNumber > 1) pw.SizedBox(height: 20)
-  //             ]),
-  //         build: (context) => [
-  //               /*customer*/
-  //               pw.Row(
-  //                   crossAxisAlignment: pw.CrossAxisAlignment.start,
-  //                   children: [
-  //                     pw.Container(
-  //                       margin: const pw.EdgeInsets.only(left: 10, right: 10),
-  //                       height: 70,
-  //                       child: pw.Text(
-  //                         'Bill to:',
-  //                         style: pw.TextStyle(
-  //                           fontWeight: pw.FontWeight.bold,
-  //                           fontSize: 12,
-  //                         ),
-  //                       ),
-  //                     ),
-  //                     pw.Expanded(
-  //                         child: pw.Container(
-  //                             height: 50,
-  //                             child: pw.RichText(
-  //                                 text: pw.TextSpan(
-  //                                     text: '${dataInformation['ToName']}\n',
-  //                                     style: pw.TextStyle(
-  //                                       // color: _darkColor,
-  //                                       fontWeight: pw.FontWeight.bold,
-  //                                       fontSize: 12,
-  //                                     ),
-  //                                     children: [
-  //                                   const pw.TextSpan(
-  //                                     text: '\n',
-  //                                     style: pw.TextStyle(
-  //                                       fontSize: 5,
-  //                                     ),
-  //                                   ),
-  //                                   pw.TextSpan(
-  //                                     text: dataInformation['Add2']
-  //                                             .toString()
-  //                                             .isEmpty
-  //                                         ? dataInformation['Add1']
-  //                                         : dataInformation['Add1'] +
-  //                                             '\n' +
-  //                                             dataInformation['Add2'],
-  //                                     style: pw.TextStyle(
-  //                                       fontWeight: pw.FontWeight.normal,
-  //                                       fontSize: 10,
-  //                                     ),
-  //                                   )
-  //                                 ])))),
-  //                   ]),
-  //               pw.Table(
-  //                 border: pw.TableBorder.all(width: 0.2),
-  //                 children: [
-  //                   pw.TableRow(children: [
-  //                     pw.Column(
-  //                         crossAxisAlignment: pw.CrossAxisAlignment.center,
-  //                         mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                         children: [
-  //                           pw.Text(tableHeaders[0],
-  //                               style: const pw.TextStyle(fontSize: 9)),
-  //                           // pw.Divider(thickness: 1)
-  //                         ]),
-  //                     pw.Column(
-  //                         crossAxisAlignment: pw.CrossAxisAlignment.center,
-  //                         mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                         children: [
-  //                           pw.Text(tableHeaders[1],
-  //                               style: const pw.TextStyle(fontSize: 9)),
-  //                           // pw.Divider(thickness: 1)
-  //                         ]),
-  //                     pw.Column(
-  //                         crossAxisAlignment: pw.CrossAxisAlignment.center,
-  //                         mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                         children: [
-  //                           pw.Text(tableHeaders[2],
-  //                               style: const pw.TextStyle(fontSize: 9)),
-  //                           // pw.Divider(thickness: 1)
-  //                         ]),
-  //                     pw.Column(
-  //                         crossAxisAlignment: pw.CrossAxisAlignment.center,
-  //                         mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                         children: [
-  //                           pw.Text(tableHeaders[3],
-  //                               style: const pw.TextStyle(fontSize: 9)),
-  //                           // pw.Divider(thickness: 1)
-  //                         ]),
-  //                     pw.Column(
-  //                         crossAxisAlignment: pw.CrossAxisAlignment.center,
-  //                         mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                         children: [
-  //                           pw.Text(tableHeaders[4],
-  //                               style: const pw.TextStyle(fontSize: 9)),
-  //                           // pw.Divider(thickness: 1)
-  //                         ]),
-  //                     pw.Column(
-  //                         crossAxisAlignment: pw.CrossAxisAlignment.center,
-  //                         mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                         children: [
-  //                           pw.Text(tableHeaders[5],
-  //                               style: const pw.TextStyle(fontSize: 9)),
-  //                           // pw.Divider(thickness: 1)
-  //                         ]),
-  //                   ]),
-  //                   for (var i = 0; i < dataParticulars.length; i++)
-  //                     pw.TableRow(children: [
-  //                       pw.Column(
-  //                           crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                           mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                           children: [
-  //                             pw.Padding(
-  //                               padding: const pw.EdgeInsets.all(2.0),
-  //                               child: pw.Text('${dataParticulars[i]['slno']}',
-  //                                   style: const pw.TextStyle(fontSize: 9)),
-  //                               // pw.Divider(thickness: 1)
-  //                             ),
-  //                           ]),
-  //                       pw.Column(
-  //                           crossAxisAlignment: pw.CrossAxisAlignment.start,
-  //                           mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                           children: [
-  //                             pw.Padding(
-  //                               padding: const pw.EdgeInsets.all(2.0),
-  //                               child: pw.Text(dataParticulars[i]['itemname'],
-  //                                   style: const pw.TextStyle(fontSize: 9)),
-  //                               // pw.Divider(thickness: 1)
-  //                             ),
-  //                           ]),
-  //                       pw.Column(
-  //                           crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                           mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                           children: [
-  //                             pw.Padding(
-  //                               padding: const pw.EdgeInsets.all(2.0),
-  //                               child: pw.Text(
-  //                                   double.tryParse(dataParticulars[i]['Rate']
-  //                                           .toString())
-  //                                       .toStringAsFixed(decimal),
-  //                                   style: const pw.TextStyle(fontSize: 9)),
-  //                               // pw.Divider(thickness: 1)
-  //                             )
-  //                           ]),
-  //                       pw.Column(
-  //                           crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                           mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                           children: [
-  //                             pw.Padding(
-  //                               padding: const pw.EdgeInsets.all(2.0),
-  //                               child: pw.Text(
-  //                                   dataParticulars[i]['Qty']
-  //                                       .toStringAsFixed(decimal),
-  //                                   style: const pw.TextStyle(fontSize: 9)),
-  //                               // pw.Divider(thickness: 1)
-  //                             )
-  //                           ]),
-  //                       pw.Column(
-  //                           crossAxisAlignment: pw.CrossAxisAlignment.center,
-  //                           mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                           children: [
-  //                             pw.Padding(
-  //                               padding: const pw.EdgeInsets.all(2.0),
-  //                               child: pw.Text(
-  //                                   dataParticulars[i]['unitName'].toString(),
-  //                                   style: const pw.TextStyle(fontSize: 9)),
-  //                               // pw.Divider(thickness: 1)
-  //                             )
-  //                           ]),
-  //                       pw.Column(
-  //                           crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                           mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                           children: [
-  //                             pw.Padding(
-  //                               padding: const pw.EdgeInsets.all(2.0),
-  //                               child: pw.Text(
-  //                                   double.tryParse(dataParticulars[i]['Total']
-  //                                           .toString())
-  //                                       .toStringAsFixed(decimal),
-  //                                   style: const pw.TextStyle(fontSize: 9)),
-  //                               // pw.Divider(thickness: 1)
-  //                             )
-  //                           ]),
-  //                     ])
-  //                 ],
-  //               ),
-  //               pw.SizedBox(
-  //                 height: 40.0,
-  //               ),
-  //               pw.Column(
-  //                 children: [
-  //                   pw.Row(
-  //                     mainAxisAlignment: pw.MainAxisAlignment.end,
-  //                     children: [
-  //                       pw.Text(
-  //                           'SUB TOTAL : ${double.tryParse(dataInformation['GrossValue'].toString()).toStringAsFixed(decimal)}'),
-  //                     ],
-  //                   ),
-  //                   /**other amount**/
-  //                   // otherAmount.length>0 ?
-  //                   _addOtherAmountPDF(otherAmount),
-  //                   pw.Row(
-  //                     mainAxisAlignment: pw.MainAxisAlignment.end,
-  //                     children: [
-  //                       pw.Text(
-  //                           'TOTAL : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}'),
-  //                     ],
-  //                   ),
-  //                   pw.Row(
-  //                     mainAxisAlignment: pw.MainAxisAlignment.end,
-  //                     children: [
-  //                       pw.Text(
-  //                           'PAID : ${double.tryParse(dataInformation['CashReceived'].toString()).toStringAsFixed(decimal)}'),
-  //                     ],
-  //                   ),
-  //                   pw.Row(
-  //                     mainAxisAlignment: pw.MainAxisAlignment.end,
-  //                     children: [
-  //                       pw.Text(
-  //                           'TOTAL DUE : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}',
-  //                           style: pw.TextStyle(
-  //                               // color: Colors.black,
-  //                               fontSize: 19,
-  //                               fontWeight: pw.FontWeight.bold)),
-  //                     ],
-  //                   ),
-  //                   pw.Row(
-  //                     children: [
-  //                       pw.Text(
-  //                         'Bill Balance : ${(double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString())).toStringAsFixed(decimal)}',
-  //                       ),
-  //                     ],
-  //                   ),
-  //                   pw.Row(
-  //                     children: [
-  //                       pw.Text(
-  //                         'Old Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
-  //                       ),
-  //                     ],
-  //                   ),
-  //                   pw.Row(
-  //                     children: [
-  //                       pw.Text(
-  //                         'Balance : ${((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toStringAsFixed(decimal)}',
-  //                       ),
-  //                     ],
-  //                   ),
-  //                 ],
-  //               ),
-  //               pw.Container(
-  //                   alignment: pw.Alignment.center,
-  //                   child: pw.Text(data['message'],
-  //                       textAlign: pw.TextAlign.center))
-  //             ],
-  // footer: _buildFooter));
 
+  pdf.addPage(pw.MultiPage(
+      /*company*/
+      header: (context) => pw.Column(children: [
+            pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.center, children: [
+              pw.Expanded(
+                  child: pw.Column(children: [
+                pw.Container(
+                    height: 80,
+                    padding: const pw.EdgeInsets.all(8),
+                    alignment: pw.Alignment.center,
+                    child: pw.RichText(
+                        textAlign: pw.TextAlign.center,
+                        text: pw.TextSpan(
+                            text: '${companySettings.name}\n',
+                            style: pw.TextStyle(
+                              // color: _darkColor,
+                              fontWeight: pw.FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                            children: [
+                              const pw.TextSpan(
+                                text: '\n',
+                                style: pw.TextStyle(
+                                  fontSize: 5,
+                                ),
+                              ),
+                              pw.TextSpan(
+                                  text: companySettings.add2.toString().isEmpty
+                                      ? companySettings.add1
+                                      : companySettings.add1 +
+                                          '\n' +
+                                          companySettings.add2,
+                                  style: pw.TextStyle(
+                                    fontWeight: pw.FontWeight.bold,
+                                    fontSize: 10,
+                                  ),
+                                  children: [
+                                    companySettings.telephone
+                                            .toString()
+                                            .isNotEmpty
+                                        ? pw.TextSpan(
+                                            text: companySettings.telephone,
+                                            children: [
+                                                companySettings.mobile
+                                                        .toString()
+                                                        .isNotEmpty
+                                                    ? pw.TextSpan(
+                                                        text: ', ' +
+                                                            companySettings
+                                                                .mobile)
+                                                    : const pw.TextSpan(
+                                                        text: ' '),
+                                              ])
+                                        : const pw.TextSpan(
+                                            text: '\n',
+                                            style: pw.TextStyle(
+                                              fontSize: 5,
+                                            ),
+                                          ),
+                                  ]),
+                            ]))),
+                pw.Container(
+                    height: 80,
+                    padding: const pw.EdgeInsets.all(8),
+                    alignment: pw.Alignment.center,
+                    child: pw.Text(invoiceHead,
+                        style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold,
+                            fontSize: 15,
+                            decoration: pw.TextDecoration.underline))),
+                pw.Container(
+                  padding: const pw.EdgeInsets.all(10),
+                  alignment: pw.Alignment.center,
+                  height: 10,
+                  child: pw.GridView(
+                    crossAxisCount: 2,
+                    children: [
+                      pw.Text('VoucherNo : ${information['entryNo']}',
+                          style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                          textAlign: pw.TextAlign.left),
+                      pw.Text('Date : ' + DateUtil.dateDMY(information['date']),
+                          style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                          textAlign: pw.TextAlign.right),
+                    ],
+                  ),
+                ),
+                pw.SizedBox(
+                  height: 5,
+                ),
+              ])),
+            ]),
+            if (context.pageNumber > 1) pw.SizedBox(height: 20)
+          ]),
+      build: (context) => [
+            /*customer*/
+            pw.Table(
+              border: pw.TableBorder.all(width: 0.2),
+              defaultColumnWidth: const pw.IntrinsicColumnWidth(),
+              children: [
+                pw.TableRow(children: [
+                  pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.center,
+                      mainAxisAlignment: pw.MainAxisAlignment.center,
+                      children: [
+                        pw.Text('Particulars',
+                            style: pw.TextStyle(
+                                fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                        // pw.Divider(thickness: 1)
+                      ]),
+                  pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.center,
+                      mainAxisAlignment: pw.MainAxisAlignment.center,
+                      children: [
+                        pw.Text('Amount',
+                            style: pw.TextStyle(
+                                fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                        // pw.Divider(thickness: 1)
+                      ]),
+                  pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.center,
+                      mainAxisAlignment: pw.MainAxisAlignment.center,
+                      children: [
+                        pw.Text('Discount',
+                            style: pw.TextStyle(
+                                fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                        // pw.Divider(thickness: 1)
+                      ]),
+                  pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.center,
+                      mainAxisAlignment: pw.MainAxisAlignment.center,
+                      children: [
+                        pw.Text('Total',
+                            style: pw.TextStyle(
+                                fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                        // pw.Divider(thickness: 1)
+                      ]),
+                ]),
+                // dataParticulars
+                pw.TableRow(children: [
+                  pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      mainAxisAlignment: pw.MainAxisAlignment.center,
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(2.0),
+                          child: pw.Text(
+                              information['name'] +
+                                  "\n" +
+                                  particular[0]['narration'].toString(),
+                              style: const pw.TextStyle(fontSize: 9)),
+                          // pw.Divider(thickness: 1)
+                        ),
+                      ]),
+                  pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.end,
+                      mainAxisAlignment: pw.MainAxisAlignment.center,
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(2.0),
+                          child: pw.Text(
+                              double.tryParse(
+                                      particular[0]['amount'].toString())!
+                                  .toStringAsFixed(2),
+                              style: const pw.TextStyle(fontSize: 9)),
+                          // pw.Divider(thickness: 1)
+                        )
+                      ]),
+                  pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.end,
+                      mainAxisAlignment: pw.MainAxisAlignment.center,
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(2.0),
+                          child: pw.Text(
+                              double.tryParse(
+                                      particular[0]['discount'].toString())!
+                                  .toStringAsFixed(2),
+                              style: const pw.TextStyle(fontSize: 9)),
+                          // pw.Divider(thickness: 1)
+                        )
+                      ]),
+                  pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.end,
+                      mainAxisAlignment: pw.MainAxisAlignment.center,
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(2.0),
+                          child: pw.Text(
+                              double.tryParse(
+                                      particular[0]['total'].toString())!
+                                  .toStringAsFixed(2),
+                              style: const pw.TextStyle(fontSize: 9)),
+                          // pw.Divider(thickness: 1)
+                        )
+                      ]),
+                ])
+              ],
+            ),
+            pw.Container(
+                alignment: pw.Alignment.center,
+                child: pw.Text(
+                  ' Amount in Words: ${NumberToWord().convert('en', double.tryParse(information['total'].toString())!.round())}',
+                )),
+            pw.Column(children: [
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(' Old Balance : ${oldBalance.toStringAsFixed(2)}',
+                      style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                      textAlign: pw.TextAlign.left),
+                  pw.Text(' Balance : ${balance.toStringAsFixed(2)}',
+                      style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                      textAlign: pw.TextAlign.right),
+                ],
+              )
+            ]),
+            pw.SizedBox(
+              height: 40.0,
+            ),
+            pw.Container(
+                alignment: pw.Alignment.center,
+                child: pw.Text(
+                    information['message'].toString().isNotEmpty
+                        ? information['message'].toString()
+                        : 'Thank you',
+                    textAlign: pw.TextAlign.center))
+          ],
+      footer: _buildFooter));
   return pdf;
 }
 
@@ -2663,46 +1734,6 @@ pw.Widget _buildFooter(pw.Context context) {
       ),
     ],
   );
-}
-
-_addOtherAmountPDF(var dataAmount) {
-  // bool isData = true;
-  return dataAmount.length > 0
-      ? pw.Table(
-          // border: pw.TableBorder.all(width: 0.2),
-          defaultColumnWidth: const pw.IntrinsicColumnWidth(),
-          children: [
-              for (var i = 0; i < dataAmount.length; i++)
-                pw.TableRow(children: [
-                  pw.Column(children: [
-                    dataAmount[i]['Amount'].toDouble() > 0
-                        ? pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(dataAmount[i]['LedName'] +
-                                  ' : ' +
-                                  dataAmount[i]['Amount'].toStringAsFixed(2)),
-                            ],
-                          )
-                        : pw.Row(),
-                  ])
-                ]),
-            ])
-      : pw.Table(
-          // border: pw.TableBorder.all(width: 0.2),
-          defaultColumnWidth: const pw.IntrinsicColumnWidth(),
-          children: [
-              pw.TableRow(children: [
-                pw.Column(children: [
-                  pw.Row(
-                    mainAxisAlignment: pw.MainAxisAlignment.end,
-                    children: [
-                      pw.Text('Discount : 0.00'),
-                    ],
-                  ),
-                ])
-              ]),
-            ]);
 }
 
 Future<String> printDocument(String title, CompanyInformation companySettings,

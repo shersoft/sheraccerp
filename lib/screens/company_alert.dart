@@ -1,14 +1,12 @@
 import 'dart:io';
-import 'dart:ui';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class AboutSherSoft extends StatelessWidget {
-  AboutSherSoft({Key? key}) : super(key: key);
+class CompanyAlert extends StatelessWidget {
+  CompanyAlert({Key? key}) : super(key: key);
 
   launchURL() async {
     const url = 'https://Shersoftware.com';
@@ -108,7 +106,7 @@ class AboutSherSoft extends StatelessWidget {
                     const Padding(
                       padding: EdgeInsets.all(4.0),
                       child: Text(
-                        "Shersoft",
+                        "SherSoft",
                         style: TextStyle(color: Colors.white, fontSize: 20),
                       ),
                     ),
@@ -192,7 +190,7 @@ class AboutSherSoft extends StatelessWidget {
                         width: 20,
                       ),
                       const Text(
-                        "Shersoftware.com",
+                        "SherSoftware.com",
                         style: TextStyle(color: Colors.blue, fontSize: 18),
                       )
                     ],
@@ -222,111 +220,16 @@ class AboutSherSoft extends StatelessWidget {
                 ),
               ],
             ),
-            Align(
+            const Align(
               alignment: Alignment.bottomCenter,
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Card(
-                            child: Chip(
-                                shadowColor: Colors.black,
-                                backgroundColor: Colors.white,
-                                label: Icon(
-                                  Icons.computer,
-                                  color: blue,
-                                ))),
-                        Card(
-                            child: Chip(
-                                shadowColor: Colors.black,
-                                backgroundColor: Colors.white,
-                                label: Icon(
-                                  Icons.web,
-                                  color: blue,
-                                ))),
-                        Card(
-                            child: Chip(
-                                shadowColor: Colors.black,
-                                backgroundColor: Colors.white,
-                                label: Icon(
-                                  Icons.phone_android,
-                                  color: blue,
-                                ))),
-                      ]),
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Card(
-                            child: Chip(
-                                shadowColor: Colors.black,
-                                backgroundColor: Colors.white,
-                                label: Text(
-                                  "SherAcc",
-                                  style: TextStyle(
-                                      color: Colors.blue, fontSize: 14),
-                                ))),
-                        Card(
-                            child: Chip(
-                                shadowColor: Colors.black,
-                                backgroundColor: Colors.white,
-                                label: Text(
-                                  "SherPharma",
-                                  style: TextStyle(
-                                      color: Colors.blue, fontSize: 14),
-                                ))),
-                        Card(
-                            child: Chip(
-                                shadowColor: Colors.black,
-                                backgroundColor: Colors.white,
-                                label: Text(
-                                  "SherGold",
-                                  style: TextStyle(
-                                      color: Colors.blue, fontSize: 14),
-                                ))),
-                      ]),
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Card(
-                            child: Chip(
-                                shadowColor: Colors.black,
-                                backgroundColor: Colors.white,
-                                label: Text(
-                                  "SherDoc",
-                                  style: TextStyle(
-                                      color: Colors.blue, fontSize: 14),
-                                ))),
-                        Card(
-                            child: Chip(
-                                shadowColor: Colors.black,
-                                backgroundColor: Colors.white,
-                                label: Text(
-                                  "SherTex",
-                                  style: TextStyle(
-                                      color: Colors.blue, fontSize: 14),
-                                ))),
-                      ]),
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Card(
-                            child: Chip(
-                                shadowColor: Colors.black,
-                                backgroundColor: Colors.white,
-                                label: Text(
-                                  "&More",
-                                  style: TextStyle(
-                                      color: Colors.blue, fontSize: 14),
-                                ))),
-                      ]),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                ],
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                    'You no longer available to use this company\nIf you want to continue contact as',
+                    style: TextStyle(
+                        color: red, fontWeight: FontWeight.bold, fontSize: 20)),
               ),
-            )
+            ),
           ],
         ),
       ),

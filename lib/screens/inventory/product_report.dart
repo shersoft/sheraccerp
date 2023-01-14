@@ -117,7 +117,7 @@ class _ProductReportState extends State<ProductReport> {
           'statementType': statementType,
           // 'itemId': itemId != null ? itemId['id'] : '0',
           // 'itemName': itemId != null ? itemName['name'] : '0',
-          'mfr': mfr != null ? mfr['id'] : '',
+          'mfr': mfr != null ? mfr['id'] : '0',
           'category': category != null ? category['id'] : '0',
           'subcategory': subCategory != null ? subCategory['id'] : '0',
           'unit': unit != null ? unit['id'] : '0',
@@ -127,7 +127,7 @@ class _ProductReportState extends State<ProductReport> {
           'rLevel':
               reorderController.text.isNotEmpty ? reorderController.text : '0',
           'rack': rack ?? 0,
-          'hsn': hsnCode ?? 0
+          'hsn': hsnCode ?? ''
         }) +
         ']';
 

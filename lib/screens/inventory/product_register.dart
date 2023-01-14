@@ -9,6 +9,7 @@ import 'package:flutter_awesome_alert_box/flutter_awesome_alert_box.dart';
 import 'package:sheraccerp/models/tax_group_model.dart';
 import 'package:sheraccerp/models/unit_model.dart';
 import 'package:sheraccerp/service/api_dio.dart';
+import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/util/show_confirm_alert_box.dart';
 import 'package:sheraccerp/widget/progress_hud.dart';
@@ -32,7 +33,7 @@ class _ProductRegisterState extends State<ProductRegister> {
       mfr,
       category,
       subCategory,
-      location = DataJson(id: 1, name: 'SHOP'),
+      location = DataJson(id: 1, name: defaultLocation),
       rack,
       unit;
   TaxGroupModel taxGroup;

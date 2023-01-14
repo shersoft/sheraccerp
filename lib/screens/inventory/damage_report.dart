@@ -20,7 +20,10 @@ class _DamageReportState extends State<DamageReport> {
   bool loadReport = false;
   DateTime now = DateTime.now();
   DioService api = DioService();
-  var itemId, itemName, location = {'id': 1, 'name': 'SHOP'}, title = '';
+  var itemId,
+      itemName,
+      location = {'id': 1, 'name': defaultLocation},
+      title = '';
   final controller = ScrollController();
   double offset = 0;
   var dropDownBranchId;
@@ -39,7 +42,7 @@ class _DamageReportState extends State<DamageReport> {
 
     if (locationList.isNotEmpty) {
       dropDownBranchId = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first;
     }

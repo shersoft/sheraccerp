@@ -102,6 +102,9 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
     return resizedData;
   }
 
+  var labelSerialNo = 'SerialNo';
+  bool isItemSerialNo;
+
   @override
   void initState() {
     super.initState();
@@ -118,10 +121,14 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         ComSettings.appSettings('int', 'key-dropdown-printer-type-view', 0);
     printerDevice =
         ComSettings.appSettings('int', 'key-dropdown-printer-device-view', 0);
-
+    isItemSerialNo = ComSettings.getStatus('KEY ITEM SERIAL NO', settings);
+    labelSerialNo =
+        ComSettings.getValue('KEY ITEM SERIAL NO', settings).toString();
+    labelSerialNo.isNotEmpty ?? 'SerialNo';
     columnsVAT = [
       JsonTableColumn("slno", label: "No"),
       JsonTableColumn("itemname", label: "Description"),
+      JsonTableColumn("hsn", label: "HSN"),
       JsonTableColumn("RealRate", label: "Unit Price"),
       JsonTableColumn("Qty", label: "Qty"),
       JsonTableColumn("unitName", label: "SKU"),
@@ -134,6 +141,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
     columnsGST = [
       JsonTableColumn("slno", label: "No"),
       JsonTableColumn("itemname", label: "Description"),
+      JsonTableColumn("hsn", label: "HSN"),
       JsonTableColumn("RealRate", label: "Unit Price"),
       JsonTableColumn("Qty", label: "Qty"),
       JsonTableColumn("unitName", label: "SKU"),
@@ -169,51 +177,53 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         _isLoading = false;
 
         List itemIdList = [];
-        for (var u in dataParticularsAll) {
-          if (itemIdList.contains(u["itemId"].toString().trim())) {
-            int index = dataParticulars.indexWhere((i) =>
-                i['itemId'].toString().trim() == u['itemId'].toString().trim());
-            double qty =
-                double.tryParse(dataParticulars[index]['Qty'].toString()) +
-                    double.tryParse(u['Qty'].toString());
-            dataParticulars[index]['Qty'] = qty;
-            dataParticulars[index]['Net'] = qty *
-                double.tryParse(dataParticulars[index]['RealRate'].toString());
-            dataParticulars[index]['CGST'] =
-                double.tryParse(dataParticulars[index]['CGST'].toString()) +
-                    double.tryParse(u['CGST'].toString());
-            dataParticulars[index]['SGST'] =
-                double.tryParse(dataParticulars[index]['SGST'].toString()) +
-                    double.tryParse(u['SGST'].toString());
-            dataParticulars[index]['IGST'] =
-                double.tryParse(dataParticulars[index]['IGST'].toString()) +
-                    double.tryParse(u['IGST'].toString());
-            dataParticulars[index]['Total'] =
-                double.tryParse(dataParticulars[index]['Total'].toString()) +
-                    double.tryParse(u['Total'].toString());
-            dataParticulars[index]['GrossValue'] = double.tryParse(
-                    dataParticulars[index]['GrossValue'].toString()) +
-                double.tryParse(u['GrossValue'].toString());
-            dataParticulars[index]['cess'] =
-                double.tryParse(dataParticulars[index]['cess'].toString()) +
-                    double.tryParse(u['cess'].toString());
-            dataParticulars[index]['adcess'] =
-                double.tryParse(dataParticulars[index]['adcess'].toString()) +
-                    double.tryParse(u['adcess'].toString());
-            dataParticulars[index]['Disc'] =
-                double.tryParse(dataParticulars[index]['Disc'].toString()) +
-                    double.tryParse(u['Disc'].toString());
-            dataParticulars[index]['DiscPersent'] = double.tryParse(
-                    dataParticulars[index]['DiscPersent'].toString()) +
-                double.tryParse(u['DiscPersent'].toString());
-            dataParticulars[index]['Fcess'] =
-                double.tryParse(dataParticulars[index]['Fcess'].toString()) +
-                    double.tryParse(u['Fcess'].toString());
-          } else {
-            itemIdList.add(u['itemId'].toString().trim());
-            dataParticulars.add(u);
-          }
-        }
+        // for (var u in dataParticularsAll) {
+        //   if (itemIdList.contains(u["itemId"].toString().trim())) {
+        //     int index = dataParticulars.indexWhere((i) =>
+        //         i['itemId'].toString().trim() == u['itemId'].toString().trim());
+        //     double qty =
+        //         double.tryParse(dataParticulars[index]['Qty'].toString()) +
+        //             double.tryParse(u['Qty'].toString());
+        //     // dataParticulars[index]['hsncode'] = hsncode;
+        //     dataParticulars[index]['Qty'] = qty;
+        //     dataParticulars[index]['Net'] = qty *
+        //         double.tryParse(dataParticulars[index]['RealRate'].toString());
+        //     dataParticulars[index]['CGST'] =
+        //         double.tryParse(dataParticulars[index]['CGST'].toString()) +
+        //             double.tryParse(u['CGST'].toString());
+        //     dataParticulars[index]['SGST'] =
+        //         double.tryParse(dataParticulars[index]['SGST'].toString()) +
+        //             double.tryParse(u['SGST'].toString());
+        //     dataParticulars[index]['IGST'] =
+        //         double.tryParse(dataParticulars[index]['IGST'].toString()) +
+        //             double.tryParse(u['IGST'].toString());
+        //     dataParticulars[index]['Total'] =
+        //         double.tryParse(dataParticulars[index]['Total'].toString()) +
+        //             double.tryParse(u['Total'].toString());
+        //     dataParticulars[index]['GrossValue'] = double.tryParse(
+        //             dataParticulars[index]['GrossValue'].toString()) +
+        //         double.tryParse(u['GrossValue'].toString());
+        //     dataParticulars[index]['cess'] =
+        //         double.tryParse(dataParticulars[index]['cess'].toString()) +
+        //             double.tryParse(u['cess'].toString());
+        //     dataParticulars[index]['adcess'] =
+        //         double.tryParse(dataParticulars[index]['adcess'].toString()) +
+        //             double.tryParse(u['adcess'].toString());
+        //     dataParticulars[index]['Disc'] =
+        //         double.tryParse(dataParticulars[index]['Disc'].toString()) +
+        //             double.tryParse(u['Disc'].toString());
+        //     dataParticulars[index]['DiscPersent'] = double.tryParse(
+        //             dataParticulars[index]['DiscPersent'].toString()) +
+        //         double.tryParse(u['DiscPersent'].toString());
+        //     dataParticulars[index]['Fcess'] =
+        //         double.tryParse(dataParticulars[index]['Fcess'].toString()) +
+        //             double.tryParse(u['Fcess'].toString());
+        //   } else {
+        //     itemIdList.add(u['itemId'].toString().trim());
+        //     dataParticulars.add(u);
+        //   }
+        // }
+        dataParticulars.addAll(dataParticularsAll);
 
         data['Particulars'] = dataParticulars;
         if (title.isEmpty) {
@@ -396,13 +406,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
   }
 
   webView() {
-    var taxSale = salesTypeData.type == 'SALES-ES'
-        ? false
-        : salesTypeData.type == 'SALES-Q'
-            ? false
-            : salesTypeData.type == 'SALES-O'
-                ? false
-                : true;
+    var taxSale = salesTypeData.tax;
     var invoiceHead = salesTypeData.type == 'SALES-ES'
         ? Settings.getValue<String>('key-sales-estimate-head', 'ESTIMATE')
         : salesTypeData.type == 'SALES-Q'
@@ -457,13 +461,10 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                             <h5>${companyTaxMode == 'INDIA' ? dataInformation['Add1'] : 'T-No :' + dataInformation['gstno']}<h5/>
                             <hr size="1" width="100%">
                             <table id="items">
-                        <tr>
-                            <th width="64%" align="center"><b>Description</b></th>
-                            <th width="8%" align="center"><b>Qty</b></th>
-                            <th width="10%" align="center"><b>Rate</b></th>
-                            <th width="10%" align="center"><b>Total</b></th>
+                        
                         ''' +
-                            _item() +
+                            _itemHeader(companyTaxMode) +
+                            _item(taxSale) +
                             '''<tr>
                           <td colspan="4" class="blank"><hr></hr></td>
                       </tr>
@@ -550,13 +551,9 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                             <h4>Bill To : ${dataInformation['ToName']}</h4>
                             <hr size="1" width="100%">
                             <table id="items">
-                        <tr>
-                            <th width="64%" align="center"><b>Description</b></th>
-                            <th width="8%" align="center"><b>Qty</b></th>
-                            <th width="10%" align="center"><b>Rate</b></th>
-                            <th width="10%" align="center"><b>Total</b></th>
-                        ''' +
-                            _item() +
+                        <tr> ''' +
+                            _itemHeader1() +
+                            _item(taxSale) +
                             '''<tr>
                           <td colspan="4" class="blank"><hr></hr></td>
                       </tr>
@@ -648,13 +645,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
   }
 
   showData() {
-    var taxSale = salesTypeData.type == 'SALES-ES'
-        ? false
-        : salesTypeData.type == 'SALES-Q'
-            ? false
-            : salesTypeData.type == 'SALES-O'
-                ? false
-                : true;
+    var taxSale = salesTypeData.tax;
     var invoiceHead = salesTypeData.type == 'SALES-ES'
         ? Settings.getValue<String>('key-sales-estimate-head', 'ESTIMATE')
         : salesTypeData.type == 'SALES-Q'
@@ -939,18 +930,131 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                 ));
   }
 
-  _item() {
+  _itemHeader(String tType) {
+    var str = '';
+    str += tType == 'INDIA'
+        ? '''
+    <tr>
+                            <th width="64%" align="center"><b>Description</b></th>
+                            <th width="8%" align="center"><b>HSN</b></th>
+                            <th width="8%" align="center"><b>Qty</b></th>
+                            <th width="10%" align="center"><b>Rate</b></th>
+                            <th width="10%" align="center"><b>Tax%</b></th>
+                            <th width="10%" align="center"><b>CGST</b></th>
+                            <th width="10%" align="center"><b>SGST</b></th>
+                            <th width="10%" align="center"><b>Total</b></th>
+                            '''
+        : '''<tr>
+                            <th width="64%" align="center"><b>Description</b></th>
+                            <th width="8%" align="center"><b>HSN</b></th>
+                            <th width="8%" align="center"><b>Qty</b></th>
+                            <th width="10%" align="center"><b>Rate</b></th>
+                            <th width="10%" align="center"><b>Tax%</b></th>
+                            <th width="10%" align="center"><b>Vat</b></th>
+                            <th width="10%" align="center"><b>Total</b></th>''';
+    return str;
+  }
+
+  _itemHeader1() {
+    var str = '';
+    str += isItemSerialNo
+        ? '''
+                            <th width="50%" align="center"><b>Description</b></th>
+                            <th width="8%" align="center"><b>''' +
+            labelSerialNo +
+            '''</b></th>
+                            <th width="8%" align="center"><b>Qty</b></th>
+                            <th width="10%" align="center"><b>Rate</b></th>
+                            <th width="10%" align="center"><b>Total</b></th>
+                        '''
+        : '''
+                            <th width="64%" align="center"><b>Description</b></th>
+                            <th width="8%" align="center"><b>Qty</b></th>
+                            <th width="10%" align="center"><b>Rate</b></th>
+                            <th width="10%" align="center"><b>Total</b></th>
+                        ''';
+    return str;
+  }
+
+  _item(bool taxIn) {
     var str = '';
     for (var i = 0; i < dataParticulars.length; i++) {
-      str += '''
-      </tr>
-        <tr class="item-row">
-        <td width="64%" align="left">${dataParticulars[i]['itemname']}</td>
-        <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
-        <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
-        <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
-      </tr>
-      ''';
+      str += taxIn
+          ? companyTaxMode == 'INDIA'
+              ? isItemSerialNo
+                  ? '''
+                    </tr>
+                      <tr class="item-row">
+                      <td width="50%" align="left">${dataParticulars[i]['itemname']}</td>
+                      <td width="10%" align="center">${dataParticulars[i]['serialno'].toString()}</td>
+                      <td width="6%" align="left">${dataParticulars[i]['hsncode']}</td>
+                      <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
+                      <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
+                      <td width="3%" align="right">${double.tryParse(dataParticulars[i]['igst'].toString()).toStringAsFixed(decimal)}</td>
+                      <td width="10%" align="right">${double.tryParse(dataParticulars[i]['CGST'].toString()).toStringAsFixed(decimal)}</td>
+                      <td width="10%" align="right">${double.tryParse(dataParticulars[i]['SGST'].toString()).toStringAsFixed(decimal)}</td>
+                      <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
+                    </tr>
+                    '''
+                  : '''
+                  </tr>
+                    <tr class="item-row">
+                    <td width="50%" align="left">${dataParticulars[i]['itemname']}</td>
+                    <td width="6%" align="left">${dataParticulars[i]['hsncode']}</td>
+                    <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="3%" align="right">${double.tryParse(dataParticulars[i]['igst'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['CGST'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['SGST'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
+                  </tr>
+                  '''
+              : isItemSerialNo
+                  ? '''
+                  </tr>
+                    <tr class="item-row">
+                    <td width="50%" align="left">${dataParticulars[i]['itemname']}</td>
+                    <td width="10%" align="center">${dataParticulars[i]['serialno'].toString()}</td>
+                    <td width="6%" align="left">${dataParticulars[i]['hsncode']}</td>
+                    <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="3%" align="right">${double.tryParse(dataParticulars[i]['igst'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['IGST'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
+                  </tr>
+                  '''
+                  : '''
+                  </tr>
+                    <tr class="item-row">
+                    <td width="50%" align="left">${dataParticulars[i]['itemname']}</td>
+                    <td width="6%" align="left">${dataParticulars[i]['hsncode']}</td>
+                    <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="3%" align="right">${double.tryParse(dataParticulars[i]['igst'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['IGST'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
+                  </tr>
+                '''
+          : isItemSerialNo
+              ? '''
+                  </tr>
+                    <tr class="item-row">
+                    <td width="64%" align="left">${dataParticulars[i]['itemname']}</td>
+                    <td width="10%" align="center">${dataParticulars[i]['serialno'].toString()}</td>
+                    <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
+                  </tr>
+                '''
+              : '''
+                </tr>
+                  <tr class="item-row">
+                  <td width="64%" align="left">${dataParticulars[i]['itemname']}</td>
+                  <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
+                  <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
+                  <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
+                </tr>
+                ''';
       totalQty += double.tryParse(dataParticulars[i]['Qty'].toString());
       totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
     }
@@ -1378,13 +1482,7 @@ void printSunmiV1(dataAll) async {
   var deliveryNote = bill['DeliveryNote'];
   var otherAmount = bill['otherAmount'];
 
-  var taxSale = salesTypeData.type == 'SALES-ES'
-      ? false
-      : salesTypeData.type == 'SALES-Q'
-          ? false
-          : salesTypeData.type == 'SALES-O'
-              ? false
-              : true;
+  var taxSale = salesTypeData.tax;
   var invoiceHead = salesTypeData.type == 'SALES-ES'
       ? Settings.getValue<String>('key-sales-estimate-head', 'ESTIMATE')
       : salesTypeData.type == 'SALES-Q'
@@ -1731,13 +1829,7 @@ void printUrovo(dataAll) async {
   var deliveryNote = bill['DeliveryNote'];
   var otherAmount = bill['otherAmount'];
 
-  bool taxSale = salesTypeData.type == 'SALES-ES'
-      ? false
-      : salesTypeData.type == 'SALES-Q'
-          ? false
-          : salesTypeData.type == 'SALES-O'
-              ? false
-              : true;
+  bool taxSale = salesTypeData.tax;
   var invoiceHead = salesTypeData.type == 'SALES-ES'
       ? Settings.getValue<String>('key-sales-estimate-head', 'ESTIMATE')
       : salesTypeData.type == 'SALES-Q'
@@ -2182,13 +2274,7 @@ Future<pw.Document> makePDF(String title, CompanyInformation companySettings,
   // var dataDeliveryNote = data['DeliveryNote'];
   var otherAmount = data['otherAmount'];
 
-  var taxSale = salesTypeData.type == 'SALES-ES'
-      ? false
-      : salesTypeData.type == 'SALES-Q'
-          ? false
-          : salesTypeData.type == 'SALES-O'
-              ? false
-              : true;
+  var taxSale = salesTypeData.tax;
   var invoiceHead = salesTypeData.type == 'SALES-ES'
       ? Settings.getValue<String>('key-sales-estimate-head', 'ESTIMATE')
       : salesTypeData.type == 'SALES-Q'
@@ -2199,34 +2285,71 @@ Future<pw.Document> makePDF(String title, CompanyInformation companySettings,
   int decimal = ComSettings.getValue('DECIMAL', settings).toString().isNotEmpty
       ? int.tryParse(ComSettings.getValue('DECIMAL', settings).toString())
       : 2;
+  bool isItemSerialNo = ComSettings.getStatus('KEY ITEM SERIAL NO', settings);
+  var labelSerialNo =
+      ComSettings.getValue('KEY ITEM SERIAL NO', settings).toString();
+  labelSerialNo.isNotEmpty ?? 'SerialNo';
   var tableHeaders = taxSale
       ? companyTaxMode == 'INDIA'
-          ? [
-              "No",
-              "Description",
-              "Unit Price",
-              "Qty",
-              "SKU",
-              "Rate",
-              "NetAmount",
-              "Tax % ",
-              "CGST",
-              "SGST",
-              "Total"
-            ]
-          : [
-              "No",
-              "Description",
-              "Unit Price",
-              "Qty",
-              "SKU",
-              "Rate",
-              "NetAmount",
-              "Tax % ",
-              "VAT",
-              "Total"
-            ]
-      : ["No", "Description", "Unit Price", "Qty", "SKU", "Total"];
+          ? isItemSerialNo
+              ? [
+                  "No",
+                  "Description",
+                  "HSN",
+                  "Unit Price",
+                  "Qty",
+                  labelSerialNo,
+                  "Rate",
+                  "NetAmount",
+                  "Tax % ",
+                  "CGST",
+                  "SGST",
+                  "Total"
+                ]
+              : [
+                  "No",
+                  "Description",
+                  "HSN",
+                  "Unit Price",
+                  "Qty",
+                  "SKU",
+                  "Rate",
+                  "NetAmount",
+                  "Tax % ",
+                  "CGST",
+                  "SGST",
+                  "Total"
+                ]
+          : isItemSerialNo
+              ? [
+                  "No",
+                  "Description",
+                  "HSN",
+                  "Unit Price",
+                  "Qty",
+                  labelSerialNo,
+                  "Rate",
+                  "NetAmount",
+                  "Tax % ",
+                  "VAT",
+                  "Total"
+                ]
+              : [
+                  "No",
+                  "Description",
+                  "HSN",
+                  "Unit Price",
+                  "Qty",
+                  "SKU",
+                  "Rate",
+                  "NetAmount",
+                  "Tax % ",
+                  "VAT",
+                  "Total"
+                ]
+      : isItemSerialNo
+          ? ["No", "Description", "Rate", "Qty", labelSerialNo, "Total"]
+          : ["No", "Description", "Unit Price", "Qty", "SKU", "Total"];
 
   final imageQr = byteImageQr != null
       ? pw.MemoryImage(Uint8List.fromList(byteImageQr))
@@ -2446,7 +2569,7 @@ Future<pw.Document> makePDF(String title, CompanyInformation companySettings,
                     ]),
                 pw.Table(
                   border: pw.TableBorder.all(width: 0.2),
-                  defaultColumnWidth: pw.IntrinsicColumnWidth(),
+                  defaultColumnWidth: const pw.IntrinsicColumnWidth(),
                   children: [
                     companyTaxMode == 'INDIA'
                         ? pw.TableRow(children: [
@@ -2546,6 +2669,15 @@ Future<pw.Document> makePDF(String title, CompanyInformation companySettings,
                                 mainAxisAlignment: pw.MainAxisAlignment.center,
                                 children: [
                                   pw.Text(tableHeaders[10],
+                                      style: const pw.TextStyle(fontSize: 9)),
+                                  // pw.Divider(thickness: 1)
+                                ]),
+                            pw.Column(
+                                crossAxisAlignment:
+                                    pw.CrossAxisAlignment.center,
+                                mainAxisAlignment: pw.MainAxisAlignment.center,
+                                children: [
+                                  pw.Text(tableHeaders[11],
                                       style: const pw.TextStyle(fontSize: 9)),
                                   // pw.Divider(thickness: 1)
                                 ]),
@@ -2661,6 +2793,17 @@ Future<pw.Document> makePDF(String title, CompanyInformation companySettings,
                                           fontWeight: pw.FontWeight.bold)),
                                   // pw.Divider(thickness: 1)
                                 ]),
+                            pw.Column(
+                                crossAxisAlignment:
+                                    pw.CrossAxisAlignment.center,
+                                mainAxisAlignment: pw.MainAxisAlignment.center,
+                                children: [
+                                  pw.Text(tableHeaders[10],
+                                      style: pw.TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: pw.FontWeight.bold)),
+                                  // pw.Divider(thickness: 1)
+                                ]),
                           ]),
                     for (var i = 0; i < dataParticulars.length; i++)
                       // dataParticulars
@@ -2690,6 +2833,21 @@ Future<pw.Document> makePDF(String title, CompanyInformation companySettings,
                                       padding: const pw.EdgeInsets.all(2.0),
                                       child: pw.Text(
                                           dataParticulars[i]['itemname'],
+                                          style:
+                                              const pw.TextStyle(fontSize: 9)),
+                                      // pw.Divider(thickness: 1)
+                                    )
+                                  ]),
+                              pw.Column(
+                                  crossAxisAlignment:
+                                      pw.CrossAxisAlignment.start,
+                                  mainAxisAlignment:
+                                      pw.MainAxisAlignment.center,
+                                  children: [
+                                    pw.Padding(
+                                      padding: const pw.EdgeInsets.all(2.0),
+                                      child: pw.Text(
+                                          dataParticulars[i]['hsncode'],
                                           style:
                                               const pw.TextStyle(fontSize: 9)),
                                       // pw.Divider(thickness: 1)
@@ -2726,20 +2884,41 @@ Future<pw.Document> makePDF(String title, CompanyInformation companySettings,
                                       // pw.Divider(thickness: 1)
                                     )
                                   ]),
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          '${dataParticulars[i]['unitName']}',
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    )
-                                  ]),
+                              isItemSerialNo
+                                  ? pw.Column(
+                                      crossAxisAlignment:
+                                          pw.CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          pw.MainAxisAlignment.center,
+                                      children: [
+                                          pw.Padding(
+                                            padding:
+                                                const pw.EdgeInsets.all(2.0),
+                                            child: pw.Text(
+                                                dataParticulars[i]['serialno']
+                                                    .toString(),
+                                                style: const pw.TextStyle(
+                                                    fontSize: 9)),
+                                            // pw.Divider(thickness: 1)
+                                          )
+                                        ])
+                                  : pw.Column(
+                                      crossAxisAlignment:
+                                          pw.CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          pw.MainAxisAlignment.center,
+                                      children: [
+                                          pw.Padding(
+                                            padding:
+                                                const pw.EdgeInsets.all(2.0),
+                                            child: pw.Text(
+                                                dataParticulars[i]['unitName']
+                                                    .toString(),
+                                                style: const pw.TextStyle(
+                                                    fontSize: 9)),
+                                            // pw.Divider(thickness: 1)
+                                          )
+                                        ]),
                               pw.Column(
                                   crossAxisAlignment: pw.CrossAxisAlignment.end,
                                   mainAxisAlignment:
@@ -2871,6 +3050,21 @@ Future<pw.Document> makePDF(String title, CompanyInformation companySettings,
                                     ),
                                   ]),
                               pw.Column(
+                                  crossAxisAlignment:
+                                      pw.CrossAxisAlignment.start,
+                                  mainAxisAlignment:
+                                      pw.MainAxisAlignment.center,
+                                  children: [
+                                    pw.Padding(
+                                      padding: const pw.EdgeInsets.all(2.0),
+                                      child: pw.Text(
+                                          dataParticulars[i]['hsncode'],
+                                          style:
+                                              const pw.TextStyle(fontSize: 9)),
+                                      // pw.Divider(thickness: 1)
+                                    )
+                                  ]),
+                              pw.Column(
                                   crossAxisAlignment: pw.CrossAxisAlignment.end,
                                   mainAxisAlignment:
                                       pw.MainAxisAlignment.center,
@@ -2901,20 +3095,41 @@ Future<pw.Document> makePDF(String title, CompanyInformation companySettings,
                                       // pw.Divider(thickness: 1)
                                     )
                                   ]),
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          '${dataParticulars[i]['unitName']}',
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    )
-                                  ]),
+                              isItemSerialNo
+                                  ? pw.Column(
+                                      crossAxisAlignment:
+                                          pw.CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          pw.MainAxisAlignment.center,
+                                      children: [
+                                          pw.Padding(
+                                            padding:
+                                                const pw.EdgeInsets.all(2.0),
+                                            child: pw.Text(
+                                                dataParticulars[i]['serialno']
+                                                    .toString(),
+                                                style: const pw.TextStyle(
+                                                    fontSize: 9)),
+                                            // pw.Divider(thickness: 1)
+                                          )
+                                        ])
+                                  : pw.Column(
+                                      crossAxisAlignment:
+                                          pw.CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          pw.MainAxisAlignment.center,
+                                      children: [
+                                          pw.Padding(
+                                            padding:
+                                                const pw.EdgeInsets.all(2.0),
+                                            child: pw.Text(
+                                                dataParticulars[i]['unitName']
+                                                    .toString(),
+                                                style: const pw.TextStyle(
+                                                    fontSize: 9)),
+                                            // pw.Divider(thickness: 1)
+                                          )
+                                        ]),
                               pw.Column(
                                   crossAxisAlignment: pw.CrossAxisAlignment.end,
                                   mainAxisAlignment:
@@ -3278,18 +3493,37 @@ Future<pw.Document> makePDF(String title, CompanyInformation companySettings,
                                 // pw.Divider(thickness: 1)
                               )
                             ]),
-                        pw.Column(
-                            crossAxisAlignment: pw.CrossAxisAlignment.center,
-                            mainAxisAlignment: pw.MainAxisAlignment.center,
-                            children: [
-                              pw.Padding(
-                                padding: const pw.EdgeInsets.all(2.0),
-                                child: pw.Text(
-                                    dataParticulars[i]['unitName'].toString(),
-                                    style: const pw.TextStyle(fontSize: 9)),
-                                // pw.Divider(thickness: 1)
-                              )
-                            ]),
+                        isItemSerialNo
+                            ? pw.Column(
+                                crossAxisAlignment:
+                                    pw.CrossAxisAlignment.center,
+                                mainAxisAlignment: pw.MainAxisAlignment.center,
+                                children: [
+                                    pw.Padding(
+                                      padding: const pw.EdgeInsets.all(2.0),
+                                      child: pw.Text(
+                                          dataParticulars[i]['serialno']
+                                              .toString(),
+                                          style:
+                                              const pw.TextStyle(fontSize: 9)),
+                                      // pw.Divider(thickness: 1)
+                                    )
+                                  ])
+                            : pw.Column(
+                                crossAxisAlignment:
+                                    pw.CrossAxisAlignment.center,
+                                mainAxisAlignment: pw.MainAxisAlignment.center,
+                                children: [
+                                    pw.Padding(
+                                      padding: const pw.EdgeInsets.all(2.0),
+                                      child: pw.Text(
+                                          dataParticulars[i]['unitName']
+                                              .toString(),
+                                          style:
+                                              const pw.TextStyle(fontSize: 9)),
+                                      // pw.Divider(thickness: 1)
+                                    )
+                                  ]),
                         pw.Column(
                             crossAxisAlignment: pw.CrossAxisAlignment.end,
                             mainAxisAlignment: pw.MainAxisAlignment.center,

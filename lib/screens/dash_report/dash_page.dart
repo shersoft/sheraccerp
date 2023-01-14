@@ -80,7 +80,7 @@ class _DashPageState extends State<DashPage> {
     });
     if (locationList.isNotEmpty) {
       dropdownBranchId = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first;
       _fetchTotalData(dropdownBranchId);
@@ -95,7 +95,7 @@ class _DashPageState extends State<DashPage> {
     Future.delayed(const Duration(milliseconds: 3000), () {
       if (locationList.isNotEmpty) {
         dropdownBranchId = locationList
-            .where((element) => element.value == 'SHOP')
+            .where((element) => element.value == defaultLocation)
             .map((e) => e.key)
             .first;
         _fetchTotalData(dropdownBranchId);
@@ -124,7 +124,7 @@ class _DashPageState extends State<DashPage> {
       totalNoCustomers = responseBodyOfTotal['No Customers'].toString();
       totalNoOfRepeatCustomers =
           responseBodyOfTotal['No of Repeat Customers'].toString();
-      totalExpenses = responseBodyOfTotal['Total Expenses'].toString();
+      totalExpenses = responseBodyOfTotal['Total Expenses'].abs().toString();
 
       return _status;
     });
@@ -622,7 +622,10 @@ class _DashPageState extends State<DashPage> {
         firstDate: DateTime(2000),
         lastDate: DateTime(2100));
     if (picked != null) {
-      setState(() => {setToDay = DateFormat('dd-MM-yyyy').format(picked)});
+      setState(() {
+        setToDay = DateFormat('dd-MM-yyyy').format(picked);
+        formattedDate = DateFormat('yyyy-MM-dd').format(picked);
+      });
     }
   }
 

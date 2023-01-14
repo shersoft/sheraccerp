@@ -34,6 +34,7 @@ class _BtPrintState extends State<BtPrint> {
   BlueDevice _device;
   String tips = 'no device connect';
   List<BlueDevice> _blueDevices = [];
+  var companyTaxMode = '';
 
   // BluetoothManager bluetoothManager = BluetoothManager.instance;
 
@@ -247,6 +248,7 @@ class _BtPrintState extends State<BtPrint> {
   }
 
   var taxPercentages = '';
+  List<dynamic> taxableData = [];
 
   Future<List<int>> salesData(PaperSize paper) async {
     var profile = await CapabilityProfile.load();
@@ -270,13 +272,7 @@ class _BtPrintState extends State<BtPrint> {
         )['LedName']
         .toString();
     // header
-    var taxSale = salesTypeData.type == 'SALES-ES'
-        ? false
-        : salesTypeData.type == 'SALES-Q'
-            ? false
-            : salesTypeData.type == 'SALES-O'
-                ? false
-                : true;
+    var taxSale = salesTypeData.tax;
     var invoiceHead = salesTypeData.type == 'SALES-ES'
         ? Settings.getValue<String>('key-sales-estimate-head', 'ESTIMATE')
         : salesTypeData.type == 'SALES-Q'
@@ -285,13 +281,19 @@ class _BtPrintState extends State<BtPrint> {
                 ? Settings.getValue<String>('key-sales-order-head', 'ORDER')
                 : Settings.getValue<String>(
                     'key-sales-invoice-head', 'INVOICE');
+    companyTaxMode = ComSettings.getValue('PACKAGE', settings);
     bool isQrCodeKSA = ComSettings.getStatus('KEY QRCODE KSA', settings);
+    bool disablePrintBalance =
+        ComSettings.getStatus('key-print-balance', settings);
     bool isEsQrCodeKSA =
         ComSettings.getStatus('KEY QRCODE KSA ON ES', settings);
     int printCopy = Settings.getValue<int>('key-dropdown-print-copy-view', 0);
     int printerModel =
         Settings.getValue<int>('key-dropdown-printer-model-view', 0);
     // for (int pCopy = 0; pCopy <= printCopy; pCopy++) {
+    if (taxSale) {
+      _taxableData(dataParticulars);
+    }
     if (printerSize == "2") {
       try {
         if (taxSale) {
@@ -304,15 +306,28 @@ class _BtPrintState extends State<BtPrint> {
               // width: PosTextSize.size2,
             ),
           );
-          var text2 = ticket.text(companySettings.add1,
-              styles: const PosStyles(align: PosAlign.center, bold: true));
-          companySettings.add1.toString().trim().isNotEmpty ?? (bytes += text2);
-          var text3 = ticket.text(companySettings.add2,
-              styles: const PosStyles(align: PosAlign.center, bold: true));
-          companySettings.add2.toString().trim().isNotEmpty ?? (bytes += text3);
-          bytes += ticket.text(
-              'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
-              styles: const PosStyles(align: PosAlign.center, bold: true));
+          if (companySettings.add1.toString().trim().isNotEmpty) {
+            bytes += ticket.text(companySettings.add1,
+                styles: const PosStyles(align: PosAlign.center));
+          }
+          if (companySettings.add2.toString().trim().isNotEmpty) {
+            bytes += ticket.text(companySettings.add2,
+                styles: const PosStyles(align: PosAlign.center));
+          }
+          if (companySettings.add3.toString().trim().isNotEmpty) {
+            bytes += ticket.text(companySettings.add3,
+                styles: const PosStyles(align: PosAlign.center));
+          }
+          if (companySettings.add4.toString().trim().isNotEmpty) {
+            bytes += ticket.text(companySettings.add4,
+                styles: const PosStyles(align: PosAlign.center));
+          }
+          if (companySettings.telephone.toString().trim().isNotEmpty ||
+              companySettings.mobile.toString().trim().isNotEmpty) {
+            bytes += ticket.text(
+                'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
+                styles: const PosStyles(align: PosAlign.center));
+          }
           bytes += ticket.text(
               companyTaxMode == 'INDIA'
                   ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
@@ -337,15 +352,15 @@ class _BtPrintState extends State<BtPrint> {
               styles: const PosStyles(align: PosAlign.left, bold: true));
           bytes += ticket.text('${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left, bold: true));
-          if (isEsQrCodeKSA) {
-            if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-              bytes += ticket.text(
-                  companyTaxMode == 'INDIA'
-                      ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
-                      : 'TRN : ${dataInformation['gstno'].toString().trim()}',
-                  styles: const PosStyles(align: PosAlign.left, bold: true));
-            }
+          //not acceptable if (isEsQrCodeKSA) {
+          if (dataInformation['gstno'].toString().trim().isNotEmpty) {
+            bytes += ticket.text(
+                companyTaxMode == 'INDIA'
+                    ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
+                    : 'TRN : ${dataInformation['gstno'].toString().trim()}',
+                styles: const PosStyles(align: PosAlign.left, bold: true));
           }
+          // }
           bytes += ticket.hr();
           bytes += ticket.text('Description',
               styles: const PosStyles(align: PosAlign.left, bold: true));
@@ -370,13 +385,13 @@ class _BtPrintState extends State<BtPrint> {
           double totalQty = 0, totalRate = 0;
           for (var i = 0; i < dataParticulars.length; i++) {
             if (double.tryParse(dataParticulars[i]['igst'].toString()) > 0) {
-              if (taxPercentages.contains(
-                  '@' + dataParticulars[i]['igst'].toString() + ' %')) {
-              } else {
-                taxPercentages +=
-                    '@' + dataParticulars[i]['igst'].toString() + ' %,';
-              }
+              taxPercentages = dataParticulars[i]['igst'].toString() + ' %';
+              // if (taxPercentages.contains(
+              //     '@' + dataParticulars[i]['igst'].toString() + ' %')) {
+            } else {
+              taxPercentages = '0 %';
             }
+            // }
             var itemName = dataParticulars[i]['itemname'].toString();
             bytes += ticket.text(itemName,
                 styles: const PosStyles(align: PosAlign.left, bold: true));
@@ -870,15 +885,28 @@ class _BtPrintState extends State<BtPrint> {
           // }
           // linesAfter: 1);
           // header1
-          var text2 = ticket.text(companySettings.add1,
-              styles: const PosStyles(align: PosAlign.center));
-          companySettings.add1.toString().trim().isNotEmpty ?? (bytes += text2);
-          var text3 = ticket.text(companySettings.add2,
-              styles: const PosStyles(align: PosAlign.center));
-          companySettings.add2.toString().trim().isNotEmpty ?? (bytes += text3);
-          bytes += ticket.text(
-              'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
-              styles: const PosStyles(align: PosAlign.center));
+          if (companySettings.add1.toString().trim().isNotEmpty) {
+            bytes += ticket.text(companySettings.add1,
+                styles: const PosStyles(align: PosAlign.center));
+          }
+          if (companySettings.add2.toString().trim().isNotEmpty) {
+            bytes += ticket.text(companySettings.add2,
+                styles: const PosStyles(align: PosAlign.center));
+          }
+          if (companySettings.add3.toString().trim().isNotEmpty) {
+            bytes += ticket.text(companySettings.add3,
+                styles: const PosStyles(align: PosAlign.center));
+          }
+          if (companySettings.add4.toString().trim().isNotEmpty) {
+            bytes += ticket.text(companySettings.add4,
+                styles: const PosStyles(align: PosAlign.center));
+          }
+          if (companySettings.telephone.toString().trim().isNotEmpty ||
+              companySettings.mobile.toString().trim().isNotEmpty) {
+            bytes += ticket.text(
+                'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
+                styles: const PosStyles(align: PosAlign.center));
+          }
           bytes += ticket.text(
               companyTaxMode == 'INDIA'
                   ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
@@ -905,15 +933,15 @@ class _BtPrintState extends State<BtPrint> {
           bytes += ticket.hr();
           bytes += ticket.text('Bill To : ${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left));
-          if (isEsQrCodeKSA) {
-            if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-              bytes += ticket.text(
-                  companyTaxMode == 'INDIA'
-                      ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
-                      : 'TRN : ${dataInformation['gstno'].toString().trim()}',
-                  styles: const PosStyles(align: PosAlign.left));
-            }
+          //don't use it if (isEsQrCodeKSA) {
+          if (dataInformation['gstno'].toString().trim().isNotEmpty) {
+            bytes += ticket.text(
+                companyTaxMode == 'INDIA'
+                    ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
+                    : 'TRN : ${dataInformation['gstno'].toString().trim()}',
+                styles: const PosStyles(align: PosAlign.left));
           }
+          // }
           bytes += ticket.hr();
           bytes += ticket.row([
             PosColumn(text: 'Description', width: 7),
@@ -927,15 +955,19 @@ class _BtPrintState extends State<BtPrint> {
                 width: 2,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
+          bytes += ticket.hr();
           double totalQty = 0, totalRate = 0;
           for (var i = 0; i < dataParticulars.length; i++) {
             if (double.tryParse(dataParticulars[i]['igst'].toString()) > 0) {
-              if (taxPercentages.contains(
-                  '@' + dataParticulars[i]['igst'].toString() + ' %')) {
-              } else {
-                taxPercentages +=
-                    '@' + dataParticulars[i]['igst'].toString() + ' %,';
-              }
+              // if (taxPercentages.contains(
+              //     '@' + dataParticulars[i]['igst'].toString() + ' %')) {
+              // } else {
+              taxPercentages =
+                  '@ ' + dataParticulars[i]['igst'].toString() + ' %';
+              // }
+            } else {
+              taxPercentages =
+                  '@ ' + dataParticulars[i]['igst'].toString() + ' %';
             }
             var itemName = paper.width == PaperSize.mm80.width
                 ? dataParticulars[i]['itemname'].toString().trim().length > 26
@@ -955,77 +987,124 @@ class _BtPrintState extends State<BtPrint> {
                         .toString()
                     : dataParticulars[i]['itemname'].toString();
             bytes += ticket.row([
-              PosColumn(text: itemName, width: 7),
+              PosColumn(
+                  text: itemName,
+                  width: 7,
+                  styles:
+                      const PosStyles(height: PosTextSize.size1, bold: true)),
               PosColumn(
                   text:
-                      '${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}',
-                  width: 1),
+                      '${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + '' + dataParticulars[i]['unitName'] + '' : dataParticulars[i]['Qty']}',
+                  width: 1,
+                  styles:
+                      const PosStyles(height: PosTextSize.size1, bold: true)),
               PosColumn(
                   text: '${dataParticulars[i]['Rate']}',
                   width: 2,
-                  styles: const PosStyles(align: PosAlign.right)),
+                  styles: const PosStyles(
+                      align: PosAlign.right,
+                      height: PosTextSize.size1,
+                      bold: true)),
               PosColumn(
                   text: '${dataParticulars[i]['Total']}',
                   width: 2,
-                  styles: const PosStyles(align: PosAlign.right)),
+                  styles: const PosStyles(
+                      align: PosAlign.right,
+                      height: PosTextSize.size1,
+                      bold: true)),
             ]);
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
+            //hsn gst o vat
+            // bytes += ticket.hr();
+            bytes += ticket.row(companyTaxMode == 'INDIA'
+                ? [
+                    PosColumn(
+                        text: '${dataParticulars[i]['hsncode']}', width: 4),
+                    PosColumn(text: '$taxPercentages', width: 4),
+                    PosColumn(
+                        text: double.tryParse(
+                                    dataParticulars[i]['cess'].toString()) >
+                                0
+                            ? 'Cess : ${dataParticulars[i]['cess']}'
+                            : '',
+                        width: 4),
+                    // PosColumn(
+                    //     text: 'CGST : ${dataParticulars[i]['CGST']}', width: 2),
+                    // PosColumn(
+                    //     text: 'SGST : ${dataParticulars[i]['SGST']}', width: 2),
+                    // PosColumn(
+                    //     text:
+                    //         '= ${double.tryParse(dataParticulars[i]['CGST'].toString()) + double.tryParse(dataParticulars[i]['SGST'].toString()) + double.tryParse(dataParticulars[i]['cess'].toString())}',
+                    //     width: 2,
+                    //     styles: const PosStyles(align: PosAlign.right)),
+                  ]
+                : [
+                    PosColumn(
+                        text: 'HSN : ${dataParticulars[i]['hsncode']}',
+                        width: 6),
+                    PosColumn(text: '$taxPercentages% ', width: 6),
+                    // PosColumn(
+                    //     text: 'Vat : ${dataParticulars[i]['IGST']}',
+                    //     width: 5,
+                    //     styles: const PosStyles(align: PosAlign.right)),
+                  ]);
           }
           bytes += ticket.hr();
           bytes += ticket.row([
-            PosColumn(text: 'Total : ', width: 7),
-            PosColumn(text: '$totalQty', width: 1),
+            PosColumn(text: 'Total ', width: 3),
+            PosColumn(text: '$totalQty', width: 3),
             PosColumn(
                 text: totalRate.toStringAsFixed(2),
-                width: 2,
+                width: 3,
                 styles: const PosStyles(align: PosAlign.right)),
             PosColumn(
                 text: '${dataInformation['Total']}',
-                width: 2,
+                width: 3,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
           bytes += ticket.hr();
-          bytes += ticket.row([
-            PosColumn(
-                text: 'Total :',
-                width: 6,
-                styles: const PosStyles(
-                  // height: PosTextSize.size1,
-                  // width: PosTextSize.size1,
-                  align: PosAlign.right,
-                )),
-            PosColumn(
-                text: '${dataInformation['NetAmount']}',
-                width: 6,
-                styles: const PosStyles(
-                  align: PosAlign.right,
-                  // height: PosTextSize.size3,
-                  // width: PosTextSize.size2,
-                )),
-          ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
-            PosColumn(
-                text: 'Tax : ' + taxPercentages,
-                width: 6,
-                styles: const PosStyles(
-                  // height: PosTextSize.size3,
-                  // width: PosTextSize.size2,
-                  align: PosAlign.right,
-                )),
-            PosColumn(
-                text: (double.tryParse(dataInformation['CGST'].toString()) +
-                        double.tryParse(dataInformation['SGST'].toString()) +
-                        double.tryParse(dataInformation['IGST'].toString()))
-                    .toStringAsFixed(2),
-                width: 6,
-                styles: const PosStyles(
-                  align: PosAlign.right,
-                  // height: PosTextSize.size3,
-                  // width: PosTextSize.size2,
-                )),
-          ]);
+          // bytes += ticket.row([
+          //   PosColumn(
+          //       text: 'Total :',
+          //       width: 6,
+          //       styles: const PosStyles(
+          //         // height: PosTextSize.size1,
+          //         // width: PosTextSize.size1,
+          //         align: PosAlign.right,
+          //       )),
+          //   PosColumn(
+          //       text: '${dataInformation['NetAmount']}',
+          //       width: 6,
+          //       styles: const PosStyles(
+          //         align: PosAlign.right,
+          //         // height: PosTextSize.size3,
+          //         // width: PosTextSize.size2,
+          //       )),
+          // ]);
+          // bytes += ticket.hr();
+          // bytes += ticket.row([
+          //   PosColumn(
+          //       text: 'Tax : ' + taxPercentages,
+          //       width: 6,
+          //       styles: const PosStyles(
+          //         // height: PosTextSize.size3,
+          //         // width: PosTextSize.size2,
+          //         align: PosAlign.right,
+          //       )),
+          //   PosColumn(
+          //       text: (double.tryParse(dataInformation['CGST'].toString()) +
+          //               double.tryParse(dataInformation['SGST'].toString()) +
+          //               double.tryParse(dataInformation['cess'].toString()) +
+          //               double.tryParse(dataInformation['IGST'].toString()))
+          //           .toStringAsFixed(2),
+          //       width: 6,
+          //       styles: const PosStyles(
+          //         align: PosAlign.right,
+          //         // height: PosTextSize.size3,
+          //         // width: PosTextSize.size2,
+          //       )),
+          // ]);
         } else {
           if (ComSettings.appSettings('bool', 'key-print-header-es', false)) {
             bytes += ticket.text(
@@ -1142,7 +1221,7 @@ class _BtPrintState extends State<BtPrint> {
               PosColumn(text: itemName, width: 7),
               PosColumn(
                   text:
-                      '${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}',
+                      '${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + '' + dataParticulars[i]['unitName'] + '' : dataParticulars[i]['Qty']}',
                   width: 1,
                   styles: const PosStyles(align: PosAlign.right)),
               PosColumn(
@@ -1247,6 +1326,105 @@ class _BtPrintState extends State<BtPrint> {
             'Amount in Words: ${NumberToWord().convert('en', double.tryParse(dataInformation['GrandTotal'].toString()).round())}',
             linesAfter: 1);
 
+        if (taxSale) {
+          bytes += ticket.hr();
+          bytes += companyTaxMode == 'INDIA'
+              ? ticket.row([
+                  PosColumn(
+                      text: 'GST %',
+                      width: 3,
+                      styles: const PosStyles(align: PosAlign.center)),
+                  PosColumn(
+                      text: 'Taxable',
+                      width: 3,
+                      styles: const PosStyles(align: PosAlign.center)),
+                  PosColumn(
+                      text: 'CGST Amt',
+                      width: 3,
+                      styles: const PosStyles(align: PosAlign.center)),
+                  PosColumn(
+                      text: 'SGST Amt',
+                      width: 3,
+                      styles: const PosStyles(align: PosAlign.center)),
+                ])
+              : ticket.row([
+                  PosColumn(
+                      text: 'VAT %',
+                      width: 4,
+                      styles: const PosStyles(align: PosAlign.center)),
+                  PosColumn(
+                      text: 'Taxable',
+                      width: 4,
+                      styles: const PosStyles(align: PosAlign.center)),
+                  PosColumn(
+                      text: 'Vat Amt',
+                      width: 4,
+                      styles: const PosStyles(align: PosAlign.center)),
+                ]);
+          bytes += ticket.hr();
+          for (var i = 0; i < taxableData.length; i++) {
+            bytes += companyTaxMode == 'INDIA'
+                ? ticket.row([
+                    PosColumn(
+                        text: '${taxableData[i]['tax'].toString()} %',
+                        width: 3,
+                        styles: const PosStyles(align: PosAlign.right)),
+                    PosColumn(
+                        text: '${taxableData[i]['taxable'].toStringAsFixed(2)}',
+                        width: 3,
+                        styles: const PosStyles(align: PosAlign.right)),
+                    PosColumn(
+                        text: '${taxableData[i]['CGST'].toStringAsFixed(2)}',
+                        width: 3,
+                        styles: const PosStyles(align: PosAlign.right)),
+                    PosColumn(
+                        text: '${taxableData[i]['SGST'].toStringAsFixed(2)}',
+                        width: 3,
+                        styles: const PosStyles(align: PosAlign.right)),
+                  ])
+                : ticket.row([
+                    PosColumn(
+                        text: '${taxableData[i]['tax'].toString()} %',
+                        width: 4,
+                        styles: const PosStyles(align: PosAlign.right)),
+                    PosColumn(
+                        text: '${taxableData[i]['taxable'].toStringAsFixed(2)}',
+                        width: 4,
+                        styles: const PosStyles(align: PosAlign.right)),
+                    PosColumn(
+                        text: '${taxableData[i]['IGST'].toStringAsFixed(2)}',
+                        width: 4,
+                        styles: const PosStyles(align: PosAlign.right)),
+                  ]);
+            bytes += ticket.hr();
+          }
+        }
+        if (Settings.getValue<bool>('key-print-balance', false)) {
+          //
+        } else {
+          bytes += ticket.row([
+            PosColumn(
+                text: 'CashReceived : ',
+                width: 6,
+                styles: const PosStyles(align: PosAlign.center)),
+            PosColumn(
+                text: '${dataInformation['CashReceived']}',
+                width: 6,
+                styles: const PosStyles(align: PosAlign.center)),
+          ]);
+          bytes += ticket.row([
+            PosColumn(
+                text: 'Old Balance : ${dataInformation['Balance']}',
+                width: 6,
+                styles: const PosStyles(align: PosAlign.center)),
+            PosColumn(
+                text:
+                    'Balance : ${(double.tryParse(dataInformation['Balance'].toString())) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))}',
+                width: 6,
+                styles: const PosStyles(align: PosAlign.center)),
+          ]);
+        }
+
         // ticket.feed(1);
         bytes += ticket.text('${bill['message']}',
             styles: const PosStyles(align: PosAlign.center));
@@ -1319,6 +1497,44 @@ class _BtPrintState extends State<BtPrint> {
     //   }
     // }
     // }
+  }
+
+  _taxableData(data) async {
+    List<dynamic> newData = [];
+    for (int i = 0; i < data.length; i++) {
+      if (newData.isNotEmpty) {
+        var index =
+            newData.indexWhere((element) => element['tax'] == data[i]['igst']);
+        if (index >= 0) {
+          var element = newData[index];
+          var oldItem = newData.elementAt(index);
+          newData.removeAt(index);
+          var newItem = {
+            'tax': element['tax'],
+            'taxable': oldItem['taxable'] + data[i]['GrossValue'],
+            'CGST': oldItem['CGST'] + data[i]['CGST'],
+            'SGST': oldItem['SGST'] + data[i]['SGST'],
+            'IGST': oldItem['IGST'] + data[i]['IGST']
+          };
+          newData.insert(index, newItem);
+        } else {
+          newData.add(addTaxableJson(data[i]));
+        }
+      } else {
+        newData.add(addTaxableJson(data[i]));
+      }
+    }
+    taxableData = newData;
+  }
+
+  addTaxableJson(data) {
+    return {
+      'tax': data['igst'],
+      'taxable': data['GrossValue'],
+      'CGST': data['CGST'],
+      'SGST': data['SGST'],
+      'IGST': data['IGST']
+    };
   }
 
   Future<List<int>> salesReturnData(PaperSize paper) async {

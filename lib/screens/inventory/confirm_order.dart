@@ -71,13 +71,7 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
   @override
   Widget build(BuildContext context) {
     _deviceSize = MediaQuery.of(context).size;
-    isTax = salesTypeData.type == 'SALES-ES'
-        ? false
-        : salesTypeData.type == 'SALES-Q'
-            ? false
-            : salesTypeData.type == 'SALES-O'
-                ? false
-                : true;
+    isTax = salesTypeData.tax;
     return ScopedModelDescendant<MainModel>(
         builder: (BuildContext context, Widget child, MainModel model) {
       // order.customerModel.addAll(model.customer);

@@ -29,14 +29,17 @@ mixin CompanyScopeModel on Model {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'companySettings/$code/$cId');
+              'companySettings/$cId',
+          queryParameters: {'code': code});
       if (response.statusCode == 200) {
         List<dynamic> _data = response.data;
         _company = CompanyInformation.fromJson(_data[0][0]);
         for (var data in _data[1]) {
           _settings.add(CompanySettings.fromJson(data));
         }
-
+        var defL =
+            ComSettings.getValue('DEFAULT LOCATION', _settings).toString();
+        defaultLocation = defL.isNotEmpty ? defL : defaultLocation;
         notifyListeners();
       } else {
         _company = null;

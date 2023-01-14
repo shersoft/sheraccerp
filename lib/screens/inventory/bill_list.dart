@@ -9,14 +9,14 @@ import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/loading.dart';
 
-class OrderList extends StatefulWidget {
-  const OrderList({Key? key}) : super(key: key);
+class BillList extends StatefulWidget {
+  const BillList({Key? key}) : super(key: key);
 
   @override
-  State<OrderList> createState() => _OrderListState();
+  State<BillList> createState() => _BillListState();
 }
 
-class _OrderListState extends State<OrderList> {
+class _BillListState extends State<BillList> {
   bool loadReport = false;
   double offset = 0;
   List<dynamic> resultData = [];
@@ -247,7 +247,7 @@ class _OrderListState extends State<OrderList> {
     //   }
     // } else {
     for (var data in salesTypeData) {
-      if (data.name == 'Sales Order Entry') dataSType.add({'id': data.id});
+      if (data.name != 'Sales Order Entry') dataSType.add({'id': data.id});
     }
     // }
 

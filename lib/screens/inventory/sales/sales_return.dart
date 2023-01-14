@@ -536,28 +536,48 @@ class _SalesReturnState extends State<SalesReturn> {
         'otherAmount': otherAmount
       };
 
-      dio.spSale(body).then((value) {
+      dio.spSale(body).then((value0) {
         setState(() {
           _isLoading = false;
         });
-        if (value > 0) {
-          if (widget.fromSale) {
-            setReturnBillNo = value;
-            setReturnBillAmount =
-                ComSettings.appSettings('bool', 'key-round-off-amount', false)
-                    ? grandTotal
-                    : grandTotal.roundToDouble();
-          }
-          dataDynamic = [
-            {
-              'RealEntryNo': value,
-              'EntryNo': value,
-              'InvoiceNo': value.toString(),
-              'Type': 1
+        if (value0 > 0) {
+          var data = '[' +
+              json.encode({
+                'statement': 'SREntryNo',
+                'entryNo': 0,
+                'invoiceNo': 0,
+                'saleFormId': saleFormId,
+                'billType': order.billType,
+                'returnNo': 0,
+                'returnAmount': 0
+              }) +
+              ']';
+
+          final body1 = {
+            'information': ledger,
+            'data': data,
+            'particular': items,
+            'otherAmount': otherAmount
+          };
+          dio.spSale(body1).then((value1) {
+            if (widget.fromSale) {
+              setReturnBillNo = value1;
+              setReturnBillAmount =
+                  ComSettings.appSettings('bool', 'key-round-off-amount', false)
+                      ? grandTotal
+                      : grandTotal.roundToDouble();
             }
-          ];
-          // clearCart();
-          showMore(context);
+            dataDynamic = [
+              {
+                'RealEntryNo': value1,
+                'EntryNo': value1,
+                'InvoiceNo': value1.toString(),
+                'Type': 1
+              }
+            ];
+            // clearCart();
+            showMore(context);
+          });
         }
       });
     }

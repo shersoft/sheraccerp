@@ -1,9 +1,9 @@
 // @dart = 2.11
 class SalesType {
   int id;
-  String name, type, rateType;
+  String name, type, rateType, sColor;
   int location;
-  bool stock, accounts;
+  bool stock, accounts, tax, eInvoice;
 
   SalesType(
       {this.id,
@@ -12,7 +12,10 @@ class SalesType {
       this.rateType,
       this.stock,
       this.accounts,
-      this.location});
+      this.location,
+      this.sColor,
+      this.tax,
+      this.eInvoice});
 
   factory SalesType.fromJson(Map<String, dynamic> json) {
     return SalesType(
@@ -22,7 +25,10 @@ class SalesType {
         rateType: json['RateType'],
         stock: json['Stock'] == 1 ? true : false,
         accounts: json['Accounts'] == 1 ? true : false,
-        location: json['Location']);
+        location: json['Location'],
+        sColor: json['Scolor'],
+        tax: json['Tax'] == 1 ? true : false,
+        eInvoice: json['EInvoice'] == 1 ? true : false);
   }
 }
 

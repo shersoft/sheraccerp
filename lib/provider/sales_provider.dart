@@ -90,7 +90,7 @@ class SalesProvider with ChangeNotifier {
   }
 
   SalesProvider() {
-    taxable = salesTypeData.type == 'SALES-ES' ? false : true;
+    taxable = salesTypeData.tax;
     _isCustomForm =
         ComSettings.appSettings('bool', 'key-switch-sales-form-set', false)
             ? true

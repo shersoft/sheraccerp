@@ -12,12 +12,13 @@ import 'package:sheraccerp/screens/dash_report/dash_page.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
 import 'package:sheraccerp/shared/constants.dart';
+import 'package:sheraccerp/util/dbhelper.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/accounts_menu.dart';
 import 'package:sheraccerp/widget/accounts_report_menu.dart';
 import 'package:sheraccerp/widget/inventory_menu.dart';
 import 'package:sheraccerp/widget/inventory_report_menu.dart';
-import 'package:sheraccerp/widget/other_report_menu.dart';
+import 'package:sheraccerp/widget/record_list_menu.dart';
 import 'package:sheraccerp/widget/report.dart';
 import 'package:sheraccerp/widget/cash_and_bank.dart';
 import 'package:sheraccerp/widget/expense.dart';
@@ -84,6 +85,35 @@ class _AdminHomeState extends State<AdminHome> with TickerProviderStateMixin {
     //             message: notificationAlert,
     //           ));
     // }
+
+    /***Test Data***/
+    // final dbHelper = DatabaseHelper.instance;
+    // final allRows = await dbHelper.queryAllRows();
+    // List<Carts> carts = [];
+    // for (var row in allRows) {
+    //   carts.add(Carts.fromMap(row));
+    // }
+    // if (carts.isNotEmpty) {
+    //   api.addEvent([
+    //     {'data': Carts.encodeCartToJson(carts).toString()}
+    //   ]).then((value) {
+    //     if (value) {
+    //       for (Carts carts in carts) {
+    //         _delete(carts.id, dbHelper);
+    //       }
+    //     }
+    //   });
+    // }
+  }
+
+  void _delete(id, DatabaseHelper dbHelper) async {
+    final rowsDeleted = await dbHelper.delete(id);
+  }
+
+  void _update(id, name, status, DatabaseHelper dbHelper) async {
+    // row to update
+    Carts carts = Carts(id, name, status);
+    final rowsAffected = await dbHelper.update(carts);
   }
 
   void setDialVisible(bool value) {
@@ -167,13 +197,11 @@ class _AdminHomeState extends State<AdminHome> with TickerProviderStateMixin {
                     icon: Icon(Icons.assignment_outlined),
                     text: "Inventory Report"),
                 Tab(icon: Icon(Icons.assignment_outlined), text: "Report"),
-                Tab(
-                    icon: Icon(Icons.assignment_outlined),
-                    text: "Other Report"),
+                Tab(icon: Icon(Icons.assignment_outlined), text: "Record List"),
                 Tab(
                     icon: Icon(Icons.settings_applications_outlined),
                     text: "Settings"),
-                Tab(icon: Icon(Icons.more), text: "More"),
+                Tab(icon: Icon(Icons.more), text: "Tools"),
               ],
               isScrollable: true,
               labelStyle: TextStyle(fontWeight: FontWeight.bold),
@@ -233,9 +261,9 @@ class _AdminHomeState extends State<AdminHome> with TickerProviderStateMixin {
                   : Report(),
               args.active == "false"
                   ? _commonService.getTrialPeriod(args.atDate)
-                      ? const OtherReportMenu()
+                      ? const RecordListMenu()
                       : _expire(args, context)
-                  : const OtherReportMenu(),
+                  : const RecordListMenu(),
               const AppSettings(),
               args.userType.toUpperCase() == 'ADMIN'
                   ? const MoreWidget()

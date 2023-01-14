@@ -78,7 +78,7 @@ class _SalesListState extends State<SalesList> {
 
     // if (locationList.isNotEmpty) {
     //   dropDownBranchId = locationList
-    //       .where((element) => element.value == 'SHOP')
+    //       .where((element) => element.value == defaultLocation)
     //       .map((e) => e.key)
     //       .first;
     // }
@@ -930,19 +930,54 @@ class _SalesListState extends State<SalesList> {
                   onTap: () {
                     int _id =
                         int.tryParse(dataDisplay[index]['SType'].toString());
-                    var _type = salesTypeDataList
+                    SalesType sData = salesTypeDataList
                         .where((element) => element.id == _id)
-                        .map((e) => e.type)
                         .first;
-
+                    // .map((e) => e.type)
+                    // .first;
+                    /* 
+                    
+accounts:
+true
+eInvoice:
+true
+id:
+1
+location:
+1
+name:
+"Sales B To B Entry"
+rateType:
+"MRP"
+sColor:
+""
+stock:
+true
+tax:
+true
+type:
+"SALES-BB"*/
                     salesTypeData = SalesType(
-                        id: _id,
-                        accounts: true,
-                        location: locationId != null ? locationId.id : 0,
-                        name: '',
-                        rateType: '',
-                        stock: true,
-                        type: _type);
+                        id: sData.id,
+                        accounts: sData.accounts,
+                        location:
+                            locationId != null ? locationId.id : sData.location,
+                        name: sData.name,
+                        rateType: sData.rateType,
+                        stock: sData.stock,
+                        type: sData.type,
+                        eInvoice: sData.eInvoice,
+                        sColor: sData.sColor,
+                        tax: sData.tax);
+
+                    // salesTypeData = SalesType(
+                    //     id: _id,
+                    //     accounts: true,
+                    //     location: locationId != null ? locationId.id : 0,
+                    //     name: '',
+                    //     rateType: '',
+                    //     stock: true,
+                    //     type: _type);
                     showDetials(context, dataDisplay[index], _id);
                   },
                 );

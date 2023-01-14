@@ -17,6 +17,7 @@ import 'package:sheraccerp/provider/sales_provider.dart';
 import 'package:sheraccerp/provider/stock_provider.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/html_previews/invoice_models.dart';
+import 'package:sheraccerp/screens/inventory/bill_list.dart';
 import 'package:sheraccerp/screens/inventory/inv_r_p_voucher.dart';
 import 'package:sheraccerp/screens/home/delivery_home.dart';
 import 'package:sheraccerp/screens/home/manager_home.dart';
@@ -157,6 +158,7 @@ class MyApp extends StatelessWidget {
               '/passCode_Auth': (context) => const PassCodeAuth(),
               '/SimpleSale': (context) => const SimpleSale(),
               '/OrderList': (context) => const OrderList(),
+              '/BillList': (context) => const BillList(),
               '/purchaseReturn': (context) => const PurchaseReturn(),
               '/purchaseOrder': (context) => const PurchaseOrder(),
               '/stockTransfer': (context) => const StockTransfer(),

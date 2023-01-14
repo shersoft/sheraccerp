@@ -68,7 +68,8 @@ class _SaleState extends State<Sale> {
       enableBarcode = false,
       _isReturnInSales = false,
       productTracking = false,
-      isFreeItem = false;
+      isFreeItem = false,
+      isFreeQty = false;
   final List<TextEditingController> _controllers = [];
   DateTime now = DateTime.now();
   String formattedDate, _narration = '';
@@ -83,6 +84,7 @@ class _SaleState extends State<Sale> {
   List<dynamic> items = [];
   int lId = 0, groupId = 0, areaId = 0, routeId = 0;
   var salesManId = 0;
+  String labelSerialNo = 'SerialNo';
   bool ledgerScanner = false, productScanner = false, loadScanner = false;
 
   Barcode result;
@@ -130,14 +132,6 @@ class _SaleState extends State<Sale> {
 
     saleAccount = mainAccount.firstWhere(
         (element) => element['LedName'] == 'GENERAL SALES A/C')['LedCode'];
-    acId = mainAccount
-        .firstWhere((element) => element['LedName'] == 'CASH')['LedCode'];
-    acId = ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) -
-                1 >
-            acId
-        ? ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', acId) -
-            1
-        : acId;
 
     ledgerScanner = ComSettings.appSettings('bool', 'key-customer-scan', false);
     itemCodeVise = ComSettings.appSettings('bool', 'key-item-by-code', false);
@@ -165,6 +159,22 @@ class _SaleState extends State<Sale> {
     companySettings = ScopedModel.of<MainModel>(context).getCompanySettings();
     settings = ScopedModel.of<MainModel>(context).getSettings();
 
+    String cashAc =
+        ComSettings.getValue('CASH A/C', settings).toString().trim() ?? 'CASH';
+    try {
+      acId = mainAccount
+          .firstWhere((element) => element['LedName'] == cashAc)['LedCode'];
+      acId = ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) -
+                  1 >
+              acId
+          ? ComSettings.appSettings(
+                  'int', 'key-dropdown-default-cash-ac', acId) -
+              1
+          : acId;
+    } catch (e) {
+      e.toString();
+      acId = -1;
+    }
     taxMethod = companySettings.taxCalculation;
     enableMULTIUNIT = ComSettings.getStatus('ENABLE MULTI-UNIT', settings);
     pRateBasedProfitInSales =
@@ -181,6 +191,8 @@ class _SaleState extends State<Sale> {
         ? int.tryParse(ComSettings.getValue('DECIMAL', settings).toString())
         : 2;
     isItemSerialNo = ComSettings.getStatus('KEY ITEM SERIAL NO', settings);
+    labelSerialNo =
+        ComSettings.getValue('KEY ITEM SERIAL NO', settings).toString();
     isItemDiscountEditLocked =
         ComSettings.getStatus('KEY LOCK SALES DISCOUNT', settings);
     isItemRateEditLocked =
@@ -191,6 +203,7 @@ class _SaleState extends State<Sale> {
     productTracking =
         ComSettings.getStatus('ENABLE PRODUCT TRACKING IN SALES', settings);
     isFreeItem = ComSettings.getStatus('KEY FREE ITEM', settings);
+    isFreeQty = ComSettings.getStatus('KEY FREE QTY IN SALE', settings);
   }
 
   @override
@@ -199,11 +212,7 @@ class _SaleState extends State<Sale> {
     final routes =
         ModalRoute.of(context).settings.arguments as Map<String, bool>;
     thisSale = routes['default'];
-    taxable = salesTypeData != null
-        ? salesTypeData.type == 'SALES-ES'
-            ? false
-            : true
-        : taxable;
+    taxable = salesTypeData != null ? salesTypeData.tax : taxable;
 
     return WillPopScope(
         onWillPop: _onWillPop,
@@ -714,7 +723,14 @@ class _SaleState extends State<Sale> {
   }
 
   void _insert(name, status) async {
-    //
+    /***Test Data***/
+    // row to insert
+    Map<String, dynamic> row = {
+      DatabaseHelper.columnName: name,
+      DatabaseHelper.columnstatus: status
+    };
+    Carts car = Carts.fromMap(row);
+    final id = await dbHelper.insert(car);
   }
 
   saveSale() async {
@@ -815,19 +831,7 @@ class _SaleState extends State<Sale> {
       var otherAmount = json.encode(order.otherAmountData);
       var saleFormId = salesTypeData.id;
       var saleFormType = salesTypeData.type;
-      var taxType = salesTypeData.type == 'SALES-ES'
-          ? isTax
-              ? 'T'
-              : 'NT'
-          : salesTypeData.type == 'SALES-Q'
-              ? isTax
-                  ? 'T'
-                  : 'NT'
-              : salesTypeData.type == 'SALES-O'
-                  ? isTax
-                      ? 'T'
-                      : 'NT'
-                  : 'T';
+      var taxType = salesTypeData.tax ? 'T' : 'NT';
       var salesRateTypeId = rateType.isNotEmpty ? rateType : '1';
       var saleAccountId = saleAccount > 0 ? saleAccount.toString() : '0';
       var checkKFC = isKFC ? '1' : '0';
@@ -904,7 +908,8 @@ class _SaleState extends State<Sale> {
             'roundOff': roundOff,
             'billType': order.billType,
             'returnNo': returnBillId,
-            'returnAmount': returnAmount
+            'returnAmount': returnAmount,
+            'otherAmount': _otherAmountTotal(order.otherAmountData)
           }) +
           ']';
 
@@ -1075,19 +1080,7 @@ class _SaleState extends State<Sale> {
       var otherAmount = json.encode(order.otherAmountData);
       var saleFormId = salesTypeData.id;
       var saleFormType = salesTypeData.type;
-      var taxType = salesTypeData.type == 'SALES-ES'
-          ? isTax
-              ? 'T'
-              : 'NT'
-          : salesTypeData.type == 'SALES-Q'
-              ? isTax
-                  ? 'T'
-                  : 'NT'
-              : salesTypeData.type == 'SALES-O'
-                  ? isTax
-                      ? 'T'
-                      : 'NT'
-                  : 'T';
+      var taxType = salesTypeData.tax ? 'T' : 'NT';
       var salesRateTypeId = rateType.isNotEmpty ? rateType : '1';
       var saleAccountId = saleAccount > 0 ? saleAccount.toString() : '0';
       var checkKFC = isKFC ? '1' : '0';
@@ -1164,7 +1157,8 @@ class _SaleState extends State<Sale> {
             'roundOff': roundOff,
             'billType': order.billType,
             'returnNo': returnBillId,
-            'returnAmount': returnAmount
+            'returnAmount': returnAmount,
+            'otherAmount': _otherAmountTotal(order.otherAmountData)
           }) +
           ']';
 
@@ -1312,13 +1306,9 @@ class _SaleState extends State<Sale> {
           salesTypeData =
               isCustomForm ? salesTypeDisplay[index] : salesTypeList[index];
           previewData = true;
-          taxable = salesTypeData != null
-              ? salesTypeData.type == 'SALES-ES'
-                  ? false
-                  : true
-              : taxable;
-          rateTypeItem = rateTypeList
-              .firstWhere((element) => element.name == salesTypeData.rateType);
+          taxable = salesTypeData != null ? salesTypeData.tax : taxable;
+          rateTypeItem = rateTypeList.firstWhere((element) =>
+              element.name == salesTypeData.rateType.toUpperCase());
         });
       },
     );
@@ -1871,9 +1861,9 @@ class _SaleState extends State<Sale> {
                           },
                           style: ElevatedButton.styleFrom(
                               elevation: 0,
-                              primary: kPrimaryDarkColor,
-                              onPrimary: white,
-                              onSurface: grey),
+                              backgroundColor: kPrimaryDarkColor,
+                              foregroundColor: white,
+                              disabledBackgroundColor: grey),
                           child: Center(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -1905,9 +1895,9 @@ class _SaleState extends State<Sale> {
                           },
                           style: ElevatedButton.styleFrom(
                               elevation: 0,
-                              primary: kPrimaryDarkColor,
-                              onPrimary: white,
-                              onSurface: grey),
+                              backgroundColor: kPrimaryDarkColor,
+                              foregroundColor: white,
+                              disabledBackgroundColor: grey),
                           child: Center(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -2430,6 +2420,7 @@ class _SaleState extends State<Sale> {
 
   clearValue() {
     _quantityController.text = '';
+    _freeQuantityController.text = '';
     _rateController.text = '';
     _discountController.text = '';
     rateEdited = false;
@@ -2452,7 +2443,7 @@ class _SaleState extends State<Sale> {
     kfc = 0;
     unitValue = 1;
     _conversion = 0;
-    free = 0;
+    freeQty = 0;
     fUnitId = 0;
     fUnitValue = 0;
     cdPer = 0;
@@ -2472,6 +2463,7 @@ class _SaleState extends State<Sale> {
   }
 
   final TextEditingController _quantityController = TextEditingController();
+  final TextEditingController _freeQuantityController = TextEditingController();
   final TextEditingController _rateController = TextEditingController();
   final TextEditingController _discountController = TextEditingController();
   final TextEditingController _discountPercentController =
@@ -2499,7 +2491,7 @@ class _SaleState extends State<Sale> {
       kfc = 0,
       unitValue = 1,
       _conversion = 0,
-      free = 0,
+      freeQty = 0,
       fUnitValue = 0,
       cdPer = 0,
       cDisc = 0,
@@ -2531,6 +2523,8 @@ class _SaleState extends State<Sale> {
         saleRate = product.retailPrice;
       } else if (salesTypeData.rateType.toUpperCase() == 'WHOLESALE') {
         saleRate = product.wholeSalePrice;
+      } else if (salesTypeData.rateType.toUpperCase() == 'BRANCH') {
+        saleRate = product.branch;
       } else {
         saleRate = product.sellingPrice;
       }
@@ -2539,6 +2533,8 @@ class _SaleState extends State<Sale> {
         saleRate = product.retailPrice;
       } else if (rateTypeItem.name.toUpperCase() == 'WHOLESALE') {
         saleRate = product.wholeSalePrice;
+      } else if (rateTypeItem.name.toUpperCase() == 'BRANCH') {
+        saleRate = product.branch;
       } else {
         saleRate = product.sellingPrice;
       }
@@ -2550,7 +2546,7 @@ class _SaleState extends State<Sale> {
       rate = _conversion > 0 ? saleRate * _conversion : saleRate;
     }
     uniqueCode = product.productId;
-    List<UnitModel> unitList = [];
+    List<UnitModel> unitListData = [];
 
     calculate() {
       if (enableMULTIUNIT) {
@@ -2594,6 +2590,9 @@ class _SaleState extends State<Sale> {
       quantity = _quantityController.text.isNotEmpty
           ? double.tryParse(_quantityController.text)
           : 0;
+      freeQty = _freeQuantityController.text.isNotEmpty
+          ? double.tryParse(_freeQuantityController.text)
+          : 0;
       rRate = taxMethod == 'MINUS'
           ? cessOnNetAmount
               ? CommonService.getRound(
@@ -2627,17 +2626,15 @@ class _SaleState extends State<Sale> {
       gross = CommonService.getRound(decimal, ((rRate * quantity)));
       subTotal = CommonService.getRound(decimal, (gross - rDisc));
       if (taxP > 0) {
-        tax = CommonService.getRound(decimal, ((subTotal * taxP) / 100));
+        tax = CommonService.getRound(4, ((subTotal * taxP) / 100));
       }
       if (companyTaxMode == 'INDIA') {
-        kfc = isKFC
-            ? CommonService.getRound(decimal, ((subTotal * kfcP) / 100))
-            : 0;
+        kfc = isKFC ? CommonService.getRound(4, ((subTotal * kfcP) / 100)) : 0;
         double csPer = taxP / 2;
         iGST = 0;
-        csGST = CommonService.getRound(decimal, ((subTotal * csPer) / 100));
+        csGST = CommonService.getRound(4, ((subTotal * csPer) / 100));
       } else if (companyTaxMode == 'GULF') {
-        iGST = CommonService.getRound(decimal, ((subTotal * taxP) / 100));
+        iGST = CommonService.getRound(4, ((subTotal * taxP) / 100));
         csGST = 0;
         kfc = 0;
       } else {
@@ -2648,8 +2645,8 @@ class _SaleState extends State<Sale> {
       }
       if (cessOnNetAmount) {
         if (cessPer > 0) {
-          cess = CommonService.getRound(decimal, ((subTotal * cessPer) / 100));
-          adCess = CommonService.getRound(decimal, (quantity * adCessPer));
+          cess = CommonService.getRound(4, ((subTotal * cessPer) / 100));
+          adCess = CommonService.getRound(4, (quantity * adCessPer));
         } else {
           cess = 0;
           adCess = 0;
@@ -2828,7 +2825,7 @@ class _SaleState extends State<Sale> {
                                         rPRate: rPRate,
                                         barcode: barcode,
                                         expDate: expDate,
-                                        free: free,
+                                        free: freeQty,
                                         fUnitId: fUnitId,
                                         cdPer: cdPer,
                                         cDisc: cDisc,
@@ -2885,8 +2882,9 @@ class _SaleState extends State<Sale> {
                                 if (totalItem > 0) {
                                   double cartS = 0, cartQt = 0;
                                   for (var element in cartItem) {
-                                    if (element.itemId == product.itemId) {
-                                      cartQt += element.quantity;
+                                    if (element.uniqueCode ==
+                                        product.productId) {
+                                      cartQt += element.quantity + element.free;
                                       cartS = element.stock;
                                     }
                                   }
@@ -2915,6 +2913,66 @@ class _SaleState extends State<Sale> {
                         ),
                       )),
                       Visibility(
+                        visible: isFreeQty,
+                        child: Expanded(
+                            child: Padding(
+                          padding: const EdgeInsets.all(2.0),
+                          child: TextFormField(
+                            controller: _freeQuantityController,
+                            // autofocus: true,
+                            validator: (value) {
+                              if (outOfStock) {
+                                return 'No Stock';
+                              }
+                              return null;
+                            },
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                                  allow: true, replacementString: '.')
+                            ],
+                            decoration: const InputDecoration(
+                                labelText: 'Free', hintText: '0.0'),
+                            onChanged: (value) {
+                              if (value.isNotEmpty) {
+                                bool cartQ = false;
+                                setState(() {
+                                  if (totalItem > 0) {
+                                    double cartS = 0, cartQt = 0;
+                                    for (var element in cartItem) {
+                                      if (element.uniqueCode ==
+                                          product.productId) {
+                                        cartQt +=
+                                            element.quantity + element.free;
+                                        cartS = element.stock;
+                                      }
+                                    }
+                                    if (cartS > 0) {
+                                      if (cartS <
+                                          cartQt + double.tryParse(value)) {
+                                        cartQ = true;
+                                      }
+                                    }
+                                  }
+
+                                  outOfStock = negativeStock
+                                      ? false
+                                      : salesTypeData.stock
+                                          ? double.tryParse(value) >
+                                                  (product.quantity)
+                                              ? true
+                                              : cartQ
+                                                  ? true
+                                                  : false
+                                          : false;
+                                  calculate();
+                                });
+                              }
+                            },
+                          ),
+                        )),
+                      ),
+                      Visibility(
                         visible: enableMULTIUNIT,
                         child: Expanded(
                           child: Padding(
@@ -2924,7 +2982,7 @@ class _SaleState extends State<Sale> {
                               builder: (BuildContext context,
                                   AsyncSnapshot snapshot) {
                                 if (snapshot.hasData) {
-                                  unitList.clear();
+                                  unitListData.clear();
                                   for (var i = 0;
                                       i < snapshot.data.length;
                                       i++) {
@@ -2936,7 +2994,7 @@ class _SaleState extends State<Sale> {
                                             snapshot.data[i].conversion;
                                       }
                                     }
-                                    unitList.add(UnitModel(
+                                    unitListData.add(UnitModel(
                                         id: snapshot.data[i].id,
                                         itemId: snapshot.data[i].itemId,
                                         conversion: snapshot.data[i].conversion,
@@ -2946,7 +3004,8 @@ class _SaleState extends State<Sale> {
                                         unit: snapshot.data[i].unit));
                                   }
                                 }
-                                return snapshot.hasData
+                                return snapshot.data != null &&
+                                        snapshot.data.length > 0
                                     ? DropdownButton<String>(
                                         hint: Text(_dropDownUnit > 0
                                             ? UnitSettings.getUnitName(
@@ -2964,9 +3023,9 @@ class _SaleState extends State<Sale> {
                                           setState(() {
                                             _dropDownUnit = int.tryParse(value);
                                             for (var i = 0;
-                                                i < unitList.length;
+                                                i < unitListData.length;
                                                 i++) {
-                                              UnitModel _unit = unitList[i];
+                                              UnitModel _unit = unitListData[i];
                                               if (_unit.unit ==
                                                   int.tryParse(value)) {
                                                 _conversion = _unit.conversion;
@@ -2977,7 +3036,36 @@ class _SaleState extends State<Sale> {
                                           });
                                         },
                                       )
-                                    : Container();
+                                    : DropdownButton<String>(
+                                        hint: Text(_dropDownUnit > 0
+                                            ? UnitSettings.getUnitName(
+                                                _dropDownUnit)
+                                            : 'SKU'),
+                                        items: unitList
+                                            .map<DropdownMenuItem<String>>(
+                                                (item) {
+                                          return DropdownMenuItem<String>(
+                                            value: item.key.toString(),
+                                            child: Text(item.value),
+                                          );
+                                        }).toList(),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _dropDownUnit = int.tryParse(value);
+                                            // for (var i = 0;
+                                            //     i < unitListData.length;
+                                            //     i++) {
+                                            //   UnitModel _unit = unitListData[i];
+                                            //   if (_unit.unit ==
+                                            //       int.tryParse(value)) {
+                                            //     _conversion = _unit.conversion;
+                                            //     break;
+                                            //   }
+                                            // }
+                                            // calculate();
+                                          });
+                                        },
+                                      );
                               },
                             ),
                           ),
@@ -3062,7 +3150,9 @@ class _SaleState extends State<Sale> {
                                 ProductRating(
                                     id: 2,
                                     name: 'WsRate',
-                                    rate: product.wholeSalePrice)
+                                    rate: product.wholeSalePrice),
+                                ProductRating(
+                                    id: 3, name: 'Branch', rate: product.branch)
                               ];
                               showDialog(
                                   context: context,
@@ -3083,7 +3173,7 @@ class _SaleState extends State<Sale> {
                                             )
                                           : const Text('Select Rate'),
                                       content: SizedBox(
-                                        height: 200.0,
+                                        height: 250.0,
                                         width: 400.0,
                                         child: ListView.builder(
                                           shrinkWrap: true,
@@ -3129,7 +3219,7 @@ class _SaleState extends State<Sale> {
                                 color: blue,
                                 child: const Text(
                                   'Sold',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: white),
                                 ),
@@ -3200,8 +3290,10 @@ class _SaleState extends State<Sale> {
                           padding: const EdgeInsets.all(2.0),
                           child: TextField(
                             controller: _serialNoController,
-                            decoration:
-                                const InputDecoration(labelText: 'SerialNo'),
+                            decoration: InputDecoration(
+                                labelText: labelSerialNo.isNotEmpty
+                                    ? labelSerialNo
+                                    : 'SerialNo'),
                             onChanged: (value) {
                               setState(() {
                                 calculate();
@@ -4671,7 +4763,7 @@ class _SaleState extends State<Sale> {
             route: '',
             state: '',
             stateCode: '',
-            taxNumber: '');
+            taxNumber: information['gstno']);
         ledgerModel = cModel;
         ScopedModel.of<MainModel>(context).addCustomer(cModel);
         for (var product in particulars) {
@@ -4706,8 +4798,7 @@ class _SaleState extends State<Sale> {
               fUnitId: int.tryParse(product['Funit'].toString()),
               cdPer: 0, //product['']cdPer,
               cDisc: 0, //product['']cDisc,
-              net:
-                  double.tryParse(product['GrossValue'].toString()), //subTotal,
+              net: double.tryParse(product['Net'].toString()), //subTotal,
               cess: double.tryParse(product['cess'].toString()), //cess,
               total: double.tryParse(product['Total'].toString()), //total,
               profitPer: 0, //product['']profitPer,
@@ -4807,6 +4898,18 @@ class _SaleState extends State<Sale> {
       debugPrint(e.toString());
     }
   }
+}
+
+String _otherAmountTotal(var otherAmountData) {
+  var data = otherAmountData;
+  var a = data.fold(
+      0,
+      (t, e) =>
+          t +
+          double.parse(e['Symbol'] == '-'
+              ? (e['Amount'] * -1).toString()
+              : e['Amount'].toString()));
+  return a.toString();
 }
 
 class ProductRating {

@@ -34,10 +34,16 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      var response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'dashboard/Total/$dataBase/${Uri.encodeComponent(sType).toString()}/$sDate/$eDate/$branch');
+      var response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'dashboard/Total/$dataBase',
+          queryParameters: {
+            'statementType': sType,
+            'sDate': sDate,
+            'eDate': eDate,
+            'branch': branch
+          });
 
       if (response.statusCode == 200) {
         Map<dynamic, dynamic> responseBodyOfTotal;
@@ -63,10 +69,16 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      var response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'dashboard/SummaryList/$dataBase/${Uri.encodeComponent(sType).toString()}/$sDate/$eDate/$branch');
+      var response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'dashboard/SummaryList/$dataBase',
+          queryParameters: {
+            'statementType': sType,
+            'sDate': sDate,
+            'eDate': eDate,
+            'branch': branch
+          });
 
       if (response.statusCode == 200) {
         return response.data;
@@ -90,10 +102,16 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      var response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'dashboard/SummaryList/$dataBase/${Uri.encodeComponent(sType).toString()}/$sDate/$eDate/$branch');
+      var response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'dashboard/SummaryList/$dataBase',
+          queryParameters: {
+            'statementType': sType,
+            'sDate': sDate,
+            'eDate': eDate,
+            'branch': branch
+          });
       if (response.statusCode == 200) {
         return response.data;
       } else {
@@ -115,10 +133,16 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      var response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'dashboard/dayStatement/$dataBase/${Uri.encodeComponent(sType).toString()}/$sDate/$eDate/$branch');
+      var response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'dashboard/dayStatement/$dataBase',
+          queryParameters: {
+            'statementType': sType,
+            'sDate': sDate,
+            'eDate': eDate,
+            'branch': branch
+          });
 
       if (response.statusCode == 200) {
         return response.data;
@@ -138,10 +162,16 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      var response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'dashboard/dayStatement/$dataBase/${Uri.encodeComponent(head).toString()}/$sDate/$eDate/$branch');
+      var response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'dashboard/dayStatement/$dataBase',
+          queryParameters: {
+            'statementType': head,
+            'sDate': sDate,
+            'eDate': eDate,
+            'branch': branch
+          });
 
       if (response.statusCode == 200) {
         return response.data;
@@ -166,7 +196,7 @@ class DioService {
       final response = await dio.post(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'comapny/event/$dataBase',
+              'company/event/$dataBase',
           data: json.encode(data),
           options: Options(headers: {'Content-Type': 'application/json'}));
 
@@ -236,11 +266,11 @@ class DioService {
           options: Options(headers: {'Content-Type': 'application/json'}));
 
       if (response.statusCode == 201) {
-        if (response.data.toString() == "1") {
-          ret = true;
-        } else {
-          ret = false;
-        }
+        // if (response.data.toString() == "1") {
+        ret = true;
+        // } else {
+        //   ret = false;
+        // }
       } else {
         ret = false;
         debugPrint('Unexpected error Occurred!');
@@ -280,6 +310,34 @@ class DioService {
       debugPrint(errorMessage.toString());
     }
     return ret;
+  }
+
+  Future<dynamic> spLedger(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    var _item = [];
+    try {
+      final response = await dio.post(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Ledger/sp_ledger/$dataBase',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        List<dynamic> _data = response.data;
+        _item = _data;
+      } else {
+        debugPrint('Failed to load data');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _item;
   }
 
   Future<bool> addProduct(var body) async {
@@ -688,7 +746,8 @@ class DioService {
       final response = await dio.delete(
         pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
-            'sale/delete/$dataBase/$entryNo/$type/$form',
+            'sale/delete/$dataBase',
+        queryParameters: {'entryNo': entryNo, 'type': type, 'form': form},
       );
       if (response.statusCode == 200) {
         ret = response.data > 0 ? true : false;
@@ -800,7 +859,8 @@ class DioService {
       final response = await dio.delete(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'InvoiceVoucher/delete/$dataBase/$id/$type',
+              'InvoiceVoucher/delete/$dataBase',
+          queryParameters: {'id': id, 'type': type},
           options: Options(headers: {'Content-Type': 'application/json'}));
 
       if (response.statusCode == 201) {
@@ -828,7 +888,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'sales_list/$dataBase/$statement');
+              'sales_list/$dataBase',
+          queryParameters: {'statementType': statement});
       List<dynamic> _items = [];
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
@@ -1047,7 +1108,7 @@ class DioService {
           options: Options(headers: {'Content-Type': 'application/json'}));
 
       if (response.statusCode == 200) {
-        List<dynamic> data = response.data['recordset'];
+        List<dynamic> data = response.data;
         return data;
       } else {
         debugPrint('Failed to load data');
@@ -1055,6 +1116,20 @@ class DioService {
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return e.response.statusCode == 400
+          ? [
+              {
+                'error': errorMessage,
+                'respond': e.response.statusCode.toString(),
+                'detials': e.response.data['originalError']['info']
+              }
+            ]
+          : [
+              {
+                'error': errorMessage,
+                'respond': e.response.statusCode.toString(),
+              }
+            ];
     }
   }
 
@@ -1092,7 +1167,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'inventory_report/EventDetails/$dataBase/$date');
+              'inventory_report/EventDetails/$dataBase',
+          queryParameters: {'date': date});
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
@@ -1144,7 +1220,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'users/find/$dataBase/${Uri.encodeComponent(name).toString()}');
+              'users/find/$dataBase',
+          queryParameters: {'name': name});
 
       if (response.statusCode == 200) {
         List<dynamic> jsonResponse = response.data;
@@ -1221,7 +1298,6 @@ class DioService {
   }
 
   Future<List<DataJson>> getSupplierListData(filter) async {
-    // /Ledger/getSupplierList/:dataBase/:name
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
@@ -1233,7 +1309,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'Ledger/getSupplierList/$dataBase/$filter');
+              'Ledger/getSupplierList/$dataBase',
+          queryParameters: {'name': filter});
       final data = response.data;
       if (data != null && data.isNotEmpty) {
         _items = DataJson.fromJsonList(data);
@@ -1258,8 +1335,8 @@ class DioService {
         pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
             statement +
-            '/$dataBase/$filter',
-        queryParameters: {"filter": filter},
+            '/$dataBase',
+        queryParameters: {"value": filter},
       );
       final data = response.data;
       if (data != null) {
@@ -1394,10 +1471,11 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<dynamic> _items = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'Ledger/getLedger/$dataBase/${Uri.encodeComponent(name).toString()}');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Ledger/getLedger/$dataBase',
+          queryParameters: {'name': name});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         _items = jsonResponse;
@@ -1421,10 +1499,18 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<dynamic> _items = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'listPage/$dataBase/$statement/$page/$location/$type/$date/$salesMan');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'listPage/$dataBase',
+          queryParameters: {
+            'statementType': statement,
+            'page': page,
+            'location': location,
+            'type': type,
+            'date': date,
+            'salesMan': salesMan
+          });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         _items = jsonResponse;
@@ -1448,10 +1534,16 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<dynamic> _items = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'damage_report/$dataBase/$statementType/$sDate/$eDate/$condition');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'damage_report/$dataBase',
+          queryParameters: {
+            'statementType': statementType,
+            'sDate': sDate,
+            'eDate': eDate,
+            'condition': condition
+          });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         _items = jsonResponse;
@@ -1474,10 +1566,11 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<dynamic> _items = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'Ledger/getLedgerByType/$dataBase/${Uri.encodeComponent(type).toString()}');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Ledger/getLedgerByType/$dataBase',
+          queryParameters: {'type': type});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         _items = jsonResponse;
@@ -1644,8 +1737,14 @@ class DioService {
         response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'Ledger/getLedgerByParent/$dataBase/$_groupId/$_areaId/$_routeId/$_salesman',
-          queryParameters: {"filter": filter},
+              'Ledger/getLedgerByParent/$dataBase',
+          queryParameters: {
+            'groupId': _groupId,
+            'areaId': _areaId,
+            'routeId': _routeId,
+            'salesman': _salesman,
+            'filter': filter
+          },
         );
       } else {
         response = await dio.get(
@@ -1762,9 +1861,17 @@ class DioService {
             _areaId = areaId > 1 ? areaId : 0,
             _routeId = routeId > 1 ? routeId : 0,
             _salesman = 0;
-        response = await dio.get(pref.getString('api' ?? '127.0.0.1:80/api/') +
-            apiV +
-            'Ledger/getLedgerByParent/$dataBase/$_groupId/$_areaId/$_routeId/$_salesman');
+        response = await dio.get(
+            pref.getString('api' ?? '127.0.0.1:80/api/') +
+                apiV +
+                'Ledger/getLedgerByParent/$dataBase',
+            queryParameters: {
+              'groupId': _groupId,
+              'areaId': _areaId,
+              'routeId': _routeId,
+              'salesman': _salesman,
+              'filter': ''
+            });
       } else {
         response = await dio.get(pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
@@ -1800,13 +1907,24 @@ class DioService {
             _areaId = areaId > 1 ? areaId : 0,
             _routeId = routeId > 1 ? routeId : 0,
             _salesman = 0;
-        response = await dio.get(pref.getString('api' ?? '127.0.0.1:80/api/') +
-            apiV +
-            'Ledger/getLedgerByParentLike/$dataBase/$_groupId/$_areaId/$_routeId/$_salesman/$like');
+        response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Ledger/getLedgerByParentLike/$dataBase',
+          queryParameters: {
+            'groupId': _groupId,
+            'areaId': _areaId,
+            'routeId': _routeId,
+            'salesman': _salesman,
+            'like': like
+          },
+        );
       } else {
-        response = await dio.get(pref.getString('api' ?? '127.0.0.1:80/api/') +
-            apiV +
-            'Ledger/getLedgerListLike/$dataBase/$like');
+        response = await dio.get(
+            pref.getString('api' ?? '127.0.0.1:80/api/') +
+                apiV +
+                'Ledger/getLedgerListLike/$dataBase',
+            queryParameters: {'name': like});
       }
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
@@ -1974,10 +2092,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'Ledger/getLedgerByType/' +
-              dataBase +
-              '/' +
-              Uri.encodeComponent(sType).toString());
+              'Ledger/getLedgerByType/$dataBase',
+          queryParameters: {'type': sType});
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         _items = List.from(data);
@@ -2029,13 +2145,39 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<Map<String, dynamic>> _items = [];
     try {
-      final response = await dio.post(
+      final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
               'inventory_report/ClosingReport/' +
               dataBase,
-          data: data,
-          options: Options(headers: {'Content-Type': 'application/json'}));
+          queryParameters: data);
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        _items = List.from(data);
+      } else {
+        debugPrint('Failed to load data');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<List<dynamic>> fetchClosingReportAll(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    List<dynamic> _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'inventory_report/ClosingReportAll/' +
+              dataBase,
+          queryParameters: data);
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         _items = List.from(data);
@@ -2234,7 +2376,7 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     if (locationList.isNotEmpty) {
       location = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first
           .toString();
@@ -2250,7 +2392,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'stock/getStockSaleListByBarcode/$dataBase/$id/$location');
+              'stock/getStockSaleListByBarcode/$dataBase',
+          queryParameters: {'Id': id, 'location': location});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {
@@ -2274,7 +2417,7 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     if (locationList.isNotEmpty) {
       location = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first
           .toString();
@@ -2293,7 +2436,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'stock/getStockSaleList/$dataBase/$id/$location/$date');
+              'stock/getStockSaleList/$dataBase',
+          queryParameters: {'id': id, 'location': location, 'date': date});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {
@@ -2323,7 +2467,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'stock/getStockSaleList/$dataBase/$id/$location/$date');
+              'stock/getStockSaleList/$dataBase',
+          queryParameters: {'id': id, 'location': location, 'date': date});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {
@@ -2347,7 +2492,7 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     if (locationList.isNotEmpty) {
       location = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first
           .toString();
@@ -2362,7 +2507,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'stock/getStockVariant/$dataBase/$id/$location');
+              'stock/getStockVariant/$dataBase',
+          queryParameters: {'Id': id, 'location': location});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {
@@ -2386,7 +2532,7 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     if (locationList.isNotEmpty) {
       location = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first
           .toString();
@@ -2401,7 +2547,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'stock/getStockVariant/$dataBase/$id/$location');
+              'stock/getStockVariant/$dataBase',
+          queryParameters: {'Id': id, 'location': location});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {
@@ -2425,7 +2572,7 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     if (locationList.isNotEmpty) {
       location = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first
           .toString();
@@ -2440,7 +2587,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'stock/getStockItem/$dataBase/$id/$location');
+              'stock/getStockItem/$dataBase',
+          queryParameters: {'Id': id, 'location': location});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {
@@ -2464,7 +2612,7 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     if (locationList.isNotEmpty) {
       location = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first
           .toString();
@@ -2479,7 +2627,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              '/stock/selectStockById/$dataBase/$id/$location');
+              '/stock/selectStockById/$dataBase',
+          queryParameters: {'id': id, 'location': location});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {
@@ -2689,7 +2838,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'sale/previous_bills/$dataBase/$ledger');
+              'sale/previous_bills/$dataBase',
+          queryParameters: {'id': ledger});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -2715,7 +2865,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'sale/find/$dataBase/$id/$type');
+              'sale/find/$dataBase',
+          queryParameters: {'id': id, 'type': type});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -2793,7 +2944,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'Product/getProductListPurchaseLike/$dataBase/$name');
+              'Product/getProductListPurchaseLike/$dataBase',
+          queryParameters: {'name': name});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -2866,10 +3018,16 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'dashboard/Expense/$dataBase/${Uri.encodeComponent(sType).toString()}/$sDate/$eDate/$branch');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'dashboard/Expense/$dataBase',
+          queryParameters: {
+            'statementType': sType,
+            'sDate': sDate,
+            'eDate': eDate,
+            'branch': branch
+          });
 
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
@@ -2890,10 +3048,16 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'dashboard/getExpenseLedger/$dataBase/$sDate/$eDate/$name/$branch');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'dashboard/getExpenseLedger/$dataBase',
+          queryParameters: {
+            'sDate': sDate,
+            'eDate': eDate,
+            'name': name,
+            'branch': branch
+          });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         return jsonResponse;
@@ -2917,7 +3081,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'dashboard/getCashBankLedger/$dataBase/$sDate/$eDate/$branch');
+              'dashboard/getCashBankLedger/$dataBase',
+          queryParameters: {'sDate': sDate, 'eDate': eDate, 'branch': branch});
 
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
@@ -2940,10 +3105,11 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<ChartPayRec> data = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'dashboard/getReceivableAndPayable/$dataBase/$sDate/$eDate/$branch');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'dashboard/getReceivableAndPayable/$dataBase',
+          queryParameters: {'sDate': sDate, 'eDate': eDate, 'branch': branch});
 
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
@@ -2968,10 +3134,11 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     dynamic _items = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          '/purchase/find/$dataBase/$id/${Uri.encodeComponent(type).toString()}');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              '/purchase/find/$dataBase',
+          queryParameters: {'id': id, 'statement': type});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -2997,7 +3164,8 @@ class DioService {
       final response = await dio.delete(
         pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
-            'purchase/delete/$dataBase/$entryNo/$type',
+            'purchase/delete/$dataBase',
+        queryParameters: {'entryNo': entryNo, 'type': type},
       );
       if (response.statusCode == 200) {
         ret = response.data['returnValue'] > 0 ? true : false;
@@ -3020,10 +3188,11 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     dynamic _items = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          '/Voucher/find/$dataBase/$id/${Uri.encodeComponent(type).toString()}');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              '/Voucher/find/$dataBase',
+          queryParameters: {'id': id, 'type': type});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -3046,10 +3215,11 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     dynamic _items = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          '/InvoiceVoucher/find/$dataBase/$id/${Uri.encodeComponent(type).toString()}');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              '/InvoiceVoucher/find/$dataBase',
+          queryParameters: {'id': id, 'type': type});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         _items = jsonResponse;
@@ -3100,7 +3270,8 @@ class DioService {
       final response = await dio.delete(
         pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
-            'stock/delete/$dataBase/$entryNo/$type',
+            'stock/delete/$dataBase',
+        queryParameters: {'entryNo': entryNo, 'type': type},
       );
       if (response.statusCode == 200) {
         ret = response.data['returnValue'] > 0 ? true : false;
@@ -3123,13 +3294,11 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<Map<String, dynamic>> _items = [];
     try {
-      //localhost:8090/api/v7/inventory_report/QuickSearch/csharp/cable
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'inventory_report/QuickSearch/' +
-              dataBase +
-              '/${Uri.encodeComponent(value).toString()}');
+              'inventory_report/QuickSearch/$dataBase',
+          queryParameters: {'name': value});
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
@@ -3155,7 +3324,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'sale/getProductTracking/$dataBase/$id/$ledger');
+              'sale/getProductTracking/$dataBase',
+          queryParameters: {'id': id, 'ledger': ledger});
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;

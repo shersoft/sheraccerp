@@ -46,6 +46,9 @@ class _ReportViewState extends State<ReportView> {
   ];
 
   List<String> tableColumn = [];
+  List<String> tableColumnIncome = [];
+  List<String> tableColumnExpense = [];
+  List<String> tableColumnTotal = [];
 
   @override
   void initState() {
@@ -1963,94 +1966,607 @@ class _ReportViewState extends State<ReportView> {
   }
 
   reportViewClosingReport() {
-    var dataJson = '[' +
-        json.encode({
-          'statementType': widget.statement.isEmpty ? '' : widget.statement,
-          'sDate': widget.sDate.isEmpty ? '' : widget.sDate,
-          'eDate': widget.eDate.isEmpty ? '' : widget.eDate,
-          'location': location[0]['id'].toString()
-        }) +
-        ']';
+    var dataJson = {
+      'statementType': widget.statement.isEmpty ? '' : widget.statement,
+      'sDate': widget.sDate.isEmpty ? '' : widget.sDate,
+      'eDate': widget.eDate.isEmpty ? '' : widget.eDate,
+      'location': location[0]['id'].toString()
+    };
     return FutureBuilder<List<dynamic>>(
-      future: api.fetchClosingReport(dataJson),
+      future: widget.statement == 'AsperMart'
+          ? api.fetchClosingReportAll(dataJson)
+          : api.fetchClosingReport(dataJson),
       builder: (ctx, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
             var data = snapshot.data;
             _data = data;
-            tableColumn = data[0].keys.toList();
-            return Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                controller: controller,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Center(
-                        child: Text('Date : From ' +
-                            DateUtil.dateDMY(widget.sDate) +
-                            ' To ' +
-                            DateUtil.dateDMY(widget.eDate))),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        columnSpacing: 12,
-                        dataRowHeight: 20,
-                        dividerThickness: 1,
-                        headingRowHeight: 30,
-                        columns: [
-                          for (int i = 0; i < tableColumn.length; i++)
-                            DataColumn(
-                              label: Align(
-                                alignment: Alignment.center,
-                                child: Text(
-                                  tableColumn[i],
-                                  style: const TextStyle(
-                                      // color: Colors.black,
-                                      fontWeight: FontWeight.bold),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                        ],
-                        rows: data
-                            .map(
-                              (values) => DataRow(
-                                cells: [
-                                  for (int i = 0; i < values.length; i++)
-                                    DataCell(
-                                      Align(
-                                        alignment: ComSettings.oKNumeric(
-                                          values[tableColumn[i]] != null
-                                              ? values[tableColumn[i]]
-                                                  .toString()
-                                              : '',
-                                        )
-                                            ? Alignment.centerRight
-                                            : Alignment.centerLeft,
-                                        child: Text(
-                                          values[tableColumn[i]] != null
-                                              ? values[tableColumn[i]]
-                                                  .toString()
-                                              : '',
-                                          softWrap: true,
-                                          overflow: TextOverflow.ellipsis,
-                                          //style: TextStyle(fontSize: 6),
-                                        ),
+            List<dynamic> incomeData = [];
+            List<dynamic> expenseData = [];
+            List<dynamic> totalData = [];
+            List<double> incomeListTotal = [];
+            List<dynamic> incomeCollection = [];
+            List<double> expenseListTotal = [];
+            if (widget.statement == 'AsperMart') {
+              List<dynamic> _incomeData = data[7];
+              if (_incomeData.isNotEmpty) {
+                List<double> listTotal = [];
+                Map<String, dynamic> m = {"Particular": "Opening Balance"};
+                m.addAll(_incomeData[0]);
+                incomeData.add(m);
+                Map<String, dynamic> m1 = {"Particular": "Collection"};
+                m1.addAll(_incomeData[1]);
+                incomeData.add(m1);
+                List<String> _tempColumnTotal = _incomeData[0].keys.toList();
+                for (int dataIndex = 0;
+                    dataIndex < _incomeData.length;
+                    dataIndex++) {
+                  for (int i = 0; i < _tempColumnTotal.length; i++) {
+                    Map _map = _incomeData[dataIndex];
+                    var aa = _map[_tempColumnTotal[i].toString()] ?? 0;
+                    double a2 = double.tryParse(aa.toString());
+                    if (dataIndex == 0) {
+                      listTotal.add(a2);
+                    } else {
+                      double oldItem = listTotal.elementAt(i);
+                      listTotal.removeAt(i);
+                      listTotal.insert(i, oldItem + a2);
+                    }
+                  }
+                }
+                Map<String, dynamic> mTotal = {"Particular": "Total"};
+                int index = 0;
+                for (var _n in _tempColumnTotal) {
+                  mTotal[_n] = listTotal[index];
+                  index++;
+                }
+                incomeData.add(mTotal);
+
+                incomeCollection.add(incomeData.elementAt(1));
+                incomeListTotal = listTotal;
+              }
+              List<dynamic> _expenseData = data[8];
+              if (_expenseData.isNotEmpty) {
+                List<double> listTotal = [];
+                List<String> _tempColumnTotal = _expenseData[0].keys.toList();
+                for (int dataIndex = 0;
+                    dataIndex < _expenseData.length;
+                    dataIndex++) {
+                  for (int i = 1; i < _tempColumnTotal.length; i++) {
+                    Map _map = _expenseData[dataIndex];
+                    var aa = _map[_tempColumnTotal[i].toString()] ?? 0;
+                    double a2 = double.tryParse(aa.toString());
+                    if (dataIndex == 0) {
+                      listTotal.add(a2);
+                    } else {
+                      double oldItem = listTotal.elementAt(i - 1);
+                      listTotal.removeAt(i - 1);
+                      listTotal.insert(i - 1, oldItem + a2);
+                    }
+                  }
+                }
+                Map<String, dynamic> mTotal = {"LedName": "Total"};
+
+                for (int index = 1; index < _tempColumnTotal.length; index++) {
+                  var _n = _tempColumnTotal[index];
+                  mTotal[_n] = listTotal[index - 1];
+                }
+                expenseData = _expenseData;
+                expenseData.add(mTotal);
+
+                expenseListTotal = listTotal;
+              }
+              List<dynamic> _totalData = data[9];
+              if (_totalData.isNotEmpty) {
+                //todaycoll = incomecolletion row amount - exptotal
+                //total = income total - expense total
+                List<String> _tempColumnTotal = _totalData[0].keys.toList();
+                for (int dataIndex = 0;
+                    dataIndex < _totalData.length;
+                    dataIndex++) {
+                  Map _map = _totalData[dataIndex];
+                  var a = _map;
+
+                  if (dataIndex == 0) {
+                    Map<String, dynamic> mTotal = {
+                      "Particulars": "Today Collection"
+                    };
+                    for (int index = 1;
+                        index < _tempColumnTotal.length;
+                        index++) {
+                      var _n = _tempColumnTotal[index];
+                      Map b0 = incomeCollection[0];
+                      double b1 = b0[_n] != null
+                          ? double.tryParse(b0[_n].toString())
+                          : 0;
+                      double b2 = expenseListTotal[index - 1];
+                      mTotal[_n] = b1 - b2;
+                    }
+                    totalData.add(mTotal);
+                  } else {
+                    Map<String, dynamic> mTotal = {
+                      "Particulars": "Total Balance"
+                    };
+                    for (int index = 1;
+                        index < _tempColumnTotal.length;
+                        index++) {
+                      var _n = _tempColumnTotal[index];
+                      mTotal[_n] = incomeListTotal[index - 1] -
+                          expenseListTotal[index - 1];
+                    }
+                    totalData.add(mTotal);
+                  }
+                }
+                // totalData = _totalData;
+              }
+              tableColumnIncome =
+                  incomeData.isEmpty ? [] : incomeData[0].keys.toList();
+              tableColumnExpense =
+                  expenseData.isEmpty ? [] : expenseData[0].keys.toList();
+              tableColumnTotal =
+                  totalData.isEmpty ? [] : totalData[0].keys.toList();
+            } else {
+              tableColumn = data[0].keys.toList();
+            }
+            return widget.statement == 'AsperMart'
+                ? Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      controller: controller,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
+                            child: Text(
+                                widget.statement +
+                                    ' Closing' +
+                                    ' Date : From ' +
+                                    DateUtil.dateDMY(widget.sDate) +
+                                    ' To ' +
+                                    DateUtil.dateDMY(widget.eDate),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                          SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Column(
+                                children: [
+                                  DataTable(
+                                    border: TableBorder.all(
+                                        width: 1.0,
+                                        color: black,
+                                        style: BorderStyle.solid),
+                                    columnSpacing: 12,
+                                    dataRowHeight: 20,
+                                    dividerThickness: 1,
+                                    headingRowHeight: 1,
+                                    columns: const [
+                                      DataColumn(
+                                        label: Text(''),
                                       ),
-                                    ),
+                                      DataColumn(
+                                        label: Text(''),
+                                      ),
+                                      DataColumn(
+                                        label: Text(''),
+                                      ),
+                                      DataColumn(
+                                        label: Text(''),
+                                      ),
+                                      DataColumn(
+                                        label: Text(''),
+                                      ),
+                                    ],
+                                    rows: [
+                                      DataRow(cells: [
+                                        const DataCell(Text('Opening Balance',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold))),
+                                        DataCell(Text(
+                                          data[0][0]['Amount'] == null
+                                              ? ''
+                                              : data[0][0]['Amount'].toString(),
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        )),
+                                        const DataCell(Text(' ')),
+                                        const DataCell(Text('Cash Bank',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold))),
+                                        DataCell(Text(
+                                            data[1][0]['Amount'] == null
+                                                ? ''
+                                                : data[1][0]['Amount']
+                                                    .toString(),
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold))),
+                                      ]),
+                                      const DataRow(cells: [
+                                        DataCell(Text('Sales',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold))),
+                                        DataCell(Text('Purchase',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold))),
+                                        DataCell(Text('Stock',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold))),
+                                        DataCell(Text('Receivable',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold))),
+                                        DataCell(Text('Payable',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold))),
+                                      ]),
+                                      DataRow(cells: [
+                                        DataCell(Text(
+                                            data[2][0][''] == null
+                                                ? ''
+                                                : data[2][0][''].toString(),
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold))),
+                                        DataCell(Text(
+                                            data[3][0]['Amount'] == null
+                                                ? ''
+                                                : data[3][0]['Amount']
+                                                    .toString(),
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold))),
+                                        DataCell(Text(
+                                            data[4][0][''] == null
+                                                ? ''
+                                                : data[4][0][''].toString(),
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold))),
+                                        DataCell(Text(
+                                            data[5][0]['Amount'] == null
+                                                ? ''
+                                                : data[5][0]['Amount']
+                                                    .toString(),
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold))),
+                                        DataCell(Text(
+                                            data[6][0]['Amount'] == null
+                                                ? ''
+                                                : data[6][0]['Amount']
+                                                    .toString(),
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold))),
+                                      ]),
+                                    ],
+                                  ),
+                                  const SizedBox(
+                                      child: Center(
+                                          child: Text('INCOME',
+                                              style: TextStyle(
+                                                  backgroundColor: blue,
+                                                  fontWeight:
+                                                      FontWeight.bold))),
+                                      height: 30,
+                                      width: 350),
+                                  tableColumnIncome.isEmpty
+                                      ? const Center()
+                                      : DataTable(
+                                          border: TableBorder.all(
+                                              width: 1.0,
+                                              color: black,
+                                              style: BorderStyle.solid),
+                                          columnSpacing: 12,
+                                          dataRowHeight: 20,
+                                          dividerThickness: 1,
+                                          headingRowHeight: 30,
+                                          columns: [
+                                            for (int i = 0;
+                                                i < tableColumnIncome.length;
+                                                i++)
+                                              DataColumn(
+                                                label: Align(
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    tableColumnIncome[i],
+                                                    style: const TextStyle(
+                                                        // color: Colors.black,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                          rows: incomeData
+                                              .map(
+                                                (values) => DataRow(
+                                                  cells: [
+                                                    for (int i = 0;
+                                                        i < values.length;
+                                                        i++)
+                                                      DataCell(
+                                                        Text(
+                                                          values[tableColumnIncome[
+                                                                      i]] !=
+                                                                  null
+                                                              ? values[
+                                                                      tableColumnIncome[
+                                                                          i]]
+                                                                  .toString()
+                                                              : '',
+                                                          softWrap: true,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          //style: TextStyle(fontSize: 6),
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              )
+                                              .toList(),
+                                        ),
+                                  const SizedBox(
+                                      child: Center(
+                                          child: Text('EXPENSE',
+                                              style: TextStyle(
+                                                  backgroundColor: blue,
+                                                  fontWeight:
+                                                      FontWeight.bold))),
+                                      height: 30,
+                                      width: 350),
+                                  tableColumnExpense.isEmpty
+                                      ? const Center()
+                                      : DataTable(
+                                          border: TableBorder.all(
+                                              width: 1.0,
+                                              color: black,
+                                              style: BorderStyle.solid),
+                                          columnSpacing: 12,
+                                          dataRowHeight: 20,
+                                          dividerThickness: 1,
+                                          headingRowHeight: 30,
+                                          columns: [
+                                            for (int i = 0;
+                                                i < tableColumnExpense.length;
+                                                i++)
+                                              DataColumn(
+                                                label: Align(
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    tableColumnExpense[i],
+                                                    style: const TextStyle(
+                                                        // color: Colors.black,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                          rows: expenseData
+                                              .map(
+                                                (values) => DataRow(
+                                                  cells: [
+                                                    for (int i = 0;
+                                                        i < values.length;
+                                                        i++)
+                                                      DataCell(
+                                                        Text(
+                                                          values[tableColumnExpense[
+                                                                      i]] !=
+                                                                  null
+                                                              ? values[
+                                                                      tableColumnExpense[
+                                                                          i]]
+                                                                  .toString()
+                                                              : '',
+                                                          softWrap: true,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          //style: TextStyle(fontSize: 6),
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              )
+                                              .toList(),
+                                        ),
+                                  const SizedBox(
+                                      child: Center(
+                                          child: Text('TOTAL',
+                                              style: TextStyle(
+                                                  backgroundColor: blue,
+                                                  fontWeight:
+                                                      FontWeight.bold))),
+                                      height: 30,
+                                      width: 350),
+                                  tableColumnTotal.isEmpty
+                                      ? const Center()
+                                      : DataTable(
+                                          border: TableBorder.all(
+                                              width: 1.0,
+                                              color: black,
+                                              style: BorderStyle.solid),
+                                          columnSpacing: 12,
+                                          dataRowHeight: 20,
+                                          dividerThickness: 1,
+                                          headingRowHeight: 30,
+                                          columns: [
+                                            for (int i = 0;
+                                                i < tableColumnTotal.length;
+                                                i++)
+                                              DataColumn(
+                                                label: Align(
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    tableColumnTotal[i],
+                                                    style: const TextStyle(
+                                                        // color: Colors.black,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                          rows: totalData
+                                              .map(
+                                                (values) => DataRow(
+                                                  cells: [
+                                                    for (int i = 0;
+                                                        i < values.length;
+                                                        i++)
+                                                      DataCell(
+                                                        Text(
+                                                          values[tableColumnTotal[
+                                                                      i]] !=
+                                                                  null
+                                                              ? values[
+                                                                      tableColumnTotal[
+                                                                          i]]
+                                                                  .toString()
+                                                              : '',
+                                                          softWrap: true,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          //style: TextStyle(fontSize: 6),
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              )
+                                              .toList(),
+                                        ),
+                                  const SizedBox(
+                                      child: Center(
+                                          child: Text('',
+                                              style: TextStyle(
+                                                  backgroundColor: blue,
+                                                  fontWeight:
+                                                      FontWeight.bold))),
+                                      height: 30,
+                                      width: 350),
+                                  DataTable(
+                                    border: TableBorder.all(
+                                        width: 0.5,
+                                        color: grey,
+                                        style: BorderStyle.solid),
+                                    columnSpacing: 12,
+                                    dataRowHeight: 20,
+                                    dividerThickness: 1,
+                                    headingRowHeight: 1,
+                                    columns: const [
+                                      DataColumn(
+                                        label: Text(''),
+                                      ),
+                                      DataColumn(
+                                        label: Text(''),
+                                      ),
+                                    ],
+                                    rows: [
+                                      const DataRow(cells: [
+                                        DataCell(Text('Cash in Hand',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold))),
+                                        DataCell(Text('Bank In Hand',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold))),
+                                      ]),
+                                      DataRow(cells: [
+                                        DataCell(Text(
+                                          data[10][0]['Amount'] == null
+                                              ? ''
+                                              : data[10][0]['Amount']
+                                                  .toString(),
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        )),
+                                        DataCell(Text(
+                                            data[11][0]['Amount'] == null
+                                                ? ''
+                                                : data[11][0]['Amount']
+                                                    .toString(),
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold))),
+                                      ]),
+                                    ],
+                                  ),
                                 ],
-                              ),
-                            )
-                            .toList(),
+                              )),
+                          // SizedBox(height: 500),
+                        ],
                       ),
                     ),
-                    // SizedBox(height: 500),
-                  ],
-                ),
-              ),
-            );
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      controller: controller,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
+                              child: Text('Date : From ' +
+                                  DateUtil.dateDMY(widget.sDate) +
+                                  ' To ' +
+                                  DateUtil.dateDMY(widget.eDate))),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: DataTable(
+                              columnSpacing: 12,
+                              dataRowHeight: 20,
+                              dividerThickness: 1,
+                              headingRowHeight: 30,
+                              columns: [
+                                for (int i = 0; i < tableColumn.length; i++)
+                                  DataColumn(
+                                    label: Align(
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        tableColumn[i],
+                                        style: const TextStyle(
+                                            // color: Colors.black,
+                                            fontWeight: FontWeight.bold),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                              rows: data
+                                  .map(
+                                    (values) => DataRow(
+                                      cells: [
+                                        for (int i = 0; i < values.length; i++)
+                                          DataCell(
+                                            Align(
+                                              alignment: ComSettings.oKNumeric(
+                                                values[tableColumn[i]] != null
+                                                    ? values[tableColumn[i]]
+                                                        .toString()
+                                                    : '',
+                                              )
+                                                  ? Alignment.centerRight
+                                                  : Alignment.centerLeft,
+                                              child: Text(
+                                                values[tableColumn[i]] != null
+                                                    ? values[tableColumn[i]]
+                                                        .toString()
+                                                    : '',
+                                                softWrap: true,
+                                                overflow: TextOverflow.ellipsis,
+                                                //style: TextStyle(fontSize: 6),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ),
+                          // SizedBox(height: 500),
+                        ],
+                      ),
+                    ),
+                  );
           } else {
             return Center(
               child: Column(

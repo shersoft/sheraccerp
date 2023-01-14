@@ -40,7 +40,6 @@ class _StockReportState extends State<StockReport> {
       rack,
       unit,
       taxGroup;
-  var condition;
   final controller = ScrollController();
   double offset = 0;
   List<dynamic> resultData = [];
@@ -54,7 +53,7 @@ class _StockReportState extends State<StockReport> {
     fromDate = DateFormat('dd-MM-yyyy').format(now);
     toDate = DateFormat('dd-MM-yyyy').format(now);
     dropdownValueStockMinus = minusStockList.first;
-    location = DataJson(id: 1, name: 'SHOP');
+    location = DataJson(id: 1, name: defaultLocation);
   }
 
   @override
@@ -171,33 +170,41 @@ class _StockReportState extends State<StockReport> {
   reportView(title) {
     var statementType =
         title == 'Stock' ? 'SimpleSummery' : 'StockLedger_Summery';
-    condition = '';
+    var _location = '',
+        _itemCode = '',
+        _itemName = '',
+        _supplier = '',
+        _mfr = '',
+        _category = '',
+        _subCategory = '',
+        _rack = '',
+        _taxGroup = '';
     if (location != null) {
-      condition += " and location='" + location.id.toString() + "'";
+      _location = location.id.toString() ?? '0';
     }
     if (itemId != null) {
-      condition += " and itemId='" + itemId.id.toString() + "'";
+      _itemCode = itemId.id.toString() ?? '';
     }
     if (itemName != null) {
-      condition += " and itemName='" + itemName.name.toString() + "'";
+      _itemName = itemName.name.toString() ?? '';
     }
     if (supplier != null) {
-      condition += " and supplier='" + supplier.id.toString() + "'";
+      _supplier = supplier.id.toString() ?? '';
     }
     if (mfr != null) {
-      condition += " and mfr='" + mfr.id.toString() + "'";
+      _mfr = mfr.id.toString() ?? '';
     }
     if (category != null) {
-      condition += " and category='" + category.id.toString() + "'";
+      _category = category.id.toString() ?? '';
     }
     if (subCategory != null) {
-      condition += " and subCategory='" + subCategory.id.toString() + "'";
+      _subCategory = subCategory.id.toString() ?? '';
     }
     if (rack != null) {
-      condition += " and rack='" + rack.id.toString() + "'";
+      _rack = rack.id.toString() ?? '';
     }
     if (taxGroup != null) {
-      condition += " and taxGroup='" + taxGroup.id.toString() + "'";
+      _taxGroup = taxGroup.id.toString() ?? '';
     }
     var dataJson = title == 'Stock'
         ? '[' +
@@ -207,16 +214,39 @@ class _StockReportState extends State<StockReport> {
               'minus': dropdownValueStockMinus != null
                   ? dropdownValueStockMinus.id.toString()
                   : '',
-              'condition': condition ?? '',
-              'unitId': unit != null ? unit.id.toString() : null
+              "sDate": fromDate,
+              "eDate": toDate,
+              "location": _location,
+              "itemCode": _itemCode,
+              "itemName": _itemName,
+              "mfr": _mfr,
+              "category": _category,
+              "subCategory": _subCategory,
+              "rack": _rack,
+              "taxGroup": _taxGroup,
+              "supplier": _supplier,
+              'unitId': unit != null ? unit.id.toString() : '0',
             }) +
             ']'
         : '[' +
             json.encode({
               'statementType': statementType.isEmpty ? '' : statementType,
-              'sDate': fromDate.isEmpty ? '' : formatYMD(fromDate),
-              'eDate': toDate.isEmpty ? '' : formatYMD(toDate),
-              'condition': condition ?? ''
+              'date': fromDate.isEmpty ? '' : formatYMD(fromDate),
+              'minus': dropdownValueStockMinus != null
+                  ? dropdownValueStockMinus.id.toString()
+                  : '',
+              "sDate": fromDate,
+              "eDate": toDate,
+              "location": _location,
+              "itemCode": _itemCode,
+              "itemName": _itemName,
+              "mfr": _mfr,
+              "category": _category,
+              "subCategory": _subCategory,
+              "rack": _rack,
+              "taxGroup": _taxGroup,
+              "supplier": _supplier,
+              'unitId': unit != null ? unit.id.toString() : 0,
             }) +
             ']';
 

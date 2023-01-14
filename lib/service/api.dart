@@ -56,10 +56,11 @@ Future<ApiResponse> getFirmList(String customerCode) async {
 
   SharedPreferences pref = await SharedPreferences.getInstance();
   try {
-    final response = await dio.get(pref
-            .getString('api' ?? '127.0.0.1:80/api/') +
-        apiV +
-        'company/getFirmList/${Uri.encodeComponent(customerCode).toString()}');
+    final response = await dio.get(
+        pref.getString('api' ?? '127.0.0.1:80/api/') +
+            apiV +
+            'companyGetFirmList',
+        queryParameters: {'customerCode': customerCode});
 
     switch (response.statusCode) {
       case 200:
@@ -96,10 +97,9 @@ Future<ApiResponse> authenticateCompany(
 
   SharedPreferences pref = await SharedPreferences.getInstance();
   try {
-    final response = await dio.get(pref
-            .getString('api' ?? '127.0.0.1:80/api/') +
-        apiV +
-        'company/Login/${Uri.encodeComponent(username).toString()}/${Uri.encodeComponent(password).toString()}');
+    final response = await dio.get(
+        pref.getString('api' ?? '127.0.0.1:80/api/') + apiV + 'companyLogin',
+        queryParameters: {'username': username, 'password': password});
 
     switch (response.statusCode) {
       case 200:
@@ -136,14 +136,13 @@ Future<ApiResponse> authenticateUser(
     final response = await dio.get(
         pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
-            'companyUser/Login/' +
-            Uri.encodeComponent(username).toString() +
-            '/' +
-            Uri.encodeComponent(password).toString() +
-            '/' +
-            regId +
-            '/' +
-            Uri.encodeComponent(deviceId).toString());
+            'companyUserLogin',
+        queryParameters: {
+          'username': username,
+          'password': password,
+          'regId': regId,
+          'deviceId': deviceId
+        });
 
     switch (response.statusCode) {
       case 200:

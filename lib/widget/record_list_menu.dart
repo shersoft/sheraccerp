@@ -4,8 +4,8 @@ import 'package:sheraccerp/screens/about_shersoft.dart';
 import 'package:sheraccerp/screens/report_view.dart';
 import 'package:sheraccerp/shared/constants.dart';
 
-class OtherReportMenu extends StatelessWidget {
-  const OtherReportMenu({Key key}) : super(key: key);
+class RecordListMenu extends StatelessWidget {
+  const RecordListMenu({Key key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

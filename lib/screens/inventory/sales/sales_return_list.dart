@@ -28,7 +28,7 @@ class _SalesReturnListState extends State<SalesReturnList> {
       mfr,
       category,
       subCategory,
-      location = {'id': 1, 'name': 'SHOP'},
+      location = {'id': 1, 'name': defaultLocation},
       salesMan,
       project,
       taxGroup;
@@ -50,7 +50,7 @@ class _SalesReturnListState extends State<SalesReturnList> {
 
     if (locationList.isNotEmpty) {
       dropDownBranchId = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first;
     }

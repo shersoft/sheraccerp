@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+
 import 'package:sheraccerp/app_settings_page.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/company_user.dart';
@@ -18,13 +19,14 @@ bool isUsingHive = true;
 String deviceId = '0';
 const String isApp = '1';
 
-const String apiV = 'v10/';
+const String apiV = 'v13/';
 const currencySymbol = '₹';
 // const bool isVariant = false;
 const bool isKFC = false;
 const double kfcPer = 0;
 int defaultUnitID =
     Settings.getValue<int>('key-dropdown-item-default-sku-view', 0);
+String defaultLocation = 'SHOP';
 const bool isArea = false;
 const bool isRoute = false;
 bool isEstimateDataBase = false;
@@ -56,6 +58,7 @@ List<OtherRegistrations> otherRegAreaList = [];
 List otherRegSalesManList = [];
 List mainAccount = [];
 List cashAccount = [];
+List<String> taxCalculationList = ['MINUS', 'PLUS'];
 DioService dioApi = DioService();
 
 String rateType = '';
@@ -356,7 +359,9 @@ class ComSettings {
       result = -1;
     }
     return result < 0
-        ? true
+        ? name == 'RECEIPT' || name == 'PAYMENT'
+            ? true
+            : false
         : result == 1
             ? true
             : false;
@@ -484,4 +489,77 @@ class SaudiConversion {
     bytesBuilder.addByte(valueByte.length);
     bytesBuilder.add(valueByte);
   }
+}
+
+List<GSTStateModel> gstStateModels = [
+  GSTStateModel(state: "", code: ""),
+  GSTStateModel(state: "JAMMU AND KASHMIR", code: "01"),
+  GSTStateModel(state: "HIMACHAL PRADESH", code: "02"),
+  GSTStateModel(state: "PUNJAB", code: "03"),
+  GSTStateModel(state: "CHANDIGARH", code: "04"),
+  GSTStateModel(state: "UTTARAKHAND", code: "05"),
+  GSTStateModel(state: "HARYANA", code: "06"),
+  GSTStateModel(state: "DELHI", code: "07"),
+  GSTStateModel(state: "RAJASTHAN", code: "08"),
+  GSTStateModel(state: "UTTAR PRADESH", code: "09"),
+  GSTStateModel(state: "BIHAR", code: "10"),
+  GSTStateModel(state: "SIKKIM", code: "11"),
+  GSTStateModel(state: "ARUNACHAL PRADESH", code: "12"),
+  GSTStateModel(state: "NAGALAND", code: "13"),
+  GSTStateModel(state: "MANIPUR", code: "14"),
+  GSTStateModel(state: "MIZORAM", code: "15"),
+  GSTStateModel(state: "TRIPURA", code: "16"),
+  GSTStateModel(state: "MEGHALAYA", code: "17"),
+  GSTStateModel(state: "ASSAM", code: "18"),
+  GSTStateModel(state: "WEST BENGAL", code: "19"),
+  GSTStateModel(state: "JHARKHAND", code: "20"),
+  GSTStateModel(state: "ODISHA", code: "21"),
+  GSTStateModel(state: "CHATTISGARH", code: "22"),
+  GSTStateModel(state: "MADHYA PRADESH", code: "23"),
+  GSTStateModel(state: "GUJARAT", code: "24"),
+  GSTStateModel(
+      state: "DADRA AND NAGAR HAVELI AND DAMAN AND DIU (NEWLY MERGED UT)",
+      code: "26"),
+  GSTStateModel(state: "MAHARASHTRA", code: "27"),
+  GSTStateModel(state: "ANDHRA PRADESH (BEFORE DIVISION)", code: "28"),
+  GSTStateModel(state: "KARNATAKA", code: "29"),
+  GSTStateModel(state: "GOA", code: "30"),
+  GSTStateModel(state: "LAKSHADWEEP", code: "31"),
+  GSTStateModel(state: "KERALA", code: "32"),
+  GSTStateModel(state: "TAMIL NADU", code: "33"),
+  GSTStateModel(state: "PUDUCHERRY", code: "34"),
+  GSTStateModel(state: "ANDAMAN AND NICOBAR ISLANDS", code: "35"),
+  GSTStateModel(state: "TELANGANA", code: "36"),
+  GSTStateModel(state: "ANDHRA PRADESH (NEWLY ADDED)", code: "37"),
+  GSTStateModel(state: "LADAKH(NEWLY ADDED)", code: "38"),
+  GSTStateModel(state: "OTHER TERRITORY", code: "97"),
+  GSTStateModel(state: "CENTRE JURISDICTION", code: "99")
+];
+
+class GSTStateModel {
+  String state;
+  String code;
+  GSTStateModel({
+    this.state,
+    this.code,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'state': state,
+      'code': code,
+    };
+  }
+
+  factory GSTStateModel.fromMap(Map<String, dynamic> map) {
+    return GSTStateModel(
+      state: map['state'] ?? '',
+      code: map['code'] ?? '',
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory GSTStateModel.fromJson(String source) =>
+      GSTStateModel.fromMap(json.decode(source));
 }

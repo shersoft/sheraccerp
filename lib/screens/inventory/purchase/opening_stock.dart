@@ -166,67 +166,71 @@ class _OpeningStockState extends State<OpeningStock> {
                     if (buttonEvent) {
                       return;
                     } else {
-                      setState(() {
-                        _isLoading = true;
-                        buttonEvent = true;
-                      });
-                      var inf = '[' +
-                          json.encode({
-                            'id': '0',
-                            'name': '',
-                            'invNo': '0',
-                            'invDate': ''
-                          }) +
-                          ']';
-                      var jsonItem = CartItemOP.encodeCartToJson(cartItem);
-                      var items = json.encode(jsonItem);
-                      var stType = 'OP_Update';
-                      var data = '[' +
-                          json.encode({
-                            'entryNo': dataDynamic[0]['EntryNo'],
-                            'date': DateUtil.dateYMD(formattedDate),
-                            'grossValue': totalGrossValue,
-                            'discount': totalDiscount,
-                            'net': totalNet,
-                            'cess': totalCess,
-                            'total': totalCartTotal,
-                            'otherCharges': 0,
-                            'otherDiscount': 0,
-                            'grandTotal': totalCartTotal,
-                            'taxType': isTax ? 'T' : 'N.T',
-                            'purchaseAccount': purchaseAccountList[0]['id'],
-                            'narration': _narration,
-                            'type': 'OP',
-                            'cashPaid': '0',
-                            'igst': totalIgST,
-                            'cgst': totalCgST,
-                            'sgst': totalSgST,
-                            'fCess': totalFCess,
-                            'adCess': totalAdCess,
-                            'Salesman': salesManId,
-                            'location': locationId,
-                            'statementtype': stType
-                          }) +
-                          ']';
-
-                      final body = {
-                        'information': inf,
-                        'data': data,
-                        'particular': items
-                      };
-                      bool _state = await dio.addOpeningStock(body);
-                      setState(() {
-                        _isLoading = false;
-                      });
-                      if (_state) {
-                        cartItem.clear();
-                        showConfirmAlertBox(
-                            context, 'Open Stock', 'Opening Stock Edited');
-                      } else {
-                        showInSnackBar('Error enter data correctly');
+                      if (totalCartTotal > 0) {
                         setState(() {
-                          buttonEvent = false;
+                          _isLoading = true;
+                          buttonEvent = true;
                         });
+                        var inf = '[' +
+                            json.encode({
+                              'id': '0',
+                              'name': '',
+                              'invNo': '0',
+                              'invDate': ''
+                            }) +
+                            ']';
+                        var jsonItem = CartItemOP.encodeCartToJson(cartItem);
+                        var items = json.encode(jsonItem);
+                        var stType = 'OP_Update';
+                        var data = '[' +
+                            json.encode({
+                              'entryNo': dataDynamic[0]['EntryNo'],
+                              'date': DateUtil.dateYMD(formattedDate),
+                              'grossValue': totalGrossValue,
+                              'discount': totalDiscount,
+                              'net': totalNet,
+                              'cess': totalCess,
+                              'total': totalCartTotal,
+                              'otherCharges': 0,
+                              'otherDiscount': 0,
+                              'grandTotal': totalCartTotal,
+                              'taxType': isTax ? 'T' : 'N.T',
+                              'purchaseAccount': purchaseAccountList[0]['id'],
+                              'narration': _narration,
+                              'type': 'OP',
+                              'cashPaid': '0',
+                              'igst': totalIgST,
+                              'cgst': totalCgST,
+                              'sgst': totalSgST,
+                              'fCess': totalFCess,
+                              'adCess': totalAdCess,
+                              'Salesman': salesManId,
+                              'location': locationId,
+                              'statementtype': stType
+                            }) +
+                            ']';
+
+                        final body = {
+                          'information': inf,
+                          'data': data,
+                          'particular': items
+                        };
+                        bool _state = await dio.addOpeningStock(body);
+                        setState(() {
+                          _isLoading = false;
+                        });
+                        if (_state) {
+                          cartItem.clear();
+                          showConfirmAlertBox(
+                              context, 'Open Stock', 'Opening Stock Edited');
+                        } else {
+                          showInSnackBar('Error enter data correctly');
+                          setState(() {
+                            buttonEvent = false;
+                          });
+                        }
+                      } else {
+                        showInSnackBar('Please Add Product');
                       }
                     }
                   },
@@ -235,74 +239,78 @@ class _OpeningStockState extends State<OpeningStock> {
                   color: blue,
                   iconSize: 40,
                   onPressed: () async {
-                    if (buttonEvent) {
-                      setState(() {
-                        buttonEvent = false;
-                      });
-
-                      return;
-                    } else {
-                      setState(() {
-                        _isLoading = true;
-                        buttonEvent = true;
-                      });
-                      var inf = '[' +
-                          json.encode({
-                            'id': '0',
-                            'name': '',
-                            'invNo': '0',
-                            'invDate': ''
-                          }) +
-                          ']';
-                      var jsonItem = CartItemOP.encodeCartToJson(cartItem);
-                      var items = json.encode(jsonItem);
-                      var stType = 'Op_Insert';
-                      var data = '[' +
-                          json.encode({
-                            'date': DateUtil.dateYMD(formattedDate),
-                            'grossValue': totalGrossValue,
-                            'discount': totalDiscount,
-                            'net': totalNet,
-                            'cess': totalCess,
-                            'total': totalCartTotal,
-                            'otherCharges': 0,
-                            'otherDiscount': 0,
-                            'grandTotal': totalCartTotal,
-                            'taxType': isTax ? 'T' : 'N.T',
-                            'purchaseAccount': purchaseAccountList[0]['id'],
-                            'narration': _narration,
-                            'type': 'OP',
-                            'cashPaid': '0',
-                            'igst': totalIgST,
-                            'cgst': totalCgST,
-                            'sgst': totalSgST,
-                            'fCess': totalFCess,
-                            'adCess': totalAdCess,
-                            'Salesman': salesManId,
-                            'location': locationId,
-                            'statementtype': stType
-                          }) +
-                          ']';
-
-                      final body = {
-                        'information': inf,
-                        'data': data,
-                        'particular': items
-                      };
-                      bool _state = await dio.addOpeningStock(body);
-                      setState(() {
-                        _isLoading = false;
-                      });
-                      if (_state) {
-                        cartItem.clear();
-                        showConfirmAlertBox(
-                            context, 'Open Stock', 'Opening Stock Saved');
-                      } else {
-                        showInSnackBar('Error enter data correctly');
+                    if (totalCartTotal > 0) {
+                      if (buttonEvent) {
                         setState(() {
                           buttonEvent = false;
                         });
+
+                        return;
+                      } else {
+                        setState(() {
+                          _isLoading = true;
+                          buttonEvent = true;
+                        });
+                        var inf = '[' +
+                            json.encode({
+                              'id': '0',
+                              'name': '',
+                              'invNo': '0',
+                              'invDate': ''
+                            }) +
+                            ']';
+                        var jsonItem = CartItemOP.encodeCartToJson(cartItem);
+                        var items = json.encode(jsonItem);
+                        var stType = 'Op_Insert';
+                        var data = '[' +
+                            json.encode({
+                              'date': DateUtil.dateYMD(formattedDate),
+                              'grossValue': totalGrossValue,
+                              'discount': totalDiscount,
+                              'net': totalNet,
+                              'cess': totalCess,
+                              'total': totalCartTotal,
+                              'otherCharges': 0,
+                              'otherDiscount': 0,
+                              'grandTotal': totalCartTotal,
+                              'taxType': isTax ? 'T' : 'N.T',
+                              'purchaseAccount': purchaseAccountList[0]['id'],
+                              'narration': _narration,
+                              'type': 'OP',
+                              'cashPaid': '0',
+                              'igst': totalIgST,
+                              'cgst': totalCgST,
+                              'sgst': totalSgST,
+                              'fCess': totalFCess,
+                              'adCess': totalAdCess,
+                              'Salesman': salesManId,
+                              'location': locationId,
+                              'statementtype': stType
+                            }) +
+                            ']';
+
+                        final body = {
+                          'information': inf,
+                          'data': data,
+                          'particular': items
+                        };
+                        bool _state = await dio.addOpeningStock(body);
+                        setState(() {
+                          _isLoading = false;
+                        });
+                        if (_state) {
+                          cartItem.clear();
+                          showConfirmAlertBox(
+                              context, 'Open Stock', 'Opening Stock Saved');
+                        } else {
+                          showInSnackBar('Error enter data correctly');
+                          setState(() {
+                            buttonEvent = false;
+                          });
+                        }
                       }
+                    } else {
+                      showInSnackBar('Please Add Product');
                     }
                   },
                   icon: const Icon(Icons.save)),
@@ -436,7 +444,7 @@ class _OpeningStockState extends State<OpeningStock> {
                   child: ListTile(
                     title: Text(dataDisplay[index]['Name']),
                     subtitle: Text('Date: ' +
-                        dataDisplay[index]['Date'] +
+                        dataDisplay[index]['DDate'] +
                         ' / EntryNo : ' +
                         dataDisplay[index]['Id'].toString()),
                     trailing: Text(

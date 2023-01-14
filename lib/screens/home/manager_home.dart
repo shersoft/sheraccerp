@@ -158,7 +158,7 @@ class _ManagerHomeState extends State<ManagerHome>
                 Tab(
                     icon: Icon(Icons.settings_applications_outlined),
                     text: "Settings"),
-                Tab(icon: Icon(Icons.more), text: "More"),
+                Tab(icon: Icon(Icons.more), text: "Tools"),
               ],
               isScrollable: true,
               labelStyle: TextStyle(fontWeight: FontWeight.bold),

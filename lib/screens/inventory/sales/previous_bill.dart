@@ -129,11 +129,19 @@ class PreviousBill extends StatelessWidget {
                                           const Icon(Icons.check_circle,
                                               size: 14),
                                           const SizedBox(width: 5),
-                                          Text("${item['itemname']}",
-                                              style: const TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 14,
-                                              ))
+                                          RichText(
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            strutStyle:
+                                                StrutStyle(fontSize: 12.0),
+                                            text: TextSpan(
+                                                text: "${item['itemname']}",
+                                                style: const TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.bold,
+                                                )),
+                                          )
                                         ])),
                                     Flexible(
                                         flex: 700,
