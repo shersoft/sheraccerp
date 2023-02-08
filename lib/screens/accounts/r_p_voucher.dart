@@ -31,7 +31,6 @@ class RPVoucher extends StatefulWidget {
 }
 
 class _RPVoucherState extends State<RPVoucher> {
-  DioService dio = DioService();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   List<LedgerModel> cashBankACList = [];
   Size deviceSize;
@@ -458,7 +457,7 @@ class _RPVoucherState extends State<RPVoucher> {
         var statement = mode == 'Payment' ? 'PVList' : 'RVList';
         salesManId = salesManId > 0 ? salesManId : -1;
         locationId = locationId > 0 ? locationId : -1;
-        dio
+        api
             .getPaginationList(statement, page, locationId.toString(), '0',
                 DateUtil.dateYMD(formattedDate), salesManId.toString())
             .then((value) {
@@ -636,7 +635,7 @@ class _RPVoucherState extends State<RPVoucher> {
               ];
               actionShow(mode, context, dataAll);
               if (ComSettings.appSettings('bool', 'key-sms-customer', false)) {
-                var bal = data[0]['oldBalance'].toString().split(' ');
+                var bal = ledgerData.balance.toString().split(' ');
                 if (bal[1] == 'Dr') {
                   var oldBalance = double.tryParse(bal[0].toString()) ?? 0;
                   if (mode == 'Payment') {
@@ -650,10 +649,10 @@ class _RPVoucherState extends State<RPVoucher> {
                   var oldBalance = (double.tryParse(bal[0].toString()) * (-1));
                   balance = oldBalance - data[0]['total'];
                 }
-                var amt = balance;
+                var amt = balance.toStringAsFixed(2);
                 var form = mode == 'Payment' ? 'PAYMENT' : 'RECEIPT';
                 String smsBody =
-                    "Dear ${data[0]['name'].toString()},\nYour $form ${data[0]['entryNo'].toString()}, Dated : $formattedDate for the Amount of ${data[0]['total'].toString()}/- \nBalance:$amt /- has been confirmed  \n${companySettings.name}";
+                    "Dear ${ledgerData.name.toString()},\nYour $form ${data[0]['entryno'].toString()}, Dated : $formattedDate for the Amount of ${data[0]['total'].toString()}/- \nBalance:$amt /- has been confirmed  \n${companySettings.name}";
                 if (ledgerData.phone.toString().isNotEmpty) {
                   sendSms(ledgerData.phone, smsBody);
                 }
@@ -925,7 +924,6 @@ class _RPVoucherState extends State<RPVoucher> {
 
   var footerMessage = '';
   fetchVoucher(context, data, mode) {
-    DioService api = DioService();
     double voucherTotal = 0;
     int row = 0;
     api

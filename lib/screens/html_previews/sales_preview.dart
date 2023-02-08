@@ -54,8 +54,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
   bool _isLoading = true;
   bool isQrCodeKSA = false;
   bool isEsQrCodeKSA = false; //
-  int printerType = 0;
-  int printerDevice = 0;
+  int printerType = 0, printerDevice = 0, printModel = 2;
   bool toggle = true;
   var eNo = 0, type = 0;
   var companyTaxMode = '';
@@ -121,6 +120,8 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         ComSettings.appSettings('int', 'key-dropdown-printer-type-view', 0);
     printerDevice =
         ComSettings.appSettings('int', 'key-dropdown-printer-device-view', 0);
+    printModel =
+        ComSettings.appSettings('int', "key-dropdown-printer-model-view", 2);
     isItemSerialNo = ComSettings.getStatus('KEY ITEM SERIAL NO', settings);
     labelSerialNo =
         ComSettings.getValue('KEY ITEM SERIAL NO', settings).toString();

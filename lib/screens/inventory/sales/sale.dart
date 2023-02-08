@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_awesome_alert_box/flutter_awesome_alert_box.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
@@ -29,6 +30,7 @@ import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/util/dbhelper.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/progress_hud.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Sale extends StatefulWidget {
   const Sale({Key key}) : super(key: key);
@@ -322,7 +324,7 @@ class _SaleState extends State<Sale> {
                           _insert(
                               'Delete DateTime:' +
                                   formattedDate +
-                                  _time +
+                                  timeIs +
                                   ' location:' +
                                   lId.toString() +
                                   ' ' +
@@ -365,7 +367,7 @@ class _SaleState extends State<Sale> {
                             _insert(
                                 'Edit DateTime:' +
                                     formattedDate +
-                                    _time +
+                                    timeIs +
                                     ' location:' +
                                     lId.toString() +
                                     ' ' +
@@ -406,7 +408,7 @@ class _SaleState extends State<Sale> {
                             _insert(
                                 'SAVE DateTime:' +
                                     formattedDate +
-                                    _time +
+                                    timeIs +
                                     ' location:' +
                                     lId.toString() +
                                     ' ' +
@@ -1828,8 +1830,11 @@ class _SaleState extends State<Sale> {
                             style: const TextStyle(fontSize: 18)),
                         Text("Tax No : " + snapshot.data.taxNumber,
                             style: const TextStyle(fontSize: 18)),
-                        Text("Phone : " + snapshot.data.phone,
-                            style: const TextStyle(fontSize: 18)),
+                        InkWell(
+                          child: Text("Phone : " + snapshot.data.phone,
+                              style: const TextStyle(fontSize: 18)),
+                          onDoubleTap: () => callNumber(snapshot.data.phone),
+                        ),
                         Text("Email : " + snapshot.data.email,
                             style: const TextStyle(fontSize: 18)),
                         Text("Balance : " + snapshot.data.balance,
@@ -1973,6 +1978,14 @@ class _SaleState extends State<Sale> {
         );
       },
     );
+  }
+
+  callNumber(number) async {
+    try {
+      await FlutterPhoneDirectCaller.callNumber(number);
+    } catch (_e) {
+      debugPrint(_e);
+    }
   }
 
   OptionRateType rateTypeItem;
@@ -4538,8 +4551,6 @@ class _SaleState extends State<Sale> {
       },
     );
   }
-
-  String get _time => DateFormat("H:m:s:S").format(DateTime.now()).toString();
 
   Future<void> _displayTextInputDialog(
       BuildContext context, String title, String text, int id) async {

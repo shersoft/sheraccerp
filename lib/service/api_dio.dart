@@ -10,6 +10,8 @@ import 'package:sheraccerp/models/customer_model.dart';
 import 'package:sheraccerp/models/ledger_name_model.dart';
 import 'package:sheraccerp/models/ledger_parent.dart';
 import 'package:sheraccerp/models/option_rate_type.dart';
+import 'package:sheraccerp/models/product_manage_model.dart';
+import 'package:sheraccerp/models/product_register_model.dart';
 import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/models/stock_item.dart';
 import 'package:sheraccerp/models/stock_product.dart';
@@ -363,6 +365,69 @@ class DioService {
         } else {
           ret = false;
         }
+      } else {
+        ret = false;
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
+  Future<bool> editProduct(var body) async {
+    bool ret = false;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/edit/$dataBase',
+          data: json.encode(body),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+        if (jsonResponse['message'] == 'success') {
+          ret = true;
+        } else {
+          ret = false;
+        }
+      } else {
+        ret = false;
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
+  Future<bool> deleteProduct(var id) async {
+    bool ret = false;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+
+    try {
+      final response = await dio.delete(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/delete/$dataBase',
+          queryParameters: {'id': id},
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        ret = response.data > 0 ? true : false;
       } else {
         ret = false;
         debugPrint('Unexpected error occurred!');
@@ -784,10 +849,105 @@ class DioService {
         }
       } else {
         debugPrint('Unexpected error Occurred!');
+        return 0;
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return 0;
+    }
+  }
+
+  Future<int> addJournalVoucher(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.post(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Journal/add/$dataBase',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 201) {
+        if (response.data['returnValue'] > 0) {
+          return response.data['returnValue'];
+        } else {
+          return 0;
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+        return 0;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return 0;
+    }
+  }
+
+  Future<int> editJournalVoucher(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Journal/edit/$dataBase',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        if (response.data['returnValue'] > 0) {
+          return response.data['returnValue'];
+        } else {
+          return 0;
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+        return 0;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return 0;
+    }
+  }
+
+  Future<int> deleteJournalVoucher(id, date, user, time) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.delete(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Journal/delete/$dataBase',
+          queryParameters: {'id': id, 'date': date, 'user': user, 'time': time},
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        if (response.data['returnValue'] > 0) {
+          return response.data['returnValue'];
+        } else {
+          return 0;
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+        return 0;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return 0;
     }
   }
 
@@ -813,10 +973,12 @@ class DioService {
         }
       } else {
         debugPrint('Unexpected error Occurred!');
+        return 0;
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return 0;
     }
   }
 
@@ -842,10 +1004,12 @@ class DioService {
         }
       } else {
         debugPrint('Unexpected error Occurred!');
+        return 0;
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return 0;
     }
   }
 
@@ -871,10 +1035,12 @@ class DioService {
         }
       } else {
         debugPrint('Unexpected error Occurred!');
+        return 0;
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return 0;
     }
   }
 
@@ -1209,6 +1375,36 @@ class DioService {
     return ret;
   }
 
+  Future<ProductRegisterModel> getProductByName(String _name) async {
+    ProductRegisterModel model;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/getByName/$dataBase',
+          queryParameters: {'name': _name});
+
+      if (response.statusCode == 200) {
+        var data = response.data;
+        if (data != null) {
+          model = ProductRegisterModel.fromMap(data[0]);
+        } else {
+          // model = ;
+          debugPrint('Unexpected error occurred!');
+        }
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return model;
+  }
+
   Future<bool> getUserLogin(name, password) async {
     bool ret = false;
     SharedPreferences pref = await SharedPreferences.getInstance();
@@ -1361,8 +1557,8 @@ class DioService {
       final response = await dio.get(
         pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
-            Uri.encodeComponent(statement).toString() +
-            '/$dataBase/$filter',
+            statement +
+            '/$dataBase',
         queryParameters: {"filter": filter},
       );
       final data = response.data;
@@ -1389,7 +1585,7 @@ class DioService {
         pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
             statement +
-            '/$dataBase/$filter',
+            '/$dataBase',
         queryParameters: {"filter": filter},
       );
       final data = response.data;
@@ -3207,6 +3403,33 @@ class DioService {
     return _items;
   }
 
+  Future<dynamic> fetchJournalVoucher(int id) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    dynamic _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              '/Journal/find/$dataBase',
+          queryParameters: {'id': id});
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+
+        _items = jsonResponse;
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
   Future<dynamic> fetchInvoiceVoucher(int id, String type) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
@@ -3338,6 +3561,78 @@ class DioService {
       debugPrint(errorMessage.toString());
     }
     return _items;
+  }
+
+  Future<List<ProductManageModel>> fetchProductDetails(id, String date) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp', location = '0';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    if (locationList.isNotEmpty) {
+      location = locationList
+          .where((element) => element.value == defaultLocation)
+          .map((e) => e.key)
+          .first
+          .toString();
+    }
+    int lId = ComSettings.appSettings(
+            'int', 'key-dropdown-default-location-view', 2) -
+        1;
+    location =
+        lId.toString().trim().isNotEmpty ? lId.toString().trim() : location;
+    List<ProductManageModel> _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'stock/getProductManagement/$dataBase',
+          queryParameters: {'id': id, 'location': location, 'date': date});
+
+      if (response.statusCode == 200) {
+        var data = response.data;
+        for (var row in data) {
+          _items.add(ProductManageModel.fromMap(row));
+        }
+      } else {
+        debugPrint('Failed to load data');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<bool> updateProductDetails(List<ProductManageModel> data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'stock/UpdateProductManagement/$dataBase',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        if (response.data['returnValue'] > 0) {
+          return response.data['returnValue'] > 0 ? true : false;
+        } else {
+          return false;
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
   }
 }
 

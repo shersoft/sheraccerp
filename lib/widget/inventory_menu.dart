@@ -257,13 +257,13 @@ class InventoryMenu extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: const [
-                  // Icon(
-                  //   Icons.shopping_bag_sharp,
-                  //   color: green[500],
-                  //   size: 90.0,
-                  // ),
+                  Icon(
+                    Icons.add_shopping_cart,
+                    color: blue,
+                    size: 90.0,
+                  ),
                   Text(
-                    '',
+                    'Product Management',
                     style: TextStyle(
                         color: Colors.black, fontWeight: FontWeight.bold),
                   ),
@@ -272,10 +272,7 @@ class InventoryMenu extends StatelessWidget {
             ),
           ),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => AboutSherSoft()),
-            );
+            Navigator.pushNamed(context, '/ProductManagement');
           },
         ),
         GestureDetector(

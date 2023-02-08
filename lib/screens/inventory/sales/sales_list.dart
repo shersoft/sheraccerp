@@ -271,13 +271,17 @@ class _SalesListState extends State<SalesList> {
             'category': category != null ? category.id : '0',
             'subcategory': subCategory != null ? subCategory.id : '0',
             'location': locationId != null
-                ? jsonEncode({'id': locationId.id})
+                ? jsonEncode([
+                    {'id': locationId.id}
+                  ])
                 : jsonEncode(locationData),
             'project': project != null ? project.id : '0',
             'salesman': salesMan != null ? salesMan.id : '0',
             'salesType': dataSType != null
                 ? jsonEncode(dataSType)
-                : jsonEncode({'id': 0})
+                : jsonEncode([
+                    {'id': 0}
+                  ])
           }) +
           ']';
 
@@ -929,34 +933,10 @@ class _SalesListState extends State<SalesList> {
                   ),
                   onTap: () {
                     int _id =
-                        int.tryParse(dataDisplay[index]['SType'].toString());
+                        int.tryParse(dataDisplay[index]['Type'].toString());
                     SalesType sData = salesTypeDataList
                         .where((element) => element.id == _id)
                         .first;
-                    // .map((e) => e.type)
-                    // .first;
-                    /* 
-                    
-accounts:
-true
-eInvoice:
-true
-id:
-1
-location:
-1
-name:
-"Sales B To B Entry"
-rateType:
-"MRP"
-sColor:
-""
-stock:
-true
-tax:
-true
-type:
-"SALES-BB"*/
                     salesTypeData = SalesType(
                         id: sData.id,
                         accounts: sData.accounts,
@@ -969,16 +949,7 @@ type:
                         eInvoice: sData.eInvoice,
                         sColor: sData.sColor,
                         tax: sData.tax);
-
-                    // salesTypeData = SalesType(
-                    //     id: _id,
-                    //     accounts: true,
-                    //     location: locationId != null ? locationId.id : 0,
-                    //     name: '',
-                    //     rateType: '',
-                    //     stock: true,
-                    //     type: _type);
-                    showDetials(context, dataDisplay[index], _id);
+                    showDetails(context, dataDisplay[index], _id);
                   },
                 );
               }
@@ -990,7 +961,7 @@ type:
     );
   }
 
-  showDetials(context, data, sType) {
+  showDetails(context, data, sType) {
     dataDynamic = [
       {
         'RealEntryNo': int.tryParse(data['Invoice']),

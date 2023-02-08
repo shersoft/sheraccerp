@@ -243,7 +243,7 @@ class AccountsMenu extends StatelessWidget {
             ),
           ),
           onTap: () {
-            // _showDialog(context);
+            Navigator.pushNamed(context, '/journal');
           },
         ),
         GestureDetector(

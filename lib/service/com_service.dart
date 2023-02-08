@@ -1,4 +1,5 @@
 // @dart = 2.11
+import 'package:intl/intl.dart';
 
 class CommonService {
   bool getTrialPeriod(String dated) {
@@ -51,3 +52,5 @@ class CommonService {
     }
   }
 }
+
+String get timeIs => DateFormat("H:m:s:S").format(DateTime.now()).toString();

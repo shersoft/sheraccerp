@@ -6,8 +6,10 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_awesome_alert_box/flutter_awesome_alert_box.dart';
+import 'package:sheraccerp/models/product_register_model.dart';
 import 'package:sheraccerp/models/tax_group_model.dart';
 import 'package:sheraccerp/models/unit_model.dart';
+import 'package:sheraccerp/screens/accounts/ledger.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
@@ -24,9 +26,11 @@ class ProductRegister extends StatefulWidget {
 class _ProductRegisterState extends State<ProductRegister> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   DioService api = DioService();
-  var productModel;
+  DataJson productModel;
   Size deviceSize;
-  bool _isLoading = false;
+  String productId = '';
+  List<DataJson> productList = [];
+  bool _isLoading = false, isExist = false, buttonEvent = false;
   DataJson itemId,
       itemName,
       supplier,
@@ -50,6 +54,7 @@ class _ProductRegisterState extends State<ProductRegister> {
   List<DataJson> unitModel = [];
   List<DataJson> rateTypeModel = [];
   List<UnitDetailModel> unitDetail = [];
+  String _result;
 
   @override
   void initState() {
@@ -102,109 +107,287 @@ class _ProductRegisterState extends State<ProductRegister> {
       key: _scaffoldKey,
       appBar: AppBar(
         actions: [
-          TextButton(
-              child: const Text(
-                "Save",
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: Colors.blue[700],
-              ),
-              onPressed: () async {
-                setState(() {
-                  _isLoading = true;
-                });
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () async {
+              // var result = await showSearch<List<DataJson>>(
+              //   context: context,
+              //   delegate: CustomDelegateProduct(productList),
+              // );
 
-                var jsonItem = UnitDetailModel.encodeCartToJson(unitDetail);
-                var items = json.encode(jsonItem);
-                var data = '[' +
-                    json.encode({
-                      'hsnCode': hsnController.text.trim().isNotEmpty
-                          ? hsnController.text.trim()
-                          : '',
-                      'itemCode': itemCodeController.text.trim().isNotEmpty
-                          ? itemCodeController.text.trim()
-                          : '',
-                      'itemName': itemNameController.text.trim().isNotEmpty
-                          ? itemNameController.text.trim()
-                          : '',
-                      'categoryId': category != null ? category.id : 0,
-                      'mfrId': mfr != null ? mfr.id : 0,
-                      'subCategoryId': subCategory != null ? subCategory.id : 0,
-                      'unitId': unit != null ? unit.id : 0,
-                      'rackId': rack != null ? rack.id : 0,
-                      'packing': packingController.text.trim().isNotEmpty
-                          ? packingController.text.trim()
-                          : 0,
-                      'reOrder': reOrderLevelController.text.trim().isNotEmpty
-                          ? reOrderLevelController.text.trim()
-                          : 0,
-                      'maxOrder': maxOrderLevelController.text.trim().isNotEmpty
-                          ? maxOrderLevelController.text.trim()
-                          : 0,
-                      'taxGroupId': taxGroup != null ? taxGroup.id : 0,
-                      'tax': taxGroup != null ? taxGroup.gst : 0,
-                      'cess': cessController.text.trim().isNotEmpty
-                          ? double.tryParse(cessController.text.trim()) > 0
-                              ? 1
-                              : 0
-                          : 0,
-                      'cessPer': cessController.text.trim().isNotEmpty
-                          ? double.tryParse(cessController.text.trim()) > 0
-                              ? double.tryParse(cessController.text.trim())
-                              : 0
-                          : 0,
-                      'addCessPer': addCessController.text.trim().isNotEmpty
-                          ? double.tryParse(addCessController.text.trim()) > 0
-                              ? double.tryParse(addCessController.text.trim())
-                              : 0
-                          : 0,
-                      'mrp': mrpController.text.trim().isNotEmpty
-                          ? double.tryParse(mrpController.text.trim()) > 0
-                              ? double.tryParse(mrpController.text.trim())
-                              : 0
-                          : 0,
-                      'retail': retailController.text.trim().isNotEmpty
-                          ? double.tryParse(retailController.text.trim()) > 0
-                              ? double.tryParse(retailController.text.trim())
-                              : 0
-                          : 0,
-                      'wsRate': wholeSaleController.text.trim().isNotEmpty
-                          ? double.tryParse(wholeSaleController.text.trim()) > 0
-                              ? double.tryParse(wholeSaleController.text.trim())
-                              : 0
-                          : 0,
-                      'spRetail': spRetailController.text.trim().isNotEmpty
-                          ? double.tryParse(spRetailController.text.trim()) > 0
-                              ? double.tryParse(spRetailController.text.trim())
-                              : 0
-                          : 0,
-                      'branch': branchController.text.trim().isNotEmpty
-                          ? double.tryParse(branchController.text.trim()) > 0
-                              ? double.tryParse(branchController.text.trim())
-                              : 0
-                          : 0,
-                      'stockValuation': dropDownStockValuation,
-                      'typeOfSupply': dropDownTypeOfSupply,
-                      'negative': 0,
-                      'active': active ? 1 : 0,
-                      'bom': 0,
-                      'serialNo': 0,
-                      'user': 0,
-                    }) +
-                    ']';
+              setState(() {
+                // _result = result[0].name;
+                // pItemName = _result;
+                // productId = result[0].id.toString();
+                if (pItemName.isNotEmpty) {
+                  findProduct(pItemName);
+                }
+              });
+            },
+          ),
+          Visibility(
+            visible: isExist,
+            child: IconButton(
+                color: red,
+                iconSize: 40,
+                onPressed: () async {
+                  if (buttonEvent) {
+                    return;
+                  } else {
+                    if (companyUserData.deleteData) {
+                      if (productId.isNotEmpty) {
+                        setState(() {
+                          _isLoading = true;
+                        });
+                        bool _state = await api.deleteProduct(productId);
+                        setState(() {
+                          _isLoading = false;
+                        });
+                        _state
+                            ? showInSnackBar('Product Deleted')
+                            : showInSnackBar('Error');
+                      } else {
+                        showInSnackBar('Select product');
+                        setState(() {
+                          buttonEvent = false;
+                        });
+                      }
+                    } else {
+                      showInSnackBar('Permission denied\ncan`t delete');
+                      setState(() {
+                        buttonEvent = false;
+                      });
+                    }
+                  }
+                },
+                icon: const Icon(Icons.delete_forever)),
+          ),
+          isExist
+              ? IconButton(
+                  color: green,
+                  iconSize: 40,
+                  onPressed: () async {
+                    setState(() {
+                      _isLoading = true;
+                    });
+                    var jsonItem = UnitDetailModel.encodeCartToJson(unitDetail);
+                    var items = json.encode(jsonItem);
+                    var data = '[' +
+                        json.encode({
+                          'id': productId.isNotEmpty ? productId : '0',
+                          'hsnCode': hsnController.text.trim().isNotEmpty
+                              ? hsnController.text.trim()
+                              : '',
+                          'itemCode': itemCodeController.text.trim().isNotEmpty
+                              ? itemCodeController.text.trim()
+                              : '',
+                          'itemName': itemNameController.text.trim().isNotEmpty
+                              ? itemNameController.text.trim()
+                              : '',
+                          'categoryId': category != null ? category.id : 0,
+                          'mfrId': mfr != null ? mfr.id : 0,
+                          'subCategoryId':
+                              subCategory != null ? subCategory.id : 0,
+                          'unitId': unit != null ? unit.id : 0,
+                          'rackId': rack != null ? rack.id : 0,
+                          'packing': packingController.text.trim().isNotEmpty
+                              ? packingController.text.trim()
+                              : 0,
+                          'reOrder':
+                              reOrderLevelController.text.trim().isNotEmpty
+                                  ? reOrderLevelController.text.trim()
+                                  : 0,
+                          'maxOrder':
+                              maxOrderLevelController.text.trim().isNotEmpty
+                                  ? maxOrderLevelController.text.trim()
+                                  : 0,
+                          'taxGroupId': taxGroup != null ? taxGroup.id : 0,
+                          'tax': taxGroup != null ? taxGroup.gst : 0,
+                          'cess': cessController.text.trim().isNotEmpty
+                              ? double.tryParse(cessController.text.trim()) > 0
+                                  ? 1
+                                  : 0
+                              : 0,
+                          'cessPer': cessController.text.trim().isNotEmpty
+                              ? double.tryParse(cessController.text.trim()) > 0
+                                  ? double.tryParse(cessController.text.trim())
+                                  : 0
+                              : 0,
+                          'addCessPer': addCessController.text.trim().isNotEmpty
+                              ? double.tryParse(addCessController.text.trim()) >
+                                      0
+                                  ? double.tryParse(
+                                      addCessController.text.trim())
+                                  : 0
+                              : 0,
+                          'mrp': mrpController.text.trim().isNotEmpty
+                              ? double.tryParse(mrpController.text.trim()) > 0
+                                  ? double.tryParse(mrpController.text.trim())
+                                  : 0
+                              : 0,
+                          'retail': retailController.text.trim().isNotEmpty
+                              ? double.tryParse(retailController.text.trim()) >
+                                      0
+                                  ? double.tryParse(
+                                      retailController.text.trim())
+                                  : 0
+                              : 0,
+                          'wsRate': wholeSaleController.text.trim().isNotEmpty
+                              ? double.tryParse(
+                                          wholeSaleController.text.trim()) >
+                                      0
+                                  ? double.tryParse(
+                                      wholeSaleController.text.trim())
+                                  : 0
+                              : 0,
+                          'spRetail': spRetailController.text.trim().isNotEmpty
+                              ? double.tryParse(
+                                          spRetailController.text.trim()) >
+                                      0
+                                  ? double.tryParse(
+                                      spRetailController.text.trim())
+                                  : 0
+                              : 0,
+                          'branch': branchController.text.trim().isNotEmpty
+                              ? double.tryParse(branchController.text.trim()) >
+                                      0
+                                  ? double.tryParse(
+                                      branchController.text.trim())
+                                  : 0
+                              : 0,
+                          'stockValuation': dropDownStockValuation,
+                          'typeOfSupply': dropDownTypeOfSupply,
+                          'negative': 0,
+                          'active': active ? 1 : 0,
+                          'bom': 0,
+                          'serialNo': 0,
+                          'user': 0,
+                        }) +
+                        ']';
 
-                final body = {'product': data, 'unitDetails': items};
-                bool _state = await api.addProduct(body);
-                setState(() {
-                  _isLoading = false;
-                });
-                _state
-                    ? showInSnackBar('Product Saved')
-                    : showInSnackBar('Error');
-              }),
+                    final body = {'product': data, 'unitDetails': items};
+                    bool _state = await api.editProduct(body);
+                    setState(() {
+                      _isLoading = false;
+                    });
+                    _state
+                        ? showInSnackBar('Product Edited')
+                        : showInSnackBar('Error');
+                  },
+                  icon: const Icon(Icons.edit))
+              : IconButton(
+                  color: white,
+                  iconSize: 40,
+                  onPressed: () async {
+                    setState(() {
+                      _isLoading = true;
+                    });
+
+                    var jsonItem = UnitDetailModel.encodeCartToJson(unitDetail);
+                    var items = json.encode(jsonItem);
+                    var data = '[' +
+                        json.encode({
+                          'id': productId.isNotEmpty ? productId : '0',
+                          'hsnCode': hsnController.text.trim().isNotEmpty
+                              ? hsnController.text.trim()
+                              : '',
+                          'itemCode': itemCodeController.text.trim().isNotEmpty
+                              ? itemCodeController.text.trim()
+                              : '',
+                          'itemName': itemNameController.text.trim().isNotEmpty
+                              ? itemNameController.text.trim()
+                              : '',
+                          'categoryId': category != null ? category.id : 0,
+                          'mfrId': mfr != null ? mfr.id : 0,
+                          'subCategoryId':
+                              subCategory != null ? subCategory.id : 0,
+                          'unitId': unit != null ? unit.id : 0,
+                          'rackId': rack != null ? rack.id : 0,
+                          'packing': packingController.text.trim().isNotEmpty
+                              ? packingController.text.trim()
+                              : 0,
+                          'reOrder':
+                              reOrderLevelController.text.trim().isNotEmpty
+                                  ? reOrderLevelController.text.trim()
+                                  : 0,
+                          'maxOrder':
+                              maxOrderLevelController.text.trim().isNotEmpty
+                                  ? maxOrderLevelController.text.trim()
+                                  : 0,
+                          'taxGroupId': taxGroup != null ? taxGroup.id : 0,
+                          'tax': taxGroup != null ? taxGroup.gst : 0,
+                          'cess': cessController.text.trim().isNotEmpty
+                              ? double.tryParse(cessController.text.trim()) > 0
+                                  ? 1
+                                  : 0
+                              : 0,
+                          'cessPer': cessController.text.trim().isNotEmpty
+                              ? double.tryParse(cessController.text.trim()) > 0
+                                  ? double.tryParse(cessController.text.trim())
+                                  : 0
+                              : 0,
+                          'addCessPer': addCessController.text.trim().isNotEmpty
+                              ? double.tryParse(addCessController.text.trim()) >
+                                      0
+                                  ? double.tryParse(
+                                      addCessController.text.trim())
+                                  : 0
+                              : 0,
+                          'mrp': mrpController.text.trim().isNotEmpty
+                              ? double.tryParse(mrpController.text.trim()) > 0
+                                  ? double.tryParse(mrpController.text.trim())
+                                  : 0
+                              : 0,
+                          'retail': retailController.text.trim().isNotEmpty
+                              ? double.tryParse(retailController.text.trim()) >
+                                      0
+                                  ? double.tryParse(
+                                      retailController.text.trim())
+                                  : 0
+                              : 0,
+                          'wsRate': wholeSaleController.text.trim().isNotEmpty
+                              ? double.tryParse(
+                                          wholeSaleController.text.trim()) >
+                                      0
+                                  ? double.tryParse(
+                                      wholeSaleController.text.trim())
+                                  : 0
+                              : 0,
+                          'spRetail': spRetailController.text.trim().isNotEmpty
+                              ? double.tryParse(
+                                          spRetailController.text.trim()) >
+                                      0
+                                  ? double.tryParse(
+                                      spRetailController.text.trim())
+                                  : 0
+                              : 0,
+                          'branch': branchController.text.trim().isNotEmpty
+                              ? double.tryParse(branchController.text.trim()) >
+                                      0
+                                  ? double.tryParse(
+                                      branchController.text.trim())
+                                  : 0
+                              : 0,
+                          'stockValuation': dropDownStockValuation,
+                          'typeOfSupply': dropDownTypeOfSupply,
+                          'negative': 0,
+                          'active': active ? 1 : 0,
+                          'bom': 0,
+                          'serialNo': 0,
+                          'user': 0,
+                        }) +
+                        ']';
+
+                    final body = {'product': data, 'unitDetails': items};
+                    bool _state = await api.addProduct(body);
+                    setState(() {
+                      _isLoading = false;
+                    });
+                    _state
+                        ? showInSnackBar('Product Saved')
+                        : showInSnackBar('Error');
+                  },
+                  icon: const Icon(Icons.save)),
         ],
         title: const Text('Product Register'),
       ),
@@ -897,5 +1080,93 @@ class _ProductRegisterState extends State<ProductRegister> {
     });
     // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
     showConfirmAlertBox(context, 'Product Register', value);
+  }
+
+  void findProduct(String pItemName) {
+    api.getProductByName(pItemName).then((value) {
+      if (value != null) {
+        if (value.slno > 0) {
+          setState(() {
+            productId = value.slno.toString();
+            pHSNCode = value.hsncode;
+            hsnController.text = value.hsncode;
+            pItemCode = value.itemcode;
+            itemCodeController.text = value.itemcode;
+            unit = DataJson(id: value.unitId, name: '');
+            mfr = DataJson(id: value.unitId, name: '');
+            category = DataJson(id: value.unitId, name: '');
+            subCategory = DataJson(id: value.unitId, name: '');
+            cessController.text = value.cess.toString();
+            addCessController.text = value.adcessper.toString();
+            mrpController.text = value.mrp.toString();
+            active = value.active == 1 ? true : false;
+            wholeSaleController.text = value.wsrate.toString();
+            retailController.text = value.retail.toString();
+            spRetailController.text = value.sprate.toString();
+            branchController.text = value.branch.toString();
+            dropDownStockValuation = value.stockvaluation.trim().toUpperCase();
+            dropDownTypeOfSupply = value.typeofsupply.trim().toUpperCase();
+            packingController.text = value.packing.toString();
+            rack = DataJson(id: value.rackId, name: '');
+            reOrderLevelController.text = value.reorder.toString();
+            maxOrderLevelController.text = value.maxorder.toString();
+
+            isExist = true;
+          });
+
+          api
+              .getTaxGroupData(value.tax.toString(), 'sales_list/taxGroup')
+              .then((taxData) {
+            setState(() {
+              taxGroup = taxData
+                  .firstWhere((element) => element.name == value.taxGroupName);
+            });
+          });
+
+          // api.getSalesListData('filter', 'sales_list/unit');
+        }
+      }
+    });
+  }
+}
+
+class CustomDelegateProduct extends SearchDelegate<List<DataJson>> {
+  List<DataJson> data;
+  CustomDelegateProduct(this.data);
+
+  @override
+  List<Widget> buildActions(BuildContext context) =>
+      [IconButton(icon: const Icon(Icons.clear), onPressed: () => query = '')];
+
+  @override
+  Widget buildLeading(BuildContext context) => IconButton(
+      icon: const Icon(Icons.chevron_left),
+      onPressed: () => close(context, []));
+
+  @override
+  Widget buildResults(BuildContext context) => Container();
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    List<DataJson> listToShow;
+    if (query.isNotEmpty) {
+      listToShow = data
+          .where((e) =>
+              e.name.toLowerCase().contains(query.toLowerCase()) &&
+              e.name.toLowerCase().startsWith(query.toLowerCase()))
+          .toList();
+    } else {
+      listToShow = data;
+    }
+    return ListView.builder(
+      itemCount: listToShow.length,
+      itemBuilder: (_, i) {
+        var noun = listToShow[i];
+        return ListTile(
+          title: Text(noun.name),
+          onTap: () => close(context, [noun]),
+        );
+      },
+    );
   }
 }

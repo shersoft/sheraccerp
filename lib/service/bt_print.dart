@@ -35,6 +35,7 @@ class _BtPrintState extends State<BtPrint> {
   String tips = 'no device connect';
   List<BlueDevice> _blueDevices = [];
   var companyTaxMode = '';
+  int printModel = 2;
 
   // BluetoothManager bluetoothManager = BluetoothManager.instance;
 
@@ -200,9 +201,11 @@ class _BtPrintState extends State<BtPrint> {
     }
 
     if (widget.data.isNotEmpty) {
+      printModel =
+          ComSettings.appSettings('int', "key-dropdown-printer-model-view", 2);
       if (widget.data[4] == 'SALE') {
-        final PosPrintResult res =
-            await printerManager.printTicket(await salesData(paper));
+        final PosPrintResult res = await printerManager.printTicket(
+            await (printModel == 3 ? salesVatData(paper) : salesData(paper)));
         showDialog(
             context: context,
             builder: (context) => AlertDialog(content: Text(res.msg)));
@@ -249,6 +252,1079 @@ class _BtPrintState extends State<BtPrint> {
 
   var taxPercentages = '';
   List<dynamic> taxableData = [];
+
+  Future<List<int>> salesVatData(PaperSize paper) async {
+    var profile = await CapabilityProfile.load();
+    final Generator ticket = Generator(paper, profile);
+    List<int> bytes = [];
+    var bill = widget.data[2];
+    var printerSize = widget.data[3];
+    CompanyInformation companySettings = widget.data[0];
+    List<CompanySettings> settings = widget.data[1];
+    var dataInformation = bill['Information'][0];
+    var dataParticulars = bill['Particulars'];
+    // var dataSerialNO = bill['SerialNO'];
+    // var dataDeliveryNote = bill['DeliveryNote'];
+    var otherAmount = bill['otherAmount'];
+    var ledgerName = mainAccount
+        .firstWhere(
+          (element) =>
+              element['LedCode'].toString() ==
+              dataInformation['Customer'].toString(),
+          orElse: () => {'LedName': dataInformation['ToName']},
+        )['LedName']
+        .toString();
+    // header
+    var taxSale = salesTypeData.type == 'SALES-ES'
+        ? false
+        : salesTypeData.type == 'SALES-Q'
+            ? false
+            : salesTypeData.type == 'SALES-O'
+                ? false
+                : true;
+    var invoiceHead = salesTypeData.type == 'SALES-ES'
+        ? Settings.getValue<String>('key-sales-estimate-head', 'ESTIMATE')
+        : salesTypeData.type == 'SALES-Q'
+            ? Settings.getValue<String>('key-sales-quotation-head', 'QUOTATION')
+            : salesTypeData.type == 'SALES-O'
+                ? Settings.getValue<String>('key-sales-order-head', 'ORDER')
+                : Settings.getValue<String>(
+                    'key-sales-invoice-head', 'INVOICE');
+    bool isQrCodeKSA = ComSettings.getStatus('KEY QRCODE KSA', settings);
+    bool isEsQrCodeKSA =
+        ComSettings.getStatus('KEY QRCODE KSA ON ES', settings);
+    int printCopy = Settings.getValue<int>('key-dropdown-print-copy-view', 0);
+    int printerModel =
+        Settings.getValue<int>('key-dropdown-printer-model-view', 0);
+    // for (int pCopy = 0; pCopy <= printCopy; pCopy++) {
+    if (printerSize == "2") {
+      try {
+        if (taxSale) {
+          bytes += ticket.text(
+            companySettings.name,
+            styles: const PosStyles(
+              align: PosAlign.center,
+              bold: true,
+              // height: PosTextSize.size2,
+              // width: PosTextSize.size2,
+            ),
+          );
+          var text2 = ticket.text(companySettings.add1,
+              styles: const PosStyles(align: PosAlign.center, bold: true));
+          companySettings.add1.toString().trim().isNotEmpty ?? (bytes += text2);
+          var text3 = ticket.text(companySettings.add2,
+              styles: const PosStyles(align: PosAlign.center, bold: true));
+          companySettings.add2.toString().trim().isNotEmpty ?? (bytes += text3);
+          bytes += ticket.text(
+              'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
+              styles: const PosStyles(align: PosAlign.center, bold: true));
+          bytes += ticket.text(
+              companyTaxMode == 'INDIA'
+                  ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
+                  : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
+              styles: const PosStyles(align: PosAlign.center, bold: true));
+          bytes += ticket.text(invoiceHead,
+              styles: const PosStyles(align: PosAlign.center, bold: true));
+          // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
+          //     styles: const PosStyles(align: PosAlign.left));
+          bytes += ticket.row([
+            PosColumn(
+                text: 'Invoice No : ${dataInformation['InvoiceNo']}',
+                width: 6,
+                styles: const PosStyles(align: PosAlign.left, bold: true)),
+            PosColumn(
+                text:
+                    'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
+                width: 6,
+                styles: const PosStyles(align: PosAlign.right, bold: true)),
+          ]);
+          bytes += ticket.text('Bill To : ',
+              styles: const PosStyles(align: PosAlign.left, bold: true));
+          bytes += ticket.text('${dataInformation['ToName']}',
+              styles: const PosStyles(align: PosAlign.left, bold: true));
+          if (isEsQrCodeKSA) {
+            if (dataInformation['gstno'].toString().trim().isNotEmpty) {
+              bytes += ticket.text(
+                  companyTaxMode == 'INDIA'
+                      ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
+                      : 'TRN : ${dataInformation['gstno'].toString().trim()}',
+                  styles: const PosStyles(align: PosAlign.left, bold: true));
+            }
+          }
+          bytes += ticket.hr();
+          bytes += ticket.text('Description',
+              styles: const PosStyles(align: PosAlign.left, bold: true));
+          bytes += ticket.row([
+            PosColumn(
+                text: '   ',
+                width: 2,
+                styles: const PosStyles(align: PosAlign.left, bold: true)),
+            PosColumn(
+                text: 'Qty',
+                width: 3,
+                styles: const PosStyles(align: PosAlign.right, bold: true)),
+            PosColumn(
+                text: 'Price',
+                width: 3,
+                styles: const PosStyles(align: PosAlign.right, bold: true)),
+            PosColumn(
+                text: 'Total',
+                width: 4,
+                styles: const PosStyles(align: PosAlign.right, bold: true)),
+          ]);
+          double totalQty = 0, totalRate = 0;
+          for (var i = 0; i < dataParticulars.length; i++) {
+            if (double.tryParse(dataParticulars[i]['igst'].toString()) > 0) {
+              if (taxPercentages.contains(
+                  '@' + dataParticulars[i]['igst'].toString() + ' %')) {
+              } else {
+                taxPercentages +=
+                    '@' + dataParticulars[i]['igst'].toString() + ' %,';
+              }
+            }
+            var itemName = dataParticulars[i]['itemname'].toString();
+            bytes += ticket.text(itemName,
+                styles: const PosStyles(align: PosAlign.left, bold: true));
+
+            bytes += ticket.row([
+              PosColumn(text: '', width: 2),
+              PosColumn(
+                  text:
+                      '${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}',
+                  width: 1),
+              PosColumn(
+                  text: '${dataParticulars[i]['Rate']}',
+                  width: 2,
+                  styles: const PosStyles(align: PosAlign.right, bold: true)),
+              PosColumn(
+                  text: '${dataParticulars[i]['Total']}',
+                  width: 2,
+                  styles: const PosStyles(align: PosAlign.right, bold: true)),
+            ]);
+            totalQty += dataParticulars[i]['Qty'];
+            totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
+          }
+          bytes += ticket.hr();
+          bytes += ticket.row([
+            PosColumn(
+                text: 'Total : ', width: 5, styles: PosStyles(bold: true)),
+            PosColumn(
+                text: '$totalQty', width: 2, styles: PosStyles(bold: true)),
+            PosColumn(
+                text: totalRate.toStringAsFixed(2),
+                width: 2,
+                styles: const PosStyles(align: PosAlign.right, bold: true)),
+            PosColumn(
+                text: '${dataInformation['Total']}',
+                width: 3,
+                styles: const PosStyles(align: PosAlign.right, bold: true)),
+          ]);
+          bytes += ticket.hr();
+          bytes += ticket.row([
+            PosColumn(
+                text: 'Total :',
+                width: 6,
+                styles: const PosStyles(
+                    // height: PosTextSize.size1,
+                    // width: PosTextSize.size1,
+                    align: PosAlign.right,
+                    bold: true)),
+            PosColumn(
+                text: '${dataInformation['NetAmount']}',
+                width: 6,
+                styles: const PosStyles(align: PosAlign.right, bold: true
+                    // height: PosTextSize.size3,
+                    // width: PosTextSize.size2,
+                    )),
+          ]);
+          bytes += ticket.hr();
+          bytes += ticket.row([
+            PosColumn(
+                text: 'Tax : ' + taxPercentages,
+                width: 6,
+                styles: const PosStyles(
+                    // height: PosTextSize.size3,
+                    // width: PosTextSize.size2,
+                    align: PosAlign.right,
+                    bold: true)),
+            PosColumn(
+                text: (double.tryParse(dataInformation['CGST'].toString()) +
+                        double.tryParse(dataInformation['SGST'].toString()) +
+                        double.tryParse(dataInformation['IGST'].toString()))
+                    .toStringAsFixed(2),
+                width: 6,
+                styles: const PosStyles(align: PosAlign.right, bold: true
+                    // height: PosTextSize.size3,
+                    // width: PosTextSize.size2,
+                    )),
+          ]);
+        } else {
+          if (ComSettings.appSettings('bool', 'key-print-header-es', false)) {
+            bytes += ticket.text(
+              companySettings.name,
+              styles: const PosStyles(
+                align: PosAlign.center,
+                bold: true,
+                // height: PosTextSize.size2,
+                // width: PosTextSize.size2,
+              ),
+            );
+            bytes += ticket.text(
+              '',
+              styles: const PosStyles(
+                align: PosAlign.center,
+                bold: true,
+                // height: PosTextSize.size2,
+                // width: PosTextSize.size2,
+              ),
+            );
+            // if (printCopy == 2) {
+            //   //   Uint8List encArabic = await CharsetConverter.encode("windows-1256", "اهلا");charset.178
+            //   //   ticket.textEncoded(encArabic, styles: PosStyles(codeTable: PosCodeTable.arabic));
+            //   ticket.text('عبدالله زهير');
+            //   //       bold: true,));
+            //   //   // ticket.textEncoded(utf8.encode('عبدالله زهير'),styles: const PosStyles(align: PosAlign.center,
+            //   //   //   bold: true,));
+            // }
+            // linesAfter: 1);
+            // header1
+            companySettings.add1.toString().trim().isNotEmpty ??
+                (bytes += ticket.text(companySettings.add1,
+                    styles:
+                        const PosStyles(align: PosAlign.center, bold: true)));
+            companySettings.add2.toString().trim().isNotEmpty ??
+                (bytes += ticket.text(companySettings.add2,
+                    styles:
+                        const PosStyles(align: PosAlign.center, bold: true)));
+            bytes += ticket.text(
+                'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
+                styles: const PosStyles(align: PosAlign.center, bold: true));
+            bytes += ticket.text(
+                companyTaxMode == 'INDIA'
+                    ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
+                    : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
+                styles: const PosStyles(align: PosAlign.center, bold: true));
+            bytes += ticket.text(invoiceHead,
+                styles: const PosStyles(align: PosAlign.center, bold: true));
+            // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
+            //     styles: const PosStyles(align: PosAlign.left));
+            bytes += ticket.hr();
+            bytes += ticket.row([
+              PosColumn(
+                  text: 'Invoice No : ${dataInformation['InvoiceNo']}',
+                  width: 12,
+                  styles: const PosStyles(align: PosAlign.left, bold: true)),
+            ]);
+            bytes += ticket.row([
+              PosColumn(
+                  text:
+                      'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
+                  width: 12,
+                  styles: const PosStyles(align: PosAlign.left, bold: true)),
+            ]);
+          } else {
+            bytes += ticket.text(invoiceHead,
+                styles: const PosStyles(align: PosAlign.center, bold: true));
+            // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
+            //     styles: const PosStyles(align: PosAlign.left));DateUtil.dateDMY
+            bytes += ticket.row([
+              PosColumn(
+                  text: 'Invoice No : ${dataInformation['InvoiceNo']}',
+                  width: 12,
+                  styles: const PosStyles(align: PosAlign.left, bold: true)),
+            ]);
+            bytes += ticket.row([
+              PosColumn(
+                  text:
+                      'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
+                  width: 12,
+                  styles: const PosStyles(align: PosAlign.left, bold: true)),
+            ]);
+          }
+          bytes += ticket.hr();
+
+          bytes += ticket.text('Bill To :',
+              styles: const PosStyles(align: PosAlign.left, bold: true));
+
+          bytes += ticket.text('${dataInformation['ToName']}',
+              styles: const PosStyles(align: PosAlign.left, bold: true));
+
+          if (isEsQrCodeKSA) {
+            if (dataInformation['gstno'].toString().trim().isNotEmpty) {
+              bytes += ticket.text(
+                  companyTaxMode == 'INDIA'
+                      ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
+                      : 'TRN : ${dataInformation['gstno'].toString().trim()}',
+                  styles: const PosStyles(align: PosAlign.left, bold: true));
+            }
+          }
+          bytes += ticket.hr();
+          bytes += ticket.text('Description',
+              styles: const PosStyles(align: PosAlign.left, bold: true));
+
+          bytes += ticket.row([
+            PosColumn(text: ' ', width: 1),
+            PosColumn(text: 'Qty', width: 3, styles: PosStyles(bold: true)),
+            PosColumn(
+                text: 'Price',
+                width: 4,
+                styles: const PosStyles(align: PosAlign.right, bold: true)),
+            PosColumn(
+                text: 'Total',
+                width: 4,
+                styles: const PosStyles(align: PosAlign.right, bold: true)),
+          ]);
+          bytes += ticket.hr();
+          double totalQty = 0, totalRate = 0;
+          for (var i = 0; i < dataParticulars.length; i++) {
+            var itemName = dataParticulars[i]['itemname'].toString();
+            bytes += ticket.text(itemName,
+                styles: const PosStyles(align: PosAlign.left, bold: true));
+
+            bytes += ticket.row([
+              PosColumn(text: '', width: 1),
+              PosColumn(
+                  text:
+                      '${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}',
+                  width: 3,
+                  styles: const PosStyles(align: PosAlign.left, bold: true)),
+              PosColumn(
+                  text: double.tryParse(dataParticulars[i]['Rate'].toString())
+                      .toStringAsFixed(2),
+                  width: 4,
+                  styles: const PosStyles(align: PosAlign.right, bold: true)),
+              PosColumn(
+                  text: double.tryParse(dataParticulars[i]['Total'].toString())
+                      .toStringAsFixed(2),
+                  width: 4,
+                  styles: const PosStyles(align: PosAlign.right, bold: true)),
+            ]);
+            totalQty += dataParticulars[i]['Qty'];
+            totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
+          }
+          bytes += ticket.hr();
+          bytes += ticket.row([
+            PosColumn(
+                text: 'Sub =',
+                width: 3,
+                styles: const PosStyles(align: PosAlign.left, bold: true)),
+            PosColumn(
+                text: '$totalQty',
+                width: 2,
+                styles: const PosStyles(align: PosAlign.left, bold: true)),
+            PosColumn(
+                text: totalRate.toStringAsFixed(2),
+                width: 3,
+                styles: const PosStyles(align: PosAlign.right, bold: true)),
+            PosColumn(
+                text: double.tryParse(dataInformation['Total'].toString())
+                    .toStringAsFixed(2),
+                width: 4,
+                styles: const PosStyles(align: PosAlign.right, bold: true)),
+          ]);
+          bytes += ticket.hr();
+          bytes += ticket.row([
+            PosColumn(
+                text: 'Total :',
+                width: 6,
+                styles: const PosStyles(
+                    // height: PosTextSize.size1,
+                    // width: PosTextSize.size1,
+                    align: PosAlign.right,
+                    bold: true)),
+            PosColumn(
+                text: double.tryParse(dataInformation['Total'].toString())
+                    .toStringAsFixed(2),
+                width: 6,
+                styles: const PosStyles(align: PosAlign.right, bold: true
+                    // height: PosTextSize.size3,
+                    // width: PosTextSize.size2,
+                    )),
+          ]);
+        }
+        for (var i = 0; i < otherAmount.length; i++) {
+          if (otherAmount[i]['Amount'].toDouble() > 0) {
+            bytes += ticket.hr();
+            bytes += ticket.row([
+              PosColumn(
+                  text: '${otherAmount[i]['LedName']} :',
+                  width: 6,
+                  styles: const PosStyles(align: PosAlign.right
+                      // height: PosTextSize.size2,
+                      // width: PosTextSize.size2,
+                      )),
+              PosColumn(
+                  text: double.tryParse(otherAmount[i]['Amount'].toString())
+                      .toStringAsFixed(2),
+                  width: 6,
+                  styles: const PosStyles(
+                    align: PosAlign.right,
+                    // height: PosTextSize.size2,
+                    // width: PosTextSize.size2,
+                  )),
+            ]);
+          }
+        }
+        // bytes += ticket.hr();
+        // bytes += ticket.text(
+        //     'Amount in Words: ${NumberToWord().convert('en', double.tryParse(dataInformation['GrandTotal'].toString()).round())}',
+        //     linesAfter: 1);
+        if (Settings.getValue<bool>('key-print-balance', false)) {
+          bytes += ticket.hr();
+          bytes += ticket.row([
+            PosColumn(
+                text: 'Net Amount :',
+                width: 6,
+                styles: const PosStyles(
+                    // height: PosTextSize.size2, width: PosTextSize.size2,
+                    bold: true,
+                    align: PosAlign.right)),
+            PosColumn(
+                text: double.tryParse(dataInformation['GrandTotal'].toString())
+                    .toStringAsFixed(2),
+                width: 6,
+                styles: const PosStyles(
+                    align: PosAlign.right,
+                    // height: PosTextSize.size2,
+                    // width: PosTextSize.size2,
+                    bold: true)),
+          ]);
+        } else {
+          if (ledgerName != 'CASH') {
+            bytes += ticket.hr();
+            bytes += ticket.row([
+              PosColumn(
+                  text: 'Old Balance :',
+                  width: 6,
+                  styles: const PosStyles(
+                      // height: PosTextSize.size2, width: PosTextSize.size2,
+                      bold: true,
+                      align: PosAlign.right)),
+              PosColumn(
+                  text: double.tryParse(dataInformation['Balance'].toString())
+                      .toStringAsFixed(2),
+                  width: 6,
+                  styles: const PosStyles(
+                      // height: PosTextSize.size2, width: PosTextSize.size2,
+                      bold: true,
+                      align: PosAlign.right)),
+            ]);
+            bytes += ticket.hr();
+            bytes += ticket.row([
+              PosColumn(
+                  text: 'Net Amount :',
+                  width: 6,
+                  styles: const PosStyles(
+                      // height: PosTextSize.size2, width: PosTextSize.size2,
+                      bold: true,
+                      align: PosAlign.right)),
+              PosColumn(
+                  text:
+                      double.tryParse(dataInformation['GrandTotal'].toString())
+                          .toStringAsFixed(2),
+                  width: 6,
+                  styles: const PosStyles(
+                      align: PosAlign.right,
+                      // height: PosTextSize.size2,
+                      // width: PosTextSize.size2,
+                      bold: true)),
+            ]);
+            bytes += ticket.hr();
+            bytes += ticket.row([
+              PosColumn(
+                  text: 'Cash Received :',
+                  width: 6,
+                  styles: const PosStyles(
+                      // height: PosTextSize.size2, width: PosTextSize.size2,
+                      bold: true,
+                      align: PosAlign.right)),
+              PosColumn(
+                  text: double.tryParse(
+                          dataInformation['CashReceived'].toString())
+                      .toStringAsFixed(2),
+                  width: 6,
+                  styles: const PosStyles(
+                      // height: PosTextSize.size2, width: PosTextSize.size2,
+                      bold: true,
+                      align: PosAlign.right)),
+            ]);
+            bytes += ticket.hr();
+            bytes += ticket.row([
+              PosColumn(
+                  text: 'Balance :',
+                  width: 6,
+                  styles: const PosStyles(
+                      // height: PosTextSize.size2, width: PosTextSize.size2,
+                      bold: true,
+                      align: PosAlign.right)),
+              PosColumn(
+                  text: (double.tryParse(
+                              dataInformation['Balance'].toString()) +
+                          (double.tryParse(
+                                  dataInformation['GrandTotal'].toString()) -
+                              double.tryParse(
+                                  dataInformation['CashReceived'].toString())))
+                      .toStringAsFixed(2),
+                  width: 6,
+                  styles: const PosStyles(
+                      align: PosAlign.right,
+                      // height: PosTextSize.size2,
+                      // width: PosTextSize.size2,
+                      bold: true)),
+            ]);
+          } else {
+            bytes += ticket.hr();
+            bytes += ticket.row([
+              PosColumn(
+                  text: 'Net Amount :',
+                  width: 6,
+                  styles: const PosStyles(
+                      // height: PosTextSize.size2, width: PosTextSize.size2,
+                      bold: true,
+                      align: PosAlign.right)),
+              PosColumn(
+                  text:
+                      double.tryParse(dataInformation['GrandTotal'].toString())
+                          .toStringAsFixed(2),
+                  width: 6,
+                  styles: const PosStyles(
+                      align: PosAlign.right,
+                      // height: PosTextSize.size2,
+                      // width: PosTextSize.size2,
+                      bold: true)),
+            ]);
+          }
+        }
+
+        // ticket.feed(1);
+        bytes += ticket.text('${bill['message']}',
+            styles: const PosStyles(align: PosAlign.center));
+
+        if (isQrCodeKSA) {
+          // Print QR Code using native function
+          // bytes += ticket.qrcode('example.com');
+          if (taxSale) {
+            bytes += ticket.qrcode(SaudiConversion.getBase64(
+                companySettings.name,
+                ComSettings.getValue('GST-NO', settings),
+                DateUtil.dateTimeQrDMY(
+                    DateUtil.datedYMD(dataInformation['DDate']) +
+                        ' ' +
+                        DateUtil.timeHMS(dataInformation['BTime'])),
+                double.tryParse(dataInformation['GrandTotal'].toString())
+                    .toStringAsFixed(2),
+                (double.tryParse(dataInformation['CGST'].toString()) +
+                        double.tryParse(dataInformation['SGST'].toString()) +
+                        double.tryParse(dataInformation['IGST'].toString()))
+                    .toStringAsFixed(2)));
+            bytes += ticket.feed(
+                ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
+          } else if (isEsQrCodeKSA) {
+            bytes += ticket.qrcode(SaudiConversion.getBase64(
+                companySettings.name,
+                ComSettings.getValue('GST-NO', settings),
+                DateUtil.dateTimeQrDMY(
+                    DateUtil.datedYMD(dataInformation['DDate']) +
+                        ' ' +
+                        DateUtil.timeHMS(dataInformation['BTime'])),
+                double.tryParse(dataInformation['GrandTotal'].toString())
+                    .toStringAsFixed(2),
+                (double.tryParse(dataInformation['CGST'].toString()) +
+                        double.tryParse(dataInformation['SGST'].toString()) +
+                        double.tryParse(dataInformation['IGST'].toString()))
+                    .toStringAsFixed(2)));
+            bytes += ticket.feed(
+                ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
+          }
+        } else {
+          bytes += ticket.feed(
+              ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
+        }
+        // ticket.cut();
+        // FirebaseCrashlytics.instance
+        //     .setCustomKey('str_key', 'bt print complited');
+        bytes += ticket.feed(2);
+        return bytes;
+      } catch (e, s) {
+        FirebaseCrashlytics.instance
+            .recordError(e, s, reason: 'bt print:' + ticket.toString());
+        bytes += ticket.feed(2);
+        return bytes;
+      }
+    } else {
+      try {
+        if (taxSale) {
+          bytes += ticket.text(
+            companySettings.name,
+            styles: const PosStyles(
+              align: PosAlign.center,
+              bold: true,
+              // height: PosTextSize.size2,
+              // width: PosTextSize.size2,
+            ),
+          );
+          bytes += ticket.text('');
+
+          // if(printCopy==2){
+          //   Uint8List encArabic = await CharsetConverter.encode("windows-1256", "اهلا");charset.178
+          //   ticket.textEncoded(encArabic, styles: PosStyles(codeTable: PosCodeTable.arabic));
+          //   ticket.text('عبدالله زهير',containsChinese: false,styles: const PosStyles(align: PosAlign.center,codeTable: ,
+          //       bold: true,));
+          //   // ticket.textEncoded(utf8.encode('عبدالله زهير'),styles: const PosStyles(align: PosAlign.center,
+          //   //   bold: true,));
+          // }
+          // linesAfter: 1);
+          // header1
+          var text2 = ticket.text(companySettings.add1,
+              styles: const PosStyles(align: PosAlign.center));
+          companySettings.add1.toString().trim().isNotEmpty ?? (bytes += text2);
+          var text3 = ticket.text(companySettings.add2,
+              styles: const PosStyles(align: PosAlign.center));
+          companySettings.add2.toString().trim().isNotEmpty ?? (bytes += text3);
+          bytes += ticket.text(
+              'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
+              styles: const PosStyles(align: PosAlign.center));
+          bytes += ticket.text(
+              companyTaxMode == 'INDIA'
+                  ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
+                  : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
+              styles: const PosStyles(align: PosAlign.center));
+          bytes += ticket.text(invoiceHead,
+              styles: const PosStyles(align: PosAlign.center, bold: true));
+          // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
+          //     styles: const PosStyles(align: PosAlign.left));
+          bytes += ticket.hr();
+          bytes += ticket.row([
+            PosColumn(
+                text: 'Invoice No : ${dataInformation['InvoiceNo']}',
+                width: 12,
+                styles: const PosStyles(align: PosAlign.left)),
+          ]);
+          bytes += ticket.row([
+            PosColumn(
+                text:
+                    'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
+                width: 12,
+                styles: const PosStyles(align: PosAlign.right)),
+          ]);
+          bytes += ticket.hr();
+          bytes += ticket.text('Bill To : ${dataInformation['ToName']}',
+              styles: const PosStyles(align: PosAlign.left));
+          if (isEsQrCodeKSA) {
+            if (dataInformation['gstno'].toString().trim().isNotEmpty) {
+              bytes += ticket.text(
+                  companyTaxMode == 'INDIA'
+                      ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
+                      : 'TRN : ${dataInformation['gstno'].toString().trim()}',
+                  styles: const PosStyles(align: PosAlign.left));
+            }
+          }
+          bytes += ticket.hr();
+          bytes += ticket.row([
+            PosColumn(text: 'Description', width: 7),
+            PosColumn(text: 'Qty', width: 1),
+            PosColumn(
+                text: 'Price',
+                width: 2,
+                styles: const PosStyles(align: PosAlign.right)),
+            PosColumn(
+                text: 'Total',
+                width: 2,
+                styles: const PosStyles(align: PosAlign.right)),
+          ]);
+          double totalQty = 0, totalRate = 0;
+          for (var i = 0; i < dataParticulars.length; i++) {
+            if (double.tryParse(dataParticulars[i]['igst'].toString()) > 0) {
+              if (taxPercentages.contains(
+                  '@' + dataParticulars[i]['igst'].toString() + ' %')) {
+              } else {
+                taxPercentages +=
+                    '@' + dataParticulars[i]['igst'].toString() + ' %,';
+              }
+            }
+            var itemName = paper.width == PaperSize.mm80.width
+                ? dataParticulars[i]['itemname'].toString().trim().length > 26
+                    ? dataParticulars[i]['itemname']
+                        .toString()
+                        .trim()
+                        .characters
+                        .take(26)
+                        .toString()
+                    : dataParticulars[i]['itemname'].toString()
+                : dataParticulars[i]['itemname'].toString().trim().length > 12
+                    ? dataParticulars[i]['itemname']
+                        .toString()
+                        .trim()
+                        .characters
+                        .take(12)
+                        .toString()
+                    : dataParticulars[i]['itemname'].toString();
+            bytes += ticket.row([
+              PosColumn(text: itemName, width: 7),
+              PosColumn(
+                  text:
+                      '${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}',
+                  width: 1),
+              PosColumn(
+                  text: '${dataParticulars[i]['Rate']}',
+                  width: 2,
+                  styles: const PosStyles(align: PosAlign.right)),
+              PosColumn(
+                  text: '${dataParticulars[i]['Total']}',
+                  width: 2,
+                  styles: const PosStyles(align: PosAlign.right)),
+            ]);
+            totalQty += dataParticulars[i]['Qty'];
+            totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
+          }
+          bytes += ticket.hr();
+          bytes += ticket.row([
+            PosColumn(text: 'Total : ', width: 7),
+            PosColumn(text: '$totalQty', width: 1),
+            PosColumn(
+                text: totalRate.toStringAsFixed(2),
+                width: 2,
+                styles: const PosStyles(align: PosAlign.right)),
+            PosColumn(
+                text: '${dataInformation['Total']}',
+                width: 2,
+                styles: const PosStyles(align: PosAlign.right)),
+          ]);
+          bytes += ticket.hr();
+          bytes += ticket.row([
+            PosColumn(
+                text: 'Total :',
+                width: 6,
+                styles: const PosStyles(
+                  // height: PosTextSize.size1,
+                  // width: PosTextSize.size1,
+                  align: PosAlign.right,
+                )),
+            PosColumn(
+                text: '${dataInformation['NetAmount']}',
+                width: 6,
+                styles: const PosStyles(
+                  align: PosAlign.right,
+                  // height: PosTextSize.size3,
+                  // width: PosTextSize.size2,
+                )),
+          ]);
+          bytes += ticket.hr();
+          bytes += ticket.row([
+            PosColumn(
+                text: 'Tax : ' + taxPercentages,
+                width: 6,
+                styles: const PosStyles(
+                  // height: PosTextSize.size3,
+                  // width: PosTextSize.size2,
+                  align: PosAlign.right,
+                )),
+            PosColumn(
+                text: (double.tryParse(dataInformation['CGST'].toString()) +
+                        double.tryParse(dataInformation['SGST'].toString()) +
+                        double.tryParse(dataInformation['IGST'].toString()))
+                    .toStringAsFixed(2),
+                width: 6,
+                styles: const PosStyles(
+                  align: PosAlign.right,
+                  // height: PosTextSize.size3,
+                  // width: PosTextSize.size2,
+                )),
+          ]);
+        } else {
+          if (ComSettings.appSettings('bool', 'key-print-header-es', false)) {
+            bytes += ticket.text(
+              companySettings.name,
+              styles: const PosStyles(
+                align: PosAlign.center,
+                bold: true,
+                // height: PosTextSize.size2,
+                // width: PosTextSize.size2,
+              ),
+            );
+            // if (printCopy == 2) {
+            //   //   Uint8List encArabic = await CharsetConverter.encode("windows-1256", "اهلا");charset.178
+            //   //   ticket.textEncoded(encArabic, styles: PosStyles(codeTable: PosCodeTable.arabic));
+            //   ticket.text('عبدالله زهير');
+            //   //       bold: true,));
+            //   //   // ticket.textEncoded(utf8.encode('عبدالله زهير'),styles: const PosStyles(align: PosAlign.center,
+            //   //   //   bold: true,));
+            // }
+            // linesAfter: 1);
+            // header1
+            companySettings.add1.toString().trim().isNotEmpty ??
+                (bytes += ticket.text(companySettings.add1,
+                    styles: const PosStyles(align: PosAlign.center)));
+            companySettings.add2.toString().trim().isNotEmpty ??
+                (bytes += ticket.text(companySettings.add2,
+                    styles: const PosStyles(align: PosAlign.center)));
+            bytes += ticket.text(
+                'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
+                styles: const PosStyles(align: PosAlign.center));
+            bytes += ticket.text(
+                companyTaxMode == 'INDIA'
+                    ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
+                    : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
+                styles: const PosStyles(align: PosAlign.center));
+            bytes += ticket.text(invoiceHead,
+                styles: const PosStyles(align: PosAlign.center, bold: true));
+            // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
+            //     styles: const PosStyles(align: PosAlign.left));
+            bytes += ticket.row([
+              PosColumn(
+                  text: 'Invoice No : ${dataInformation['InvoiceNo']}',
+                  width: 6,
+                  styles: const PosStyles(align: PosAlign.left)),
+              PosColumn(
+                  text:
+                      'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
+                  width: 6,
+                  styles: const PosStyles(align: PosAlign.right)),
+            ]);
+          } else {
+            bytes += ticket.text(invoiceHead,
+                styles: const PosStyles(align: PosAlign.center, bold: true));
+            // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
+            //     styles: const PosStyles(align: PosAlign.left));DateUtil.dateDMY
+            bytes += ticket.row([
+              PosColumn(
+                  text: 'Invoice No : ${dataInformation['InvoiceNo']}',
+                  width: 6,
+                  styles: const PosStyles(align: PosAlign.left)),
+              PosColumn(
+                  text:
+                      'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
+                  width: 6,
+                  styles: const PosStyles(align: PosAlign.right)),
+            ]);
+          }
+          bytes += ticket.text('Bill To : ${dataInformation['ToName']}',
+              styles: const PosStyles(align: PosAlign.left));
+
+          if (isEsQrCodeKSA) {
+            if (dataInformation['gstno'].toString().trim().isNotEmpty) {
+              bytes += ticket.text(
+                  companyTaxMode == 'INDIA'
+                      ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
+                      : 'TRN : ${dataInformation['gstno'].toString().trim()}',
+                  styles: const PosStyles(align: PosAlign.left));
+            }
+          }
+          bytes += ticket.hr();
+          bytes += ticket.row([
+            PosColumn(text: 'Description', width: 7),
+            PosColumn(text: 'Qty', width: 1),
+            PosColumn(
+                text: 'Price',
+                width: 2,
+                styles: const PosStyles(align: PosAlign.right)),
+            PosColumn(
+                text: 'Total',
+                width: 2,
+                styles: const PosStyles(align: PosAlign.right)),
+          ]);
+          bytes += ticket.hr();
+          double totalQty = 0, totalRate = 0;
+          for (var i = 0; i < dataParticulars.length; i++) {
+            var itemName = paper.width == PaperSize.mm80.width
+                ? dataParticulars[i]['itemname'].toString().trim().length > 26
+                    ? dataParticulars[i]['itemname']
+                        .toString()
+                        .trim()
+                        .characters
+                        .take(26)
+                        .toString()
+                    : dataParticulars[i]['itemname'].toString()
+                : dataParticulars[i]['itemname'].toString().trim().length > 12
+                    ? dataParticulars[i]['itemname']
+                        .toString()
+                        .trim()
+                        .characters
+                        .take(12)
+                        .toString()
+                    : dataParticulars[i]['itemname'].toString();
+            bytes += ticket.row([
+              PosColumn(text: itemName, width: 7),
+              PosColumn(
+                  text:
+                      '${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}',
+                  width: 1,
+                  styles: const PosStyles(align: PosAlign.right)),
+              PosColumn(
+                  text: double.tryParse(dataParticulars[i]['Rate'].toString())
+                      .toStringAsFixed(2),
+                  width: 2,
+                  styles: const PosStyles(align: PosAlign.right)),
+              PosColumn(
+                  text: double.tryParse(dataParticulars[i]['Total'].toString())
+                      .toStringAsFixed(2),
+                  width: 2,
+                  styles: const PosStyles(align: PosAlign.right)),
+            ]);
+            totalQty += dataParticulars[i]['Qty'];
+            totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
+          }
+          bytes += ticket.hr();
+          bytes += ticket.row([
+            PosColumn(
+                text: 'Sub =',
+                width: 2,
+                styles: const PosStyles(align: PosAlign.left)),
+            PosColumn(
+                text: '$totalQty',
+                width: 3,
+                styles: const PosStyles(align: PosAlign.left)),
+            PosColumn(
+                text: totalRate.toStringAsFixed(2),
+                width: 3,
+                styles: const PosStyles(align: PosAlign.right)),
+            PosColumn(
+                text: double.tryParse(dataInformation['Total'].toString())
+                    .toStringAsFixed(2),
+                width: 4,
+                styles: const PosStyles(align: PosAlign.right)),
+          ]);
+          bytes += ticket.hr();
+          bytes += ticket.row([
+            PosColumn(
+                text: 'Total :',
+                width: 6,
+                styles: const PosStyles(
+                  // height: PosTextSize.size1,
+                  // width: PosTextSize.size1,
+                  align: PosAlign.right,
+                )),
+            PosColumn(
+                text: double.tryParse(dataInformation['Total'].toString())
+                    .toStringAsFixed(2),
+                width: 6,
+                styles: const PosStyles(
+                  align: PosAlign.right,
+                  // height: PosTextSize.size3,
+                  // width: PosTextSize.size2,
+                )),
+          ]);
+        }
+        for (var i = 0; i < otherAmount.length; i++) {
+          if (otherAmount[i]['Amount'].toDouble() > 0) {
+            bytes += ticket.hr();
+            bytes += ticket.row([
+              PosColumn(
+                  text: '${otherAmount[i]['LedName']} :',
+                  width: 6,
+                  styles: const PosStyles(align: PosAlign.right
+                      // height: PosTextSize.size2,
+                      // width: PosTextSize.size2,
+                      )),
+              PosColumn(
+                  text: double.tryParse(otherAmount[i]['Amount'].toString())
+                      .toStringAsFixed(2),
+                  width: 6,
+                  styles: const PosStyles(
+                    align: PosAlign.right,
+                    // height: PosTextSize.size2,
+                    // width: PosTextSize.size2,
+                  )),
+            ]);
+          }
+        }
+        bytes += ticket.hr();
+        bytes += ticket.row([
+          PosColumn(
+              text: 'Net Amount :',
+              width: 6,
+              styles: const PosStyles(
+                  // height: PosTextSize.size2, width: PosTextSize.size2,
+                  bold: true,
+                  align: PosAlign.right)),
+          PosColumn(
+              text: double.tryParse(dataInformation['GrandTotal'].toString())
+                  .toStringAsFixed(2),
+              width: 6,
+              styles: const PosStyles(
+                  align: PosAlign.right,
+                  // height: PosTextSize.size2,
+                  // width: PosTextSize.size2,
+                  bold: true)),
+        ]);
+        bytes += ticket.hr();
+        bytes += ticket.text(
+            'Amount in Words: ${NumberToWord().convert('en', double.tryParse(dataInformation['GrandTotal'].toString()).round())}',
+            linesAfter: 1);
+
+        // ticket.feed(1);
+        bytes += ticket.text('${bill['message']}',
+            styles: const PosStyles(align: PosAlign.center));
+
+        if (isQrCodeKSA) {
+          // Print QR Code using native function
+          // bytes += ticket.qrcode('example.com');
+          if (taxSale) {
+            bytes += ticket.qrcode(SaudiConversion.getBase64(
+                companySettings.name,
+                ComSettings.getValue('GST-NO', settings),
+                DateUtil.dateTimeQrDMY(
+                    DateUtil.datedYMD(dataInformation['DDate']) +
+                        ' ' +
+                        DateUtil.timeHMS(dataInformation['BTime'])),
+                double.tryParse(dataInformation['GrandTotal'].toString())
+                    .toStringAsFixed(2),
+                (double.tryParse(dataInformation['CGST'].toString()) +
+                        double.tryParse(dataInformation['SGST'].toString()) +
+                        double.tryParse(dataInformation['IGST'].toString()))
+                    .toStringAsFixed(2)));
+            bytes += ticket.feed(
+                ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
+          } else if (isEsQrCodeKSA) {
+            bytes += ticket.qrcode(SaudiConversion.getBase64(
+                companySettings.name,
+                ComSettings.getValue('GST-NO', settings),
+                DateUtil.dateTimeQrDMY(
+                    DateUtil.datedYMD(dataInformation['DDate']) +
+                        ' ' +
+                        DateUtil.timeHMS(dataInformation['BTime'])),
+                double.tryParse(dataInformation['GrandTotal'].toString())
+                    .toStringAsFixed(2),
+                (double.tryParse(dataInformation['CGST'].toString()) +
+                        double.tryParse(dataInformation['SGST'].toString()) +
+                        double.tryParse(dataInformation['IGST'].toString()))
+                    .toStringAsFixed(2)));
+            bytes += ticket.feed(
+                ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
+          }
+        } else {
+          bytes += ticket.feed(
+              ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
+        }
+        // ticket.cut();
+        // FirebaseCrashlytics.instance
+        //     .setCustomKey('str_key', 'bt print complited');
+        bytes += ticket.feed(2);
+        return bytes;
+      } catch (e, s) {
+        FirebaseCrashlytics.instance
+            .recordError(e, s, reason: 'bt print:' + ticket.toString());
+        bytes += ticket.feed(2);
+        return bytes;
+      }
+    }
+    // } else if (printerModel == 6) {
+    //   try {
+    //     // Print image
+    //     final Uint8List bytes = widget.byteImage;
+    //     final img.Image image = img.decodeImage(bytes);
+    //     ticket.image(image);
+    //     ticket.feed(2);
+    //     ticket.cut();
+    //     return ticket;
+    //   } catch (e, s) {
+    //     FirebaseCrashlytics.instance
+    //         .recordError(e, s, reason: 'bt print:' + ticket.toString());
+    //     return ticket;
+    //   }
+    // }
+    // }
+  }
 
   Future<List<int>> salesData(PaperSize paper) async {
     var profile = await CapabilityProfile.load();

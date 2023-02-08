@@ -16,12 +16,14 @@ import 'package:sheraccerp/provider/purchase_provider.dart';
 import 'package:sheraccerp/provider/sales_provider.dart';
 import 'package:sheraccerp/provider/stock_provider.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
+import 'package:sheraccerp/screens/accounts/journal.dart';
 import 'package:sheraccerp/screens/html_previews/invoice_models.dart';
 import 'package:sheraccerp/screens/inventory/bill_list.dart';
 import 'package:sheraccerp/screens/inventory/inv_r_p_voucher.dart';
 import 'package:sheraccerp/screens/home/delivery_home.dart';
 import 'package:sheraccerp/screens/home/manager_home.dart';
 import 'package:sheraccerp/screens/inventory/order_list.dart';
+import 'package:sheraccerp/screens/inventory/product_management.dart';
 import 'package:sheraccerp/screens/inventory/purchase/opening_stock.dart';
 import 'package:sheraccerp/screens/inventory/purchase/purchase_new.dart';
 import 'package:sheraccerp/screens/inventory/purchase/purchase_order.dart';
@@ -165,6 +167,8 @@ class MyApp extends StatelessWidget {
               '/sale': (context) => const Sales(),
               '/InvRPVoucher': (context) => const InvRPVoucher(),
               '/InvoiceModels': (context) => const InvoiceModels(),
+              '/ProductManagement': (context) => ProductManagement(),
+              '/journal': (context) => Journal(),
             },
             theme: isDarkTheme
                 ? ThemeData(

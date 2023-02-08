@@ -295,7 +295,7 @@ class AppSettings extends StatelessWidget {
                 ),
               ],
             )),
-        //Transaction
+        // //Transaction
         SingleChildScrollView(
           child: SimpleSettingsTile(
               title: 'Transaction',
@@ -510,7 +510,7 @@ class AppSettings extends StatelessWidget {
                 ],
               )),
         ),
-        //Item
+        // //Item
         SimpleSettingsTile(
             title: 'Item',
             subtitle: 'Item Settings',
@@ -720,7 +720,7 @@ class AppSettings extends StatelessWidget {
                 )
               ],
             )),
-        //Pinter
+        // //Pinter
         SimpleSettingsTile(
             title: 'Pinter',
             subtitle: 'Pinter Settings',
