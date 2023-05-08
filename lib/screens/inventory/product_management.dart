@@ -360,6 +360,7 @@ class _ProductManagementState extends State<ProductManagement> {
   }
 
   void findProductDetails(String productId) {
+    productData = [];
     var date =
         getToDay.isNotEmpty ? getToDay : DateFormat('dd-MM-yyyy').format(now);
     api.fetchProductDetails(productId, DateUtil.dateYMD(date)).then((data) {

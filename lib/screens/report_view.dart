@@ -215,8 +215,14 @@ class _ReportViewState extends State<ReportView> {
                                                                         widget.type ==
                                                                             'Receivable'
                                                                     ? reportView()
-                                                                    : const Text(
-                                                                        'No Report'));
+                                                                    : widget.type == 'PaymentList' ||
+                                                                            widget.type ==
+                                                                                'ReceiptList' ||
+                                                                            widget.type ==
+                                                                                'JournalList'
+                                                                        ? reportVoucherList()
+                                                                        : const Text(
+                                                                            'No Report'));
   }
 
   reportView() {
@@ -1581,6 +1587,156 @@ class _ReportViewState extends State<ReportView> {
   reportViewEmployeeList() {
     return FutureBuilder<List<dynamic>>(
       future: api.getEmployeeList(),
+      builder: (ctx, snapshot) {
+        if (snapshot.hasData) {
+          if (snapshot.data.isNotEmpty) {
+            var data = snapshot.data;
+            _data = data;
+            tableColumn = data[0].keys.toList();
+            return Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                controller: controller,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: DataTable(
+                        columnSpacing: 12,
+                        dataRowHeight: 20,
+                        dividerThickness: 1,
+                        headingRowHeight: 30,
+                        columns: [
+                          for (int i = 0; i < tableColumn.length; i++)
+                            DataColumn(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: Text(
+                                  tableColumn[i],
+                                  style: const TextStyle(
+                                      // color: Colors.black,
+                                      fontWeight: FontWeight.bold),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                        ],
+                        rows: data
+                            .map(
+                              (values) => DataRow(
+                                cells: [
+                                  for (int i = 0; i < values.length; i++)
+                                    DataCell(
+                                      Align(
+                                        alignment: ComSettings.oKNumeric(
+                                          values[tableColumn[i]] != null
+                                              ? values[tableColumn[i]]
+                                                  .toString()
+                                              : '',
+                                        )
+                                            ? Alignment.centerRight
+                                            : Alignment.centerLeft,
+                                        child: Text(
+                                          values[tableColumn[i]] != null
+                                              ? values[tableColumn[i]]
+                                                  .toString()
+                                              : '',
+                                          softWrap: true,
+                                          overflow: TextOverflow.ellipsis,
+                                          //style: TextStyle(fontSize: 6),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ),
+                    // SizedBox(height: 500),
+                  ],
+                ),
+              ),
+            );
+          } else {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [SizedBox(height: 20), Text('No Data Found..')],
+              ),
+            );
+          }
+        } else if (snapshot.hasError) {
+          return AlertDialog(
+            title: const Text(
+              'An Error Occurred!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.redAccent,
+              ),
+            ),
+            content: Text(
+              "${snapshot.error}",
+              style: const TextStyle(
+                color: Colors.blueAccent,
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: const Text(
+                  'Go Back',
+                  style: TextStyle(
+                    color: Colors.redAccent,
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          );
+        }
+        // By default, show a loading spinner.
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const <Widget>[
+              CircularProgressIndicator(),
+              SizedBox(height: 20),
+              Text('This may take some time..')
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  reportVoucherList() {
+    String ledCode = widget.id;
+    String location = widget.branchId.toString().isNotEmpty
+        ? widget.branchId.toString()
+        : '1';
+    String groupCode = '0';
+    String project = '0';
+    String fromDate = widget.sDate.isNotEmpty ? widget.sDate : '2000-01-01';
+    String toDate = widget.eDate.isNotEmpty ? widget.eDate : '2000-01-01';
+    String sDate = widget.sDate.isNotEmpty ? widget.sDate : '2000-01-01';
+    String eDate = widget.eDate.isNotEmpty ? widget.eDate : '2000-01-01';
+    String where = '';
+    String cashId = '0';
+    String salesman = widget.salesMan.isNotEmpty ? widget.salesMan : '0';
+    String statement = widget.type == 'PaymentList'
+        ? 'PvListSummery'
+        : widget.type == 'ReceiptList'
+            ? 'RvListSummery'
+            : widget.type == 'JournalList'
+                ? 'JvList'
+                : '';
+    return FutureBuilder<List<dynamic>>(
+      future: api.getVoucherList(ledCode, location, groupCode, project,
+          fromDate, toDate, sDate, eDate, where, cashId, salesman, statement),
       builder: (ctx, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {

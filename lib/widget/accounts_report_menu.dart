@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sheraccerp/screens/report_view.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
 
@@ -252,6 +253,92 @@ class AccountsReportMenu extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
                   Icon(
+                    Icons.payments_rounded,
+                    color: Colors.green[500],
+                    size: 90.0,
+                  ),
+                  const Text(
+                    'Payment List',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            // Navigator.push(
+            //     context,
+            //     MaterialPageRoute(
+            //         builder: (BuildContext context) => const ReportView(
+            //             '0',
+            //             '1',
+            //             '2000-01-01',
+            //             '2000-01-01',
+            //             'PaymentList',
+            //             '',
+            //             'Payment List',
+            //             '0',
+            //             1)));
+            argumentsPass = {'mode': 'PaymentList'};
+            Navigator.pushNamed(
+              context,
+              '/select_ledger',
+            );
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Icon(
+                    Icons.receipt_long_rounded,
+                    color: Colors.blue[500],
+                    size: 90.0,
+                  ),
+                  const Text(
+                    'Receipt List',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            // Navigator.push(
+            //     context,
+            //     MaterialPageRoute(
+            //         builder: (BuildContext context) => const ReportView(
+            //             '0',
+            //             '1',
+            //             '2000-01-01',
+            //             '2000-01-01',
+            //             'ReceiptList',
+            //             '',
+            //             'Receipt List',
+            //             '0',
+            //             1)));
+            argumentsPass = {'mode': 'ReceiptList'};
+            Navigator.pushNamed(
+              context,
+              '/select_ledger',
+            );
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Icon(
                     Icons.show_chart_rounded,
                     color: Colors.green[300],
                     size: 90.0,
@@ -378,6 +465,49 @@ class AccountsReportMenu extends StatelessWidget {
                     size: 90.0,
                   ),
                   const Text(
+                    'Journal List',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            argumentsPass = {'mode': 'JournalList'};
+            Navigator.pushNamed(
+              context,
+              '/select_ledger',
+            );
+            // Navigator.push(
+            //     context,
+            //     MaterialPageRoute(
+            //         builder: (BuildContext context) => const ReportView(
+            //             '0',
+            //             '1',
+            //             '2000-01-01',
+            //             '2000-01-01',
+            //             'JournalList',
+            //             '',
+            //             'Journal List',
+            //             '0',
+            //             1)));
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Icon(
+                    Icons.ballot_rounded,
+                    color: kPrimaryColor[300],
+                    size: 90.0,
+                  ),
+                  const Text(
                     'Invoice \nBalance Customers',
                     style: TextStyle(
                         color: Colors.black, fontWeight: FontWeight.bold),
@@ -424,17 +554,6 @@ class AccountsReportMenu extends StatelessWidget {
             );
           },
         ),
-        //Ledger_ReportProject
-        //ReceivblesDebitOnly,
-        //ReceivblesCreditOnly
-        //ReceivblesDebitOnlySalesman
-        //ReceivblesCreditOnlySalesman
-        //Cash Book Projection
-        //Trial_G_l
-        //Trial_G
-        //Custom Summary
-        //Ledger_Report_Qty
-        //ShowBills
       ],
     );
   }

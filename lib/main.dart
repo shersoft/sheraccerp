@@ -168,7 +168,7 @@ class MyApp extends StatelessWidget {
               '/InvRPVoucher': (context) => const InvRPVoucher(),
               '/InvoiceModels': (context) => const InvoiceModels(),
               '/ProductManagement': (context) => ProductManagement(),
-              '/journal': (context) => Journal(),
+              '/journal': (context) => const Journal(),
             },
             theme: isDarkTheme
                 ? ThemeData(

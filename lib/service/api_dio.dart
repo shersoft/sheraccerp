@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:sheraccerp/models/customer_model.dart';
@@ -17,7 +16,6 @@ import 'package:sheraccerp/models/stock_item.dart';
 import 'package:sheraccerp/models/stock_product.dart';
 import 'package:sheraccerp/models/tax_group_model.dart';
 import 'package:sheraccerp/models/unit_model.dart';
-import 'package:sheraccerp/provider/app_provider.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/widget/simple_piediagram_pay_rec.dart';
 
@@ -54,10 +52,12 @@ class DioService {
         return responseBodyOfTotal;
       } else {
         debugPrint('Failed to load internet');
+        return {};
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return {};
     }
   }
 
@@ -1065,10 +1065,12 @@ class DioService {
         return _items;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -1091,10 +1093,12 @@ class DioService {
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -1117,10 +1121,12 @@ class DioService {
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -1143,10 +1149,12 @@ class DioService {
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -1169,10 +1177,12 @@ class DioService {
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -1193,10 +1203,12 @@ class DioService {
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -1219,19 +1231,35 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'purchaseReport/$dataBase/$branchId/$statement/$sDate/$eDate/$supplierId/$project/$itemId/$mfr/$category/$subcategory/$salesman/$taxGroup');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'purchaseReport/$dataBase',
+          queryParameters: {
+            'sDate': '$sDate',
+            'eDate': '$eDate',
+            'branchId': branchId,
+            'statementType': statement,
+            'supplierId': supplierId,
+            'project': project,
+            'itemId': itemId,
+            'mfr': mfr,
+            'category': category,
+            'subcategory': subcategory,
+            'salesman': salesman,
+            'taxGroup': taxGroup
+          });
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -1245,17 +1273,19 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'purchaseReportMonthly/$dataBase/$branchId');
+              'purchaseReportMonthly/$dataBase');
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -1278,6 +1308,7 @@ class DioService {
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
@@ -1316,10 +1347,12 @@ class DioService {
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -1341,10 +1374,12 @@ class DioService {
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -1458,6 +1493,7 @@ class DioService {
         return response.data;
       } else {
         debugPrint('Failed to load data');
+        return {};
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
@@ -1635,8 +1671,6 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<LedgerParent> _items = [];
     try {
-      // getMainHead
-      //LedCode'], value: element['LedName
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
@@ -1644,8 +1678,7 @@ class DioService {
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var group in jsonResponse) {
-          _items.add(LedgerParent.fromJson(
-              group)); //{'Ledcode': group['lh_id'], 'LedName': group['lh_name']});
+          _items.add(LedgerParent.fromJson(group));
         }
         return _items;
       } else {
@@ -3626,6 +3659,81 @@ class DioService {
         }
       } else {
         debugPrint('Unexpected error Occurred!');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
+  }
+
+  Future<List<dynamic>> getVoucherList(
+      String ledCode,
+      String location,
+      String groupCode,
+      String project,
+      String fromDate,
+      String toDate,
+      String sDate,
+      String eDate,
+      String where,
+      String cashId,
+      String salesman,
+      String statement) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    List<dynamic> _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'voucher_report/getListReport/$dataBase',
+          queryParameters: {
+            'ledCode': ledCode,
+            'location': location,
+            'groupCode': groupCode,
+            'project': project,
+            'fromDate': fromDate,
+            'toDate': toDate,
+            'sDate': sDate,
+            'eDate': eDate,
+            'where': where,
+            'cashId': cashId,
+            'salesman': salesman,
+            'statement': statement
+          });
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        _items = data;
+      } else {
+        debugPrint('Failed to load data');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<bool> companyUpdate(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'company/company/update',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        return response.data > 0 ? true : false;
+      } else {
+        debugPrint('Failed to load data');
         return false;
       }
     } catch (e) {

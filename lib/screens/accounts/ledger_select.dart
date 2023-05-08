@@ -63,6 +63,13 @@ class _LedgerSelectState extends State<LedgerSelect> {
         _loading = false;
         _ledger = 'CASH';
         _id = 0;
+      } else if (mode == "ReceiptList" ||
+          mode == 'PaymentList' ||
+          mode == 'JournalList') {
+        statement = mode;
+        _loading = false;
+        _ledger = 'CASH';
+        _id = 0;
       } else if (mode == "CashBook") {
         statement = 'Ledger_Report';
         _loading = false;
@@ -241,7 +248,15 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                 : mode ==
                                                                         'Receivable'
                                                                     ? 'Receivable'
-                                                                    : 'Select'),
+                                                                    : mode ==
+                                                                            'ReceiptList'
+                                                                        ? 'Receipt List'
+                                                                        : mode ==
+                                                                                'PaymentList'
+                                                                            ? 'Payment List'
+                                                                            : mode == 'JournalList'
+                                                                                ? 'Journal List'
+                                                                                : 'Select'),
       ),
       body: _loading ? _loadLedger() : _loadWidget(),
     );
@@ -1854,7 +1869,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                                 '1',
                                                                                 DateUtil.dateDMY2YMD(fromDate),
                                                                                 DateUtil.dateDMY2YMD(toDate),
-                                                                                'Bill By Bill',
+                                                                                statement,
                                                                                 '',
                                                                                 statement,
                                                                                 salesMan,

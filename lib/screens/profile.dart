@@ -1,10 +1,14 @@
 // @dart = 2.11
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/bussiness_card.dart';
+import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
 
@@ -19,6 +23,12 @@ class _ProfileState extends State<Profile> {
   CompanyInformation companySettings;
   List<CompanySettings> settings;
   bool viewProfile = true;
+  String _dropDownTaxCalculation;
+  String _taxNoHint = '';
+  String _dropDownState = '';
+  String _stateCode = '';
+  GSTStateModel gstStateM;
+  DioService api = DioService();
 
   @override
   void initState() {
@@ -94,7 +104,7 @@ class _ProfileState extends State<Profile> {
         GestureDetector(
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => const BussinessCard(),
+              builder: (context) => const BusinessCard(),
             ),
           ),
           child: const Card(
@@ -105,7 +115,7 @@ class _ProfileState extends State<Profile> {
                 color: indigoAccent,
               ),
               title: Text(
-                'Bussiness Card',
+                'Business Card',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   color: blueAccent,
@@ -229,11 +239,6 @@ class _ProfileState extends State<Profile> {
   final TextEditingController _telephoneC = TextEditingController();
   final TextEditingController _tinC = TextEditingController();
   final TextEditingController _taxNoC = TextEditingController();
-  String _dropDownTaxCalculation = '';
-  String _taxNoHint = '';
-  String _dropDownState = '';
-  String _stateCode = '';
-  GSTStateModel gstStateM;
 
   editProfile() {
     _nameC.text = (companySettings.name);
@@ -247,144 +252,197 @@ class _ProfileState extends State<Profile> {
     _pinC.text = (companySettings.pin);
     _sCurrencyC.text = (companySettings.sCurrency);
     _sNameC.text = (companySettings.sName);
-    _dropDownTaxCalculation = (companySettings.taxCalculation);
+    _dropDownTaxCalculation =
+        _dropDownTaxCalculation ?? (companySettings.taxCalculation);
     _telephoneC.text = (companySettings.telephone);
     _tinC.text = (companySettings.tin);
     _taxNoC.text = '${ComSettings.getValue('GST-NO', settings)}';
     _taxNoHint = companyTaxMode == 'INDIA' ? 'GSTNO ' : 'TRN ';
-    // gstStateM = GSTStateModel(
-    //     state: ComSettings.getValue('COMP-STATE', settings),
-    //     code: ComSettings.getValue('COMP-STATECODE', settings));
-    gstStateM = GSTStateModel(state: "KERALA", code: "32");
+    var _gstStateM = GSTStateModel(
+        state: ComSettings.getValue('COMP-STATE', settings),
+        code: ComSettings.getValue('COMP-STATECODE', settings));
+    var gstState =
+        gstStateModels.lastWhere((element) => element.code == _gstStateM.code);
+    gstStateM = gstStateM ?? gstState;
 
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          Expanded(
-              child: TextField(
-            controller: _nameC,
-            decoration: const InputDecoration(hintText: 'Name'),
-          )),
-          Expanded(
-              child: TextField(
-            controller: _add1C,
-            decoration: const InputDecoration(hintText: 'Address 1'),
-          )),
-          Expanded(
-              child: TextField(
-            controller: _add2C,
-            decoration: const InputDecoration(hintText: 'Address 2'),
-          )),
-          Expanded(
-              child: TextField(
-            controller: _add3C,
-            decoration: const InputDecoration(hintText: 'Address 3'),
-          )),
-          Expanded(
-              child: TextField(
-            controller: _add4C,
-            decoration: const InputDecoration(hintText: 'Address 4'),
-          )),
-          Expanded(
-              child: TextField(
-            controller: _add5C,
-            decoration: const InputDecoration(hintText: 'Address 5'),
-          )),
-          Expanded(
-              child: TextField(
-            controller: _taxNoC,
-            decoration: InputDecoration(hintText: _taxNoHint),
-          )),
-          Expanded(
-              child: TextField(
-            controller: _emailC,
-            decoration: const InputDecoration(hintText: 'Mail Id'),
-          )),
-          Expanded(
-              child: TextField(
-            controller: _mobileC,
-            decoration: const InputDecoration(hintText: 'Mobile No'),
-          )),
-          Row(
-            // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('State : '),
-              DropdownButton<GSTStateModel>(
-                items:
-                    gstStateModels.map<DropdownMenuItem<GSTStateModel>>((item) {
-                  return DropdownMenuItem<GSTStateModel>(
-                    value: item,
-                    child: Text(item.state),
-                  );
-                }).toList(),
-                onChanged: (item) {
-                  setState(() {
-                    _dropDownState = item.state;
-                    _stateCode = item.code;
-                    gstStateM = item;
-                  });
-                },
-                // value: gstStateM,
-              ),
-              const Text('Code : '),
-              Text(_stateCode),
-            ],
-          ),
-          Expanded(
-              child: TextField(
-            controller: _pinC,
-            decoration: const InputDecoration(hintText: 'PinCode'),
-          )),
-          Expanded(
-              child: TextField(
-            controller: _sCurrencyC,
-            decoration: const InputDecoration(hintText: 'Currency'),
-          )),
-          Expanded(
-              child: TextField(
-            controller: _sNameC,
-            decoration: const InputDecoration(hintText: 'Second Name'),
-          )),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              const Text('TaxCalculation : '),
-              DropdownButton<String>(
-                // hint: Text(_dropDownTaxCalculation.isNotEmpty
-                //     ? _dropDownTaxCalculation
-                //     : 'MINUS'),
-                items: taxCalculationList.map<DropdownMenuItem<String>>((item) {
-                  return DropdownMenuItem<String>(
-                    value: item,
-                    child: Text(item),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _dropDownTaxCalculation = value;
-                  });
-                },
-                value: _dropDownTaxCalculation,
-              ),
-            ],
-          ),
-          Expanded(
-              child: TextField(
-            controller: _telephoneC,
-            decoration: const InputDecoration(hintText: 'Telephone'),
-          )),
-          Expanded(
-              child: TextField(
-            controller: _tinC,
-            decoration: const InputDecoration(hintText: 'Tin No'),
-          )),
-        ],
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _nameC,
+              decoration: const InputDecoration(hintText: 'Name'),
+            ),
+            TextField(
+              controller: _add1C,
+              decoration: const InputDecoration(hintText: 'Address 1'),
+            ),
+            TextField(
+              controller: _add2C,
+              decoration: const InputDecoration(hintText: 'Address 2'),
+            ),
+            TextField(
+              controller: _add3C,
+              decoration: const InputDecoration(hintText: 'Address 3'),
+            ),
+            TextField(
+              controller: _add4C,
+              decoration: const InputDecoration(hintText: 'Address 4'),
+            ),
+            TextField(
+              controller: _add5C,
+              decoration: const InputDecoration(hintText: 'Address 5'),
+            ),
+            TextField(
+              controller: _taxNoC,
+              decoration: InputDecoration(hintText: _taxNoHint),
+            ),
+            TextField(
+              controller: _emailC,
+              decoration: const InputDecoration(hintText: 'Mail Id'),
+            ),
+            TextField(
+              controller: _mobileC,
+              decoration: const InputDecoration(hintText: 'Mobile No'),
+            ),
+            Row(
+              // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('State : '),
+                Expanded(
+                  child: DropdownButton<GSTStateModel>(
+                    items: gstStateModels
+                        .map<DropdownMenuItem<GSTStateModel>>((item) {
+                      return DropdownMenuItem<GSTStateModel>(
+                        value: item,
+                        child: Text(item.state),
+                      );
+                    }).toList(),
+                    onChanged: (item) {
+                      setState(() {
+                        _dropDownState = item.state;
+                        _stateCode = item.code;
+                        gstStateM = item;
+                      });
+                    },
+                    value: gstStateM,
+                  ),
+                ),
+                const Text('Code : '),
+                Text(_stateCode),
+              ],
+            ),
+            TextField(
+              controller: _pinC,
+              decoration: const InputDecoration(hintText: 'PinCode'),
+            ),
+            TextField(
+              controller: _sCurrencyC,
+              decoration: const InputDecoration(hintText: 'Currency'),
+            ),
+            TextField(
+              controller: _sNameC,
+              decoration: const InputDecoration(hintText: 'Second Name'),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                const Text('TaxCalculation : '),
+                DropdownButton<String>(
+                  items:
+                      taxCalculationList.map<DropdownMenuItem<String>>((item) {
+                    return DropdownMenuItem<String>(
+                      value: item,
+                      child: Text(item),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _dropDownTaxCalculation = value;
+                    });
+                  },
+                  value: _dropDownTaxCalculation,
+                ),
+              ],
+            ),
+            TextField(
+              controller: _telephoneC,
+              decoration: const InputDecoration(hintText: 'Telephone'),
+            ),
+            TextField(
+              controller: _tinC,
+              decoration: const InputDecoration(hintText: 'Tin No'),
+            ),
+          ],
+        ),
       ),
     );
   }
-}
 
-void updateProfile() {
-  // Dio
+  void updateProfile() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String code = pref.getString('Code') ?? "0";
+    // String companyName = pref.getString('CompanyName') ?? "0";
+    String dbName = pref.getString('DBName') ?? "0";
+    String taxDbName = pref.getString('DBNameT') ?? "0";
+    String name = _nameC.text.trim().toUpperCase() ?? 'Company Name';
+
+    var data = {
+      'companyName': name,
+      'code': code,
+      'secondName': _sNameC.text.trim().toUpperCase(),
+      'add1': _add1C.text.trim(),
+      'add2': _add2C.text.trim(),
+      'add3': _add3C.text.trim(),
+      'add4': _add4C.text.trim(),
+      'add5': _add5C.text.trim(),
+      'email': _emailC.text.trim(),
+      'telephone': _telephoneC.text.trim(),
+      'mobile': _mobileC.text.trim(),
+      'pinCode': _pinC.text.trim(),
+      'currency': _sCurrencyC.text.trim(),
+      'taxNo': _taxNoC.text.trim(),
+      'state': _dropDownState.trim(),
+      'stateCode': _stateCode.trim(),
+      'tin': _tinC.text.trim(),
+      'taxCalculation': _dropDownTaxCalculation.trim(),
+      'dbName': dbName,
+      'taxDbName': taxDbName,
+      'customerCode': companySettings.customerCode,
+      'eDate': companySettings.eDate,
+      'runningDate': companySettings.runningDate,
+      'sDate': companySettings.sDate,
+      'statement': 'Update',
+    };
+    api.companyUpdate(data).then((value) async {
+      if (value) {
+        await pref.setString("CompanyName", name);
+        var dataBase = isEstimateDataBase ? dbName : taxDbName;
+        showInSnackBarAction(dataBase);
+      } else {
+        showInSnackBar('error');
+      }
+    });
+  }
+
+  void showInSnackBar(String value) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
+  }
+
+  void showInSnackBarAction(dataBase) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: const Text('Company Updated.'),
+      duration: const Duration(seconds: 1),
+      action: SnackBarAction(
+        label: 'Click',
+        onPressed: () {
+          ScopedModel.of<MainModel>(context).getCompanySettingsAll(dataBase);
+        },
+        textColor: Colors.white,
+        disabledTextColor: Colors.grey,
+      ),
+      backgroundColor: Colors.red,
+    ));
+  }
 }

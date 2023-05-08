@@ -71,6 +71,14 @@ class _ExpenseState extends State<Expense> {
           }
           n++;
         }
+        if (_expenseData.isEmpty) {
+          _expenseData.add(
+            ChartExpense(
+                name: 'expense', amount: '0', id: 1, colorVal: '0xff990099'),
+          );
+          lItems.add(ExpenseListItemModel(
+              id: 1, amount: '0', eno: '0', party: 'expense'));
+        }
       });
     });
   }

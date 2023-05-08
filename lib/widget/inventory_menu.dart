@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sheraccerp/screens/about_shersoft.dart';
+import 'package:sheraccerp/screens/html_previews/invoice_make.dart';
 import 'package:sheraccerp/util/res_color.dart';
 
 class InventoryMenu extends StatelessWidget {
@@ -283,25 +284,25 @@ class InventoryMenu extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: const [
-                  // Icon(
-                  //   Icons.shopping_bag_sharp,
-                  //   color: green[500],
-                  //   size: 90.0,
-                  // ),
-                  Text(
-                    '',
-                    style: TextStyle(
-                        color: Colors.black, fontWeight: FontWeight.bold),
+                  Icon(
+                    Icons.file_download,
+                    color: green,
+                    size: 90.0,
                   ),
+                  // Text(
+                  //   'Invoice Make',
+                  //   style: TextStyle(
+                  //       color: Colors.black, fontWeight: FontWeight.bold),
+                  // ),
                 ],
               ),
             ),
           ),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => AboutSherSoft()),
-            );
+            // Navigator.push(
+            //   context,
+            //   MaterialPageRoute(builder: (context) => InvoiceMake()),
+            // );
           },
         ),
         GestureDetector(
