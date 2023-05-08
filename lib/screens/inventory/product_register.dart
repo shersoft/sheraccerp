@@ -432,9 +432,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                 },
                 controller: hsnController,
               ),
-              const Divider(
-                height: 2,
-              ),
+              const Divider(),
               SimpleAutoCompleteTextField(
                 key: keyItemCode,
                 controller: itemCodeController,
@@ -446,9 +444,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                   pItemCode = data;
                 },
               ),
-              const Divider(
-                height: 2,
-              ),
+              const Divider(),
               SimpleAutoCompleteTextField(
                 key: keyItemName,
                 controller: itemNameController,
@@ -460,31 +456,27 @@ class _ProductRegisterState extends State<ProductRegister> {
                   pItemName = data;
                 },
               ),
-              const Divider(
-                height: 2,
-              ),
+              const Divider(),
               DropdownSearch<dynamic>(
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getTaxGroupData(filter, 'sales_list/taxGroup'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "TaxGroup"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: "TaxGroup"),
                 onChanged: (dynamic data) {
                   taxGroup = data;
                 },
                 showSearchBox: true,
                 selectedItem: taxGroup,
               ),
-              const Divider(
-                height: 2,
-              ),
+              const Divider(),
               ListTile(
                   title: DropdownSearch<dynamic>(
                     maxHeight: 300,
                     onFind: (String filter) =>
                         api.getSalesListData(filter, 'sales_list/unit'),
-                    dropdownSearchDecoration:
-                        const InputDecoration(hintText: 'Select Unit'),
+                    dropdownSearchDecoration: const InputDecoration(
+                        border: OutlineInputBorder(), hintText: 'Select Unit'),
                     onChanged: (dynamic data) {
                       unit = data;
                     },
@@ -502,54 +494,48 @@ class _ProductRegisterState extends State<ProductRegister> {
                         });
                       },
                       child: const Text('Details'))),
-              const Divider(
-                height: 2,
-              ),
+              const Divider(),
               DropdownSearch<dynamic>(
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/manufacture'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Manufacture'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Select Manufacture'),
                 onChanged: (dynamic data) {
                   mfr = data;
                 },
                 showSearchBox: true,
                 selectedItem: mfr,
               ),
-              const Divider(
-                height: 2,
-              ),
+              const Divider(),
               DropdownSearch<dynamic>(
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/category'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Category'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: 'Select Category'),
                 onChanged: (dynamic data) {
                   category = data;
                 },
                 selectedItem: category,
                 showSearchBox: true,
               ),
-              const Divider(
-                height: 2,
-              ),
+              const Divider(),
               DropdownSearch<dynamic>(
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/subCategory'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select SubCategory'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Select SubCategory'),
                 onChanged: (dynamic data) {
                   subCategory = data;
                 },
                 selectedItem: subCategory,
                 showSearchBox: true,
               ),
-              const Divider(
-                height: 2,
-              ),
+              const Divider(),
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 Expanded(
                   child: TextFormField(
@@ -583,13 +569,9 @@ class _ProductRegisterState extends State<ProductRegister> {
                   ),
                 )
               ]),
-              const Divider(
-                height: 2,
-              ),
+              const Divider(),
               const Text('Selling Rates'),
-              const Divider(
-                height: 2,
-              ),
+              const Divider(),
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 Expanded(
                   child: TextFormField(
@@ -622,9 +604,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                   ),
                 ))
               ]),
-              const Divider(
-                height: 2,
-              ),
+              const Divider(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -661,9 +641,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                   ),
                 ],
               ),
-              const Divider(
-                height: 2,
-              ),
+              const Divider(),
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 Expanded(
                   child: TextField(
@@ -697,9 +675,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                   ),
                 )
               ]),
-              const Divider(
-                height: 2,
-              ),
+              const Divider(),
               Column(
                 children: [
                   Row(
@@ -758,9 +734,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                   ),
                 ],
               ),
-              const Divider(
-                height: 2,
-              ),
+              const Divider(),
               const Text('More'),
               Row(
                 children: [
@@ -786,8 +760,9 @@ class _ProductRegisterState extends State<ProductRegister> {
                       maxHeight: 300,
                       onFind: (String filter) =>
                           api.getSalesListData(filter, 'sales_list/rack'),
-                      dropdownSearchDecoration:
-                          const InputDecoration(hintText: 'Select Rack'),
+                      dropdownSearchDecoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: 'Select Rack'),
                       onChanged: (dynamic data) {
                         rack = data;
                       },
@@ -797,9 +772,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                   ),
                 ],
               ),
-              const Divider(
-                height: 2,
-              ),
+              const Divider(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

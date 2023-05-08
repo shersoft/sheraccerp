@@ -291,8 +291,9 @@ class _RPVoucherState extends State<RPVoucher> {
                 return models;
               },
               isFilteredOnline: true,
-              dropdownSearchDecoration:
-                  const InputDecoration(labelText: "Select Ledger Name"),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: "Select Ledger Name"),
               onChanged: (LedgerModel data) {
                 // print(data);
                 ledData = data;
@@ -329,6 +330,7 @@ class _RPVoucherState extends State<RPVoucher> {
                           allow: true, replacementString: '.')
                     ],
                     decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
                       hintText: 'Amount',
                     ),
                     onChanged: (value) {
@@ -358,6 +360,7 @@ class _RPVoucherState extends State<RPVoucher> {
                           allow: true, replacementString: '.')
                     ],
                     decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
                       hintText: 'Discount',
                     ),
                     onChanged: (value) {
@@ -393,6 +396,7 @@ class _RPVoucherState extends State<RPVoucher> {
                   child: TextField(
                     controller: _controllerNarration,
                     decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
                       hintText: 'Narration...',
                     ),
                     onChanged: (value) {
@@ -590,6 +594,7 @@ class _RPVoucherState extends State<RPVoucher> {
             'salesman': '-1',
             'month': '',
             'particular': particular,
+            'fyId': currentFinancialYear.id,
             'statementType': operation == 'DELETE'
                 ? mode == 'Payment'
                     ? 'Delete_Pv'

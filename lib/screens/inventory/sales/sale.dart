@@ -911,7 +911,8 @@ class _SaleState extends State<Sale> {
             'billType': order.billType,
             'returnNo': returnBillId,
             'returnAmount': returnAmount,
-            'otherAmount': _otherAmountTotal(order.otherAmountData)
+            'otherAmount': _otherAmountTotal(order.otherAmountData),
+            'fyId': currentFinancialYear.id
           }) +
           ']';
 
@@ -1160,7 +1161,8 @@ class _SaleState extends State<Sale> {
             'billType': order.billType,
             'returnNo': returnBillId,
             'returnAmount': returnAmount,
-            'otherAmount': _otherAmountTotal(order.otherAmountData)
+            'otherAmount': _otherAmountTotal(order.otherAmountData),
+            'fyId': currentFinancialYear.id,
           }) +
           ']';
 
@@ -1349,6 +1351,7 @@ class _SaleState extends State<Sale> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
                                   hintText: 'Search...',
                                 ),
                                 onChanged: (text) {
@@ -1491,6 +1494,7 @@ class _SaleState extends State<Sale> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
                                   hintText: 'Search...',
                                 ),
                                 onChanged: (text) {
@@ -1725,6 +1729,7 @@ class _SaleState extends State<Sale> {
                         Expanded(
                           child: TextField(
                             decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
                               hintText: 'Customer Name : ',
                             ),
                             onChanged: (value) {
@@ -2043,8 +2048,9 @@ class _SaleState extends State<Sale> {
                     ? Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: TextField(
-                          decoration:
-                              const InputDecoration(hintText: 'Search...'),
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              hintText: 'Search...'),
                           onChanged: (text) {
                             text = text.toLowerCase();
                             setState(() {
@@ -2073,7 +2079,7 @@ class _SaleState extends State<Sale> {
                                 //     onPressed: () {
                                 // if (singleProduct) {
                                 //   addProduct(CartItem(
-                                // id: totalItem + 1,
+                                // id: totalAdd Item 1,
                                 // itemId: product.itemId,
                                 // itemName: product.name,
                                 // quantity: 1,
@@ -2945,7 +2951,9 @@ class _SaleState extends State<Sale> {
                                   allow: true, replacementString: '.')
                             ],
                             decoration: const InputDecoration(
-                                labelText: 'Free', hintText: '0.0'),
+                                border: OutlineInputBorder(),
+                                labelText: 'Free',
+                                hintText: '0.0'),
                             onChanged: (value) {
                               if (value.isNotEmpty) {
                                 bool cartQ = false;
@@ -3114,7 +3122,9 @@ class _SaleState extends State<Sale> {
                                   allow: true, replacementString: '.')
                             ],
                             decoration: const InputDecoration(
-                                labelText: 'Price', hintText: '0.0'),
+                                border: OutlineInputBorder(),
+                                labelText: 'Price',
+                                hintText: '0.0'),
                             onChanged: (value) {
                               if (value.isNotEmpty) {
                                 if (isMinimumRate) {
@@ -3264,7 +3274,9 @@ class _SaleState extends State<Sale> {
                                   allow: true, replacementString: '.')
                             ],
                             decoration: const InputDecoration(
-                                labelText: ' % ', hintText: '0.0'),
+                                border: OutlineInputBorder(),
+                                labelText: ' % ',
+                                hintText: '0.0'),
                             onChanged: (value) {
                               setState(() {
                                 calculate();
@@ -3283,7 +3295,9 @@ class _SaleState extends State<Sale> {
                                   allow: true, replacementString: '.')
                             ],
                             decoration: const InputDecoration(
-                                labelText: 'Discount', hintText: '0.0'),
+                                border: OutlineInputBorder(),
+                                labelText: 'Discount',
+                                hintText: '0.0'),
                             onChanged: (value) {
                               setState(() {
                                 calculate();
@@ -3304,6 +3318,7 @@ class _SaleState extends State<Sale> {
                           child: TextField(
                             controller: _serialNoController,
                             decoration: InputDecoration(
+                                border: OutlineInputBorder(),
                                 labelText: labelSerialNo.isNotEmpty
                                     ? labelSerialNo
                                     : 'SerialNo'),
@@ -4115,7 +4130,7 @@ class _SaleState extends State<Sale> {
                   child: Padding(
                     padding: EdgeInsets.only(right: 8.0),
                     child: Text(
-                      'Item +',
+                      'Add Item',
                       style: TextStyle(
                           color: blue,
                           fontSize: 25,
@@ -4197,6 +4212,7 @@ class _SaleState extends State<Sale> {
                           allow: true, replacementString: '.')
                     ],
                     decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
                       hintText: 'Cash Received : ',
                     ),
                     onChanged: (value) {
@@ -4249,6 +4265,7 @@ class _SaleState extends State<Sale> {
                       Expanded(
                         child: TextField(
                           decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
                             hintText: 'Narration...',
                           ),
                           onChanged: (value) {
@@ -4268,6 +4285,7 @@ class _SaleState extends State<Sale> {
                           child: TextField(
                             controller: returnEntryNoController,
                             decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
                               hintText: 'Bill No :',
                             ),
                             keyboardType: TextInputType.number,
@@ -4301,6 +4319,7 @@ class _SaleState extends State<Sale> {
                           child: TextField(
                             controller: returnAmountController,
                             decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
                               hintText: 'Amount :',
                             ),
                             keyboardType: TextInputType.number,
@@ -4570,7 +4589,8 @@ class _SaleState extends State<Sale> {
                 });
               },
               controller: _controller,
-              decoration: const InputDecoration(hintText: "value"),
+              decoration: const InputDecoration(
+                  border: OutlineInputBorder(), hintText: "value"),
               keyboardType: TextInputType.number,
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -4625,7 +4645,8 @@ class _SaleState extends State<Sale> {
                   barcodeValueText = value;
                 });
               },
-              decoration: const InputDecoration(hintText: "barcode"),
+              decoration: const InputDecoration(
+                  border: OutlineInputBorder(), hintText: "barcode"),
               keyboardType: TextInputType.number,
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),

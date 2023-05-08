@@ -118,8 +118,9 @@ class _AddProductsaleState extends State<AddProductsale> {
                     ? Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: TextField(
-                          decoration:
-                              const InputDecoration(hintText: 'Search...'),
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              hintText: 'Search...'),
                           onChanged: (text) {
                             text = text.toLowerCase();
                             setState(() {
@@ -900,7 +901,7 @@ class _ProductAddSaleState extends State<ProductAddSale> {
     //                         return null;
     //                       },
     //                       keyboardType: TextInputType.number,
-    //                       decoration: const InputDecoration(
+    //                       decoration: const InputDecoration(border: OutlineInputBorder(),
     //                           labelText: 'Quantity', hintText: '0.0'),
     //                       onChanged: (value) {
     //                         if (value.isNotEmpty) {
@@ -1032,7 +1033,7 @@ class _ProductAddSaleState extends State<ProductAddSale> {
     //                         readOnly: isItemRateEditLocked,
     //                         // autofocus: true,
     //                         keyboardType: TextInputType.number,
-    //                         decoration: const InputDecoration(
+    //                         decoration: const InputDecoration(border: OutlineInputBorder(),
     //                             labelText: 'Price', hintText: '0.0'),
     //                         onChanged: (value) {
     //                           if (value.isNotEmpty) {
@@ -1153,7 +1154,7 @@ class _ProductAddSaleState extends State<ProductAddSale> {
     //                         controller: _discountPercentController,
     //                         // autofocus: true,
     //                         keyboardType: TextInputType.number,
-    //                         decoration: const InputDecoration(
+    //                         decoration: const InputDecoration(border: OutlineInputBorder(),
     //                             labelText: ' % ', hintText: '0.0'),
     //                         onChanged: (value) {
     //                           setState(() {
@@ -1169,7 +1170,7 @@ class _ProductAddSaleState extends State<ProductAddSale> {
     //                         controller: _discountController,
     //                         // autofocus: true,
     //                         keyboardType: TextInputType.number,
-    //                         decoration: const InputDecoration(
+    //                         decoration: const InputDecoration(border: OutlineInputBorder(),
     //                             labelText: 'Discount', hintText: '0.0'),
     //                         onChanged: (value) {
     //                           setState(() {

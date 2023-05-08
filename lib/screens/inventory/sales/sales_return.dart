@@ -836,6 +836,7 @@ class _SalesReturnState extends State<SalesReturn> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
                                   hintText: 'Search...',
                                 ),
                                 onChanged: (text) {
@@ -1130,8 +1131,9 @@ class _SalesReturnState extends State<SalesReturn> {
                     ? Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: TextField(
-                          decoration:
-                              const InputDecoration(hintText: 'Search...'),
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              hintText: 'Search...'),
                           onChanged: (text) {
                             text = text.toLowerCase();
                             setState(() {
@@ -1531,7 +1533,9 @@ class _SalesReturnState extends State<SalesReturn> {
                                 allow: true, replacementString: '.')
                           ],
                           decoration: const InputDecoration(
-                              labelText: 'quantity', hintText: '0.0'),
+                              border: OutlineInputBorder(),
+                              labelText: 'quantity',
+                              hintText: '0.0'),
                           onChanged: (value) {
                             setState(() {
                               calculate();
@@ -1638,7 +1642,9 @@ class _SalesReturnState extends State<SalesReturn> {
                                   allow: true, replacementString: '.')
                             ],
                             decoration: const InputDecoration(
-                                labelText: 'price', hintText: '0.0'),
+                                border: OutlineInputBorder(),
+                                labelText: 'price',
+                                hintText: '0.0'),
                             onChanged: (value) {
                               setState(() {
                                 rateEdited = _rateController.text.isNotEmpty
@@ -1671,7 +1677,9 @@ class _SalesReturnState extends State<SalesReturn> {
                                 allow: true, replacementString: '.')
                           ],
                           decoration: const InputDecoration(
-                              labelText: 'discount', hintText: '0.0'),
+                              border: OutlineInputBorder(),
+                              labelText: 'discount',
+                              hintText: '0.0'),
                           onChanged: (value) {
                             setState(() {
                               calculate();
@@ -2145,7 +2153,7 @@ class _SalesReturnState extends State<SalesReturn> {
                   child: Padding(
                     padding: EdgeInsets.only(right: 8.0),
                     child: Text(
-                      'Item +',
+                      'Add Item',
                       style: TextStyle(
                           color: blue,
                           fontSize: 25,
@@ -2239,6 +2247,7 @@ class _SalesReturnState extends State<SalesReturn> {
                     Expanded(
                       child: TextField(
                         decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
                           hintText: 'Narration...',
                         ),
                         onChanged: (value) {
@@ -2461,7 +2470,8 @@ class _SalesReturnState extends State<SalesReturn> {
                 });
               },
               controller: _controller,
-              decoration: const InputDecoration(hintText: "value"),
+              decoration: const InputDecoration(
+                  border: OutlineInputBorder(), hintText: "value"),
               keyboardType: TextInputType.number,
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),

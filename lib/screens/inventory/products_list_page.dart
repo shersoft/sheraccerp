@@ -502,7 +502,8 @@ class _ProductsListPageState extends State<ProductsListPage> {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextField(
-        decoration: const InputDecoration(hintText: 'Search...'),
+        decoration: const InputDecoration(
+            border: OutlineInputBorder(), hintText: 'Search...'),
         onChanged: (text) {
           text = text.toLowerCase();
           setState(() {
@@ -787,7 +788,9 @@ class _ProductsListPageState extends State<ProductsListPage> {
                                     allow: true, replacementString: '.')
                               ],
                               decoration: const InputDecoration(
-                                  labelText: 'quantity', hintText: '0.0'),
+                                  border: OutlineInputBorder(),
+                                  labelText: 'quantity',
+                                  hintText: '0.0'),
                               onChanged: (value) {
                                 setState(() {
                                   outOfStock = negativeStock
@@ -910,7 +913,9 @@ class _ProductsListPageState extends State<ProductsListPage> {
                                       allow: true, replacementString: '.')
                                 ],
                                 decoration: const InputDecoration(
-                                    labelText: 'price', hintText: '0.0'),
+                                    border: OutlineInputBorder(),
+                                    labelText: 'price',
+                                    hintText: '0.0'),
                                 onChanged: (value) {
                                   setState(() {
                                     rateEdited = _rateController.text.isNotEmpty
@@ -943,7 +948,9 @@ class _ProductsListPageState extends State<ProductsListPage> {
                                     allow: true, replacementString: '.')
                               ],
                               decoration: const InputDecoration(
-                                  labelText: 'discount', hintText: '0.0'),
+                                  border: OutlineInputBorder(),
+                                  labelText: 'discount',
+                                  hintText: '0.0'),
                               onChanged: (value) {
                                 setState(() {
                                   calculate();
@@ -1080,7 +1087,8 @@ class _ProductsListPageState extends State<ProductsListPage> {
                   });
                 },
                 controller: _controller,
-                decoration: const InputDecoration(hintText: "value"),
+                decoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: "value"),
                 keyboardType: TextInputType.number,
                 inputFormatters: [
                   FilteringTextInputFormatter(RegExp(r'[0-9]'),

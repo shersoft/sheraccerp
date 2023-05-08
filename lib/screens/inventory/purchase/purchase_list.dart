@@ -393,8 +393,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/location'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Branch'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: 'Select Branch'),
                 onChanged: (dynamic data) {
                   locationId = data;
                 },
@@ -441,8 +441,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/ItemCode'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Item Code'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: 'Select Item Code'),
                 onChanged: (dynamic data) {
                   itemId = data;
                 },
@@ -453,8 +453,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/itemName'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Item Name'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: 'Select Item Name'),
                 onChanged: (dynamic data) {
                   itemName = data;
                 },
@@ -465,8 +465,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/supplier'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Supplier'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: 'Select Supplier'),
                 onChanged: (dynamic data) {
                   supplier = data;
                 },
@@ -477,8 +477,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/manufacture'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Item MFR'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: 'Select Item MFR'),
                 onChanged: (dynamic data) {
                   mfr = data;
                 },
@@ -489,8 +489,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/category'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Category'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: 'Select Category'),
                 onChanged: (dynamic data) {
                   category = data;
                 },
@@ -501,8 +501,9 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/subCategory'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select SubCategory'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Select SubCategory'),
                 onChanged: (dynamic data) {
                   subCategory = data;
                 },
@@ -513,8 +514,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/salesMan'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select SalesMan'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: 'Select SalesMan'),
                 onChanged: (dynamic data) {
                   salesMan = data;
                 },
@@ -525,8 +526,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/project'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Project'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: 'Select Project'),
                 onChanged: (dynamic data) {
                   project = data;
                 },
@@ -537,8 +538,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/taxGroup'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select TaxGroup'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: 'Select TaxGroup'),
                 onChanged: (dynamic data) {
                   taxGroup = data;
                 },

@@ -360,8 +360,8 @@ class _ProductReportState extends State<ProductReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/unit'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Unit'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: 'Select Unit'),
                 onChanged: (dynamic data) {
                   unit = data;
                 },
@@ -384,8 +384,8 @@ class _ProductReportState extends State<ProductReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/category'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Category"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: "Select Category"),
                 onChanged: (dynamic data) {
                   category = data;
                 },
@@ -396,8 +396,9 @@ class _ProductReportState extends State<ProductReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/subCategory'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select SubCategory"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: "Select SubCategory"),
                 onChanged: (dynamic data) {
                   subCategory = data;
                 },
@@ -424,8 +425,8 @@ class _ProductReportState extends State<ProductReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/taxGroup'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select TaxGroup"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: "Select TaxGroup"),
                 onChanged: (dynamic data) {
                   taxGroup = data;
                 },
@@ -436,8 +437,8 @@ class _ProductReportState extends State<ProductReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'Product/getHsnCodeList'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select HSN Code"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: "Select HSN Code"),
                 onChanged: (dynamic data) {
                   hsnCode = data;
                 },
@@ -449,8 +450,8 @@ class _ProductReportState extends State<ProductReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/rack'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Rack"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: "Select Rack"),
                 onChanged: (dynamic data) {
                   rack = data;
                 },
@@ -463,7 +464,8 @@ class _ProductReportState extends State<ProductReport> {
                   Expanded(
                     child: TextField(
                       controller: taxPController,
-                      decoration: const InputDecoration(hintText: 'TAX %'),
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(), hintText: 'TAX %'),
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -477,7 +479,8 @@ class _ProductReportState extends State<ProductReport> {
                   Expanded(
                       child: TextField(
                     controller: reorderController,
-                    decoration: InputDecoration(hintText: 'Reorder'),
+                    decoration: const InputDecoration(
+                        border: OutlineInputBorder(), hintText: 'Reorder'),
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),

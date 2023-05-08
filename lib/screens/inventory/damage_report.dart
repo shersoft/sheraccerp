@@ -327,8 +327,8 @@ class _DamageReportState extends State<DamageReport> {
                 // maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/ItemCode'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Item Code'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: 'Select Item Code'),
                 onChanged: (dynamic data) {
                   itemId = data;
                 },
@@ -339,8 +339,8 @@ class _DamageReportState extends State<DamageReport> {
                 // maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/itemName'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Item Name'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: 'Select Item Name'),
                 onChanged: (dynamic data) {
                   itemName = data;
                 },

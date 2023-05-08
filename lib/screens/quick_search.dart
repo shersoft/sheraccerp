@@ -85,7 +85,8 @@ class _QuickSearchState extends State<QuickSearch> {
                     children: [
                       Expanded(
                         child: TextField(
-                          decoration: const InputDecoration(hintText: 'Search'),
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder(), hintText: 'Search'),
                           onChanged: (value) {
                             name = value;
                           },

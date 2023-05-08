@@ -548,7 +548,7 @@ class _StockTransferState extends State<StockTransfer> {
                   child: Padding(
                     padding: EdgeInsets.only(right: 8.0),
                     child: Text(
-                      'Item +',
+                      'Add Item',
                       style: TextStyle(
                           color: blue,
                           fontSize: 25,
@@ -595,6 +595,7 @@ class _StockTransferState extends State<StockTransfer> {
                               Flexible(
                                 child: TextField(
                                   decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
                                     hintText: 'Search...',
                                   ),
                                   onChanged: (text) {

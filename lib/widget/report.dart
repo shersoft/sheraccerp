@@ -290,8 +290,8 @@ class Report extends StatelessWidget {
               maxHeight: 300,
               onFind: (String filter) =>
                   api.getSalesListData(filter, 'sales_list/location'),
-              dropdownSearchDecoration:
-                  const InputDecoration(hintText: "Select Branch"),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(), hintText: "Select Branch"),
               onChanged: (dynamic data) {
                 location = data;
               },

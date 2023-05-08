@@ -479,6 +479,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
                                   hintText: 'Search...',
                                 ),
                                 onChanged: (text) {
@@ -652,7 +653,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                   child: Padding(
                     padding: EdgeInsets.only(right: 8.0),
                     child: Text(
-                      'Item +',
+                      'Add Item',
                       style: TextStyle(
                           color: blue,
                           fontSize: 25,
@@ -694,6 +695,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
                                   hintText: 'Search...',
                                 ),
                                 onChanged: (text) {
@@ -1234,8 +1236,8 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
               maxHeight: 300,
               onFind: (String filter) =>
                   dio.getSalesListData(filter, 'sales_list/unit'),
-              dropdownSearchDecoration:
-                  const InputDecoration(hintText: 'Select Unit'),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(), hintText: 'Select Unit'),
               onChanged: (dynamic data) {
                 unit = data;
                 calculate();

@@ -101,6 +101,24 @@ class _OpeningStockState extends State<OpeningStock> {
 
   @override
   Widget build(BuildContext context) {
+    controllerBranch.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerBranch.text.length));
+
+    controllerDiscount.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerDiscount.text.length));
+    controllerDiscountPer.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerDiscountPer.text.length));
+    controllerMrp.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerMrp.text.length));
+    controllerQuantity.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerQuantity.text.length));
+    controllerRate.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerRate.text.length));
+    controllerRetail.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerRetail.text.length));
+    controllerWholeSale.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerWholeSale.text.length));
+
     deviceSize = MediaQuery.of(context).size;
     return WillPopScope(
         onWillPop: _onWillPop,
@@ -206,7 +224,8 @@ class _OpeningStockState extends State<OpeningStock> {
                               'adCess': totalAdCess,
                               'Salesman': salesManId,
                               'location': locationId,
-                              'statementtype': stType
+                              'statementtype': stType,
+                              'fyId': currentFinancialYear.id,
                             }) +
                             ']';
 
@@ -285,7 +304,9 @@ class _OpeningStockState extends State<OpeningStock> {
                               'adCess': totalAdCess,
                               'Salesman': salesManId,
                               'location': locationId,
-                              'statementtype': stType
+                              'statementtype': stType,
+                              'fyId': currentFinancialYear.id,
+                              'entryNo': 0,
                             }) +
                             ']';
 
@@ -394,6 +415,14 @@ class _OpeningStockState extends State<OpeningStock> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _focusNodeQuantity.dispose();
+    _focusNodeBranch.dispose();
+    _focusNodeDiscount.dispose();
+    _focusNodeDiscountPer.dispose();
+    _focusNodeMrp.dispose();
+    _focusNodeRate.dispose();
+    _focusNodeRetail.dispose();
+    _focusNodeWholeSale.dispose();
     super.dispose();
   }
 
@@ -508,6 +537,7 @@ class _OpeningStockState extends State<OpeningStock> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
                                   hintText: 'Search...',
                                 ),
                                 onChanged: (text) {
@@ -654,7 +684,7 @@ class _OpeningStockState extends State<OpeningStock> {
                 child: Padding(
                   padding: EdgeInsets.only(right: 8.0),
                   child: Text(
-                    'Item +',
+                    'Item Add',
                     style: TextStyle(
                         color: blue, fontSize: 25, fontWeight: FontWeight.bold),
                   ),
@@ -697,6 +727,7 @@ class _OpeningStockState extends State<OpeningStock> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
                                   hintText: 'Search...',
                                 ),
                                 onChanged: (text) {
@@ -817,6 +848,14 @@ class _OpeningStockState extends State<OpeningStock> {
   TextEditingController controllerRetail = TextEditingController();
   TextEditingController controllerWholeSale = TextEditingController();
   TextEditingController controllerBranch = TextEditingController();
+  FocusNode _focusNodeQuantity = FocusNode();
+  FocusNode _focusNodeRate = FocusNode();
+  FocusNode _focusNodeDiscountPer = FocusNode();
+  FocusNode _focusNodeDiscount = FocusNode();
+  FocusNode _focusNodeMrp = FocusNode();
+  FocusNode _focusNodeRetail = FocusNode();
+  FocusNode _focusNodeWholeSale = FocusNode();
+  FocusNode _focusNodeBranch = FocusNode();
 
   double quantity = 0,
       rate = 0,
@@ -859,14 +898,6 @@ class _OpeningStockState extends State<OpeningStock> {
   String expDate = '1900-01-01', serialNo = '';
   var unit;
   int uniqueCode = 0, fUnitId = 0, barcode = 0;
-  bool editableMrp = false,
-      editableRetail = false,
-      editableWSale = false,
-      editableBranch = false,
-      editableRate = false,
-      editableQuantity = false,
-      editableDiscount = false,
-      editableDiscountP = false;
 
   itemDetailWidget() {
     if (editItem) {
@@ -876,39 +907,39 @@ class _OpeningStockState extends State<OpeningStock> {
           id: cartItem.elementAt(position).supplierId,
           name: cartItem.elementAt(position).supplier);
       quantity = cartItem[position].quantity;
-      if (quantity > 0 && !editableQuantity) {
+      if (quantity > 0 && !_focusNodeQuantity.hasFocus) {
         controllerQuantity.text = quantity.toString();
       }
       rate = cartItem.elementAt(position).rate;
-      if (rate > 0 && !editableRate) {
+      if (rate > 0 && !_focusNodeRate.hasFocus) {
         controllerRate.text = rate.toString();
       }
       if (cartItem.elementAt(position).rRate > 0) {
         rRate = cartItem.elementAt(position).rRate;
       }
       mrp = cartItem.elementAt(position).mrp;
-      if (mrp > 0 && !editableMrp) {
+      if (mrp > 0 && !_focusNodeMrp.hasFocus) {
         controllerMrp.text = mrp.toString();
       }
       retail = cartItem.elementAt(position).retail;
-      if (retail > 0 && !editableRetail) {
+      if (retail > 0 && !_focusNodeRetail.hasFocus) {
         controllerRetail.text = retail.toString();
       }
       wholeSale = cartItem.elementAt(position).wholesale;
-      if (wholeSale > 0 && !editableWSale) {
+      if (wholeSale > 0 && !_focusNodeWholeSale.hasFocus) {
         controllerWholeSale.text = wholeSale.toString();
       }
       spRetail = cartItem.elementAt(position).spRetail;
       branch = cartItem.elementAt(position).branch;
-      if (branch > 0 && !editableBranch) {
+      if (branch > 0 && !_focusNodeBranch.hasFocus) {
         controllerBranch.text = branch.toString();
       }
       discount = cartItem.elementAt(position).discount;
-      if (discount > 0 && !editableDiscount) {
+      if (discount > 0 && !_focusNodeDiscount.hasFocus) {
         controllerDiscount.text = discount.toString();
       }
       discountPer = cartItem.elementAt(position).discountPercent;
-      if (discountPer > 0 && !editableDiscountP) {
+      if (discountPer > 0 && !_focusNodeDiscountPer.hasFocus) {
         controllerDiscountPer.text = discountPer.toString();
       }
       subTotal = cartItem.elementAt(position).gross;
@@ -929,27 +960,27 @@ class _OpeningStockState extends State<OpeningStock> {
       taxP = double.tryParse(productModel['tax'].toString());
       kfcP = double.tryParse(productModel['KFC'].toString());
       rate = double.tryParse(productModelPrize['prate'].toString());
-      if (rate > 0 && !editableRate) {
+      if (rate > 0 && !_focusNodeRate.hasFocus) {
         controllerRate.text = rate.toString();
       }
       if (double.tryParse(productModelPrize['realprate'].toString()) > 0) {
         rRate = double.tryParse(productModelPrize['realprate'].toString());
       }
       mrp = double.tryParse(productModelPrize['mrp'].toString());
-      if (mrp > 0 && !editableMrp) {
+      if (mrp > 0 && !_focusNodeMrp.hasFocus) {
         controllerMrp.text = mrp.toString();
       }
       retail = double.tryParse(productModelPrize['retail'].toString());
-      if (retail > 0 && !editableRetail) {
+      if (retail > 0 && !_focusNodeRetail.hasFocus) {
         controllerRetail.text = retail.toString();
       }
       wholeSale = double.tryParse(productModelPrize['wsrate'].toString());
-      if (wholeSale > 0 && !editableWSale) {
+      if (wholeSale > 0 && !_focusNodeWholeSale.hasFocus) {
         controllerWholeSale.text = wholeSale.toString();
       }
       spRetail = double.tryParse(productModelPrize['spretail'].toString());
       branch = double.tryParse(productModelPrize['branch'].toString());
-      if (branch > 0 && !editableBranch) {
+      if (branch > 0 && !_focusNodeBranch.hasFocus) {
         controllerBranch.text = branch.toString();
       }
     }
@@ -1248,16 +1279,17 @@ class _OpeningStockState extends State<OpeningStock> {
             ),
             TextField(
               controller: controllerQuantity,
+              focusNode: _focusNodeQuantity,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), hintText: 'Quantity'),
               keyboardType: TextInputType.number,
+              textAlign: TextAlign.right,
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')
               ],
               onChanged: (value) {
                 setState(() {
-                  editableQuantity = true;
                   quantity = double.tryParse(value);
                   calculate();
                 });
@@ -1268,8 +1300,8 @@ class _OpeningStockState extends State<OpeningStock> {
               maxHeight: 300,
               onFind: (String filter) =>
                   dio.getSalesListData(filter, 'sales_list/unit'),
-              dropdownSearchDecoration:
-                  const InputDecoration(hintText: 'Select Unit'),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(), hintText: 'Select Unit'),
               onChanged: (dynamic data) {
                 unit = data;
                 calculate();
@@ -1279,16 +1311,17 @@ class _OpeningStockState extends State<OpeningStock> {
             const Divider(),
             TextField(
               controller: controllerRate,
+              focusNode: _focusNodeRate,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), hintText: 'P Rate'),
               keyboardType: TextInputType.number,
+              textAlign: TextAlign.right,
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')
               ],
               onChanged: (value) {
                 setState(() {
-                  editableRate = true;
                   rate = double.tryParse(value);
                   calculate();
                 });
@@ -1312,16 +1345,17 @@ class _OpeningStockState extends State<OpeningStock> {
                   width: 50,
                   child: TextField(
                     controller: controllerDiscountPer,
+                    focusNode: _focusNodeDiscountPer,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), hintText: ' % '),
                     keyboardType: TextInputType.number,
+                    textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     onChanged: (value) {
                       setState(() {
-                        editableDiscountP = true;
                         discountPer = double.tryParse(value);
                         calculate();
                       });
@@ -1333,16 +1367,17 @@ class _OpeningStockState extends State<OpeningStock> {
                   width: 100,
                   child: TextField(
                     controller: controllerDiscount,
+                    focusNode: _focusNodeDiscount,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), hintText: 'discount'),
                     keyboardType: TextInputType.number,
+                    textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     onChanged: (value) {
                       setState(() {
-                        editableDiscount = true;
                         discount = double.tryParse(value);
                         calculate();
                       });
@@ -1360,16 +1395,17 @@ class _OpeningStockState extends State<OpeningStock> {
                   width: 100,
                   child: TextField(
                     controller: controllerMrp,
+                    focusNode: _focusNodeMrp,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), hintText: 'MRP'),
                     keyboardType: TextInputType.number,
+                    textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     onChanged: (value) {
                       setState(() {
-                        editableMrp = true;
                         mrp = double.tryParse(value);
                         calculateRate();
                       });
@@ -1381,16 +1417,17 @@ class _OpeningStockState extends State<OpeningStock> {
                   width: 100,
                   child: TextField(
                     controller: controllerRetail,
+                    focusNode: _focusNodeRetail,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), hintText: 'Retail'),
                     keyboardType: TextInputType.number,
+                    textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     onChanged: (value) {
                       setState(() {
-                        editableRetail = true;
                         retail = double.tryParse(value);
                         calculateRate();
                       });
@@ -1410,16 +1447,17 @@ class _OpeningStockState extends State<OpeningStock> {
                   width: 100,
                   child: TextField(
                     controller: controllerWholeSale,
+                    focusNode: _focusNodeWholeSale,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), hintText: 'WholeSale'),
                     keyboardType: TextInputType.number,
+                    textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     onChanged: (value) {
                       setState(() {
-                        editableWSale = true;
                         wholeSale = double.tryParse(value);
                         calculateRate();
                       });
@@ -1431,16 +1469,17 @@ class _OpeningStockState extends State<OpeningStock> {
                   width: 100,
                   child: TextField(
                     controller: controllerBranch,
+                    focusNode: _focusNodeBranch,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), hintText: 'Branch'),
                     keyboardType: TextInputType.number,
+                    textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     onChanged: (value) {
                       setState(() {
-                        editableBranch = true;
                         branch = double.tryParse(value);
                         calculateRate();
                       });
@@ -1670,14 +1709,6 @@ class _OpeningStockState extends State<OpeningStock> {
     controllerMrp.text = '';
     controllerRetail.text = '';
     controllerWholeSale.text = '';
-    editableQuantity = false;
-    editableMrp = false;
-    editableRetail = false;
-    editableWSale = false;
-    editableBranch = false;
-    editableRate = false;
-    editableDiscount = false;
-    editableDiscountP = false;
   }
 
   Future _selectDate() async {

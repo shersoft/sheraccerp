@@ -241,3 +241,51 @@ class CompanySettings {
   String companyInformationToMap(List<CompanySettings> data) =>
       json.encode(List<dynamic>.from(data.map((x) => x.toMap())));
 }
+
+class FinancialYear {
+  int id;
+  String startDate;
+  String endDate;
+  String narration;
+  int createdUser;
+  String createdDate;
+  int status;
+  FinancialYear({
+    this.id,
+    this.startDate,
+    this.endDate,
+    this.narration,
+    this.createdUser,
+    this.createdDate,
+    this.status,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'startDate': startDate,
+      'endDate': endDate,
+      'narration': narration,
+      'createdUser': createdUser,
+      'createdDate': createdDate,
+      'status': status,
+    };
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory FinancialYear.fromJson(Map<String, dynamic> map) {
+    return FinancialYear(
+      id: map['FyId']?.toInt() ?? 0,
+      startDate: map['FromDate'] ?? '',
+      endDate: map['ToDate'] ?? '',
+      narration: map['Narration'] ?? '',
+      createdUser: map['CreatedUser']?.toInt() ?? 0,
+      createdDate: map['CreatedDate'] ?? '',
+      status: map['Status']?.toInt() ?? 0,
+    );
+  }
+
+  String financialYearToMap(List<FinancialYear> data) =>
+      json.encode(List<dynamic>.from(data.map((x) => x.toMap())));
+}

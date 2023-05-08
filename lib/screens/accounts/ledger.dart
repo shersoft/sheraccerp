@@ -235,6 +235,7 @@ class _LedgerState extends State<Ledger> {
                         LengthLimitingTextInputFormatter(45),
                       ],
                       decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
                         labelText: 'Name',
                         icon: Icon(Icons.person),
                       ),
@@ -254,6 +255,7 @@ class _LedgerState extends State<Ledger> {
                         LengthLimitingTextInputFormatter(25),
                       ],
                       decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
                         labelText: 'Address',
                         icon: Icon(Icons.person),
                       ),
@@ -263,6 +265,7 @@ class _LedgerState extends State<Ledger> {
                       maxLength: 12,
                       keyboardType: TextInputType.phone,
                       decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
                         labelText: "Telephone",
                         icon: Icon(Icons.phone),
                       ),
@@ -274,6 +277,7 @@ class _LedgerState extends State<Ledger> {
                       ],
                       keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
                         labelText: 'E-mail',
                         icon: Icon(Icons.email),
                       ),
@@ -285,6 +289,7 @@ class _LedgerState extends State<Ledger> {
                       ],
                       keyboardType: TextInputType.text,
                       decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
                         labelText: 'Tax No',
                       ),
                     ),
@@ -312,6 +317,7 @@ class _LedgerState extends State<Ledger> {
                             LengthLimitingTextInputFormatter(25),
                           ],
                           decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
                             labelText: 'Address 2',
                           ),
                         ),
@@ -322,6 +328,7 @@ class _LedgerState extends State<Ledger> {
                             LengthLimitingTextInputFormatter(25),
                           ],
                           decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
                             labelText: 'Address 3',
                           ),
                         ),
@@ -332,6 +339,7 @@ class _LedgerState extends State<Ledger> {
                             LengthLimitingTextInputFormatter(25),
                           ],
                           decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
                             labelText: 'Address 4',
                           ),
                         ),
@@ -342,6 +350,7 @@ class _LedgerState extends State<Ledger> {
                           ],
                           keyboardType: TextInputType.text,
                           decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
                             labelText: 'City',
                             icon: Icon(Icons.location_city),
                           ),
@@ -353,6 +362,7 @@ class _LedgerState extends State<Ledger> {
                           ],
                           keyboardType: TextInputType.text,
                           decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
                             labelText: 'Route',
                           ),
                         ),
@@ -363,6 +373,7 @@ class _LedgerState extends State<Ledger> {
                           ],
                           keyboardType: TextInputType.text,
                           decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
                             labelText: 'State',
                           ),
                         ),
@@ -373,6 +384,7 @@ class _LedgerState extends State<Ledger> {
                           ],
                           keyboardType: TextInputType.text,
                           decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
                             labelText: 'State Code',
                           ),
                         ),
@@ -401,6 +413,7 @@ class _LedgerState extends State<Ledger> {
                                 ],
                                 keyboardType: TextInputType.number,
                                 decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
                                   labelText: 'Debit Amount',
                                 ),
                               ),
@@ -416,6 +429,7 @@ class _LedgerState extends State<Ledger> {
                                 ],
                                 keyboardType: TextInputType.number,
                                 decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
                                   labelText: 'Credit Amount',
                                 ),
                               ),

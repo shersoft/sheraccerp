@@ -560,6 +560,7 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
                                     Expanded(
                                       child: TextField(
                                         decoration: const InputDecoration(
+                                          border: OutlineInputBorder(),
                                           hintText: 'Narration...',
                                         ),
                                         onChanged: (value) {
@@ -722,6 +723,7 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
                                         replacementString: '.')
                                   ],
                                   decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
                                     hintText: 'Cash Received: ',
                                   ),
                                   onChanged: (value) {
@@ -780,7 +782,8 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
                   });
                 },
                 controller: _controller,
-                decoration: const InputDecoration(hintText: "value"),
+                decoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: "value"),
                 keyboardType: TextInputType.number,
                 inputFormatters: [
                   FilteringTextInputFormatter(RegExp(r'[0-9]'),

@@ -427,6 +427,7 @@ class _SalesState extends State<Sales> {
           Flexible(
             child: TextField(
               decoration: const InputDecoration(
+                border: OutlineInputBorder(),
                 hintText: 'Search...',
               ),
               onChanged: (text) {

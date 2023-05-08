@@ -5,9 +5,13 @@ import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:intl/intl.dart';
+import 'package:scoped_model/scoped_model.dart';
+import 'package:sheraccerp/models/company.dart';
+import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/simple_barchart.dart';
 
@@ -39,7 +43,7 @@ class _DashPageState extends State<DashPage> {
   final List<ChartSales> _salesData = [];
   final List<ChartPurchase> _purchaseData = [];
   DateTime now = DateTime.now();
-  String formattedDate;
+  String formattedDate, startDate, endDate;
   var dropdownBranchId = 1;
   DioService dio = DioService();
 
@@ -67,6 +71,9 @@ class _DashPageState extends State<DashPage> {
     super.initState();
     formattedDate = DateFormat('yyyy-MM-dd').format(now);
     setToDay = DateFormat('dd-MM-yyyy').format(now);
+    startDate = DateUtil.dateDMY(currentFinancialYear.startDate);
+    endDate = DateUtil.dateDMY(currentFinancialYear.endDate);
+
     Future<String>.delayed(
             const Duration(seconds: 2), () => '["123", "456", "789"]')
         .then((String value) {
@@ -219,27 +226,45 @@ class _DashPageState extends State<DashPage> {
           crossAxisSpacing: 4,
           children: [
             StaggeredGridTile.extent(
-              mainAxisExtent: 50,
+              mainAxisExtent: 80,
               crossAxisCellCount: 2,
               child: _buildTile(
                 Padding(
                   padding: const EdgeInsets.all(14),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Date',
-                          style: TextStyle(
-                              color: black,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 18.0)),
-                      InkWell(
-                        child: Text(getToDay,
-                            style: const TextStyle(
-                                color: black,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 18.0)),
-                        onTap: () => _selectDate(),
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            InkWell(
+                                child: Text(
+                                    'Financial Year $startDate  $endDate',
+                                    style: const TextStyle(
+                                        color: black,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 18.0)),
+                                onTap: () => _showFinancialList())
+                          ]),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Text('Date',
+                              style: TextStyle(
+                                  color: black,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 18.0)),
+                          InkWell(
+                            child: Text(getToDay,
+                                style: const TextStyle(
+                                    color: black,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 18.0)),
+                            onTap: () => _selectDate(),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -642,5 +667,65 @@ class _DashPageState extends State<DashPage> {
                     // print('Not set yet');
                   },
             child: child));
+  }
+
+  _showFinancialList() {
+    return showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Container(
+              child: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Financial Year',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              color: Colors.blueAccent,
+            ),
+            content: setFinancialList(context),
+          );
+        });
+  }
+
+  setFinancialList(context) {
+    List<FinancialYear> data =
+        ScopedModel.of<MainModel>(context).getFinancialYear();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 300.0,
+          width: 300.0,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: data.length,
+            itemBuilder: (BuildContext context, int index) {
+              return ListTile(
+                title: InkWell(
+                  child: Card(
+                      elevation: 3,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                            "${DateUtil.dateDMY(data[index].startDate)} - ${DateUtil.dateDMY(data[index].endDate)}"),
+                      )),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      currentFinancialYear = data[index];
+                      startDate =
+                          DateUtil.dateDMY(currentFinancialYear.startDate);
+                      endDate = DateUtil.dateDMY(currentFinancialYear.endDate);
+                    });
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 }

@@ -48,6 +48,7 @@ class _JournalState extends State<Journal> {
   List<CompanySettings> settings;
   CompanyInformation companySettings;
   final TextEditingController _controllerAmount = TextEditingController();
+  FocusNode _focusNode = FocusNode();
   final TextEditingController _controllerNarration = TextEditingController();
   double amount = 0;
 
@@ -78,6 +79,9 @@ class _JournalState extends State<Journal> {
 
   @override
   Widget build(BuildContext context) {
+    _controllerAmount.selection = TextSelection.fromPosition(
+        TextPosition(offset: _controllerAmount.text.length));
+
     deviceSize = MediaQuery.of(context).size;
     return WillPopScope(
         onWillPop: _onWillPop,
@@ -231,8 +235,9 @@ class _JournalState extends State<Journal> {
                 return models;
               },
               isFilteredOnline: true,
-              dropdownSearchDecoration:
-                  const InputDecoration(labelText: "Select Debit Account"),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: "Select Debit Account"),
               onChanged: (LedgerModel data) {
                 debugPrint(data.toString());
                 ledgerDebitData = data;
@@ -252,8 +257,9 @@ class _JournalState extends State<Journal> {
                 return models;
               },
               isFilteredOnline: true,
-              dropdownSearchDecoration:
-                  const InputDecoration(labelText: "Select Credit Account"),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: "Select Credit Account"),
               onChanged: (LedgerModel data) {
                 ledgerCreditData = data;
                 setState(() {
@@ -270,12 +276,15 @@ class _JournalState extends State<Journal> {
                 Expanded(
                   child: TextField(
                     controller: _controllerAmount,
+                    focusNode: _focusNode,
                     keyboardType: TextInputType.number,
+                    textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
                       hintText: 'Amount',
                     ),
                     onChanged: (value) {
@@ -299,6 +308,7 @@ class _JournalState extends State<Journal> {
                   child: TextField(
                     controller: _controllerNarration,
                     decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
                       hintText: 'Narration...',
                     ),
                     onChanged: (value) {
@@ -389,6 +399,7 @@ class _JournalState extends State<Journal> {
 
   @override
   void dispose() {
+    _focusNode.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -515,6 +526,7 @@ class _JournalState extends State<Journal> {
           'salesman': salesManId,
           'checkReturn': -1,
           'particular': particular,
+          'fyId': currentFinancialYear.id
         }
       ];
       if (operation == 'DELETE') {

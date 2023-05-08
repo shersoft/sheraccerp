@@ -353,8 +353,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                   maxHeight: 300,
                   onFind: (String filter) =>
                       api.getSalesListData(filter, 'sales_list/location'),
-                  dropdownSearchDecoration:
-                      const InputDecoration(hintText: 'Select Branch'),
+                  dropdownSearchDecoration: const InputDecoration(
+                      border: OutlineInputBorder(), hintText: 'Select Branch'),
                   onChanged: (dynamic data) {
                     locationId = data;
                   },
@@ -455,8 +455,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                       maxHeight: 300,
                       onFind: (String filter) =>
                           api.getSalesListData(filter, 'sales_list/location'),
-                      dropdownSearchDecoration:
-                          const InputDecoration(hintText: 'Select Branch'),
+                      dropdownSearchDecoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: 'Select Branch'),
                       onChanged: (dynamic data) {
                         locationId = data;
                       },
@@ -1057,6 +1058,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                       'sales_list/location'),
                                               dropdownSearchDecoration:
                                                   const InputDecoration(
+                                                      border:
+                                                          OutlineInputBorder(),
                                                       hintText:
                                                           'Select Branch'),
                                               onChanged: (dynamic data) {
@@ -1255,6 +1258,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                               'sales_list/location'),
                                                       dropdownSearchDecoration:
                                                           const InputDecoration(
+                                                              border:
+                                                                  OutlineInputBorder(),
                                                               hintText:
                                                                   'Select Branch'),
                                                       onChanged:
@@ -1845,10 +1850,11 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                       api.getSalesListData(
                                                                           filter,
                                                                           'sales_list/location'),
-                                                                  dropdownSearchDecoration:
-                                                                      const InputDecoration(
-                                                                          hintText:
-                                                                              'Select Branch'),
+                                                                  dropdownSearchDecoration: const InputDecoration(
+                                                                      border:
+                                                                          OutlineInputBorder(),
+                                                                      hintText:
+                                                                          'Select Branch'),
                                                                   onChanged:
                                                                       (dynamic
                                                                           data) {
@@ -1915,7 +1921,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextField(
-        decoration: const InputDecoration(hintText: 'Search...'),
+        decoration: const InputDecoration(
+            border: OutlineInputBorder(), hintText: 'Search...'),
         onChanged: (text) {
           text = text.toLowerCase();
           setState(() {

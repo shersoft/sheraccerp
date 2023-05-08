@@ -239,7 +239,8 @@ class _PurchaseState extends State<Purchase> {
                             'adCess': totalAdCess,
                             'Salesman': salesManId,
                             'location': locationId,
-                            'statementtype': stType
+                            'statementtype': stType,
+                            'fyId': currentFinancialYear.id,
                           }) +
                           ']';
 
@@ -313,7 +314,8 @@ class _PurchaseState extends State<Purchase> {
                             'adCess': totalAdCess,
                             'Salesman': salesManId,
                             'location': locationId,
-                            'statementtype': stType
+                            'statementtype': stType,
+                            'fyId': currentFinancialYear.id,
                           }) +
                           ']';
 
@@ -524,6 +526,7 @@ class _PurchaseState extends State<Purchase> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
                                   hintText: 'Search...',
                                 ),
                                 onChanged: (text) {
@@ -650,7 +653,7 @@ class _PurchaseState extends State<Purchase> {
     //                           Flexible(
     //                             child: TextField(
     //                               decoration: const InputDecoration(
-    //                                 hintText: 'Search...',
+    //                                 border: OutlineInputBorder(),hintText: 'Search...',
     //                               ),
     //                               onChanged: (text) {
     //                                 text = text.toLowerCase();
@@ -850,7 +853,7 @@ class _PurchaseState extends State<Purchase> {
                   child: Padding(
                     padding: EdgeInsets.only(right: 8.0),
                     child: Text(
-                      'Item +',
+                      'Add Item',
                       style: TextStyle(
                           color: blue,
                           fontSize: 25,
@@ -897,6 +900,7 @@ class _PurchaseState extends State<Purchase> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
                                   hintText: 'Search...',
                                 ),
                                 onChanged: (text) {
@@ -1016,7 +1020,7 @@ class _PurchaseState extends State<Purchase> {
   //                             Flexible(
   //                               child: TextField(
   //                                 decoration: const InputDecoration(
-  //                                   hintText: 'Search...',
+  //                                   border: OutlineInputBorder(),hintText: 'Search...',
   //                                 ),
   //                                 onChanged: (text) {
   //                                   text = text.toLowerCase();
@@ -1697,6 +1701,7 @@ class _PurchaseState extends State<Purchase> {
                     child: TextField(
                       controller: controllerSerialNo,
                       decoration: InputDecoration(
+                          border: OutlineInputBorder(),
                           labelText:
                               isItemSerialNo ? labelSerialNo : 'SerialNo'),
                       onChanged: (value) {
@@ -1714,8 +1719,8 @@ class _PurchaseState extends State<Purchase> {
               maxHeight: 300,
               onFind: (String filter) =>
                   dio.getSalesListData(filter, 'sales_list/unit'),
-              dropdownSearchDecoration:
-                  const InputDecoration(hintText: 'Select Unit'),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(), hintText: 'Select Unit'),
               onChanged: (dynamic data) {
                 unit = data;
                 calculate();

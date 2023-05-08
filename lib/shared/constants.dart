@@ -19,7 +19,7 @@ bool isUsingHive = true;
 String deviceId = '0';
 const String isApp = '1';
 
-const String apiV = 'v14/';
+const String apiV = 'v16/';
 const currencySymbol = '₹';
 // const bool isVariant = false;
 const bool isKFC = false;
@@ -32,6 +32,7 @@ const bool isRoute = false;
 bool isEstimateDataBase = false;
 String userNameC = 'ADMIN';
 CompanyUser companyUserData;
+FinancialYear currentFinancialYear;
 List<FormModel> userControlData = [];
 int userIdC = 1;
 String _toDay;
