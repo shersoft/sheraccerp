@@ -77,6 +77,7 @@ class _SaleState extends State<Sale> {
   String formattedDate, _narration = '';
   double _balance = 0, grandTotal = 0;
   final TextEditingController _controllerCashReceived = TextEditingController();
+  FocusNode _focusNodeCashReceived = FocusNode();
 
   int page = 1, pageTotal = 0, totalRecords = 0;
   int saleAccount = 0, acId = 0, decimal = 2;
@@ -210,6 +211,19 @@ class _SaleState extends State<Sale> {
 
   @override
   Widget build(BuildContext context) {
+    _discountController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _discountController.text.length));
+    _discountPercentController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _discountPercentController.text.length));
+    _quantityController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _quantityController.text.length));
+    _rateController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _rateController.text.length));
+    _controllerCashReceived.selection = TextSelection.fromPosition(
+        TextPosition(offset: _controllerCashReceived.text.length));
+    _freeQuantityController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _freeQuantityController.text.length));
+
     deviceSize = MediaQuery.of(context).size;
     final routes =
         ModalRoute.of(context).settings.arguments as Map<String, bool>;
@@ -2442,7 +2456,6 @@ class _SaleState extends State<Sale> {
     _freeQuantityController.text = '';
     _rateController.text = '';
     _discountController.text = '';
-    rateEdited = false;
     _discountPercentController.text = '';
     _serialNoController.text = '';
     taxP = 0;
@@ -2488,10 +2501,16 @@ class _SaleState extends State<Sale> {
   final TextEditingController _discountPercentController =
       TextEditingController();
   final TextEditingController _serialNoController = TextEditingController();
+
+  FocusNode _focusNodeQuantity = FocusNode();
+  FocusNode _focusNodeFreeQuantity = FocusNode();
+  FocusNode _focusNodeRate = FocusNode();
+  FocusNode _focusNodeDiscountPer = FocusNode();
+  FocusNode _focusNodeDiscount = FocusNode();
+
   final _resetKey = GlobalKey<FormState>();
   String expDate = '2000-01-01';
   int _dropDownUnit = 0, fUnitId = 0, uniqueCode = 0, barcode = 0;
-  bool rateEdited = false;
 
   double taxP = 0,
       tax = 0,
@@ -2558,7 +2577,9 @@ class _SaleState extends State<Sale> {
         saleRate = product.sellingPrice;
       }
     }
-    if (saleRate > 0 && !rateEdited && _rateController.text.isEmpty) {
+    if (saleRate > 0 &&
+        !_focusNodeRate.hasFocus &&
+        _rateController.text.isEmpty) {
       _rateController.text = _conversion > 0
           ? (saleRate * _conversion).toStringAsFixed(decimal)
           : saleRate.toStringAsFixed(decimal);
@@ -2572,7 +2593,7 @@ class _SaleState extends State<Sale> {
         if (saleRate > 0) {
           if (_conversion > 0) {
             //var r = 0.0;
-            if (rateEdited) {
+            if (_focusNodeRate.hasFocus) {
               rate = double.tryParse(_rateController.text);
               // rate = double.tryParse(_rateController.text) * _conversion;
             } else {
@@ -2595,7 +2616,7 @@ class _SaleState extends State<Sale> {
               : 0;
         }
       } else {
-        if (rateEdited) {
+        if (_focusNodeRate.hasFocus) {
           rate = double.tryParse(_rateController.text);
         } else if (saleRate > 0) {
           _rateController.text = saleRate.toStringAsFixed(decimal);
@@ -3132,7 +3153,6 @@ class _SaleState extends State<Sale> {
                                   if (double.tryParse(_rateController.text) >=
                                       minRate) {
                                     setState(() {
-                                      rateEdited = true;
                                       isMinimumRatedLock = false;
                                       calculate();
                                     });
@@ -3143,7 +3163,6 @@ class _SaleState extends State<Sale> {
                                   }
                                 } else {
                                   setState(() {
-                                    rateEdited = true;
                                     calculate();
                                   });
                                 }
