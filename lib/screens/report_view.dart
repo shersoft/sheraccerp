@@ -27,7 +27,7 @@ class ReportView extends StatefulWidget {
   final String name;
   final String statement;
   final String salesMan;
-  final int branchId;
+  final List<int> branchId;
 
   @override
   _ReportViewState createState() => _ReportViewState();
@@ -39,7 +39,7 @@ class _ReportViewState extends State<ReportView> {
   double offset = 0;
   var _data;
   List<dynamic> location = [
-    {'id': 1}
+    {'id': 0}
   ];
   List<dynamic> project = [
     {'id': 0}
@@ -55,7 +55,15 @@ class _ReportViewState extends State<ReportView> {
     controller.addListener(onScroll);
     super.initState();
     location.removeAt(0);
-    location.add(({'id': widget.branchId}));
+    if (widget.branchId[0] == 0) {
+      for (int i = 0; i < otherRegLocationList.length; i++) {
+        location.add(({'id': otherRegLocationList[i].id}));
+      }
+    } else {
+      for (int i = 0; i < widget.branchId.length; i++) {
+        location.add(({'id': widget.branchId[i]}));
+      }
+    }
   }
 
   @override

@@ -1750,7 +1750,8 @@ class DioService {
             'location': location,
             'type': type,
             'date': date,
-            'salesMan': salesMan
+            'salesMan': salesMan,
+            'fyId': currentFinancialYear.id
           });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
@@ -3383,7 +3384,11 @@ class DioService {
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
               '/purchase/find/$dataBase',
-          queryParameters: {'id': id, 'statement': type});
+          queryParameters: {
+            'id': id,
+            'statement': type,
+            'fyId': currentFinancialYear.id
+          });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -3441,7 +3446,11 @@ class DioService {
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
               '/Voucher/find/$dataBase',
-          queryParameters: {'id': id, 'type': type});
+          queryParameters: {
+            'id': id,
+            'type': type,
+            'fyId': currentFinancialYear.id
+          });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -3517,10 +3526,11 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     dynamic _items = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          '/stock/stockTransferfind/$dataBase/$id/${Uri.encodeComponent(type).toString()}');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              '/stock/stockTransferFind/$dataBase',
+          queryParameters: {'entryNo': id, 'fyId': currentFinancialYear.id});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -3547,7 +3557,11 @@ class DioService {
         pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
             'stock/delete/$dataBase',
-        queryParameters: {'entryNo': entryNo, 'type': type},
+        queryParameters: {
+          'entryNo': entryNo,
+          'type': type,
+          'fyId': currentFinancialYear.id
+        },
       );
       if (response.statusCode == 200) {
         ret = response.data['returnValue'] > 0 ? true : false;

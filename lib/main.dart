@@ -141,7 +141,7 @@ class MyApp extends StatelessWidget {
               '/preview_show': (context) => const SalesPreviewShow(),
               '/select_ledger': (context) => const LedgerSelect(),
               '/report_view': (context) => const ReportView('0', '0',
-                  '2020-01-01', '2020-01-01', 'ledger', '', '', '0', 0),
+                  '2020-01-01', '2020-01-01', 'ledger', '', '', '0', [0]),
               '/RPVoucher': (context) => const RPVoucher(),
               '/SalesList': (context) => const SalesList(),
               '/PurchaseList': (context) => const PurchaseList(),

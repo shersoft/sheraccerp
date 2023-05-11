@@ -525,7 +525,8 @@ class _SalesReturnState extends State<SalesReturn> {
             'roundOff': roundOff,
             'billType': order.billType,
             'returnNo': 0,
-            'returnAmount': 0
+            'returnAmount': 0,
+            'fyId': currentFinancialYear.id
           }) +
           ']';
 
@@ -533,7 +534,8 @@ class _SalesReturnState extends State<SalesReturn> {
         'information': ledger,
         'data': data,
         'particular': items,
-        'otherAmount': otherAmount
+        'otherAmount': otherAmount,
+        'fyId': currentFinancialYear.id
       };
 
       dio.spSale(body).then((value0) {
@@ -549,7 +551,8 @@ class _SalesReturnState extends State<SalesReturn> {
                 'saleFormId': saleFormId,
                 'billType': order.billType,
                 'returnNo': 0,
-                'returnAmount': 0
+                'returnAmount': 0,
+                'fyId': currentFinancialYear.id
               }) +
               ']';
 
@@ -702,7 +705,8 @@ class _SalesReturnState extends State<SalesReturn> {
             'roundOff': roundOff,
             'billType': order.billType,
             'returnNo': 0,
-            'returnAmount': 0
+            'returnAmount': 0,
+            'fyId': currentFinancialYear.id
           }) +
           ']';
 
@@ -710,7 +714,8 @@ class _SalesReturnState extends State<SalesReturn> {
         'information': ledger,
         'data': data,
         'particular': items,
-        'otherAmount': otherAmount
+        'otherAmount': otherAmount,
+        'fyId': currentFinancialYear.id
       };
 
       dio.spSale(body).then((value) {
@@ -739,6 +744,7 @@ class _SalesReturnState extends State<SalesReturn> {
           'entryNo': dataDynamic[0]['EntryNo'],
           'invoiceNo': dataDynamic[0]['InvoiceNo'],
           'saleFormId': saleFormId,
+          'fyId': currentFinancialYear.id
         }) +
         ']';
     final body = {
@@ -2532,7 +2538,8 @@ class _SalesReturnState extends State<SalesReturn> {
               json.encode({
                 'statement': 'SalesReturnFind',
                 'entryNo': dataDynamic[0]['EntryNo'].toString(),
-                'saleFormId': saleFormId
+                'saleFormId': saleFormId,
+                'fyId': currentFinancialYear.id
               }) +
               ']';
           final body = {
@@ -2603,7 +2610,8 @@ class _SalesReturnState extends State<SalesReturn> {
         json.encode({
           'statement': 'SalesReturnFind',
           'entryNo': dataS['Id'].toString(),
-          'saleFormId': saleFormId
+          'saleFormId': saleFormId,
+          'fyId': currentFinancialYear.id
         }) +
         ']';
     final body = {

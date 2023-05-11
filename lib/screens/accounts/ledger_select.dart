@@ -362,6 +362,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                 ),
                 TextButton(
                   onPressed: () {
+                    List<int> branches =
+                        locationId != null ? [locationId.id] : [0];
                     Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -374,9 +376,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                 _ledger,
                                 statement,
                                 salesMan,
-                                locationId != null
-                                    ? locationId.id
-                                    : _dropDownBranchId)));
+                                branches)));
                   },
                   child: const Text('Show'),
                   style: ButtonStyle(
@@ -478,8 +478,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                     statement,
                                     salesMan,
                                     locationId != null
-                                        ? locationId.id
-                                        : _dropDownBranchId)));
+                                        ? [locationId.id]
+                                        : [_dropDownBranchId])));
                       },
                       child: const Text('Show'),
                       style: ButtonStyle(
@@ -575,8 +575,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                             statement,
                                             salesMan,
                                             locationId != null
-                                                ? locationId.id
-                                                : _dropDownBranchId)));
+                                                ? [locationId.id]
+                                                : [_dropDownBranchId])));
                           },
                           child: const Text('Show'),
                           style: ButtonStyle(
@@ -654,8 +654,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                 statement,
                                                 salesMan,
                                                 locationId != null
-                                                    ? locationId.id
-                                                    : _dropDownBranchId)));
+                                                    ? [locationId.id]
+                                                    : [_dropDownBranchId])));
                               },
                               child: const Text('Show'),
                               style: ButtonStyle(
@@ -766,8 +766,10 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                     statement,
                                                     salesMan,
                                                     locationId != null
-                                                        ? locationId.id
-                                                        : _dropDownBranchId)));
+                                                        ? [locationId.id]
+                                                        : [
+                                                            _dropDownBranchId
+                                                          ])));
                                   },
                                   child: const Text('Show'),
                                   style: ButtonStyle(
@@ -845,8 +847,10 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                         statement,
                                                         salesMan,
                                                         locationId != null
-                                                            ? locationId.id
-                                                            : _dropDownBranchId)));
+                                                            ? [locationId.id]
+                                                            : [
+                                                                _dropDownBranchId
+                                                              ])));
                                       },
                                       child: const Text('Show'),
                                       style: ButtonStyle(
@@ -927,9 +931,15 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                             _ledger,
                                                             statement,
                                                             salesMan,
-                                                            locationId != null
-                                                                ? locationId.id
-                                                                : _dropDownBranchId)));
+                                                            locationId !=
+                                                                    null
+                                                                ? [
+                                                                    locationId
+                                                                        .id
+                                                                  ]
+                                                                : [
+                                                                    _dropDownBranchId
+                                                                  ])));
                                           },
                                           child: const Text('Show'),
                                           style: ButtonStyle(
@@ -1147,9 +1157,13 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                 salesMan,
                                                                 locationId !=
                                                                         null
-                                                                    ? locationId
-                                                                        .id
-                                                                    : _dropDownBranchId)));
+                                                                    ? [
+                                                                        locationId
+                                                                            .id
+                                                                      ]
+                                                                    : [
+                                                                        _dropDownBranchId
+                                                                      ])));
                                               },
                                               child: const Text('Show'),
                                               style: ButtonStyle(
@@ -1286,9 +1300,12 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                     salesMan,
                                                                     locationId !=
                                                                             null
-                                                                        ? locationId
-                                                                            .id
-                                                                        : _dropDownBranchId)));
+                                                                        ? [
+                                                                            locationId.id
+                                                                          ]
+                                                                        : [
+                                                                            _dropDownBranchId
+                                                                          ])));
                                                       },
                                                       child: const Text('Show'),
                                                       style: ButtonStyle(
@@ -1451,8 +1468,12 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                         salesMan,
                                                                         locationId !=
                                                                                 null
-                                                                            ? locationId.id
-                                                                            : _dropDownBranchId)));
+                                                                            ? [
+                                                                                locationId.id
+                                                                              ]
+                                                                            : [
+                                                                                _dropDownBranchId
+                                                                              ])));
                                                           },
                                                           child: const Text(
                                                               'Show'),
@@ -1603,8 +1624,12 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                             selectedGroupValues,
                                                                             salesMan,
                                                                             locationId != null
-                                                                                ? locationId.id
-                                                                                : _dropDownBranchId)));
+                                                                                ? [
+                                                                                    locationId.id
+                                                                                  ]
+                                                                                : [
+                                                                                    _dropDownBranchId
+                                                                                  ])));
                                                               },
                                                               child: const Text(
                                                                   'Show'),
@@ -1743,7 +1768,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                                 mode == 'Payable' ? 'ReceivblesCreditOnly' : 'ReceivblesDebitOnly',
                                                                                 // selectedGroupValues == '' ? '' : '',
                                                                                 salesMan,
-                                                                                locationId != null ? locationId.id : _dropDownBranchId)));
+                                                                                locationId != null ? [locationId.id] : [_dropDownBranchId])));
                                                                   },
                                                                   child:
                                                                       const Text(
@@ -1873,13 +1898,21 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                             builder: (BuildContext context) => ReportView(
                                                                                 '0',
                                                                                 '1',
-                                                                                DateUtil.dateDMY2YMD(fromDate),
-                                                                                DateUtil.dateDMY2YMD(toDate),
+                                                                                DateUtil.dateDMY2YMD(
+                                                                                    fromDate),
+                                                                                DateUtil.dateDMY2YMD(
+                                                                                    toDate),
                                                                                 statement,
                                                                                 '',
                                                                                 statement,
                                                                                 salesMan,
-                                                                                locationId != null ? locationId.id : _dropDownBranchId)));
+                                                                                locationId != null
+                                                                                    ? [
+                                                                                        locationId.id
+                                                                                      ]
+                                                                                    : [
+                                                                                        _dropDownBranchId
+                                                                                      ])));
                                                                   },
                                                                   child:
                                                                       const Text(

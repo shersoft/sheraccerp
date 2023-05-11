@@ -195,7 +195,8 @@ class _StockTransferState extends State<StockTransfer> {
                             'narration': _narration,
                             'Salesman': salesManId,
                             'location': '0',
-                            'statementtype': stType
+                            'statementtype': stType,
+                            'fyId': currentFinancialYear.id
                           }) +
                           ']';
 
@@ -247,7 +248,8 @@ class _StockTransferState extends State<StockTransfer> {
                             'narration': _narration,
                             'Salesman': salesManId,
                             'location': '0',
-                            'statementtype': stType
+                            'statementtype': stType,
+                            'fyId': currentFinancialYear.id
                           }) +
                           ']';
 
