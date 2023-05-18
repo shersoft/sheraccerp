@@ -31,7 +31,11 @@ class _SalesListState extends State<SalesList> {
   var _data;
   int menuId = 0;
   String toDate;
-  bool loadReport = false, isType = false, classic = true, newMode = false;
+  bool loadReport = false,
+      stockValuation = false,
+      isType = false,
+      classic = true,
+      newMode = false;
   DateTime now = DateTime.now();
   DioService api = DioService();
   var itemId,
@@ -66,7 +70,22 @@ class _SalesListState extends State<SalesList> {
     TypeItem(15, 'Replace P&L ItemWise'),
     TypeItem(16, 'Simple P&l Report'),
     TypeItem(17, 'Scheme Report'),
-    TypeItem(18, 'ItemWise Monthly')
+    TypeItem(18, 'ItemWise Monthly'),
+    TypeItem(19, 'P&L ItemWise New'),
+    TypeItem(20, 'Customer Address'),
+    TypeItem(21, 'Insurance Report'),
+    TypeItem(22, 'Sales Qty Total'),
+    TypeItem(23, 'Group Summery Custom'),
+    TypeItem(24, 'P&L Monthly'),
+    TypeItem(25, 'ItemWise Rate Analysis'),
+    TypeItem(26, 'ItemWise Profit Analysis'),
+    TypeItem(27, 'Sales E-Invoice Report'),
+    TypeItem(28, 'Month Wise Item Summery'),
+    TypeItem(29, 'Supplier Wise Sales Total'),
+    TypeItem(30, 'Sales ItemWise Customer Grouping'),
+    TypeItem(31, 'Sales Summery DC'),
+    TypeItem(32, 'Sales Monthly'),
+    TypeItem(33, 'DeliveryNote Summery')
   ];
   int valueType = 1;
 
@@ -1081,6 +1100,22 @@ class _SalesListState extends State<SalesList> {
                 ),
               ),
               const Divider(),
+              Container(
+                decoration:
+                    BoxDecoration(border: Border.all(width: 0.3, color: black)),
+                child: Row(children: [
+                  const Text('Stock Valuation Last P-Rate'),
+                  Checkbox(
+                    value: stockValuation,
+                    onChanged: (value) {
+                      setState(() {
+                        stockValuation = value;
+                      });
+                    },
+                  )
+                ]),
+              ),
+              const Divider(),
               DropdownSearch<dynamic>(
                 maxHeight: 300,
                 onFind: (String filter) =>
@@ -1189,6 +1224,34 @@ class _SalesListState extends State<SalesList> {
                 },
                 showSearchBox: true,
               ),
+              const Divider(),
+              DropdownSearch<dynamic>(
+                maxHeight: 300,
+                onFind: (String filter) =>
+                    api.getSalesListData(filter, 'sales_list/supplier'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: "Select Supplier"),
+                onChanged: (dynamic data) {
+                  customer = data;
+                },
+                showSearchBox: true,
+              ),
+              const Divider(),
+              Card(
+                  child: Row(
+                children: [
+                  const Text('Select Area'),
+                  const Text('Select Area')
+                ],
+              )),
+              const Divider(),
+              Card(
+                  child: Row(
+                children: [
+                  const Text('Select Route'),
+                  const Text('Select Route')
+                ],
+              )),
               const Divider(),
               salesTypeDataList.isNotEmpty
                   ? ExpansionTile(

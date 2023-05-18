@@ -71,6 +71,7 @@ class _SaleState extends State<Sale> {
       _isReturnInSales = false,
       productTracking = false,
       isFreeItem = false,
+      isStockProductOnlyInSalesQO = false,
       isFreeQty = false;
   final List<TextEditingController> _controllers = [];
   DateTime now = DateTime.now();
@@ -145,8 +146,11 @@ class _SaleState extends State<Sale> {
       setState(() {
         rateTypeList = value;
 
-        String rateTypeS =
-            salesTypeData.rateType.isNotEmpty ? salesTypeData.rateType : 'MRP';
+        String rateTypeS = salesTypeData != null
+            ? salesTypeData.rateType.isNotEmpty
+                ? salesTypeData.rateType
+                : 'MRP'
+            : 'MRP';
 
         rateTypeItem =
             rateTypeList.firstWhere((element) => element.name == rateTypeS);
@@ -207,6 +211,10 @@ class _SaleState extends State<Sale> {
         ComSettings.getStatus('ENABLE PRODUCT TRACKING IN SALES', settings);
     isFreeItem = ComSettings.getStatus('KEY FREE ITEM', settings);
     isFreeQty = ComSettings.getStatus('KEY FREE QTY IN SALE', settings);
+    isStockProductOnlyInSalesQO =
+        ComSettings.getStatus('STOCK PRODUCT ONLY IN SALES QO', settings);
+
+    // (salesTypeData.type != 'SALES-O' || salesTypeData.type != 'SALES-Q');
   }
 
   @override
@@ -848,7 +856,8 @@ class _SaleState extends State<Sale> {
       var saleFormId = salesTypeData.id;
       var saleFormType = salesTypeData.type;
       var taxType = salesTypeData.tax ? 'T' : 'NT';
-      var salesRateTypeId = rateType.isNotEmpty ? rateType : '1';
+      var salesRateTypeId =
+          rateTypeItem != null ? rateTypeItem.id.toString() : '1';
       var saleAccountId = saleAccount > 0 ? saleAccount.toString() : '0';
       var checkKFC = isKFC ? '1' : '0';
       double grandTotal = double.tryParse(order.grandTotal) > 0
@@ -925,6 +934,7 @@ class _SaleState extends State<Sale> {
             'billType': order.billType,
             'returnNo': returnBillId,
             'returnAmount': returnAmount,
+            'invoiceNo': '0',
             'otherAmount': _otherAmountTotal(order.otherAmountData),
             'fyId': currentFinancialYear.id
           }) +
@@ -1098,7 +1108,8 @@ class _SaleState extends State<Sale> {
       var saleFormId = salesTypeData.id;
       var saleFormType = salesTypeData.type;
       var taxType = salesTypeData.tax ? 'T' : 'NT';
-      var salesRateTypeId = rateType.isNotEmpty ? rateType : '1';
+      var salesRateTypeId =
+          rateTypeItem != null ? rateTypeItem.id.toString() : '1';
       var saleAccountId = saleAccount > 0 ? saleAccount.toString() : '0';
       var checkKFC = isKFC ? '1' : '0';
       double grandTotal = double.tryParse(order.grandTotal) > 0
@@ -1175,6 +1186,7 @@ class _SaleState extends State<Sale> {
             'billType': order.billType,
             'returnNo': returnBillId,
             'returnAmount': returnAmount,
+            'invoiceNo': '0',
             'otherAmount': _otherAmountTotal(order.otherAmountData),
             'fyId': currentFinancialYear.id,
           }) +
@@ -1730,8 +1742,12 @@ class _SaleState extends State<Sale> {
                             },
                           ),
                         ]),
+                        const Text(
+                          'NAME ',
+                          style: TextStyle(color: blue),
+                        ),
                         InkWell(
-                          child: Text("Name : " + snapshot.data.name,
+                          child: Text(snapshot.data.name,
                               style: const TextStyle(fontSize: 20)),
                           onTap: () {
                             setState(() {
@@ -1824,8 +1840,13 @@ class _SaleState extends State<Sale> {
                             },
                           ),
                         ]),
+                        const Text(
+                          'Name',
+                          style: TextStyle(
+                              color: blue, fontWeight: FontWeight.bold),
+                        ),
                         InkWell(
-                          child: Text("Name : " + snapshot.data.name,
+                          child: Text(snapshot.data.name,
                               style: const TextStyle(fontSize: 20)),
                           onTap: () {
                             setState(() {
@@ -1837,9 +1858,13 @@ class _SaleState extends State<Sale> {
                         Visibility(
                             visible: customerReusableProduct,
                             child: Text('Stock IN :' + snapshot.data.remarks)),
+                        const Text(
+                          'Address',
+                          style: TextStyle(
+                              color: blue, fontWeight: FontWeight.bold),
+                        ),
                         Text(
-                            "Address : " +
-                                snapshot.data.address1 +
+                            snapshot.data.address1 +
                                 " ," +
                                 snapshot.data.address2 +
                                 " ," +
@@ -1847,16 +1872,36 @@ class _SaleState extends State<Sale> {
                                 " ," +
                                 snapshot.data.address4,
                             style: const TextStyle(fontSize: 18)),
-                        Text("Tax No : " + snapshot.data.taxNumber,
+                        const Text(
+                          'Tax No',
+                          style: TextStyle(
+                              color: blue, fontWeight: FontWeight.bold),
+                        ),
+                        Text(snapshot.data.taxNumber,
                             style: const TextStyle(fontSize: 18)),
+                        const Text(
+                          'Phone',
+                          style: TextStyle(
+                              color: blue, fontWeight: FontWeight.bold),
+                        ),
                         InkWell(
-                          child: Text("Phone : " + snapshot.data.phone,
+                          child: Text(snapshot.data.phone,
                               style: const TextStyle(fontSize: 18)),
                           onDoubleTap: () => callNumber(snapshot.data.phone),
                         ),
-                        Text("Email : " + snapshot.data.email,
+                        const Text(
+                          'Email',
+                          style: TextStyle(
+                              color: blue, fontWeight: FontWeight.bold),
+                        ),
+                        Text(snapshot.data.email,
                             style: const TextStyle(fontSize: 18)),
-                        Text("Balance : " + snapshot.data.balance,
+                        const Text(
+                          'Balance',
+                          style: TextStyle(
+                              color: blue, fontWeight: FontWeight.bold),
+                        ),
+                        Text(snapshot.data.balance,
                             style: const TextStyle(fontSize: 18)),
                         ElevatedButton(
                           onPressed: () {
@@ -2045,8 +2090,14 @@ class _SaleState extends State<Sale> {
     setState(() {
       if (items.isNotEmpty) isItemData = true;
     });
+
     return FutureBuilder<List<StockItem>>(
-      future: dio.fetchStockProduct(DateUtil.dateDMY2YMD(formattedDate)),
+      future:
+          (salesTypeData.type == 'SALES-O' || salesTypeData.type == 'SALES-Q')
+              ? isStockProductOnlyInSalesQO
+                  ? dio.fetchStockProduct(DateUtil.dateDMY2YMD(formattedDate))
+                  : dio.fetchNoStockProduct(DateUtil.dateDMY2YMD(formattedDate))
+              : dio.fetchStockProduct(DateUtil.dateDMY2YMD(formattedDate)),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
@@ -2206,10 +2257,12 @@ class _SaleState extends State<Sale> {
   itemDetailWidget() {
     return isBarcodePicker
         ? showBarcodeProduct()
-        : productModel.hasVariant
-            ? showVariantDialog(productModel.id, productModel.name,
-                productModel.quantity.toString())
-            : selectStockLedger();
+        : (salesTypeData.type == 'SALES-O' || salesTypeData.type == 'SALES-Q')
+            ? selectNoStockLedger()
+            : productModel.hasVariant
+                ? showVariantDialog(productModel.id, productModel.name,
+                    productModel.quantity.toString())
+                : selectStockLedger();
   }
 
   showBarcodeProduct() {
@@ -2287,6 +2340,94 @@ class _SaleState extends State<Sale> {
           if (snapshot.hasData) {
             if (snapshot.data.length > 0) {
               return showAddMore(context, snapshot.data[0]);
+            } else {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 20),
+                    const Text('Stock Ledger Data Missing...'),
+                    TextButton(
+                        onPressed: () {
+                          setState(() {
+                            nextWidget = 2;
+                          });
+                        },
+                        child: const Text('Select Product Again'))
+                  ],
+                ),
+              );
+            }
+          } else if (snapshot.hasError) {
+            return AlertDialog(
+              title: const Text(
+                'An Error Occurred!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.redAccent,
+                ),
+              ),
+              content: Text(
+                "${snapshot.error}",
+                style: const TextStyle(
+                  color: Colors.blueAccent,
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text(
+                    'Go Back',
+                    style: TextStyle(
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                )
+              ],
+            );
+          }
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const <Widget>[
+                CircularProgressIndicator(),
+                SizedBox(height: 20),
+                Text('This may take some time..')
+              ],
+            ),
+          );
+        });
+  }
+
+  selectNoStockLedger() {
+    return FutureBuilder(
+        future: dio.fetchNoStockVariant(productModel.id),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            if (snapshot.data.length > 0) {
+              var d = snapshot.data[0];
+              StockProduct data = StockProduct(
+                  adCessPer: 0,
+                  branch: d['branch'].toDouble(),
+                  buyingPrice: d['prate'].toDouble(),
+                  buyingPriceReal: d['realprate'].toDouble(),
+                  cess: 0,
+                  cessPer: 0,
+                  hsnCode: '',
+                  itemId: productModel.id,
+                  minimumRate: d['wsrate'].toDouble(),
+                  name: productModel.name,
+                  productId: d['uniquecode'],
+                  quantity: 0,
+                  retailPrice: d['retail'].toDouble(),
+                  sellingPrice: d['mrp'].toDouble(),
+                  spRetailPrice: d['spretail'].toDouble(),
+                  stockValuation: 'AVG',
+                  tax: 0,
+                  wholeSalePrice: d['wsrate'].toDouble());
+              return showAddMore(context, data);
             } else {
               return Center(
                 child: Column(
@@ -2645,21 +2786,39 @@ class _SaleState extends State<Sale> {
       double discP = _discountPercentController.text.isNotEmpty
           ? double.tryParse(_discountPercentController.text)
           : 0;
+      double disc = _discountController.text.isNotEmpty
+          ? double.tryParse(_discountController.text)
+          : 0;
       double qt = _quantityController.text.isNotEmpty
           ? double.tryParse(_quantityController.text)
           : 0;
       double sRate = _rateController.text.isNotEmpty
           ? double.tryParse(_rateController.text)
           : 0;
-      _discountController.text = _discountPercentController.text.isNotEmpty
-          ? (((qt * sRate) * discP) / 100).toStringAsFixed(decimal)
-          : '';
-      discountPercent = _discountPercentController.text.isNotEmpty
-          ? double.tryParse(_discountPercentController.text)
-          : 0;
-      discount = discountPercent > 0
-          ? double.tryParse(_discountController.text)
-          : discount;
+      if (_focusNodeDiscountPer.hasFocus) {
+        _discountController.text = _discountController.text.isNotEmpty
+            ? (((qt * sRate) * discP) / 100).toStringAsFixed(2)
+            : '';
+        discount = _discountController.text.isNotEmpty
+            ? double.tryParse(_discountController.text)
+            : 0;
+        discountPercent = discount > 0
+            ? double.tryParse(_discountPercentController.text)
+            : discount;
+      }
+
+      if (_focusNodeDiscount.hasFocus) {
+        _discountPercentController.text =
+            _discountPercentController.text.isNotEmpty
+                ? ((disc * 100) / (qt * sRate)).toStringAsFixed(2)
+                : '';
+        discountPercent = _discountPercentController.text.isNotEmpty
+            ? double.tryParse(_discountPercentController.text)
+            : 0;
+        discount = discountPercent > 0
+            ? double.tryParse(_discountController.text)
+            : discount;
+      }
       rDisc = taxMethod == 'MINUS'
           ? CommonService.getRound(4, ((discount * 100) / (taxP + 100)))
           : discount;
@@ -2901,6 +3060,7 @@ class _SaleState extends State<Sale> {
                         padding: const EdgeInsets.all(2.0),
                         child: TextFormField(
                           controller: _quantityController,
+                          focusNode: _focusNodeQuantity,
                           // autofocus: true,
                           validator: (value) {
                             if (outOfStock) {
@@ -2938,14 +3098,22 @@ class _SaleState extends State<Sale> {
 
                                 outOfStock = negativeStock
                                     ? false
-                                    : salesTypeData.stock
-                                        ? double.tryParse(value) >
+                                    : salesTypeData.type == 'SALES-O' ||
+                                            salesTypeData.type == 'SALES-Q'
+                                        ? isStockProductOnlyInSalesQO
+                                            ? double.tryParse(value) >
+                                                    product.quantity
+                                                ? true
+                                                : cartQ
+                                                    ? true
+                                                    : false
+                                            : false
+                                        : double.tryParse(value) >
                                                 product.quantity
                                             ? true
                                             : cartQ
                                                 ? true
-                                                : false
-                                        : false;
+                                                : false;
                                 calculate();
                               });
                             }
@@ -2959,6 +3127,7 @@ class _SaleState extends State<Sale> {
                           padding: const EdgeInsets.all(2.0),
                           child: TextFormField(
                             controller: _freeQuantityController,
+                            focusNode: _focusNodeFreeQuantity,
                             // autofocus: true,
                             validator: (value) {
                               if (outOfStock) {
@@ -2999,14 +3168,22 @@ class _SaleState extends State<Sale> {
 
                                   outOfStock = negativeStock
                                       ? false
-                                      : salesTypeData.stock
-                                          ? double.tryParse(value) >
-                                                  (product.quantity)
+                                      : salesTypeData.type == 'SALES-O' ||
+                                              salesTypeData.type == 'SALES-Q'
+                                          ? isStockProductOnlyInSalesQO
+                                              ? double.tryParse(value) >
+                                                      product.quantity
+                                                  ? true
+                                                  : cartQ
+                                                      ? true
+                                                      : false
+                                              : false
+                                          : double.tryParse(value) >
+                                                  product.quantity
                                               ? true
                                               : cartQ
                                                   ? true
-                                                  : false
-                                          : false;
+                                                  : false;
                                   calculate();
                                 });
                               }
@@ -3127,6 +3304,7 @@ class _SaleState extends State<Sale> {
                       ),
                     ],
                   ),
+                  const Divider(),
                   Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -3135,6 +3313,7 @@ class _SaleState extends State<Sale> {
                           padding: const EdgeInsets.all(2.0),
                           child: TextField(
                             controller: _rateController,
+                            focusNode: _focusNodeRate,
                             readOnly: isItemRateEditLocked,
                             // autofocus: true,
                             keyboardType: TextInputType.number,
@@ -3278,6 +3457,7 @@ class _SaleState extends State<Sale> {
                           ),
                         )
                       ]),
+                  const Divider(),
                   Visibility(
                     visible: !isItemDiscountEditLocked,
                     child: Row(
@@ -3287,6 +3467,7 @@ class _SaleState extends State<Sale> {
                           padding: const EdgeInsets.all(2.0),
                           child: TextField(
                             controller: _discountPercentController,
+                            focusNode: _focusNodeDiscountPer,
                             keyboardType: TextInputType.number,
                             inputFormatters: [
                               FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -3294,7 +3475,7 @@ class _SaleState extends State<Sale> {
                             ],
                             decoration: const InputDecoration(
                                 border: OutlineInputBorder(),
-                                labelText: ' % ',
+                                labelText: 'Discount % ',
                                 hintText: '0.0'),
                             onChanged: (value) {
                               setState(() {
@@ -3307,6 +3488,7 @@ class _SaleState extends State<Sale> {
                             child: Padding(
                           padding: const EdgeInsets.all(2.0),
                           child: TextField(
+                            focusNode: _focusNodeDiscount,
                             controller: _discountController,
                             keyboardType: TextInputType.number,
                             inputFormatters: [
@@ -3327,6 +3509,7 @@ class _SaleState extends State<Sale> {
                       ],
                     ),
                   ),
+                  const Divider(),
                   Visibility(
                     visible: isItemSerialNo,
                     child: Row(
@@ -3337,7 +3520,7 @@ class _SaleState extends State<Sale> {
                           child: TextField(
                             controller: _serialNoController,
                             decoration: InputDecoration(
-                                border: OutlineInputBorder(),
+                                border: const OutlineInputBorder(),
                                 labelText: labelSerialNo.isNotEmpty
                                     ? labelSerialNo
                                     : 'SerialNo'),
@@ -3351,6 +3534,7 @@ class _SaleState extends State<Sale> {
                       ],
                     ),
                   ),
+                  const Divider(),
                   Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                     Visibility(
                       visible: isTax,
@@ -3368,6 +3552,7 @@ class _SaleState extends State<Sale> {
                       child: Text(subTotal.toStringAsFixed(decimal)),
                     ),
                   ]),
+                  const Divider(),
                   Visibility(
                     visible: isTax,
                     child: Row(
@@ -3475,8 +3660,23 @@ class _SaleState extends State<Sale> {
                                               }
                                               outOfStock = negativeStock
                                                   ? false
-                                                  : salesTypeData.stock
-                                                      ? cartItem[index]
+                                                  : salesTypeData.type ==
+                                                              'SALES-O' ||
+                                                          salesTypeData.type ==
+                                                              'SALES-Q'
+                                                      ? isStockProductOnlyInSalesQO
+                                                          ? cartItem[index]
+                                                                          .quantity +
+                                                                      1 >
+                                                                  cartItem[
+                                                                          index]
+                                                                      .stock
+                                                              ? true
+                                                              : cartQ
+                                                                  ? true
+                                                                  : false
+                                                          : false
+                                                      : cartItem[index]
                                                                       .quantity +
                                                                   1 >
                                                               cartItem[index]
@@ -3484,8 +3684,7 @@ class _SaleState extends State<Sale> {
                                                           ? true
                                                           : cartQ
                                                               ? true
-                                                              : false
-                                                      : false;
+                                                              : false;
                                               if (outOfStock) {
                                                 ScaffoldMessenger.of(context)
                                                     .showSnackBar(SnackBar(
@@ -3533,16 +3732,29 @@ class _SaleState extends State<Sale> {
                                             }
                                             outOfStock = negativeStock
                                                 ? false
-                                                : salesTypeData.stock
-                                                    ? cartItem[index].quantity +
+                                                : salesTypeData.type ==
+                                                            'SALES-O' ||
+                                                        salesTypeData.type ==
+                                                            'SALES-Q'
+                                                    ? isStockProductOnlyInSalesQO
+                                                        ? cartItem[index]
+                                                                        .quantity +
+                                                                    1 >
+                                                                cartItem[index]
+                                                                    .stock
+                                                            ? true
+                                                            : cartQ
+                                                                ? true
+                                                                : false
+                                                        : false
+                                                    : cartItem[index].quantity +
                                                                 1 >
                                                             cartItem[index]
                                                                 .stock
                                                         ? true
                                                         : cartQ
                                                             ? true
-                                                            : false
-                                                    : false;
+                                                            : false;
                                             if (outOfStock) {
                                               ScaffoldMessenger.of(context)
                                                   .showSnackBar(SnackBar(
@@ -4006,13 +4218,19 @@ class _SaleState extends State<Sale> {
       }
       outOfStock = negativeStock
           ? false
-          : salesTypeData.stock
-              ? double.tryParse(value) > cartItem[index].stock
+          : salesTypeData.type == 'SALES-O' || salesTypeData.type == 'SALES-Q'
+              ? isStockProductOnlyInSalesQO
+                  ? double.tryParse(value) > cartItem[index].stock
+                      ? true
+                      : cartQ
+                          ? true
+                          : false
+                  : false
+              : double.tryParse(value) > cartItem[index].stock
                   ? true
                   : cartQ
                       ? true
-                      : false
-              : false;
+                      : false;
       if (outOfStock) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: const Text('Sorry stock not available.'),

@@ -71,8 +71,12 @@ class _DashPageState extends State<DashPage> {
     super.initState();
     formattedDate = DateFormat('yyyy-MM-dd').format(now);
     setToDay = DateFormat('dd-MM-yyyy').format(now);
-    startDate = DateUtil.dateDMY(currentFinancialYear.startDate);
-    endDate = DateUtil.dateDMY(currentFinancialYear.endDate);
+    startDate = DateUtil.dateDMY(currentFinancialYear == null
+        ? '2000-01-01'
+        : currentFinancialYear.startDate);
+    endDate = DateUtil.dateDMY(currentFinancialYear == null
+        ? '2000-01-01'
+        : currentFinancialYear.endDate);
 
     Future<String>.delayed(
             const Duration(seconds: 2), () => '["123", "456", "789"]')
