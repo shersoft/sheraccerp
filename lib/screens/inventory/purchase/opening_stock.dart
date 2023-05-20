@@ -42,7 +42,7 @@ class _OpeningStockState extends State<OpeningStock> {
       widgetID = true,
       oldBill = false,
       lastRecord = false,
-      realPRATEBASEDPROFITPERCENTAGE = false,
+      realPRateBasedProfitPercentage = false,
       buttonEvent = false;
   List<CartItemOP> cartItem = [];
   int page = 1, pageTotal = 0, totalRecords = 0;
@@ -53,8 +53,8 @@ class _OpeningStockState extends State<OpeningStock> {
   bool enableMULTIUNIT = false,
       cessOnNetAmount = false,
       enableKeralaFloodCess = false,
-      useUNIQUECODEASBARCODE = false,
-      useOLDBARCODE = false;
+      useUniqueCodeAsBarcode = false,
+      useOldBarcode = false;
   int locationId = 1, salesManId = 0, decimal = 2;
 
   @override
@@ -82,10 +82,10 @@ class _OpeningStockState extends State<OpeningStock> {
     companyTaxMode = ComSettings.getValue('PACKAGE', settings);
     cessOnNetAmount = ComSettings.getStatus('CESS ON NET AMOUNT', settings);
     enableKeralaFloodCess = false;
-    useUNIQUECODEASBARCODE =
+    useUniqueCodeAsBarcode =
         ComSettings.getStatus('USE UNIQUECODE AS BARCODE', settings);
-    useOLDBARCODE = ComSettings.getStatus('USE OLD BARCODE', settings);
-    realPRATEBASEDPROFITPERCENTAGE =
+    useOldBarcode = ComSettings.getStatus('USE OLD BARCODE', settings);
+    realPRateBasedProfitPercentage =
         ComSettings.getStatus('REAL PRATE BASED PROFIT PERCENTAGE', settings);
 
     salesManId = ComSettings.appSettings(
@@ -1025,32 +1025,32 @@ class _OpeningStockState extends State<OpeningStock> {
           decimal, (net + csGST + csGST + iGST + cess + adCess));
       // total = net + tax;
       if (mrp > 0) {
-        profitPer = realPRATEBASEDPROFITPERCENTAGE
+        profitPer = realPRateBasedProfitPercentage
             ? CommonService.getRound(decimal, (((mrp - rRate) * 100) / rRate))
             : CommonService.getRound(decimal, (((mrp - rate) * 100) / rate));
       }
       if (retail > 0) {
-        retailPer = realPRATEBASEDPROFITPERCENTAGE
+        retailPer = realPRateBasedProfitPercentage
             ? CommonService.getRound(
                 decimal, (((retail - rRate) * 100) / rRate))
             : CommonService.getRound(decimal, (((retail - rate) * 100) / rate));
       }
       if (wholeSale > 0) {
-        wholesalePer = realPRATEBASEDPROFITPERCENTAGE
+        wholesalePer = realPRateBasedProfitPercentage
             ? CommonService.getRound(
                 decimal, (((wholeSale - rRate) * 100) / rRate))
             : CommonService.getRound(
                 decimal, (((wholeSale - rate) * 100) / rate));
       }
       if (spRetail > 0) {
-        spRetailPer = realPRATEBASEDPROFITPERCENTAGE
+        spRetailPer = realPRateBasedProfitPercentage
             ? CommonService.getRound(
                 decimal, (((spRetail - rRate) * 100) / rRate))
             : CommonService.getRound(
                 decimal, (((spRetail - rate) * 100) / rate));
       }
       if (branch > 0) {
-        branchPer = realPRATEBASEDPROFITPERCENTAGE
+        branchPer = realPRateBasedProfitPercentage
             ? CommonService.getRound(
                 decimal, (((branch - rRate) * 100) / rRate))
             : CommonService.getRound(decimal, (((branch - rate) * 100) / rate));
