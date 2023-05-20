@@ -2183,6 +2183,46 @@ class DioService {
     return _items;
   }
 
+  Future<List<LedgerModel>> getLedgerBySalesManLike(
+      int salesman, String like) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    List<LedgerModel> _items = [];
+    try {
+      Response response;
+      if (salesman > 1) {
+        var _salesman = salesman > 1 ? salesman : 0;
+        response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Ledger/getLedgerBySalesManLike/$dataBase',
+          queryParameters: {'salesman': _salesman, 'like': like},
+        );
+      } else {
+        response = await dio.get(
+            pref.getString('api' ?? '127.0.0.1:80/api/') +
+                apiV +
+                'Ledger/getLedgerListLike/$dataBase',
+            queryParameters: {'name': like});
+      }
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+        for (var ledger in jsonResponse) {
+          _items.add(LedgerModel.fromJson(ledger));
+        }
+      } else {
+        debugPrint('Failed to load data');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
   Future<List<LedgerModel>> getSupplierNameList() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
@@ -2811,7 +2851,7 @@ class DioService {
     return _items;
   }
 
-  Future<List<dynamic>> fetchNoStockVariant(int id) async {
+  Future<List<dynamic>> fetchNoStockVariant(String id) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp', location = '0';
     dataBase = isEstimateDataBase
@@ -2834,7 +2874,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'Product/getProductPurchaseById/$dataBase/$id');
+              'stock/getNonStockVariant/$dataBase',
+          queryParameters: {'Id': id});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {

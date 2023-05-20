@@ -72,6 +72,7 @@ class _SaleState extends State<Sale> {
       productTracking = false,
       isFreeItem = false,
       isStockProductOnlyInSalesQO = false,
+      isSalesManWiseLedger = false,
       isFreeQty = false;
   final List<TextEditingController> _controllers = [];
   DateTime now = DateTime.now();
@@ -213,8 +214,8 @@ class _SaleState extends State<Sale> {
     isFreeQty = ComSettings.getStatus('KEY FREE QTY IN SALE', settings);
     isStockProductOnlyInSalesQO =
         ComSettings.getStatus('STOCK PRODUCT ONLY IN SALES QO', settings);
-
-    // (salesTypeData.type != 'SALES-O' || salesTypeData.type != 'SALES-Q');
+    isSalesManWiseLedger =
+        ComSettings.getStatus('KEY SALESMAN WISE LEDGER', settings);
   }
 
   @override
@@ -959,7 +960,7 @@ class _SaleState extends State<Sale> {
               final bodyJson = {
                 'statement': 'CheckPrint',
                 'entryNo': value.toString(),
-                'sType': salesRateTypeId,
+                'sType': saleFormId.toString(),
                 'grandTotal': ComSettings.appSettings(
                         'bool', 'key-round-off-amount', false)
                     ? grandTotal.toStringAsFixed(decimal)
@@ -972,7 +973,7 @@ class _SaleState extends State<Sale> {
                       'RealEntryNo': value,
                       'EntryNo': value,
                       'InvoiceNo': value.toString(),
-                      'Type': salesTypeData.id
+                      'Type': saleFormId
                     }
                   ];
                   if (ComSettings.appSettings(
@@ -1210,7 +1211,7 @@ class _SaleState extends State<Sale> {
               final bodyJson = {
                 'statement': 'CheckPrint',
                 'entryNo': dataDynamic[0]['EntryNo'].toString(),
-                'sType': salesRateTypeId,
+                'sType': dataDynamic[0]['Type'].toString(),
                 'grandTotal': ComSettings.appSettings(
                         'bool', 'key-round-off-amount', false)
                     ? grandTotal.toStringAsFixed(decimal)
@@ -1347,8 +1348,10 @@ class _SaleState extends State<Sale> {
   var nameLike = "ca";
   selectLedgerWidget() {
     return FutureBuilder<List<dynamic>>(
-      future: dio.getCustomerNameListLike(
-          groupId, areaId, routeId, salesManId, nameLike),
+      future: isSalesManWiseLedger
+          ? dio.getLedgerBySalesManLike(salesManId, nameLike)
+          : dio.getCustomerNameListLike(
+              groupId, areaId, routeId, salesManId, nameLike),
       builder: (ctx, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
@@ -2403,30 +2406,30 @@ class _SaleState extends State<Sale> {
 
   selectNoStockLedger() {
     return FutureBuilder(
-        future: dio.fetchNoStockVariant(productModel.id),
+        future: dio.fetchNoStockVariant(productModel.code),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data.length > 0) {
               var d = snapshot.data[0];
               StockProduct data = StockProduct(
-                  adCessPer: 0,
-                  branch: d['branch'].toDouble(),
+                  adCessPer: d['adcessper'].toDouble(),
+                  branch: d['Branch'].toDouble(),
                   buyingPrice: d['prate'].toDouble(),
-                  buyingPriceReal: d['realprate'].toDouble(),
-                  cess: 0,
-                  cessPer: 0,
-                  hsnCode: '',
-                  itemId: productModel.id,
-                  minimumRate: d['wsrate'].toDouble(),
-                  name: productModel.name,
+                  buyingPriceReal: d['RealPrate'].toDouble(),
+                  cess: d['cess'].toDouble(),
+                  cessPer: d['cessper'].toDouble(),
+                  hsnCode: d['hsncode'],
+                  itemId: d['ItemId'],
+                  minimumRate: d['minimumRate'].toDouble(),
+                  name: d['itemname'],
                   productId: d['uniquecode'],
-                  quantity: 0,
+                  quantity: d['Qty'].toDouble(),
                   retailPrice: d['retail'].toDouble(),
                   sellingPrice: d['mrp'].toDouble(),
-                  spRetailPrice: d['spretail'].toDouble(),
-                  stockValuation: 'AVG',
-                  tax: 0,
-                  wholeSalePrice: d['wsrate'].toDouble());
+                  spRetailPrice: d['Spretail'].toDouble(),
+                  stockValuation: d['stockvaluation'],
+                  tax: d['tax'].toDouble(),
+                  wholeSalePrice: d['WSrate'].toDouble());
               return showAddMore(context, data);
             } else {
               return Center(
