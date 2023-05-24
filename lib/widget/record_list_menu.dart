@@ -51,7 +51,9 @@ class RecordListMenu extends StatelessWidget {
                         '',
                         'Ledger_List',
                         '0',
-                        [1])));
+                        [1],
+                        '0',
+                        '0')));
           },
         ),
         GestureDetector(
@@ -89,7 +91,9 @@ class RecordListMenu extends StatelessWidget {
                         '',
                         'Employee List',
                         '0',
-                        [1])));
+                        [1],
+                        '0',
+                        '0')));
           },
         ),
         GestureDetector(
@@ -127,7 +131,9 @@ class RecordListMenu extends StatelessWidget {
                         '',
                         'CustomerCardList',
                         '0',
-                        [1])));
+                        [1],
+                        '0',
+                        '0')));
           },
         ),
         GestureDetector(

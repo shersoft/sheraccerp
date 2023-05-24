@@ -2922,6 +2922,7 @@ class _SaleState extends State<Sale> {
                           child: const Text("ADD"),
                           color: blue,
                           onPressed: () {
+                            calculate();
                             setState(() {
                               isVariantSelected = false;
                               if (quantity > 0 || isFreeItem) {

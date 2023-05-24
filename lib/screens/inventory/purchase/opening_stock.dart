@@ -671,7 +671,7 @@ class _OpeningStockState extends State<OpeningStock> {
             ),
             ListTile(
               title: Text(
-                  purchaseAccountList.length > 0
+                  purchaseAccountList.isNotEmpty
                       ? purchaseAccountList[0]['name']
                       : '',
                   style: const TextStyle(fontWeight: FontWeight.bold)),

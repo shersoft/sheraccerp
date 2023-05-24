@@ -1,6 +1,7 @@
 // @dart = 2.11
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/screens/report_view.dart';
 import 'package:sheraccerp/service/api_dio.dart';
@@ -21,7 +22,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
   DioService api = DioService();
   bool _loading = true, _ob = true, _gAll = true, _0b = false;
   var _ledger, _id, locationId, _dropDownBranchId;
-  String fromDate, toDate, sType = 'Summery';
+  String fromDate, toDate, sType = 'Summery', area = '0', route = '0';
+  dynamic areaModel, routeModel;
   var statement = '';
   var salesMan = '0';
   var mode = '';
@@ -202,6 +204,13 @@ class _LedgerSelectState extends State<LedgerSelect> {
         });
       }
     }
+
+    if (otherRegAreaList.isNotEmpty) {
+      areaModel = otherRegAreaList.first;
+    }
+    if (otherRegRouteList.isNotEmpty) {
+      routeModel = otherRegRouteList.first;
+    }
   }
 
   @override
@@ -376,7 +385,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                 _ledger,
                                 statement,
                                 salesMan,
-                                branches)));
+                                branches,
+                                area,
+                                route)));
                   },
                   child: const Text('Show'),
                   style: ButtonStyle(
@@ -479,7 +490,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                     salesMan,
                                     locationId != null
                                         ? [locationId.id]
-                                        : [_dropDownBranchId])));
+                                        : [_dropDownBranchId],
+                                    area,
+                                    route)));
                       },
                       child: const Text('Show'),
                       style: ButtonStyle(
@@ -576,7 +589,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                             salesMan,
                                             locationId != null
                                                 ? [locationId.id]
-                                                : [_dropDownBranchId])));
+                                                : [_dropDownBranchId],
+                                            area,
+                                            route)));
                           },
                           child: const Text('Show'),
                           style: ButtonStyle(
@@ -655,7 +670,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                 salesMan,
                                                 locationId != null
                                                     ? [locationId.id]
-                                                    : [_dropDownBranchId])));
+                                                    : [_dropDownBranchId],
+                                                area,
+                                                route)));
                               },
                               child: const Text('Show'),
                               style: ButtonStyle(
@@ -767,9 +784,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                     salesMan,
                                                     locationId != null
                                                         ? [locationId.id]
-                                                        : [
-                                                            _dropDownBranchId
-                                                          ])));
+                                                        : [_dropDownBranchId],
+                                                    area,
+                                                    route)));
                                   },
                                   child: const Text('Show'),
                                   style: ButtonStyle(
@@ -850,7 +867,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                             ? [locationId.id]
                                                             : [
                                                                 _dropDownBranchId
-                                                              ])));
+                                                              ],
+                                                        area,
+                                                        route)));
                                       },
                                       child: const Text('Show'),
                                       style: ButtonStyle(
@@ -939,7 +958,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                   ]
                                                                 : [
                                                                     _dropDownBranchId
-                                                                  ])));
+                                                                  ],
+                                                            area,
+                                                            route)));
                                           },
                                           child: const Text('Show'),
                                           style: ButtonStyle(
@@ -1089,8 +1110,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                   'Summery Area Wise',
                                                   'Group & Ledger',
                                                   'PV/RV Report',
-                                                  'Group Wise PV/RV Report',
-                                                  'Group List All Groups'
+                                                  'Salesman Wise Group List',
+                                                  'Group List All Groups',
+                                                  'Balance Order By Date'
                                                 ].map((String items) {
                                                   return DropdownMenuItem(
                                                     value: items,
@@ -1103,7 +1125,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                     sType = value;
                                                     statement = value ==
                                                             'Summery'
-                                                        ? 'SalesmanGroupList'
+                                                        ? 'SummeryAll'
                                                         : value == 'Simple'
                                                             ? 'SimpleGList'
                                                             : value ==
@@ -1118,24 +1140,25 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                         : value ==
                                                                                 'PV/RV Report'
                                                                             ? 'PV/RV Report'
-                                                                            : value == 'Group List All Groups'
-                                                                                ? 'GroupListAllGroups'
-                                                                                : 'SalesmanGroupList';
+                                                                            : value == 'Salesman Wise Group List'
+                                                                                ? 'SalesmanGroupList'
+                                                                                : value == 'Group List All Groups'
+                                                                                    ? 'GroupListAllGroups'
+                                                                                    : value == 'Balance Order By Date'
+                                                                                        ? 'Balance Order By Date'
+                                                                                        : 'SummeryAll';
                                                   });
                                                 },
                                               ),
                                             ),
                                             TextButton(
                                               onPressed: () {
-                                                statement = _ob
-                                                    ? sType == 'Summery'
-                                                        ? 'SummeryBalanceOnly'
-                                                        : 'SummeryZeroBalanceOnly'
-                                                    : statement;
-                                                statement = _gAll
-                                                    ? sType == 'Summery'
-                                                        ? 'SalesmanGroupList'
-                                                        : statement
+                                                statement = sType == 'Summery'
+                                                    ? _gAll
+                                                        ? 'SummeryAll'
+                                                        : _ob
+                                                            ? 'SummeryBalanceOnly'
+                                                            : 'SummeryZeroBalanceOnly'
                                                     : statement;
                                                 Navigator.push(
                                                     context,
@@ -1163,7 +1186,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                       ]
                                                                     : [
                                                                         _dropDownBranchId
-                                                                      ])));
+                                                                      ],
+                                                                area,
+                                                                route)));
                                               },
                                               child: const Text('Show'),
                                               style: ButtonStyle(
@@ -1174,7 +1199,73 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                     MaterialStateProperty.all<
                                                         Color>(Colors.white),
                                               ),
-                                            )
+                                            ),
+                                            const Divider(),
+                                            Card(
+                                              elevation: 5,
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceAround,
+                                                children: [
+                                                  const Text('Select Area'),
+                                                  DropdownButton<
+                                                      OtherRegistrations>(
+                                                    icon: const Icon(Icons
+                                                        .keyboard_arrow_down),
+                                                    items: otherRegAreaList.map(
+                                                        (OtherRegistrations
+                                                            items) {
+                                                      return DropdownMenuItem<
+                                                          OtherRegistrations>(
+                                                        value: items,
+                                                        child: Text(items.name),
+                                                      );
+                                                    }).toList(),
+                                                    value: areaModel,
+                                                    onChanged: (value) {
+                                                      setState(() {
+                                                        areaModel = value;
+                                                        area =
+                                                            value.id.toString();
+                                                      });
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const Divider(),
+                                            Card(
+                                              elevation: 5,
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceAround,
+                                                children: [
+                                                  const Text('Select Route'),
+                                                  DropdownButton<
+                                                      OtherRegistrations>(
+                                                    icon: const Icon(Icons
+                                                        .keyboard_arrow_down),
+                                                    items: otherRegRouteList
+                                                        .map((OtherRegistrations
+                                                            items) {
+                                                      return DropdownMenuItem<
+                                                          OtherRegistrations>(
+                                                        value: items,
+                                                        child: Text(items.name),
+                                                      );
+                                                    }).toList(),
+                                                    value: routeModel,
+                                                    onChanged: (value) {
+                                                      routeModel = value;
+                                                      route =
+                                                          value.id.toString();
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       )
@@ -1305,7 +1396,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                           ]
                                                                         : [
                                                                             _dropDownBranchId
-                                                                          ])));
+                                                                          ],
+                                                                    area,
+                                                                    route)));
                                                       },
                                                       child: const Text('Show'),
                                                       style: ButtonStyle(
@@ -1473,7 +1566,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                               ]
                                                                             : [
                                                                                 _dropDownBranchId
-                                                                              ])));
+                                                                              ],
+                                                                        area,
+                                                                        route)));
                                                           },
                                                           child: const Text(
                                                               'Show'),
@@ -1629,7 +1724,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                                   ]
                                                                                 : [
                                                                                     _dropDownBranchId
-                                                                                  ])));
+                                                                                  ],
+                                                                            area,
+                                                                            route)));
                                                               },
                                                               child: const Text(
                                                                   'Show'),
@@ -1768,7 +1865,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                                 mode == 'Payable' ? 'ReceivblesCreditOnly' : 'ReceivblesDebitOnly',
                                                                                 // selectedGroupValues == '' ? '' : '',
                                                                                 salesMan,
-                                                                                locationId != null ? [locationId.id] : [_dropDownBranchId])));
+                                                                                locationId != null ? [locationId.id] : [_dropDownBranchId],
+                                                                                area,
+                                                                                route)));
                                                                   },
                                                                   child:
                                                                       const Text(
@@ -1787,150 +1886,272 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                               ],
                                                             ),
                                                           )
-                                                        : Container(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(8.0),
-                                                            child: Column(
-                                                              children: [
-                                                                Card(
-                                                                  elevation:
-                                                                      0.5,
-                                                                  child: Row(
-                                                                    mainAxisAlignment:
-                                                                        MainAxisAlignment
-                                                                            .spaceAround,
-                                                                    children: [
-                                                                      const Text(
-                                                                        'From : ',
-                                                                        style: TextStyle(
-                                                                            fontWeight:
-                                                                                FontWeight.bold,
-                                                                            fontSize: 16),
+                                                        : mode == 'PaymentList' ||
+                                                                mode ==
+                                                                    'ReceiptList'
+                                                            ? Container(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                            .all(
+                                                                        8.0),
+                                                                child: Column(
+                                                                  children: [
+                                                                    Card(
+                                                                      elevation:
+                                                                          0.5,
+                                                                      child:
+                                                                          Row(
+                                                                        mainAxisAlignment:
+                                                                            MainAxisAlignment.spaceAround,
+                                                                        children: [
+                                                                          const Text(
+                                                                            'From : ',
+                                                                            style:
+                                                                                TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                                                          ),
+                                                                          InkWell(
+                                                                            child:
+                                                                                Text(
+                                                                              fromDate,
+                                                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                                                                            ),
+                                                                            onTap: () =>
+                                                                                _selectDate('f'),
+                                                                          ),
+                                                                          const Text(
+                                                                            'To : ',
+                                                                            style:
+                                                                                TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                                                          ),
+                                                                          InkWell(
+                                                                            child:
+                                                                                Text(
+                                                                              toDate,
+                                                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                                                                            ),
+                                                                            onTap: () =>
+                                                                                _selectDate('t'),
+                                                                          ),
+                                                                        ],
                                                                       ),
-                                                                      InkWell(
-                                                                        child:
-                                                                            Text(
-                                                                          fromDate,
-                                                                          style: const TextStyle(
-                                                                              fontWeight: FontWeight.bold,
-                                                                              fontSize: 22),
-                                                                        ),
-                                                                        onTap: () =>
-                                                                            _selectDate('f'),
+                                                                    ),
+                                                                    DropdownSearch<
+                                                                        dynamic>(
+                                                                      maxHeight:
+                                                                          300,
+                                                                      onFind: (String
+                                                                              filter) =>
+                                                                          api.getSalesListData(
+                                                                              filter,
+                                                                              'sales_list/location'),
+                                                                      dropdownSearchDecoration: const InputDecoration(
+                                                                          border:
+                                                                              OutlineInputBorder(),
+                                                                          hintText:
+                                                                              'Select Branch'),
+                                                                      onChanged:
+                                                                          (dynamic
+                                                                              data) {
+                                                                        locationId =
+                                                                            data;
+                                                                      },
+                                                                      showSearchBox:
+                                                                          true,
+                                                                    ),
+                                                                    const Divider(),
+                                                                    Card(
+                                                                      elevation:
+                                                                          5,
+                                                                      child:
+                                                                          Row(
+                                                                        mainAxisAlignment:
+                                                                            MainAxisAlignment.spaceAround,
+                                                                        children: [
+                                                                          const Text(
+                                                                              'Select Area'),
+                                                                          DropdownButton<
+                                                                              OtherRegistrations>(
+                                                                            icon:
+                                                                                const Icon(Icons.keyboard_arrow_down),
+                                                                            items:
+                                                                                otherRegAreaList.map((OtherRegistrations items) {
+                                                                              return DropdownMenuItem<OtherRegistrations>(
+                                                                                value: items,
+                                                                                child: Text(items.name),
+                                                                              );
+                                                                            }).toList(),
+                                                                            value:
+                                                                                areaModel,
+                                                                            onChanged:
+                                                                                (value) {
+                                                                              setState(() {
+                                                                                areaModel = value;
+                                                                                area = value.id.toString();
+                                                                              });
+                                                                            },
+                                                                          ),
+                                                                        ],
                                                                       ),
-                                                                      const Text(
-                                                                        'To : ',
-                                                                        style: TextStyle(
-                                                                            fontWeight:
-                                                                                FontWeight.bold,
-                                                                            fontSize: 16),
-                                                                      ),
-                                                                      InkWell(
-                                                                        child:
-                                                                            Text(
-                                                                          toDate,
-                                                                          style: const TextStyle(
-                                                                              fontWeight: FontWeight.bold,
-                                                                              fontSize: 22),
-                                                                        ),
-                                                                        onTap: () =>
-                                                                            _selectDate('t'),
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                ),
-                                                                // Card(
-                                                                //   elevation: 2,
-                                                                //   child:
-                                                                //       DropDownSettingsTile<int>(
-                                                                //     title: 'Branch',
-                                                                //     settingKey:
-                                                                //         'key-dropdown-default-location-view',
-                                                                //     values: locationList
-                                                                //             .isNotEmpty
-                                                                //         ? {
-                                                                //             for (var e
-                                                                //                 in locationList)
-                                                                //               e.key + 1: e.value
-                                                                //           }
-                                                                //         : {
-                                                                //             2: '',
-                                                                //           },
-                                                                //     selected: 2,
-                                                                //     onChange: (value) {
-                                                                //       debugPrint(
-                                                                //           'key-dropdown-default-location-view: $value');
-                                                                //       dropDownBranchId =
-                                                                //           value - 1;
-                                                                //     },
-                                                                //   ),
-                                                                // ),
-                                                                DropdownSearch<
-                                                                    dynamic>(
-                                                                  maxHeight:
-                                                                      300,
-                                                                  onFind: (String
-                                                                          filter) =>
-                                                                      api.getSalesListData(
-                                                                          filter,
-                                                                          'sales_list/location'),
-                                                                  dropdownSearchDecoration: const InputDecoration(
-                                                                      border:
-                                                                          OutlineInputBorder(),
-                                                                      hintText:
-                                                                          'Select Branch'),
-                                                                  onChanged:
-                                                                      (dynamic
-                                                                          data) {
-                                                                    locationId =
-                                                                        data;
-                                                                  },
-                                                                  showSearchBox:
-                                                                      true,
-                                                                ),
-                                                                TextButton(
-                                                                  onPressed:
-                                                                      () {
-                                                                    Navigator.push(
-                                                                        context,
-                                                                        MaterialPageRoute(
-                                                                            builder: (BuildContext context) => ReportView(
-                                                                                '0',
-                                                                                '1',
-                                                                                DateUtil.dateDMY2YMD(
-                                                                                    fromDate),
-                                                                                DateUtil.dateDMY2YMD(
-                                                                                    toDate),
-                                                                                statement,
-                                                                                '',
-                                                                                statement,
-                                                                                salesMan,
-                                                                                locationId != null
-                                                                                    ? [
-                                                                                        locationId.id
-                                                                                      ]
-                                                                                    : [
-                                                                                        _dropDownBranchId
-                                                                                      ])));
-                                                                  },
-                                                                  child:
-                                                                      const Text(
+                                                                    ),
+                                                                    const Divider(),
+                                                                    DropdownSearch<
+                                                                        dynamic>(
+                                                                      maxHeight:
+                                                                          300,
+                                                                      onFind: (String
+                                                                              filter) =>
+                                                                          api.getSalesListData(
+                                                                              filter,
+                                                                              'sales_list/salesMan'),
+                                                                      dropdownSearchDecoration: const InputDecoration(
+                                                                          border:
+                                                                              OutlineInputBorder(),
+                                                                          hintText:
+                                                                              'Select Salesman'),
+                                                                      onChanged:
+                                                                          (dynamic
+                                                                              data) {
+                                                                        salesMan =
+                                                                            data.toString();
+                                                                      },
+                                                                      showSearchBox:
+                                                                          true,
+                                                                    ),
+                                                                    TextButton(
+                                                                      onPressed:
+                                                                          () {
+                                                                        Navigator.push(
+                                                                            context,
+                                                                            MaterialPageRoute(builder: (BuildContext context) => ReportView('0', '1', DateUtil.dateDMY2YMD(fromDate), DateUtil.dateDMY2YMD(toDate), statement, '', statement, salesMan, locationId != null ? [locationId.id] : [_dropDownBranchId], area, route)));
+                                                                      },
+                                                                      child: const Text(
                                                                           'Show'),
-                                                                  style:
-                                                                      ButtonStyle(
-                                                                    backgroundColor:
-                                                                        MaterialStateProperty.all<Color>(
-                                                                            kPrimaryColor),
-                                                                    foregroundColor: MaterialStateProperty.all<
-                                                                            Color>(
-                                                                        Colors
-                                                                            .white),
-                                                                  ),
-                                                                )
-                                                              ],
-                                                            ),
-                                                          );
+                                                                      style:
+                                                                          ButtonStyle(
+                                                                        backgroundColor:
+                                                                            MaterialStateProperty.all<Color>(kPrimaryColor),
+                                                                        foregroundColor:
+                                                                            MaterialStateProperty.all<Color>(Colors.white),
+                                                                      ),
+                                                                    )
+                                                                  ],
+                                                                ),
+                                                              )
+                                                            : Container(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                            .all(
+                                                                        8.0),
+                                                                child: Column(
+                                                                  children: [
+                                                                    Card(
+                                                                      elevation:
+                                                                          0.5,
+                                                                      child:
+                                                                          Row(
+                                                                        mainAxisAlignment:
+                                                                            MainAxisAlignment.spaceAround,
+                                                                        children: [
+                                                                          const Text(
+                                                                            'From : ',
+                                                                            style:
+                                                                                TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                                                          ),
+                                                                          InkWell(
+                                                                            child:
+                                                                                Text(
+                                                                              fromDate,
+                                                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                                                                            ),
+                                                                            onTap: () =>
+                                                                                _selectDate('f'),
+                                                                          ),
+                                                                          const Text(
+                                                                            'To : ',
+                                                                            style:
+                                                                                TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                                                          ),
+                                                                          InkWell(
+                                                                            child:
+                                                                                Text(
+                                                                              toDate,
+                                                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                                                                            ),
+                                                                            onTap: () =>
+                                                                                _selectDate('t'),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    ),
+                                                                    // Card(
+                                                                    //   elevation: 2,
+                                                                    //   child:
+                                                                    //       DropDownSettingsTile<int>(
+                                                                    //     title: 'Branch',
+                                                                    //     settingKey:
+                                                                    //         'key-dropdown-default-location-view',
+                                                                    //     values: locationList
+                                                                    //             .isNotEmpty
+                                                                    //         ? {
+                                                                    //             for (var e
+                                                                    //                 in locationList)
+                                                                    //               e.key + 1: e.value
+                                                                    //           }
+                                                                    //         : {
+                                                                    //             2: '',
+                                                                    //           },
+                                                                    //     selected: 2,
+                                                                    //     onChange: (value) {
+                                                                    //       debugPrint(
+                                                                    //           'key-dropdown-default-location-view: $value');
+                                                                    //       dropDownBranchId =
+                                                                    //           value - 1;
+                                                                    //     },
+                                                                    //   ),
+                                                                    // ),
+                                                                    DropdownSearch<
+                                                                        dynamic>(
+                                                                      maxHeight:
+                                                                          300,
+                                                                      onFind: (String
+                                                                              filter) =>
+                                                                          api.getSalesListData(
+                                                                              filter,
+                                                                              'sales_list/location'),
+                                                                      dropdownSearchDecoration: const InputDecoration(
+                                                                          border:
+                                                                              OutlineInputBorder(),
+                                                                          hintText:
+                                                                              'Select Branch'),
+                                                                      onChanged:
+                                                                          (dynamic
+                                                                              data) {
+                                                                        locationId =
+                                                                            data;
+                                                                      },
+                                                                      showSearchBox:
+                                                                          true,
+                                                                    ),
+                                                                    TextButton(
+                                                                      onPressed:
+                                                                          () {
+                                                                        Navigator.push(
+                                                                            context,
+                                                                            MaterialPageRoute(builder: (BuildContext context) => ReportView('0', '1', DateUtil.dateDMY2YMD(fromDate), DateUtil.dateDMY2YMD(toDate), statement, '', statement, salesMan, locationId != null ? [locationId.id] : [_dropDownBranchId], area, route)));
+                                                                      },
+                                                                      child: const Text(
+                                                                          'Show'),
+                                                                      style:
+                                                                          ButtonStyle(
+                                                                        backgroundColor:
+                                                                            MaterialStateProperty.all<Color>(kPrimaryColor),
+                                                                        foregroundColor:
+                                                                            MaterialStateProperty.all<Color>(Colors.white),
+                                                                      ),
+                                                                    )
+                                                                  ],
+                                                                ),
+                                                              );
   }
 
   _listItem(index) {

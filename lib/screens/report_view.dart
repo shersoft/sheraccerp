@@ -15,8 +15,18 @@ import 'package:sheraccerp/widget/pdf_screen.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 class ReportView extends StatefulWidget {
-  const ReportView(this.id, this.ob, this.sDate, this.eDate, this.type,
-      this.name, this.statement, this.salesMan, this.branchId,
+  const ReportView(
+      this.id,
+      this.ob,
+      this.sDate,
+      this.eDate,
+      this.type,
+      this.name,
+      this.statement,
+      this.salesMan,
+      this.branchId,
+      this.area,
+      this.route,
       {Key key})
       : super(key: key);
   final String id;
@@ -28,6 +38,8 @@ class ReportView extends StatefulWidget {
   final String statement;
   final String salesMan;
   final List<int> branchId;
+  final String area;
+  final String route;
 
   @override
   _ReportViewState createState() => _ReportViewState();
@@ -64,6 +76,9 @@ class _ReportViewState extends State<ReportView> {
         location.add(({'id': widget.branchId[i]}));
       }
     }
+    project = [
+      {'id': widget.area}
+    ];
   }
 
   @override
@@ -270,9 +285,12 @@ class _ReportViewState extends State<ReportView> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade200),
+                        border:
+                            TableBorder.all(width: 1.0, color: Colors.black),
                         columnSpacing: 12,
                         dataRowHeight: 20,
-                        dividerThickness: 1,
                         headingRowHeight: 30,
                         columns: [
                           for (int i = 0; i < tableColumn.length; i++)
@@ -674,9 +692,12 @@ class _ReportViewState extends State<ReportView> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade200),
+                        border:
+                            TableBorder.all(width: 1.0, color: Colors.black),
                         columnSpacing: 12,
                         dataRowHeight: 20,
-                        dividerThickness: 1,
                         headingRowHeight: 30,
                         columns: [
                           for (int i = 0; i < tableColumn.length - 1; i++)
@@ -818,9 +839,11 @@ class _ReportViewState extends State<ReportView> {
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
+                    headingRowColor: MaterialStateColor.resolveWith(
+                        (states) => Colors.grey.shade200),
+                    border: TableBorder.all(width: 1.0, color: Colors.black),
                     columnSpacing: 12,
                     dataRowHeight: 20,
-                    dividerThickness: 1,
                     headingRowHeight: 30,
                     columns: [
                       for (int i = 0; i < tableColumn.length; i++)
@@ -942,9 +965,11 @@ class _ReportViewState extends State<ReportView> {
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
+                    headingRowColor: MaterialStateColor.resolveWith(
+                        (states) => Colors.grey.shade200),
+                    border: TableBorder.all(width: 1.0, color: Colors.black),
                     columnSpacing: 12,
                     dataRowHeight: 20,
-                    dividerThickness: 1,
                     headingRowHeight: 30,
                     columns: [
                       for (int i = 0; i < tableColumn.length; i++)
@@ -1066,9 +1091,11 @@ class _ReportViewState extends State<ReportView> {
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
+                    headingRowColor: MaterialStateColor.resolveWith(
+                        (states) => Colors.grey.shade200),
+                    border: TableBorder.all(width: 1.0, color: Colors.black),
                     columnSpacing: 12,
                     dataRowHeight: 20,
-                    dividerThickness: 1,
                     headingRowHeight: 30,
                     columns: [
                       for (int i = 0; i < tableColumn.length; i++)
@@ -1190,9 +1217,11 @@ class _ReportViewState extends State<ReportView> {
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
+                    headingRowColor: MaterialStateColor.resolveWith(
+                        (states) => Colors.grey.shade200),
+                    border: TableBorder.all(width: 1.0, color: Colors.black),
                     columnSpacing: 12,
                     dataRowHeight: 20,
-                    dividerThickness: 1,
                     headingRowHeight: 30,
                     columns: [
                       for (int i = 0; i < tableColumn.length; i++)
@@ -1334,9 +1363,12 @@ class _ReportViewState extends State<ReportView> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade200),
+                        border:
+                            TableBorder.all(width: 1.0, color: Colors.black),
                         columnSpacing: 12,
                         dataRowHeight: 20,
-                        dividerThickness: 1,
                         headingRowHeight: 30,
                         columns: [
                           for (int i = 0; i < tableColumn.length; i++)
@@ -1453,10 +1485,10 @@ class _ReportViewState extends State<ReportView> {
           'sDate': widget.sDate.isEmpty ? '' : widget.sDate,
           'eDate': widget.eDate.isEmpty ? '' : widget.eDate,
           'id': widget.id ?? '',
-          'Check_openingbalance': widget.ob ?? 0,
+          'Check_openingBalance': widget.ob ?? 0,
           'location': jsonEncode(location),
           'city': jsonEncode(project),
-          'salesMan': 0
+          'salesMan': widget.salesMan.isNotEmpty ? widget.salesMan : '0'
         }) +
         ']';
     return FutureBuilder<List<dynamic>>(
@@ -1465,8 +1497,31 @@ class _ReportViewState extends State<ReportView> {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
             var data = snapshot.data;
-            _data = data;
             tableColumn = data[0].keys.toList();
+            Map<String, dynamic> totalData = {};
+            for (int i = 0; i < tableColumn.length; i++) {
+              var cell = '';
+              if (tableColumn[i].toLowerCase().contains('debit') ||
+                  tableColumn[i].toLowerCase().contains('opbalance') ||
+                  tableColumn[i].toLowerCase().contains('credit') ||
+                  tableColumn[i].toLowerCase().contains('balance') ||
+                  tableColumn[i].toLowerCase().contains('total')) {
+                cell = data
+                    .fold(
+                        0,
+                        (a, b) =>
+                            a + double.parse(b[tableColumn[i]].toString()))
+                    .toStringAsFixed(2);
+              }
+              if (i == 0) {
+                cell = 'Total';
+              }
+              totalData[tableColumn[i]] = cell;
+            }
+            if (totalData.isNotEmpty) {
+              data.add(totalData);
+            }
+            _data = data;
             return Padding(
               padding: const EdgeInsets.all(5.0),
               child: SingleChildScrollView(
@@ -1483,9 +1538,13 @@ class _ReportViewState extends State<ReportView> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade200),
+                        border:
+                            TableBorder.all(width: 1.0, color: Colors.black),
                         columnSpacing: 12,
                         dataRowHeight: 20,
-                        dividerThickness: 1,
+                        // dividerThickness: 1,
                         headingRowHeight: 30,
                         columns: [
                           for (int i = 0; i < tableColumn.length; i++)
@@ -1612,9 +1671,12 @@ class _ReportViewState extends State<ReportView> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade200),
+                        border:
+                            TableBorder.all(width: 1.0, color: Colors.black),
                         columnSpacing: 12,
                         dataRowHeight: 20,
-                        dividerThickness: 1,
                         headingRowHeight: 30,
                         columns: [
                           for (int i = 0; i < tableColumn.length; i++)
@@ -1742,9 +1804,24 @@ class _ReportViewState extends State<ReportView> {
             : widget.type == 'JournalList'
                 ? 'JvList'
                 : '';
+    String areaId = widget.area.isNotEmpty ? widget.area : '0';
+    String routeId = widget.route.isNotEmpty ? widget.route : '0';
     return FutureBuilder<List<dynamic>>(
-      future: api.getVoucherList(ledCode, location, groupCode, project,
-          fromDate, toDate, sDate, eDate, where, cashId, salesman, statement),
+      future: api.getVoucherList(
+          ledCode,
+          location,
+          groupCode,
+          project,
+          fromDate,
+          toDate,
+          sDate,
+          eDate,
+          where,
+          cashId,
+          salesman,
+          statement,
+          areaId,
+          routeId),
       builder: (ctx, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
@@ -1762,9 +1839,12 @@ class _ReportViewState extends State<ReportView> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade200),
+                        border:
+                            TableBorder.all(width: 1.0, color: Colors.black),
                         columnSpacing: 12,
                         dataRowHeight: 20,
-                        dividerThickness: 1,
                         headingRowHeight: 30,
                         columns: [
                           for (int i = 0; i < tableColumn.length; i++)
@@ -1891,9 +1971,12 @@ class _ReportViewState extends State<ReportView> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade200),
+                        border:
+                            TableBorder.all(width: 1.0, color: Colors.black),
                         columnSpacing: 12,
                         dataRowHeight: 20,
-                        dividerThickness: 1,
                         headingRowHeight: 30,
                         columns: [
                           for (int i = 0; i < tableColumn.length; i++)
@@ -2020,9 +2103,12 @@ class _ReportViewState extends State<ReportView> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade200),
+                        border:
+                            TableBorder.all(width: 1.0, color: Colors.black),
                         columnSpacing: 12,
                         dataRowHeight: 20,
-                        dividerThickness: 1,
                         headingRowHeight: 30,
                         columns: [
                           for (int i = 0; i < tableColumn.length; i++)
@@ -2675,9 +2761,12 @@ class _ReportViewState extends State<ReportView> {
                           SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: DataTable(
+                              headingRowColor: MaterialStateColor.resolveWith(
+                                  (states) => Colors.grey.shade200),
+                              border: TableBorder.all(
+                                  width: 1.0, color: Colors.black),
                               columnSpacing: 12,
                               dataRowHeight: 20,
-                              dividerThickness: 1,
                               headingRowHeight: 30,
                               columns: [
                                 for (int i = 0; i < tableColumn.length; i++)
@@ -2788,15 +2877,17 @@ class _ReportViewState extends State<ReportView> {
   }
 
   reportViewProfitAndLossAccount() {
-    var dataJson = '[' +
-        json.encode({
-          'statementType': widget.statement.isEmpty ? '' : widget.statement,
-          'sDate': widget.sDate.isEmpty ? '' : widget.sDate,
-          'eDate': widget.eDate.isEmpty ? '' : widget.eDate,
-          'stockValuation': widget.name.isEmpty ? '' : widget.name,
-          'code': ''
-        }) +
-        ']';
+    var dataJson = {
+      'statementType': widget.statement.isEmpty ? '' : widget.statement,
+      'sDate': widget.sDate.isEmpty ? '' : widget.sDate,
+      'eDate': widget.eDate.isEmpty ? '' : widget.eDate,
+      'stockValuation': widget.name.isEmpty ? '' : widget.name,
+      'code': '',
+      'location': widget.branchId[0].toString().isNotEmpty
+          ? widget.branchId[0].toString()
+          : '1',
+      'fyId': currentFinancialYear.id
+    };
     return FutureBuilder<List<dynamic>>(
       future: api.fetchProfitAndLossAccount(dataJson),
       builder: (ctx, snapshot) {
@@ -2821,9 +2912,12 @@ class _ReportViewState extends State<ReportView> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade200),
+                        border:
+                            TableBorder.all(width: 1.0, color: Colors.black),
                         columnSpacing: 12,
                         dataRowHeight: 20,
-                        dividerThickness: 1,
                         headingRowHeight: 30,
                         columns: [
                           for (int i = 0; i < tableColumn.length; i++)
@@ -2967,9 +3061,12 @@ class _ReportViewState extends State<ReportView> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade200),
+                        border:
+                            TableBorder.all(width: 1.0, color: Colors.black),
                         columnSpacing: 12,
                         dataRowHeight: 20,
-                        dividerThickness: 1,
                         headingRowHeight: 30,
                         columns: [
                           for (int i = 0; i < tableColumn.length; i++)

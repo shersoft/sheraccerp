@@ -56,6 +56,7 @@ List otherRegistrationList = [];
 List<OtherRegistrations> otherRegUnitList = [];
 List<OtherRegistrations> otherRegLocationList = [];
 List<OtherRegistrations> otherRegAreaList = [];
+List<OtherRegistrations> otherRegRouteList = [];
 List otherRegSalesManList = [];
 List mainAccount = [];
 List cashAccount = [];
@@ -118,6 +119,7 @@ class ComSettings {
       }
       for (var json in map['area']) {
         otherRegAreaList.add(OtherRegistrations.fromJson(json));
+        otherRegAreaList.sort((a, b) => a.name.compareTo(b.name));
         areaList.add(AppSettingsMap(key: json['auto'], value: json['Name']));
       }
       if (map['salesMan'].length > 0) {
@@ -140,6 +142,8 @@ class ComSettings {
         }
       }
       for (var json in map['route']) {
+        otherRegRouteList.add(OtherRegistrations.fromJson(json));
+        otherRegRouteList.sort((a, b) => a.name.compareTo(b.name));
         routeList.add(AppSettingsMap(key: json['auto'], value: json['Name']));
       }
       if (map['brand'].length > 0) {
