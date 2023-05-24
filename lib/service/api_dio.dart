@@ -2397,13 +2397,12 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<Map<String, dynamic>> _items = [];
     try {
-      final response = await dio.post(
+      final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
               'accounts_report/ProfitAndLoss/' +
               dataBase,
-          data: data,
-          options: Options(headers: {'Content-Type': 'application/json'}));
+          queryParameters: data);
       if (response.statusCode == 200) {
         if (response.data.toString().isNotEmpty) {
           List<dynamic> data = response.data;
@@ -3839,7 +3838,9 @@ class DioService {
       String where,
       String cashId,
       String salesman,
-      String statement) async {
+      String statement,
+      String area,
+      String route) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
@@ -3863,7 +3864,9 @@ class DioService {
             'where': where,
             'cashId': cashId,
             'salesman': salesman,
-            'statement': statement
+            'statement': statement,
+            'areaId': area,
+            'routeId': route
           });
 
       if (response.statusCode == 200) {
