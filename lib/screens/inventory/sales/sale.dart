@@ -441,7 +441,7 @@ class _SaleState extends State<Sale> {
                             saveSale();
                           } else {
                             Fluttertoast.showToast(
-                                msg: 'Please add atleast one item');
+                                msg: 'Please add at least one item');
                             setState(() {
                               buttonEvent = false;
                             });
@@ -546,11 +546,13 @@ class _SaleState extends State<Sale> {
             tempList.add(response[0][i]);
           }
 
-          setState(() {
-            isLoadingData = false;
-            dataDisplay.addAll(tempList);
-            lastRecord = tempList.isNotEmpty ? false : true;
-          });
+          if (mounted) {
+            setState(() {
+              isLoadingData = false;
+              dataDisplay.addAll(tempList);
+              lastRecord = tempList.isNotEmpty ? false : true;
+            });
+          }
         });
       }
     }
@@ -953,7 +955,8 @@ class _SaleState extends State<Sale> {
             'saleFormType': saleFormType,
             'narration': order.narration,
             'location': order.location.toString(),
-            'id': order.customerModel[0].id.toString()
+            'id': order.customerModel[0].id.toString(),
+            'fyId': currentFinancialYear.id
           };
           dio.addOtherAmount(bodyJsonAmount).then((ret) {
             if (ret) {
@@ -1007,6 +1010,8 @@ class _SaleState extends State<Sale> {
             _isLoading = false;
           });
         }
+      }).catchError((e) {
+        showErrorDialog(context, e.toString());
       });
     }
   }
@@ -4947,6 +4952,20 @@ class _SaleState extends State<Sale> {
             'Do you want to Preview\nEntryNo : ${dataDynamic[0]['EntryNo']}',
         title: 'SAVED',
         context: context);
+  }
+
+  showErrorDialog(context, String msg) {
+    debugPrint('error save sales :$msg');
+    setState(() {
+      _isLoading = false;
+      buttonEvent = false;
+    });
+    SimpleAlertBox(
+      context: context,
+      title: 'Error',
+      buttonText: 'Close',
+      infoMessage: 'There was an error during saving.',
+    );
   }
 
   Future _selectDate() async {

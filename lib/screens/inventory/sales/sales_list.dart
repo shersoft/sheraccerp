@@ -6,6 +6,7 @@ import 'package:csv/csv.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
@@ -41,6 +42,7 @@ class _SalesListState extends State<SalesList> {
   var itemId,
       itemName,
       customer,
+      supplier,
       mfr,
       category,
       subCategory,
@@ -88,6 +90,8 @@ class _SalesListState extends State<SalesList> {
     TypeItem(33, 'DeliveryNote Summery')
   ];
   int valueType = 1;
+  String area = '0', route = '0';
+  dynamic areaModel, routeModel;
 
   @override
   void initState() {
@@ -279,6 +283,9 @@ class _SalesListState extends State<SalesList> {
           locationData.add({'id': data.key});
         }
       }
+      String areaId = area.isNotEmpty ? area : '0';
+      String routeId = route.isNotEmpty ? route : '0';
+
       var dataJson = '[' +
           json.encode({
             'statementType': statementType.isEmpty ? '' : statementType,
@@ -300,7 +307,29 @@ class _SalesListState extends State<SalesList> {
                 ? jsonEncode(dataSType)
                 : jsonEncode([
                     {'id': 0}
-                  ])
+                  ]),
+            'toName': '',
+            'taxGroup': taxGroup != null ? taxGroup.id : '0',
+            'groupId': '0',
+            'areaId': areaId,
+            'type': '0',
+            'hsnCode': '',
+            'cashSale': '0',
+            'creditSales': '0',
+            'rateType': stockValuation ? 'RPRate' : 'PRate',
+            'serialNo': '',
+            'supplierId': supplier != null ? supplier.id : '0',
+            'srCheck': '0',
+            'serviceCheck': '0',
+            'expenseCheck': '0',
+            'counterNo': '',
+            'cardNo': '',
+            'salesman2': '0',
+            'typeOfSupply': '',
+            'barcode': '0',
+            'userId': '0',
+            'hsn': '',
+            'supLed': '0',
           }) +
           ']';
 
@@ -310,8 +339,62 @@ class _SalesListState extends State<SalesList> {
           if (snapshot.hasData) {
             if (snapshot.data.isNotEmpty) {
               var data = snapshot.data;
-              _data = data;
               var col = data[0].keys.toList();
+              if (classic && statementType != 'P_l_ItemWise_New') {
+                Map<String, dynamic> totalData = {};
+                for (int i = 0; i < col.length; i++) {
+                  var cell = '';
+                  if (col[i].toLowerCase() == ('discount') ||
+                      col[i].toLowerCase() == ('grossvalue') ||
+                      col[i].toLowerCase() == ('cgst') ||
+                      col[i].toLowerCase() == ('sgst') ||
+                      col[i].toLowerCase() == ('igst') ||
+                      col[i].toLowerCase() == ('netamount') ||
+                      col[i].toLowerCase() == ('cess') ||
+                      col[i].toLowerCase() == ('tcs') ||
+                      col[i].toLowerCase() == ('othercharges') ||
+                      col[i].toLowerCase() == ('otherdiscount') ||
+                      col[i].toLowerCase() == ('loadingcharge') ||
+                      col[i].toLowerCase() == ('roundoff') ||
+                      col[i].toLowerCase() == ('grandtotal') ||
+                      col[i].toLowerCase() == ('creditsales') ||
+                      col[i].toLowerCase() == ('cashsales') ||
+                      col[i].toLowerCase() == ('bankamount') ||
+                      col[i].toLowerCase() == ('qty') ||
+                      col[i].toLowerCase() == ('free') ||
+                      col[i].toLowerCase() == ('freeqty') ||
+                      col[i].toLowerCase() == ('rate') ||
+                      col[i].toLowerCase() == ('prate') ||
+                      col[i].toLowerCase() == ('srate') ||
+                      col[i].toLowerCase() == ('profit') ||
+                      col[i].toLowerCase() == ('total') ||
+                      col[i].toLowerCase() == ('labourcharge') ||
+                      col[i].toLowerCase() == ('returnamount') ||
+                      col[i].toLowerCase() == ('balance')) {
+                    cell = data
+                        .fold(
+                            0,
+                            (a, b) =>
+                                a +
+                                (b[col[i]] != null
+                                    ? b[col[i]] == ''
+                                        ? 0
+                                        : double.parse(b[col[i]].toString())
+                                    : 0))
+                        .toStringAsFixed(2);
+                  }
+                  if (i == 0) {
+                    cell = 'Total';
+                  }
+                  totalData[col[i]] = cell;
+                }
+                if (totalData.isNotEmpty) {
+                  data.add(totalData);
+                }
+                _data = data;
+              } else {
+                _data = data;
+              }
               return classic
                   ? Padding(
                       padding: const EdgeInsets.all(5.0),
@@ -1235,26 +1318,60 @@ class _SalesListState extends State<SalesList> {
                 dropdownSearchDecoration: const InputDecoration(
                     border: OutlineInputBorder(), hintText: "Select Supplier"),
                 onChanged: (dynamic data) {
-                  customer = data;
+                  supplier = data;
                 },
                 showSearchBox: true,
               ),
               const Divider(),
               Card(
-                  child: Row(
-                children: [
-                  const Text('Select Area'),
-                  const Text('Select Area')
-                ],
-              )),
+                elevation: 5,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    const Text('Select Area'),
+                    DropdownButton<OtherRegistrations>(
+                      icon: const Icon(Icons.keyboard_arrow_down),
+                      items: otherRegAreaList.map((OtherRegistrations items) {
+                        return DropdownMenuItem<OtherRegistrations>(
+                          value: items,
+                          child: Text(items.name),
+                        );
+                      }).toList(),
+                      value: areaModel,
+                      onChanged: (value) {
+                        setState(() {
+                          areaModel = value;
+                          area = value.id.toString();
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
               const Divider(),
               Card(
-                  child: Row(
-                children: [
-                  const Text('Select Route'),
-                  const Text('Select Route')
-                ],
-              )),
+                elevation: 5,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    const Text('Select Route'),
+                    DropdownButton<OtherRegistrations>(
+                      icon: const Icon(Icons.keyboard_arrow_down),
+                      items: otherRegRouteList.map((OtherRegistrations items) {
+                        return DropdownMenuItem<OtherRegistrations>(
+                          value: items,
+                          child: Text(items.name),
+                        );
+                      }).toList(),
+                      value: routeModel,
+                      onChanged: (value) {
+                        routeModel = value;
+                        route = value.id.toString();
+                      },
+                    ),
+                  ],
+                ),
+              ),
               const Divider(),
               salesTypeDataList.isNotEmpty
                   ? ExpansionTile(

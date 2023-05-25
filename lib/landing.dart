@@ -1061,15 +1061,19 @@ class _LandingState extends State<Landing> {
   void startTimer() {
     Timer.periodic(
       const Duration(seconds: 1),
-      (Timer timer) => setState(
-        () {
-          if (_progress == 1) {
-            timer.cancel();
-          } else {
-            _progress += 0.2;
-          }
-        },
-      ),
+      (Timer timer) async {
+        if (mounted) {
+          setState(
+            () {
+              if (_progress == 1) {
+                timer.cancel();
+              } else {
+                _progress += 0.2;
+              }
+            },
+          );
+        }
+      },
     );
   }
 }

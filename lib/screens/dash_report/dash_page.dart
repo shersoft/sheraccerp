@@ -150,18 +150,20 @@ class _DashPageState extends State<DashPage> {
       Map<dynamic, dynamic> responseBodyOfSalesSummary;
       List<dynamic> _salesSummary = responseData.length > 0 ? responseData : [];
 
-      setState(() {
-        _statusSalesSummary = true;
-        if (_salesSummary.isNotEmpty) {
-          responseBodyOfSalesSummary = _salesSummary[0];
-          if (responseBodyOfSalesSummary != null) {
-            _salesData.clear();
-            for (Map sales in _salesSummary) {
-              _salesData.add(ChartSales.fromJson(sales));
+      if (mounted) {
+        setState(() {
+          _statusSalesSummary = true;
+          if (_salesSummary.isNotEmpty) {
+            responseBodyOfSalesSummary = _salesSummary[0];
+            if (responseBodyOfSalesSummary != null) {
+              _salesData.clear();
+              for (Map sales in _salesSummary) {
+                _salesData.add(ChartSales.fromJson(sales));
+              }
             }
           }
-        }
-      });
+        });
+      }
       return _statusSalesSummary;
     });
   }
@@ -176,18 +178,20 @@ class _DashPageState extends State<DashPage> {
       List<dynamic> _purchaseSummary =
           responseData.length > 0 ? responseData : [];
 
-      setState(() {
-        _statusPurchaseSummary = true;
-        if (_purchaseSummary.isNotEmpty) {
-          responseBodyOfPurchaseSummary = _purchaseSummary[0];
-          if (responseBodyOfPurchaseSummary != null) {
-            _purchaseData.clear();
-            for (Map purchase in _purchaseSummary) {
-              _purchaseData.add(ChartPurchase.fromJson(purchase));
+      if (mounted) {
+        setState(() {
+          _statusPurchaseSummary = true;
+          if (_purchaseSummary.isNotEmpty) {
+            responseBodyOfPurchaseSummary = _purchaseSummary[0];
+            if (responseBodyOfPurchaseSummary != null) {
+              _purchaseData.clear();
+              for (Map purchase in _purchaseSummary) {
+                _purchaseData.add(ChartPurchase.fromJson(purchase));
+              }
             }
           }
-        }
-      });
+        });
+      }
       return _statusPurchaseSummary;
     });
   }

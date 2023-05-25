@@ -267,8 +267,39 @@ class _ReportViewState extends State<ReportView> {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
             var data = snapshot.data;
-            _data = data;
             tableColumn = data[0].keys.toList();
+            if (widget.type == 'Invoice Wise Balance Customers' ||
+                widget.type == 'Invoice Wise Balance Suppliers' ||
+                widget.type == 'Payable' ||
+                widget.type == 'Receivable') {
+              Map<String, dynamic> totalData = {};
+              for (int i = 0; i < tableColumn.length; i++) {
+                var cell = '';
+                if (tableColumn[i].toLowerCase() == ('debit') ||
+                    tableColumn[i].toLowerCase() == ('opbalance') ||
+                    tableColumn[i].toLowerCase() == ('credit') ||
+                    tableColumn[i].toLowerCase() == ('balance') ||
+                    tableColumn[i].toLowerCase() == ('amount') ||
+                    tableColumn[i].toLowerCase() == ('total')) {
+                  cell = data
+                      .fold(
+                          0,
+                          (a, b) =>
+                              a + double.parse(b[tableColumn[i]].toString()))
+                      .toStringAsFixed(2);
+                }
+                if (i == 0) {
+                  cell = 'Total';
+                }
+                totalData[tableColumn[i]] = cell;
+              }
+              if (totalData.isNotEmpty) {
+                data.add(totalData);
+              }
+              _data = data;
+            } else {
+              _data = data;
+            }
             return Padding(
               padding: const EdgeInsets.all(5.0),
               child: SingleChildScrollView(
@@ -1501,11 +1532,11 @@ class _ReportViewState extends State<ReportView> {
             Map<String, dynamic> totalData = {};
             for (int i = 0; i < tableColumn.length; i++) {
               var cell = '';
-              if (tableColumn[i].toLowerCase().contains('debit') ||
-                  tableColumn[i].toLowerCase().contains('opbalance') ||
-                  tableColumn[i].toLowerCase().contains('credit') ||
-                  tableColumn[i].toLowerCase().contains('balance') ||
-                  tableColumn[i].toLowerCase().contains('total')) {
+              if (tableColumn[i].toLowerCase() == ('debit') ||
+                  tableColumn[i].toLowerCase() == ('opbalance') ||
+                  tableColumn[i].toLowerCase() == ('credit') ||
+                  tableColumn[i].toLowerCase() == ('balance') ||
+                  tableColumn[i].toLowerCase() == ('total')) {
                 cell = data
                     .fold(
                         0,
@@ -1785,9 +1816,8 @@ class _ReportViewState extends State<ReportView> {
 
   reportVoucherList() {
     String ledCode = widget.id;
-    String location = widget.branchId.toString().isNotEmpty
-        ? widget.branchId.toString()
-        : '1';
+    String location =
+        widget.branchId.isNotEmpty ? widget.branchId[0].toString() : '1';
     String groupCode = '0';
     String project = '0';
     String fromDate = widget.sDate.isNotEmpty ? widget.sDate : '2000-01-01';
@@ -1826,8 +1856,29 @@ class _ReportViewState extends State<ReportView> {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
             var data = snapshot.data;
-            _data = data;
             tableColumn = data[0].keys.toList();
+            Map<String, dynamic> totalData = {};
+            for (int i = 0; i < tableColumn.length; i++) {
+              var cell = '';
+              if (tableColumn[i].toLowerCase() == ('discount') ||
+                  tableColumn[i].toLowerCase() == ('amount') ||
+                  tableColumn[i].toLowerCase() == ('total')) {
+                cell = data
+                    .fold(
+                        0,
+                        (a, b) =>
+                            a + double.parse(b[tableColumn[i]].toString()))
+                    .toStringAsFixed(2);
+              }
+              if (i == 0) {
+                cell = 'Total';
+              }
+              totalData[tableColumn[i]] = cell;
+            }
+            if (totalData.isNotEmpty) {
+              data.add(totalData);
+            }
+            _data = data;
             return Padding(
               padding: const EdgeInsets.all(5.0),
               child: SingleChildScrollView(

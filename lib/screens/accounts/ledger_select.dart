@@ -2011,8 +2011,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                       onChanged:
                                                                           (dynamic
                                                                               data) {
-                                                                        salesMan =
-                                                                            data.toString();
+                                                                        salesMan = data
+                                                                            .id
+                                                                            .toString();
                                                                       },
                                                                       showSearchBox:
                                                                           true,
