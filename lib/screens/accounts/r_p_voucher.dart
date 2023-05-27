@@ -38,7 +38,7 @@ class _RPVoucherState extends State<RPVoucher> {
   List<dynamic> itemDisplay = [];
   DioService api = DioService();
   DateTime now = DateTime.now();
-  String formattedDate, narration = '';
+  String formattedDate, narration = '', projectId = '-1';
   double balance = 0, total = 0, amount = 0, discount = 0;
   var accountId = '', accountName = '';
   LedgerModel ledData;
@@ -158,8 +158,8 @@ class _RPVoucherState extends State<RPVoucher> {
                       accountId = acId > 0 ? acId.toString() : '';
                       if (companyUserData.deleteData) {
                         title == 'Payment'
-                            ? submitData('Payment', 'DELETE')
-                            : submitData('Receipt', 'DELETE');
+                            ? deleteVoucher('Payment', 'DELETE')
+                            : deleteVoucher('Receipt', 'DELETE');
                       } else {
                         Fluttertoast.showToast(
                             msg: 'Permission denied\ncan`t delete');
@@ -588,24 +588,20 @@ class _RPVoucherState extends State<RPVoucher> {
             'amount': amount,
             'discount': discount,
             'total': total,
-            'location': 1,
+            'location': locationId,
             'user': 1,
-            'project': '-1',
-            'salesman': '-1',
+            'project': projectId,
+            'salesman': salesManId,
             'month': '',
             'particular': particular,
             'fyId': currentFinancialYear.id,
-            'statementType': operation == 'DELETE'
+            'statementType': operation == 'UPDATE'
                 ? mode == 'Payment'
-                    ? 'Delete_Pv'
-                    : 'Delete_Rv'
-                : operation == 'UPDATE'
-                    ? mode == 'Payment'
-                        ? 'Update_Pv'
-                        : 'Update_Rv'
-                    : mode == 'Payment'
-                        ? 'InsertPv'
-                        : 'Insert_Rv'
+                    ? 'Update_Pv'
+                    : 'Update_Rv'
+                : mode == 'Payment'
+                    ? 'InsertPv'
+                    : 'Insert_Rv'
             // 'Update_Rv'  Update_Pv Delete_Pv Delete_Rv  FindPv FindRv
           }
         ];
@@ -671,6 +667,39 @@ class _RPVoucherState extends State<RPVoucher> {
               : operation == 'UPDATE'
                   ? 'error : Cannot update this ' + mode
                   : 'error : Cannot save this ' + mode;
+          showInSnackBar(opr);
+        }
+      }
+    }
+  }
+
+  void deleteVoucher(mode, operation) async {
+    if (accountId.isEmpty) {
+      Fluttertoast.showToast(msg: 'Select Cash Account');
+    } else {
+      if (amount <= 0 || ledData.id <= 0) {
+        Fluttertoast.showToast(msg: 'Select Account and amount');
+        setState(() {
+          buttonEvent = false;
+        });
+      } else {
+        setState(() {
+          _isLoading = true;
+          buttonEvent = true;
+        });
+        var entryNo = oldVoucher ? dataDynamic[0]['EntryNo'].toString() : '0';
+        var fyId = currentFinancialYear.id;
+        var statementType = mode == 'Payment' ? 'Delete_Pv' : 'Delete_Rv';
+        refNo = await api.deleteVoucher(entryNo, fyId, statementType);
+        if (refNo > 0) {
+          setState(() {
+            _isLoading = false;
+            buttonEvent = false;
+            showInSnackBar('Deleted');
+            clearData();
+          });
+        } else {
+          var opr = 'error : Cannot delete this ' + mode;
           showInSnackBar(opr);
         }
       }

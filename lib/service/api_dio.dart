@@ -630,8 +630,8 @@ class DioService {
     return ret;
   }
 
-  Future<int> addSale(var body) async {
-    int ret = 0;
+  Future<dynamic> addSale(var body) async {
+    dynamic ret = '0';
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
@@ -646,20 +646,25 @@ class DioService {
           options: Options(headers: {'Content-Type': 'application/json'}));
 
       if (response.statusCode == 200) {
-        ret = response.data;
+        if (response.data['id'] > 0) {
+          ret = response.data['id'].toString();
+        } else {
+          ret = response.data['message'];
+        }
       } else {
-        ret = 0;
+        ret = 'Unexpected error occurred!';
         debugPrint('Unexpected error occurred!');
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      ret = errorMessage.toString();
     }
     return ret;
   }
 
-  Future<int> editSale(var body) async {
-    int ret = 0;
+  Future<dynamic> editSale(var body) async {
+    dynamic ret = 0;
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
@@ -674,14 +679,20 @@ class DioService {
           options: Options(headers: {'Content-Type': 'application/json'}));
 
       if (response.statusCode == 200) {
-        ret = response.data;
+        if (response.data['id'] > 0) {
+          ret = response.data['id'].toString();
+        } else {
+          ret = response.data['message'];
+        }
       } else {
-        ret = 0;
+        ret = '0';
         debugPrint('Unexpected error occurred!');
+        ret = 'Unexpected error occurred!';
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      ret = errorMessage.toString();
     }
     return ret;
   }
@@ -848,6 +859,41 @@ class DioService {
           options: Options(headers: {'Content-Type': 'application/json'}));
 
       if (response.statusCode == 201) {
+        if (response.data['returnValue'] > 0) {
+          return response.data['returnValue'];
+        } else {
+          return 0;
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+        return 0;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return 0;
+    }
+  }
+
+  Future<int> deleteVoucher(String id, int fyId, String statementType) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.delete(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Voucher/delete/$dataBase',
+          queryParameters: {
+            'id': id,
+            'statementType': statementType,
+            'fyId': currentFinancialYear.id
+          },
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
         if (response.data['returnValue'] > 0) {
           return response.data['returnValue'];
         } else {
@@ -1741,18 +1787,21 @@ class DioService {
     List<dynamic> _items = [];
     try {
       final response = await dio.get(
-          pref.getString('api' ?? '127.0.0.1:80/api/') +
-              apiV +
-              'listPage/$dataBase',
-          queryParameters: {
-            'statementType': statement,
-            'page': page,
-            'location': location,
-            'type': type,
-            'date': date,
-            'salesMan': salesMan,
-            'fyId': currentFinancialYear.id
-          });
+        pref.getString('api' ?? '127.0.0.1:80/api/') +
+            apiV +
+            'listPage/$dataBase',
+        queryParameters: {
+          'statementType': statement,
+          'page': page,
+          'location': location,
+          'type': type,
+          'date': date,
+          'salesMan': salesMan,
+          'fyId': currentFinancialYear.id
+        },
+      ).onError((error, stackTrace) {
+        debugPrint('ERRRRRRRRRRRRRRRRR:' + error.toString());
+      }).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         _items = jsonResponse;

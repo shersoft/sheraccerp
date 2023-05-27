@@ -945,11 +945,11 @@ class _SaleState extends State<Sale> {
 
       final body = {'information': ledger, 'data': data, 'particular': items};
 
-      dio.addSale(body).then((value) {
-        if (value > 0) {
+      dio.addSale(body).then((result) {
+        if (CommonService().isNumeric(result) && int.tryParse(result) > 0) {
           final bodyJsonAmount = {
             'statement': 'SalesInsert',
-            'entryNo': value.toString(),
+            'entryNo': int.tryParse(result.toString()),
             'data': otherAmount,
             'date': order.dated.toString(),
             'saleFormType': saleFormType,
@@ -962,7 +962,7 @@ class _SaleState extends State<Sale> {
             if (ret) {
               final bodyJson = {
                 'statement': 'CheckPrint',
-                'entryNo': value.toString(),
+                'entryNo': int.tryParse(result.toString()),
                 'sType': saleFormId.toString(),
                 'grandTotal': ComSettings.appSettings(
                         'bool', 'key-round-off-amount', false)
@@ -973,9 +973,9 @@ class _SaleState extends State<Sale> {
                 if (data) {
                   dataDynamic = [
                     {
-                      'RealEntryNo': value,
-                      'EntryNo': value,
-                      'InvoiceNo': value.toString(),
+                      'RealEntryNo': int.tryParse(result.toString()),
+                      'EntryNo': int.tryParse(result.toString()),
+                      'InvoiceNo': int.tryParse(result.toString()),
                       'Type': saleFormId
                     }
                   ];
@@ -995,7 +995,7 @@ class _SaleState extends State<Sale> {
                             : double.tryParse(order.balanceAmount) -
                                 double.tryParse(ob1);
                     String smsBody =
-                        "Dear ${ledgerModel.name},\nYour Sales $billName ${value.toString()}, Dated : $formattedDate for the Amount of ${order.grandTotal}/- \nBalance:$amt /- has been confirmed  \n${companySettings.name}";
+                        "Dear ${ledgerModel.name},\nYour Sales $billName ${result.toString()}, Dated : $formattedDate for the Amount of ${order.grandTotal}/- \nBalance:$amt /- has been confirmed  \n${companySettings.name}";
                     if (ledgerModel.phone.toString().isNotEmpty) {
                       sendSms(ledgerModel.phone, smsBody);
                     }
@@ -1009,6 +1009,8 @@ class _SaleState extends State<Sale> {
           setState(() {
             _isLoading = false;
           });
+        } else {
+          showErrorDialog(context, result.toString());
         }
       }).catchError((e) {
         showErrorDialog(context, e.toString());
@@ -1199,8 +1201,8 @@ class _SaleState extends State<Sale> {
           ']';
 
       final body = {'information': ledger, 'data': data, 'particular': items};
-      dio.editSale(body).then((value) {
-        if (value > 0) {
+      dio.editSale(body).then((result) {
+        if (CommonService().isNumeric(result) && int.tryParse(result) > 0) {
           final bodyJsonAmount = {
             'statement': 'SalesUpdate',
             'entryNo': dataDynamic[0]['EntryNo'].toString(),
@@ -1233,7 +1235,11 @@ class _SaleState extends State<Sale> {
           setState(() {
             _isLoading = false;
           });
+        } else {
+          showErrorDialog(context, result.toString());
         }
+      }).catchError((e) {
+        showErrorDialog(context, e.toString());
       });
     }
   }
@@ -4964,7 +4970,7 @@ class _SaleState extends State<Sale> {
       context: context,
       title: 'Error',
       buttonText: 'Close',
-      infoMessage: 'There was an error during saving.',
+      infoMessage: msg,
     );
   }
 
