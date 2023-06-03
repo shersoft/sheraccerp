@@ -2262,6 +2262,7 @@ Future<String> _createPDF(String title, CompanyInformation companySettings,
 
 Future<String> savePreviewPDF(pw.Document pdf, var title) async {
   var output = await getTemporaryDirectory();
+  title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
   final file = File('${output.path}/' + title + '.pdf');
   await file.writeAsBytes(await pdf.save());
   return file.path.toString();
@@ -3245,6 +3246,12 @@ Future<pw.Document> makePDF(String title, CompanyInformation companySettings,
                           ),
                     /**other amount**/
                     // otherAmount.length>0 ?
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.end,
+                      children: [
+                        pw.Text('***Discount***'),
+                      ],
+                    ),
                     _addOtherAmountPDF(otherAmount),
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.end,
@@ -3259,7 +3266,7 @@ Future<pw.Document> makePDF(String title, CompanyInformation companySettings,
                         pw.Text(
                             'TOTAL DUE : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}',
                             style: pw.TextStyle(
-                                // color: Colors.black,
+                                color: PdfColors.black,
                                 fontSize: 19,
                                 fontWeight: pw.FontWeight.bold)),
                       ],
@@ -3556,6 +3563,18 @@ Future<pw.Document> makePDF(String title, CompanyInformation companySettings,
                     ),
                     /**other amount**/
                     // otherAmount.length>0 ?
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.end,
+                      children: [
+                        pw.Text(''),
+                      ],
+                    ),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.end,
+                      children: [
+                        pw.Text('***Discount***'),
+                      ],
+                    ),
                     _addOtherAmountPDF(otherAmount),
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.end,
@@ -3643,16 +3662,14 @@ _addOtherAmountPDF(var dataAmount) {
               for (var i = 0; i < dataAmount.length; i++)
                 pw.TableRow(children: [
                   pw.Column(children: [
-                    dataAmount[i]['Amount'].toDouble() > 0
-                        ? pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(dataAmount[i]['LedName'] +
-                                  ' : ' +
-                                  dataAmount[i]['Amount'].toStringAsFixed(2)),
-                            ],
-                          )
-                        : pw.Row(),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.end,
+                      children: [
+                        pw.Text(dataAmount[i]['LedName'] +
+                            ' : ' +
+                            dataAmount[i]['Amount'].toStringAsFixed(2)),
+                      ],
+                    ),
                   ])
                 ]),
             ])

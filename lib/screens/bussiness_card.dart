@@ -301,6 +301,7 @@ class _BusinessCardState extends State<BusinessCard> {
 
 Future<String> saveTemp(Uint8List img, var title) async {
   var output = await getTemporaryDirectory();
+  title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
   final file = File('${output.path}/' + title + '.pdf');
   file.writeAsBytes(img);
   return file.path.toString();

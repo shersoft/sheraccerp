@@ -1452,6 +1452,7 @@ Future<String> _createPDF(
 
 Future<String> savePreviewPDF(pw.Document pdf, var title) async {
   var output = await getTemporaryDirectory();
+  title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
   final file = File('${output.path}/' + title + '.pdf');
   await file.writeAsBytes(await pdf.save());
   return file.path.toString();

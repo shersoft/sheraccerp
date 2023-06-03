@@ -143,20 +143,33 @@ class _SaleState extends State<Sale> {
     keyItemsVariantStock =
         ComSettings.appSettings('bool', 'key-items-variant-stock', false);
 
-    dio.getRateTypeList().then((value) {
-      setState(() {
-        rateTypeList = value;
+    if (optionRateTypeList.isEmpty) {
+      dio.getRateTypeList().then((value) {
+        setState(() {
+          rateTypeList = value;
 
-        String rateTypeS = salesTypeData != null
-            ? salesTypeData.rateType.isNotEmpty
-                ? salesTypeData.rateType
-                : 'MRP'
-            : 'MRP';
+          String rateTypeS = salesTypeData != null
+              ? salesTypeData.rateType.isNotEmpty
+                  ? salesTypeData.rateType
+                  : 'MRP'
+              : 'MRP';
 
-        rateTypeItem =
-            rateTypeList.firstWhere((element) => element.name == rateTypeS);
+          rateTypeItem =
+              rateTypeList.firstWhere((element) => element.name == rateTypeS);
+        });
       });
-    });
+    } else {
+      rateTypeList = optionRateTypeList;
+
+      String rateTypeS = salesTypeData != null
+          ? salesTypeData.rateType.isNotEmpty
+              ? salesTypeData.rateType
+              : 'MRP'
+          : 'MRP';
+
+      rateTypeItem =
+          rateTypeList.firstWhere((element) => element.name == rateTypeS);
+    }
   }
 
   CompanyInformation companySettings;
@@ -213,7 +226,7 @@ class _SaleState extends State<Sale> {
     isFreeItem = ComSettings.getStatus('KEY FREE ITEM', settings);
     isFreeQty = ComSettings.getStatus('KEY FREE QTY IN SALE', settings);
     isStockProductOnlyInSalesQO =
-        ComSettings.getStatus('STOCK PRODUCT ONLY IN SALES QO', settings);
+        ComSettings.getStatus('KEY STOCK PRODUCT ONLY IN SALES QO', settings);
     isSalesManWiseLedger =
         ComSettings.getStatus('KEY SALESMAN WISE LEDGER', settings);
   }
@@ -766,7 +779,7 @@ class _SaleState extends State<Sale> {
     ledger.add(CustomerModel(
         address1: ledgerModel.address1 + " " + ledgerModel.address2,
         address2: ledgerModel.address3 + " " + ledgerModel.address4,
-        address3: ledgerModel.taxNumber,
+        address3: '',
         address4: ledgerModel.taxNumber,
         balance: ledgerModel.balance,
         city: ledgerModel.city,
@@ -1023,7 +1036,7 @@ class _SaleState extends State<Sale> {
     ledger.add(CustomerModel(
         address1: ledgerModel.address1 + " " + ledgerModel.address2,
         address2: ledgerModel.address3 + " " + ledgerModel.address4,
-        address3: ledgerModel.taxNumber,
+        address3: '',
         address4: ledgerModel.taxNumber,
         balance: ledgerModel.balance,
         city: ledgerModel.city,
@@ -1349,8 +1362,10 @@ class _SaleState extends State<Sale> {
               isCustomForm ? salesTypeDisplay[index] : salesTypeList[index];
           previewData = true;
           taxable = salesTypeData != null ? salesTypeData.tax : taxable;
-          rateTypeItem = rateTypeList.firstWhere((element) =>
-              element.name == salesTypeData.rateType.toUpperCase());
+          rateTypeItem = rateTypeList.isEmpty
+              ? null
+              : rateTypeList.firstWhere((element) =>
+                  element.name == salesTypeData.rateType.toUpperCase());
         });
       },
     );
@@ -2810,28 +2825,26 @@ class _SaleState extends State<Sale> {
           ? double.tryParse(_rateController.text)
           : 0;
       if (_focusNodeDiscountPer.hasFocus) {
-        _discountController.text = _discountController.text.isNotEmpty
+        _discountController.text = _discountPercentController.text.isNotEmpty
             ? (((qt * sRate) * discP) / 100).toStringAsFixed(2)
             : '';
         discount = _discountController.text.isNotEmpty
             ? double.tryParse(_discountController.text)
             : 0;
-        discountPercent = discount > 0
-            ? double.tryParse(_discountPercentController.text)
-            : discount;
+        discountPercent = double.tryParse(_discountPercentController.text);
       }
 
       if (_focusNodeDiscount.hasFocus) {
-        _discountPercentController.text =
-            _discountPercentController.text.isNotEmpty
-                ? ((disc * 100) / (qt * sRate)).toStringAsFixed(2)
-                : '';
-        discountPercent = _discountPercentController.text.isNotEmpty
+        _discountPercentController.text = _discountController.text.isNotEmpty
+            ? ((disc * 100) / (qt * sRate)).toStringAsFixed(2)
+            : '';
+        discountPercent = _discountController.text.isNotEmpty
             ? double.tryParse(_discountPercentController.text)
             : 0;
-        discount = discountPercent > 0
-            ? double.tryParse(_discountController.text)
-            : discount;
+        // discount = discountPercent > 0
+        // ?
+        double.tryParse(_discountController.text);
+        // : discount;
       }
       rDisc = taxMethod == 'MINUS'
           ? CommonService.getRound(4, ((discount * 100) / (taxP + 100)))

@@ -1800,8 +1800,10 @@ class DioService {
           'fyId': currentFinancialYear.id
         },
       ).onError((error, stackTrace) {
-        debugPrint('ERRRRRRRRRRRRRRRRR:' + error.toString());
-      }).timeout(const Duration(seconds: 10));
+        debugPrint('Erorr:' + error.toString());
+      })
+          // .timeout(const Duration(seconds: 10));
+          ;
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         _items = jsonResponse;
@@ -2100,6 +2102,7 @@ class DioService {
         for (var ledger in jsonResponse) {
           _items.add(OptionRateType.fromJson(ledger));
         }
+        optionRateTypeList = _items;
       } else {
         debugPrint('Failed to load data');
       }
@@ -3254,7 +3257,7 @@ class DioService {
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
               'sale/previous_bills/$dataBase',
-          queryParameters: {'id': ledger});
+          queryParameters: {'id': ledger, 'fyId': currentFinancialYear.id});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 

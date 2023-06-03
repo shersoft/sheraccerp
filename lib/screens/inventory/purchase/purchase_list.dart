@@ -823,6 +823,7 @@ class _PurchaseListState extends State<PurchaseList> {
 
   Future<String> savePreviewPDF(pw.Document pdf, var title) async {
     var output = await getTemporaryDirectory();
+    title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
     final file = File('${output.path}/' + title + '.pdf');
     await file.writeAsBytes(await pdf.save());
     return file.path.toString();
@@ -855,6 +856,7 @@ class _PurchaseListState extends State<PurchaseList> {
 
   Future<String> savePreviewCSV(var csv, var title) async {
     var output = await getTemporaryDirectory();
+    title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
     final file = File('${output.path}/' + title + '.csv');
     await file.writeAsString(csv);
     return file.path.toString();
