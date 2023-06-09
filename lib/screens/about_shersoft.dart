@@ -11,7 +11,7 @@ class AboutSherSoft extends StatelessWidget {
   AboutSherSoft({Key? key}) : super(key: key);
 
   launchURL() async {
-    const url = 'https://Shersoftware.com';
+    const url = 'https://shersoftware.com/';
     if (await canLaunch(url)) {
       await launch(url);
     } else {
@@ -21,7 +21,7 @@ class AboutSherSoft extends StatelessWidget {
 
   final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
-      path: 'Shersoftware@Gmail.com',
+      path: 'Shersoftware@gmail.com',
       queryParameters: {'subject': 'about as'});
 
   launchPhone() async {
@@ -43,7 +43,7 @@ class AboutSherSoft extends StatelessWidget {
     String url = "";
     if (Platform.isAndroid) {
       //FOR Android
-      url = 'sms:9847006558?body=message';
+      url = 'sms:9847997755?body=message';
       if (await canLaunch(url)) {
         await launch(url);
       } else {
@@ -51,7 +51,7 @@ class AboutSherSoft extends StatelessWidget {
       }
     } else if (Platform.isIOS) {
       //FOR IOS
-      url = 'sms:9847006558&body=message';
+      url = 'sms:9847997755&body=message';
       if (await canLaunch(url)) {
         await launch(url);
       } else {
@@ -108,7 +108,7 @@ class AboutSherSoft extends StatelessWidget {
                     const Padding(
                       padding: EdgeInsets.all(4.0),
                       child: Text(
-                        "Shersoft",
+                        "SherSoft",
                         style: TextStyle(color: Colors.white, fontSize: 20),
                       ),
                     ),
@@ -122,7 +122,7 @@ class AboutSherSoft extends StatelessWidget {
                     const Padding(
                       padding: EdgeInsets.all(2.0),
                       child: Text(
-                        "📌Kerala, Malappuram, Perinthalmanna",
+                        "📌Perinthalmanna, Malappuram, Kerala",
                         style: TextStyle(color: Colors.white, fontSize: 14),
                       ),
                     )
@@ -192,7 +192,7 @@ class AboutSherSoft extends StatelessWidget {
                         width: 20,
                       ),
                       const Text(
-                        "Shersoftware.com",
+                        "shersoftware.com",
                         style: TextStyle(color: Colors.blue, fontSize: 18),
                       )
                     ],
@@ -214,7 +214,7 @@ class AboutSherSoft extends StatelessWidget {
                         width: 20,
                       ),
                       const Text(
-                        "Shersoftware@gmail.com",
+                        "shersoftware@gmail.com",
                         style: TextStyle(color: Colors.blue, fontSize: 18),
                       )
                     ],

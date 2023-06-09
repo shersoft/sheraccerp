@@ -18,6 +18,7 @@ import 'package:sheraccerp/provider/stock_provider.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/accounts/journal.dart';
 import 'package:sheraccerp/screens/html_previews/invoice_models.dart';
+import 'package:sheraccerp/screens/inventory/alignment_entry.dart';
 import 'package:sheraccerp/screens/inventory/bill_list.dart';
 import 'package:sheraccerp/screens/inventory/inv_r_p_voucher.dart';
 import 'package:sheraccerp/screens/home/delivery_home.dart';
@@ -133,6 +134,7 @@ class MyApp extends StatelessWidget {
               '/staff_home': (context) => const StaffHome(title: 'SherAcc'),
               '/expense_list': (context) => ExpenseList(null, 0),
               '/sales': (context) => const Sale(),
+              '/AlignmentEntry': (context) => AlignmentEntry(),
               '/purchase': (context) => const Purchase(),
               '/add_product': (context) => const ProductsListPage(),
               '/cart': (context) => const CartPage(),

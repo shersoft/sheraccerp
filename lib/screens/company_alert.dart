@@ -41,7 +41,7 @@ class CompanyAlert extends StatelessWidget {
     String url = "";
     if (Platform.isAndroid) {
       //FOR Android
-      url = 'sms:9847006558?body=message';
+      url = 'sms:9847997755?body=message';
       if (await canLaunch(url)) {
         await launch(url);
       } else {
@@ -49,7 +49,7 @@ class CompanyAlert extends StatelessWidget {
       }
     } else if (Platform.isIOS) {
       //FOR IOS
-      url = 'sms:9847006558&body=message';
+      url = 'sms:9847997755&body=message';
       if (await canLaunch(url)) {
         await launch(url);
       } else {

@@ -285,24 +285,21 @@ class InventoryMenu extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: const [
                   Icon(
-                    Icons.file_download,
-                    color: green,
+                    Icons.car_repair_rounded,
+                    color: blueAccent,
                     size: 90.0,
                   ),
-                  // Text(
-                  //   'Invoice Make',
-                  //   style: TextStyle(
-                  //       color: Colors.black, fontWeight: FontWeight.bold),
-                  // ),
+                  Text(
+                    'Alignment Entry',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             ),
           ),
           onTap: () {
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(builder: (context) => InvoiceMake()),
-            // );
+            Navigator.pushNamed(context, '/AlignmentEntry');
           },
         ),
         GestureDetector(
