@@ -1,8 +1,10 @@
 // @dart = 2.9
 import 'dart:async';
 import 'dart:convert';
+import 'dart:html' as html;
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -2261,11 +2263,31 @@ Future<String> _createPDF(String title, CompanyInformation companySettings,
 }
 
 Future<String> savePreviewPDF(pw.Document pdf, var title) async {
-  var output = await getTemporaryDirectory();
   title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
-  final file = File('${output.path}/' + title + '.pdf');
-  await file.writeAsBytes(await pdf.save());
-  return file.path.toString();
+  if (kIsWeb) {
+    try {
+      final bytes = await pdf.save();
+      final blob = html.Blob([bytes], 'application/pdf');
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement()
+        ..href = url
+        ..style.display = 'none'
+        ..download = '$title.pdf';
+      html.document.body.children.add(anchor);
+      anchor.click();
+      html.document.body.children.remove(anchor);
+      html.Url.revokeObjectUrl(url);
+      return '';
+    } catch (ex) {
+      ex.toString();
+    }
+    return '';
+  } else {
+    var output = await getTemporaryDirectory();
+    final file = File('${output.path}/' + title + '.pdf');
+    await file.writeAsBytes(await pdf.save());
+    return file.path.toString();
+  }
 }
 
 Future<pw.Document> makePDF(String title, CompanyInformation companySettings,

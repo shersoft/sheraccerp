@@ -1371,7 +1371,7 @@ class _SaleState extends State<Sale> {
     );
   }
 
-  var nameLike = "ca";
+  var nameLike = "a";
   selectLedgerWidget() {
     return FutureBuilder<List<dynamic>>(
       future: isSalesManWiseLedger
@@ -1416,7 +1416,7 @@ class _SaleState extends State<Sale> {
                                     //   var itemName = item.name.toLowerCase();
                                     // return itemName.contains(text);
                                     // }).toList();
-                                    nameLike = text.isNotEmpty ? text : 'ca';
+                                    nameLike = text.isNotEmpty ? text : 'a';
                                   });
                                 },
                               ),
@@ -1781,7 +1781,7 @@ class _SaleState extends State<Sale> {
                           onTap: () {
                             setState(() {
                               nextWidget = 0;
-                              nameLike = 'ca';
+                              nameLike = 'a';
                             });
                           },
                         ),
@@ -1880,7 +1880,7 @@ class _SaleState extends State<Sale> {
                           onTap: () {
                             setState(() {
                               nextWidget = 0;
-                              nameLike = 'ca';
+                              nameLike = 'a';
                             });
                           },
                         ),

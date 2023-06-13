@@ -584,7 +584,7 @@ class _AlignmentEntryState extends State<AlignmentEntry> {
     return const Text('No Widget');
   }
 
-  var nameLike = "ca";
+  var nameLike = "a";
   selectLedgerWidget() {
     return FutureBuilder<List<dynamic>>(
       future: isSalesManWiseLedger
@@ -615,7 +615,7 @@ class _AlignmentEntryState extends State<AlignmentEntry> {
                                     //   var itemName = item.name.toLowerCase();
                                     // return itemName.contains(text);
                                     // }).toList();
-                                    nameLike = text.isNotEmpty ? text : 'ca';
+                                    nameLike = text.isNotEmpty ? text : 'a';
                                   });
                                 },
                               ),
@@ -733,7 +733,7 @@ class _AlignmentEntryState extends State<AlignmentEntry> {
                           onTap: () {
                             setState(() {
                               nextWidget = 0;
-                              nameLike = 'ca';
+                              nameLike = 'a';
                             });
                           },
                         ),
@@ -817,7 +817,7 @@ class _AlignmentEntryState extends State<AlignmentEntry> {
                           onTap: () {
                             setState(() {
                               nextWidget = 0;
-                              nameLike = 'ca';
+                              nameLike = 'a';
                             });
                           },
                         ),

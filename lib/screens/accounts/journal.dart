@@ -177,7 +177,7 @@ class _JournalState extends State<Journal> {
         ));
   }
 
-  var nameLike = 'ca';
+  var nameLike = 'a';
   _body() {
     return Container(
       padding: const EdgeInsets.all(6.0),
@@ -230,7 +230,7 @@ class _JournalState extends State<Journal> {
             DropdownSearch<LedgerModel>(
               maxHeight: 300,
               onFind: (String filter) async {
-                nameLike = filter.isNotEmpty ? filter : 'ca';
+                nameLike = filter.isNotEmpty ? filter : 'a';
                 var models = ledgerUserFilterCreation(ledgerList, nameLike);
                 return models;
               },
@@ -252,7 +252,7 @@ class _JournalState extends State<Journal> {
             DropdownSearch<LedgerModel>(
               maxHeight: 300,
               onFind: (String filter) async {
-                nameLike = filter.isNotEmpty ? filter : 'ca';
+                nameLike = filter.isNotEmpty ? filter : 'a';
                 var models = ledgerUserFilterCreation(ledgerList, nameLike);
                 return models;
               },

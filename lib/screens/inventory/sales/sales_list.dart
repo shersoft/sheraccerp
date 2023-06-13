@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:csv/csv.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sheraccerp/models/other_registrations.dart';
@@ -17,6 +18,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:share/share.dart';
 import 'package:sheraccerp/widget/pdf_screen.dart';
+import 'dart:html' as html;
 
 import 'package:sheraccerp/widget/loading.dart';
 
@@ -1629,11 +1631,31 @@ class _SalesListState extends State<SalesList> {
   }
 
   Future<String> savePreviewPDF(pw.Document pdf, var title) async {
-    var output = await getTemporaryDirectory();
     title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
-    final file = File('${output.path}/' + title + '.pdf');
-    await file.writeAsBytes(await pdf.save());
-    return file.path.toString();
+    if (kIsWeb) {
+      try {
+        final bytes = await pdf.save();
+        final blob = html.Blob([bytes], 'application/pdf');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement()
+          ..href = url
+          ..style.display = 'none'
+          ..download = '$title.pdf';
+        html.document.body.children.add(anchor);
+        anchor.click();
+        html.document.body.children.remove(anchor);
+        html.Url.revokeObjectUrl(url);
+        return '';
+      } catch (ex) {
+        ex.toString();
+      }
+      return '';
+    } else {
+      var output = await getTemporaryDirectory();
+      final file = File('${output.path}/' + title + '.pdf');
+      await file.writeAsBytes(await pdf.save());
+      return file.path.toString();
+    }
   }
 
   Future<String> _createCSV(String title) async {
@@ -1662,11 +1684,26 @@ class _SalesListState extends State<SalesList> {
   }
 
   Future<String> savePreviewCSV(var csv, var title) async {
-    var output = await getTemporaryDirectory();
     title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
-    final file = File('${output.path}/' + title + '.csv');
-    await file.writeAsString(csv);
-    return file.path.toString();
+    if (kIsWeb) {
+      try {
+        html.AnchorElement()
+          ..href =
+              '${Uri.dataFromString(csv, mimeType: 'text/csv', encoding: utf8)}'
+          ..download = title
+          ..style.display = 'none'
+          ..click();
+        return '';
+      } catch (ex) {
+        ex.toString();
+      }
+      return '';
+    } else {
+      var output = await getTemporaryDirectory();
+      final file = File('${output.path}/' + title + '.csv');
+      await file.writeAsString(csv);
+      return file.path.toString();
+    }
   }
 
   Future<void> urlFileShare(

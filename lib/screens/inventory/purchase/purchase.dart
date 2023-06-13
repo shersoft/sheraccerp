@@ -507,7 +507,7 @@ class _PurchaseState extends State<Purchase> {
           ));
   }
 
-  var nameLike = "ca";
+  var nameLike = "a";
   selectLedgerWidget() {
     return FutureBuilder<List<dynamic>>(
       future: dio.getSupplierListData(nameLike),
@@ -532,7 +532,7 @@ class _PurchaseState extends State<Purchase> {
                                 onChanged: (text) {
                                   text = text.toLowerCase();
                                   setState(() {
-                                    nameLike = text.isNotEmpty ? text : 'ca';
+                                    nameLike = text.isNotEmpty ? text : 'a';
                                   });
                                 },
                               ),
@@ -581,7 +581,7 @@ class _PurchaseState extends State<Purchase> {
                       onPressed: () {
                         setState(() {
                           nextWidget = 0;
-                          nameLike = 'ca';
+                          nameLike = 'a';
                         });
                       },
                       child: const Text('Select again'))

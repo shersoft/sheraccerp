@@ -222,7 +222,7 @@ class _RPVoucherState extends State<RPVoucher> {
         ));
   }
 
-  var nameLike = 'ca';
+  var nameLike = 'a';
   _body(mode) {
     return Container(
       padding: const EdgeInsets.all(6.0),
@@ -285,7 +285,7 @@ class _RPVoucherState extends State<RPVoucher> {
             DropdownSearch<LedgerModel>(
               maxHeight: 300,
               onFind: (String filter) async {
-                nameLike = filter.isNotEmpty ? filter : 'ca';
+                nameLike = filter.isNotEmpty ? filter : 'a';
                 var models = api.getCustomerNameListLike(
                     groupId, areaId, routeId, salesManId, nameLike);
                 return models;
