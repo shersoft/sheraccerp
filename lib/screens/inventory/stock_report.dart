@@ -28,6 +28,7 @@ class _StockReportState extends State<StockReport> {
   var _data;
   int menuId = 0;
   bool loadReport = false;
+  bool stockValuation = false;
   DateTime now = DateTime.now();
   DioService api = DioService();
   DataJson itemId,
@@ -44,6 +45,8 @@ class _StockReportState extends State<StockReport> {
   double offset = 0;
   List<dynamic> resultData = [];
   DataJson dropdownValueStockMinus;
+  DataJson dropdownValueReportType;
+  DataJson dropdownValueLedgerReportType;
   String title = '';
   List<String> tableColumn = [];
 
@@ -53,6 +56,8 @@ class _StockReportState extends State<StockReport> {
     fromDate = DateFormat('dd-MM-yyyy').format(now);
     toDate = DateFormat('dd-MM-yyyy').format(now);
     dropdownValueStockMinus = minusStockList.first;
+    dropdownValueReportType = reportTypeList.first;
+    dropdownValueLedgerReportType = reportTypeLedgerList.first;
     location = DataJson(id: 1, name: defaultLocation);
   }
 
@@ -168,8 +173,39 @@ class _StockReportState extends State<StockReport> {
   }
 
   reportView(title) {
-    var statementType =
-        title == 'Stock' ? 'SimpleSummery' : 'StockLedger_Summery';
+    var statementType = title == 'Stock'
+        ? stockValuation
+            ? 'LastRate_StockValuation'
+            : dropdownValueReportType.id == reportTypeList[0].id
+                ? 'SimpleSummery'
+                : dropdownValueReportType.id == reportTypeList[1].id
+                    ? 'Stock Profit'
+                    : dropdownValueReportType.id == reportTypeList[2].id
+                        ? 'Category_Wise'
+                        : dropdownValueReportType.id == reportTypeList[3].id
+                            ? 'ZeroStockItems'
+                            : dropdownValueReportType.id == reportTypeList[4].id
+                                ? 'Stock_Ageing'
+                                : dropdownValueReportType.id ==
+                                        reportTypeList[5].id
+                                    ? 'LocationComparison'
+                                    : dropdownValueReportType.id ==
+                                            reportTypeList[6].id
+                                        ? 'SerialNo Report'
+                                        : dropdownValueReportType.id ==
+                                                reportTypeList[7].id
+                                            ? 'ReOrderLevelList'
+                                            : 'SimpleSummery'
+        : dropdownValueLedgerReportType.id == reportTypeLedgerList[0].id
+            ? 'StockLedger_Summery'
+            : dropdownValueLedgerReportType.id == reportTypeLedgerList[1].id
+                ? 'StockLedger_BatchWise'
+                : dropdownValueLedgerReportType.id == reportTypeLedgerList[2].id
+                    ? 'StockLedger_Summery_Daily'
+                    : dropdownValueLedgerReportType.id ==
+                            reportTypeLedgerList[6].id
+                        ? 'StockLedger_Wop'
+                        : 'StockLedger_Summery';
     var _location = '',
         _itemCode = '',
         _itemName = '',
@@ -206,49 +242,64 @@ class _StockReportState extends State<StockReport> {
     if (taxGroup != null) {
       _taxGroup = taxGroup.id.toString() ?? '';
     }
+    var stockMovingType = '';
+    if (title == 'Stock') {
+      stockMovingType = '';
+    } else {
+      stockMovingType = dropdownValueLedgerReportType.id ==
+              reportTypeLedgerList[3].id
+          ? 'FAST MOVING ITEMS'
+          : dropdownValueLedgerReportType.id == reportTypeLedgerList[4].id
+              ? 'SLOW MOVING ITEMS'
+              : dropdownValueLedgerReportType.id == reportTypeLedgerList[5].id
+                  ? 'NON MOVING ITEMS'
+                  : '';
+    }
     var dataJson = title == 'Stock'
-        ? '[' +
-            json.encode({
-              'statementType': statementType.isEmpty ? '' : statementType,
-              'date': fromDate.isEmpty ? '' : formatYMD(fromDate),
-              'minus': dropdownValueStockMinus != null
-                  ? dropdownValueStockMinus.id.toString()
-                  : '',
-              "sDate": fromDate,
-              "eDate": toDate,
-              "location": _location,
-              "itemCode": _itemCode,
-              "itemName": _itemName,
-              "mfr": _mfr,
-              "category": _category,
-              "subCategory": _subCategory,
-              "rack": _rack,
-              "taxGroup": _taxGroup,
-              "supplier": _supplier,
-              'unitId': unit != null ? unit.id.toString() : '0',
-            }) +
-            ']'
-        : '[' +
-            json.encode({
-              'statementType': statementType.isEmpty ? '' : statementType,
-              'date': fromDate.isEmpty ? '' : formatYMD(fromDate),
-              'minus': dropdownValueStockMinus != null
-                  ? dropdownValueStockMinus.id.toString()
-                  : '',
-              "sDate": fromDate,
-              "eDate": toDate,
-              "location": _location,
-              "itemCode": _itemCode,
-              "itemName": _itemName,
-              "mfr": _mfr,
-              "category": _category,
-              "subCategory": _subCategory,
-              "rack": _rack,
-              "taxGroup": _taxGroup,
-              "supplier": _supplier,
-              'unitId': unit != null ? unit.id.toString() : 0,
-            }) +
-            ']';
+        ? {
+            'statementType': statementType.isEmpty ? '' : statementType,
+            'date': fromDate.isEmpty ? '' : formatYMD(fromDate),
+            'minus': dropdownValueStockMinus != null
+                ? dropdownValueStockMinus.id.toString()
+                : '',
+            "sDate": fromDate.isEmpty ? '' : formatYMD(fromDate),
+            "eDate": toDate.isEmpty ? '' : formatYMD(toDate),
+            "location": _location,
+            "uniqueCode": 0,
+            "itemId": 0,
+            "itemCode": _itemCode,
+            "itemName": _itemName,
+            "mfr": _mfr,
+            "category": _category,
+            "subCategory": _subCategory,
+            "rack": _rack,
+            "taxGroup": _taxGroup,
+            "supplier": _supplier,
+            'unitId': unit != null ? unit.id.toString() : '0',
+            "itemMovingType": stockMovingType
+          }
+        : {
+            'statementType': statementType.isEmpty ? '' : statementType,
+            'date': fromDate.isEmpty ? '' : formatYMD(fromDate),
+            'minus': dropdownValueStockMinus != null
+                ? dropdownValueStockMinus.id.toString()
+                : '',
+            "sDate": fromDate.isEmpty ? '' : formatYMD(fromDate),
+            "eDate": toDate.isEmpty ? '' : formatYMD(toDate),
+            "location": _location,
+            "uniqueCode": 0,
+            "itemId": 0,
+            "itemCode": _itemCode,
+            "itemName": _itemName,
+            "mfr": _mfr,
+            "category": _category,
+            "subCategory": _subCategory,
+            "rack": _rack,
+            "taxGroup": _taxGroup,
+            "supplier": _supplier,
+            'unitId': unit != null ? unit.id.toString() : 0,
+            "itemMovingType": stockMovingType
+          };
 
     return FutureBuilder<List<dynamic>>(
       future: api.getStockReport(dataJson),
@@ -256,8 +307,68 @@ class _StockReportState extends State<StockReport> {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
             var data = snapshot.data;
-            _data = data;
             tableColumn = data[0].keys.toList();
+            var col = tableColumn;
+            Map<String, dynamic> totalData = {};
+            for (int i = 0; i < col.length; i++) {
+              var cell = '';
+              if (col[i].toLowerCase() == ('realprate') ||
+                  col[i].toLowerCase() == ('mrp') ||
+                  col[i].toLowerCase() == ('retail') ||
+                  col[i].toLowerCase() == ('wsrate') ||
+                  col[i].toLowerCase() == ('wholsale') ||
+                  col[i].toLowerCase() == ('spretail') ||
+                  col[i].toLowerCase() == ('branch') ||
+                  col[i].toLowerCase() == ('qty') ||
+                  col[i].toLowerCase() == ('free') ||
+                  col[i].toLowerCase() == ('freeqty') ||
+                  col[i].toLowerCase() == ('rate') ||
+                  col[i].toLowerCase() == ('prate') ||
+                  col[i].toLowerCase() == ('srate') ||
+                  col[i].toLowerCase() == ('profit') ||
+                  col[i].toLowerCase() == ('total') ||
+                  col[i].toLowerCase() == ('amount') ||
+                  col[i].toLowerCase() == ('mrpamount') ||
+                  col[i].toLowerCase() == ('openingstock') ||
+                  col[i].toLowerCase() == ('openingstockentry') ||
+                  col[i].toLowerCase() == ('purchase') ||
+                  col[i].toLowerCase() == ('unrpurchase') ||
+                  col[i].toLowerCase() == ('sales') ||
+                  col[i].toLowerCase() == ('sreturn') ||
+                  col[i].toLowerCase() == ('preturn') ||
+                  col[i].toLowerCase() == ('damage') ||
+                  col[i].toLowerCase() == ('btr') ||
+                  col[i].toLowerCase() == ('replacement') ||
+                  col[i].toLowerCase() == ('rawmaterial') ||
+                  col[i].toLowerCase() == ('stocktransfer-') ||
+                  col[i].toLowerCase() == ('stocktransfer+') ||
+                  col[i].toLowerCase() == ('stockadj+') ||
+                  col[i].toLowerCase() == ('stockadj-') ||
+                  col[i].toLowerCase() == ('netqty') ||
+                  col[i].toLowerCase() == ('btr') ||
+                  col[i].toLowerCase() == ('rpamount')) {
+                cell = data
+                    .fold(
+                        0,
+                        (a, b) =>
+                            a +
+                            (b[col[i]] != null
+                                ? b[col[i]] == ''
+                                    ? 0
+                                    : double.parse(b[col[i]].toString())
+                                : 0))
+                    .toStringAsFixed(2);
+              }
+              if (i == 0) {
+                cell = 'Total';
+              }
+              totalData[col[i]] = cell;
+            }
+            if (totalData.isNotEmpty) {
+              data.add(totalData);
+            }
+            _data = data;
+
             return Padding(
               padding: const EdgeInsets.all(5.0),
               child: SingleChildScrollView(
@@ -412,6 +523,8 @@ class _StockReportState extends State<StockReport> {
                 ),
               ),
               const Divider(),
+              dropDownReportType(),
+              const Divider(),
               DropdownSearch<dynamic>(
                 maxHeight: 300,
                 onFind: (String filter) =>
@@ -439,6 +552,8 @@ class _StockReportState extends State<StockReport> {
                       MaterialStateProperty.all<Color>(Colors.white),
                 ),
               ),
+              const Divider(),
+              stockMethod(),
               const Divider(),
               dropDownStockMinus(),
               const Divider(),
@@ -600,6 +715,8 @@ class _StockReportState extends State<StockReport> {
                 ),
               ),
               const Divider(),
+              dropDownLedgerReportType(),
+              const Divider(),
               DropdownSearch<dynamic>(
                 maxHeight: 300,
                 onFind: (String filter) =>
@@ -751,31 +868,133 @@ class _StockReportState extends State<StockReport> {
   List<DataJson> minusStockList = [
     DataJson(id: 2, name: 'AVOID MINUS STOCK'),
     DataJson(id: 0, name: 'ONLY MINUS STOCK'),
-    DataJson(id: 1, name: 'INCLUDE MINUS STOCK')
+    DataJson(id: 1, name: 'INCLUDE MINUS STOCK'),
+    DataJson(id: 3, name: 'ONLY ZERO STOCK'),
+    DataJson(id: 4, name: 'PLUS & MINUS STOCK'),
   ];
 
+  List<DataJson> reportTypeList = [
+    DataJson(id: 0, name: 'Simple'),
+    DataJson(id: 1, name: 'Stock Profit'),
+    DataJson(id: 2, name: 'Category Wise'),
+    DataJson(id: 3, name: 'Zero Stock Items'),
+    DataJson(id: 4, name: 'Stock Ageing'),
+    DataJson(id: 5, name: 'Location Comparison'),
+    DataJson(id: 6, name: 'SerialNo Report'),
+    DataJson(id: 7, name: 'Below Reorder'),
+  ];
+
+  List<DataJson> reportTypeLedgerList = [
+    DataJson(id: 0, name: 'Detailed'),
+    DataJson(id: 1, name: 'Batch Wise'),
+    DataJson(id: 2, name: 'Daily'),
+    DataJson(id: 3, name: 'Fast Moving Items'),
+    DataJson(id: 4, name: 'Slow Moving Items'),
+    DataJson(id: 5, name: 'Non Moving Items'),
+    DataJson(id: 6, name: 'Summary w/o UNP'),
+  ];
+
+  dropDownLedgerReportType() {
+    return Card(
+      elevation: 5,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          const Text('Report Type'),
+          DropdownButton<DataJson>(
+            value: dropdownValueLedgerReportType,
+            icon: const Icon(Icons.arrow_drop_down),
+            onChanged: (DataJson data) {
+              setState(() {
+                dropdownValueLedgerReportType = data;
+              });
+            },
+            items: reportTypeLedgerList
+                .map<DropdownMenuItem<DataJson>>((DataJson value) {
+              return DropdownMenuItem<DataJson>(
+                value: value,
+                child: Text(value.name),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  dropDownReportType() {
+    return Card(
+      elevation: 5,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          const Text('Report Type'),
+          DropdownButton<DataJson>(
+            value: dropdownValueReportType,
+            icon: const Icon(Icons.arrow_drop_down),
+            onChanged: (DataJson data) {
+              setState(() {
+                dropdownValueReportType = data;
+              });
+            },
+            items: reportTypeList
+                .map<DropdownMenuItem<DataJson>>((DataJson value) {
+              return DropdownMenuItem<DataJson>(
+                value: value,
+                child: Text(value.name),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
   dropDownStockMinus() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        const Text('Minus Stock'),
-        DropdownButton<DataJson>(
-          value: dropdownValueStockMinus,
-          icon: const Icon(Icons.arrow_drop_down),
-          onChanged: (DataJson data) {
-            setState(() {
-              dropdownValueStockMinus = data;
-            });
-          },
-          items:
-              minusStockList.map<DropdownMenuItem<DataJson>>((DataJson value) {
-            return DropdownMenuItem<DataJson>(
-              value: value,
-              child: Text(value.name),
-            );
-          }).toList(),
-        ),
-      ],
+    return Card(
+      elevation: 5,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          const Text('Minus Stock'),
+          DropdownButton<DataJson>(
+            value: dropdownValueStockMinus,
+            icon: const Icon(Icons.arrow_drop_down),
+            onChanged: (DataJson data) {
+              setState(() {
+                dropdownValueStockMinus = data;
+              });
+            },
+            items: minusStockList
+                .map<DropdownMenuItem<DataJson>>((DataJson value) {
+              return DropdownMenuItem<DataJson>(
+                value: value,
+                child: Text(value.name),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  stockMethod() {
+    return Card(
+      elevation: 5,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          const Text('Stock Valuation Last P-Rate'),
+          Checkbox(
+            value: stockValuation,
+            onChanged: (value) {
+              setState(() {
+                stockValuation = value;
+              });
+            },
+          )
+        ],
+      ),
     );
   }
 
