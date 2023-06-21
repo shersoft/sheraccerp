@@ -1034,10 +1034,10 @@ class _SaleState extends State<Sale> {
   updateSale() {
     List<CustomerModel> ledger = [];
     ledger.add(CustomerModel(
-        address1: ledgerModel.address1 + " " + ledgerModel.address2,
-        address2: ledgerModel.address3 + " " + ledgerModel.address4,
-        address3: '',
-        address4: ledgerModel.taxNumber,
+        address1: ledgerModel.address1,
+        address2: ledgerModel.address2,
+        address3: ledgerModel.address3,
+        address4: ledgerModel.address4,
         balance: ledgerModel.balance,
         city: ledgerModel.city,
         email: ledgerModel.email,

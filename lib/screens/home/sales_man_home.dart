@@ -97,6 +97,41 @@ class _SalesManHomeState extends State<SalesManHome> {
     // }
   }
 
+  sentBachUpData() async {
+    // var token = await _firebaseMessaging.getToken();
+    // print("Instance ID: " + token);
+    //             showDialog(
+    // context: context, builder: (BuildContext context) => CustomDialog());
+    // showFancyCustomDialog(context);
+    // if (msg) {
+    //   showDialog(
+    //       context: context,
+    //       builder: (BuildContext context) => CustomAlertDialog(
+    //             title: messageTitle,
+    //             message: notificationAlert,
+    //           ));
+    // }
+
+    /***Test Data***/
+    final dbHelper = DatabaseHelper.instance;
+    final allRows = await dbHelper.queryAllRows();
+    List<Carts> carts = [];
+    for (var row in allRows) {
+      carts.add(Carts.fromMap(row));
+    }
+    if (carts.isNotEmpty) {
+      api.addEvent([
+        {'data': Carts.encodeCartToJson(carts).toString()}
+      ]).then((value) {
+        if (value) {
+          for (Carts carts in carts) {
+            _delete(carts.id, dbHelper);
+          }
+        }
+      });
+    }
+  }
+
   void _delete(id, DatabaseHelper dbHelper) async {
     final rowsDeleted = await dbHelper.delete(id);
   }
@@ -536,6 +571,11 @@ class _SalesManHomeState extends State<SalesManHome> {
                         },
                       ),
                     ),
+                    OutlinedButton(
+                        onPressed: () async {
+                          sentBachUpData();
+                        },
+                        child: const Text('Share Catch File'))
                   ],
                 ),
               ));

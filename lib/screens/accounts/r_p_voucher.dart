@@ -461,9 +461,10 @@ class _RPVoucherState extends State<RPVoucher> {
         var statement = mode == 'Payment' ? 'PVList' : 'RVList';
         salesManId = salesManId > 0 ? salesManId : -1;
         locationId = locationId > 0 ? locationId : -1;
+        String salesMan = salesManId > 0 ? salesManId.toString() : '';
         api
             .getPaginationList(statement, page, locationId.toString(), '0',
-                DateUtil.dateYMD(formattedDate), salesManId.toString())
+                DateUtil.dateYMD(formattedDate), salesMan)
             .then((value) {
           if (value.isEmpty) {
             return;
