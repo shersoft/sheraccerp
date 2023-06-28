@@ -23,7 +23,9 @@ import 'package:sheraccerp/screens/inventory/bill_list.dart';
 import 'package:sheraccerp/screens/inventory/inv_r_p_voucher.dart';
 import 'package:sheraccerp/screens/home/delivery_home.dart';
 import 'package:sheraccerp/screens/home/manager_home.dart';
+import 'package:sheraccerp/screens/inventory/order_item_qty_list.dart';
 import 'package:sheraccerp/screens/inventory/order_list.dart';
+import 'package:sheraccerp/screens/inventory/price_list.dart';
 import 'package:sheraccerp/screens/inventory/product_management.dart';
 import 'package:sheraccerp/screens/inventory/purchase/opening_stock.dart';
 import 'package:sheraccerp/screens/inventory/purchase/purchase_new.dart';
@@ -166,12 +168,14 @@ class MyApp extends StatelessWidget {
               '/damageEntry': (context) => const DamageEntry(),
               '/openingStock': (context) => const OpeningStock(),
               '/damageReport': (context) => const DamageReport(),
+              '/priceList': (context) => const PriceList(),
               '/SalesReturnList': (context) => const SalesReturnList(),
               '/ProductReport': (context) => const ProductReport(),
               '/owner_home': (context) => const OwnerHome(),
               '/passCode_Auth': (context) => const PassCodeAuth(),
               '/SimpleSale': (context) => const SimpleSale(),
               '/OrderList': (context) => const OrderList(),
+              '/OrderItemList': (context) => const OrderItemList(),
               '/BillList': (context) => const BillList(),
               '/purchaseReturn': (context) => const PurchaseReturn(),
               '/purchaseOrder': (context) => const PurchaseOrder(),

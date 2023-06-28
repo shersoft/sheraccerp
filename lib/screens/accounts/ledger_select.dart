@@ -20,7 +20,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
   List<dynamic> items = [];
   List<dynamic> itemDisplay = [];
   DioService api = DioService();
-  bool _loading = true, _ob = true, _gAll = true, _0b = false;
+  bool _loading = true, _showQty = false, _ob = true, _gAll = true, _0b = false;
   var _ledger, _id, locationId, _dropDownBranchId;
   String fromDate, toDate, sType = 'Summery', area = '0', route = '0';
   dynamic areaModel, routeModel;
@@ -339,6 +339,15 @@ class _LedgerSelectState extends State<LedgerSelect> {
                         });
                       },
                     ),
+                    const Text('Show Qty'),
+                    Checkbox(
+                      value: _showQty,
+                      onChanged: (value) {
+                        setState(() {
+                          _showQty = value;
+                        });
+                      },
+                    )
                   ],
                 ),
                 // Card(
@@ -371,6 +380,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                 ),
                 TextButton(
                   onPressed: () {
+                    statement = _showQty ? 'Ledger_Report_Qty' : statement;
                     List<int> branches =
                         locationId != null ? [locationId.id] : [0];
                     Navigator.push(

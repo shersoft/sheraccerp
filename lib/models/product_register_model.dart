@@ -137,7 +137,7 @@ class ProductRegisterModel {
         bom: json["bom"] ?? 0,
         photo: Photo.fromMap(json["photo"]),
         regItemName: json["RegItemName"] ?? '',
-        stockQty: json["StockQty"] ?? 0.0,
+        stockQty: json["StockQty"] != null ? json["StockQty"].toDouble() : 0.0,
         taxGroupName: json["TaxGroup_Name"] ?? '',
         pluNo: json["PluNo"] ?? 0,
         machineItem: json["MachineItem"] ?? 0,

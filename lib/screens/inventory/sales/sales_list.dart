@@ -327,7 +327,7 @@ class _SalesListState extends State<SalesList> {
             'counterNo': '',
             'cardNo': '',
             'salesman2': '0',
-            'typeOfSupply': '',
+            'typeOfSupply': 'ALL',
             'barcode': '0',
             'userId': '0',
             'hsn': '',

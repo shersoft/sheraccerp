@@ -6,7 +6,10 @@ import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
+import 'package:scoped_model/scoped_model.dart';
 import 'package:share/share.dart';
+import 'package:sheraccerp/models/company.dart';
+import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
@@ -57,6 +60,9 @@ class _ReportViewState extends State<ReportView> {
     {'id': 0}
   ];
 
+  List<CompanySettings> settings;
+  List<ReportDesign> reportDesign;
+  CompanyInformation companySettings;
   List<String> tableColumn = [];
   List<String> tableColumnIncome = [];
   List<String> tableColumnExpense = [];
@@ -79,6 +85,13 @@ class _ReportViewState extends State<ReportView> {
     project = [
       {'id': widget.area}
     ];
+    loadSettings();
+  }
+
+  loadSettings() {
+    companySettings = ScopedModel.of<MainModel>(context).getCompanySettings();
+    settings = ScopedModel.of<MainModel>(context).getSettings();
+    reportDesign = ScopedModel.of<MainModel>(context).getReportDesign();
   }
 
   @override
@@ -267,6 +280,20 @@ class _ReportViewState extends State<ReportView> {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
             var data = snapshot.data;
+            if (widget.statement == 'Ledger_Report_Qty') {
+              var filterItems = data;
+              for (ReportDesign design in reportDesign) {
+                if (!design.visibility) {
+                  filterItems
+                      .forEach((item) => item..remove(design.caption.trim()));
+                }
+              }
+              // Map<String, dynamic> singleItem = {"type": "P"};
+              // filterItems.removeWhere(
+              //     (element) => element.keys. =>  == singleItem.keys.first);
+              debugPrint(filterItems.toString());
+              data = filterItems;
+            }
             tableColumn = data[0].keys.toList();
             if (widget.type == 'Invoice Wise Balance Customers' ||
                 widget.type == 'Invoice Wise Balance Suppliers' ||

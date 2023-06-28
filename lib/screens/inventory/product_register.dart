@@ -55,6 +55,7 @@ class _ProductRegisterState extends State<ProductRegister> {
   List<DataJson> rateTypeModel = [];
   List<UnitDetailModel> unitDetail = [];
   String _result;
+  String isItemName = '';
 
   @override
   void initState() {
@@ -102,6 +103,13 @@ class _ProductRegisterState extends State<ProductRegister> {
 
   @override
   Widget build(BuildContext context) {
+    final routes =
+        ModalRoute.of(context).settings.arguments as Map<String, String>;
+    isItemName = routes != null ? routes['name'].toString() : '';
+    if (isItemName.isNotEmpty) {
+      pItemName = isItemName;
+      findProduct(pItemName);
+    }
     deviceSize = MediaQuery.of(context).size;
     return Scaffold(
       key: _scaffoldKey,
@@ -421,16 +429,55 @@ class _ProductRegisterState extends State<ProductRegister> {
         ? ListView(
             padding: const EdgeInsets.all(8.0),
             children: [
-              SimpleAutoCompleteTextField(
-                clearOnSubmit: false,
-                key: keyHsn,
-                suggestions: hsnList,
-                decoration: const InputDecoration(
-                    border: OutlineInputBorder(), labelText: 'HSN Code'),
-                textSubmitted: (data) {
-                  pHSNCode = data;
-                },
-                controller: hsnController,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Expanded(
+                    child: SimpleAutoCompleteTextField(
+                      clearOnSubmit: false,
+                      key: keyHsn,
+                      suggestions: hsnList,
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(), labelText: 'HSN Code'),
+                      textSubmitted: (data) {
+                        pHSNCode = data;
+                      },
+                      controller: hsnController,
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.settings, color: blue),
+                    onSelected: (value) {
+                      // Handle menu item selection
+                      setState(() {
+                        // Perform actions based on the selected value
+                        if (value == 'ReName ItemCode') {
+                          if (pItemCode.isNotEmpty) {
+                            _reNameCodeDialog(context);
+                          }
+                        } else if (value == 'ReName ItemName') {
+                          if (pItemName.isNotEmpty) {
+                            _reNameNameDialog(context);
+                          }
+                        }
+                      });
+                    },
+                    itemBuilder: (BuildContext context) => [
+                      const PopupMenuItem<String>(
+                        value: 'ReName ItemCode',
+                        child: Text('ReName ItemCode'),
+                      ),
+                      const PopupMenuItem<String>(
+                        value: 'ReName ItemName',
+                        child: Text('ReName ItemName'),
+                      ),
+                      // const PopupMenuItem<String>(
+                      //   value: 'Update HSN Code',
+                      //   child: Text('Update HSN Code'),
+                      // ),
+                    ],
+                  ),
+                ],
               ),
               const Divider(),
               SimpleAutoCompleteTextField(
@@ -1060,6 +1107,7 @@ class _ProductRegisterState extends State<ProductRegister> {
       if (value != null) {
         if (value.slno > 0) {
           setState(() {
+            itemNameController.text = value.itemname;
             productId = value.slno.toString();
             pHSNCode = value.hsncode;
             hsnController.text = value.hsncode;
@@ -1100,6 +1148,194 @@ class _ProductRegisterState extends State<ProductRegister> {
         }
       }
     });
+  }
+
+  void findProductByCode(String pItemName) {
+    api.getProductByName(pItemName).then((value) {
+      if (value != null) {
+        if (value.slno > 0) {
+          setState(() {
+            itemNameController.text = value.itemname;
+            productId = value.slno.toString();
+            pHSNCode = value.hsncode;
+            hsnController.text = value.hsncode;
+            pItemCode = value.itemcode;
+            itemCodeController.text = value.itemcode;
+            unit = DataJson(id: value.unitId, name: '');
+            mfr = DataJson(id: value.unitId, name: '');
+            category = DataJson(id: value.unitId, name: '');
+            subCategory = DataJson(id: value.unitId, name: '');
+            cessController.text = value.cess.toString();
+            addCessController.text = value.adcessper.toString();
+            mrpController.text = value.mrp.toString();
+            active = value.active == 1 ? true : false;
+            wholeSaleController.text = value.wsrate.toString();
+            retailController.text = value.retail.toString();
+            spRetailController.text = value.sprate.toString();
+            branchController.text = value.branch.toString();
+            dropDownStockValuation = value.stockvaluation.trim().toUpperCase();
+            dropDownTypeOfSupply = value.typeofsupply.trim().toUpperCase();
+            packingController.text = value.packing.toString();
+            rack = DataJson(id: value.rackId, name: '');
+            reOrderLevelController.text = value.reorder.toString();
+            maxOrderLevelController.text = value.maxorder.toString();
+
+            isExist = true;
+          });
+
+          api
+              .getTaxGroupData(value.tax.toString(), 'sales_list/taxGroup')
+              .then((taxData) {
+            setState(() {
+              taxGroup = taxData
+                  .firstWhere((element) => element.name == value.taxGroupName);
+            });
+          });
+
+          // api.getSalesListData('filter', 'sales_list/unit');
+        }
+      }
+    });
+  }
+
+  TextEditingController _textFieldController = TextEditingController();
+
+  _reNameNameDialog(BuildContext context) async {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            'ReName $pItemName',
+            style: const TextStyle(fontSize: 12),
+          ),
+          content: TextField(
+            controller: _textFieldController,
+            decoration: const InputDecoration(hintText: "Enter New Name"),
+          ),
+          actions: [
+            TextButton(
+              child: const Text('CANCEL'),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () async {
+                Navigator.pop(context);
+                setState(() {
+                  _isLoading = true;
+                });
+                var body = {
+                  'new': _textFieldController.text,
+                  'old': pItemName,
+                  'Statement': 'ReNameItemName'
+                };
+                bool _state = await api.renameProduct(body);
+                _state
+                    ? showInSnackBar('Product Name Renamed')
+                    : showInSnackBar('Error');
+                if (_state) {
+                  itemNameController.text = _textFieldController.text;
+                  pItemName = _textFieldController.text;
+                  _textFieldController.text = '';
+                }
+                setState(() {
+                  _isLoading = false;
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  _reNameCodeDialog(BuildContext context) async {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            'ReName $pItemCode',
+            style: const TextStyle(fontSize: 12),
+          ),
+          content: TextField(
+            controller: _textFieldController,
+            decoration: const InputDecoration(hintText: "Enter New ItemCode"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('CANCEL'),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () async {
+                Navigator.pop(context);
+                setState(() {
+                  _isLoading = true;
+                });
+                var body = {
+                  'new': _textFieldController.text,
+                  'old': pItemCode,
+                  'Statement': 'ReNameItemcode'
+                };
+                bool _state = await api.renameProduct(body);
+                _state
+                    ? showInSnackBar('Product Code Renamed')
+                    : showInSnackBar('Error');
+                if (_state) {
+                  itemCodeController.text = _textFieldController.text;
+                  pItemCode = _textFieldController.text;
+                  _textFieldController.text = '';
+                }
+                setState(() {
+                  _isLoading = false;
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  _reNameHSNDialog(BuildContext context) async {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('ReName HSN'),
+          content: TextField(
+            controller: _textFieldController,
+            decoration: const InputDecoration(hintText: "Enter New HSN Code"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('CANCEL'),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () async {
+                var body = {'': ''};
+                bool _state = await api.renameProduct(body);
+                _state
+                    ? showInSnackBar('Product Saved')
+                    : showInSnackBar('Error');
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 

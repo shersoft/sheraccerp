@@ -289,3 +289,95 @@ class FinancialYear {
   String financialYearToMap(List<FinancialYear> data) =>
       json.encode(List<dynamic>.from(data.map((x) => x.toMap())));
 }
+
+class ReportDesign {
+  int auto;
+  String caption;
+  String align;
+  String width;
+  bool total;
+  bool visibility;
+  String form;
+  int visibleIndex;
+  ReportDesign({
+    this.auto,
+    this.caption,
+    this.align,
+    this.width,
+    this.total,
+    this.visibility,
+    this.form,
+    this.visibleIndex,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'auto': auto,
+      'caption': caption,
+      'align': align,
+      'width': width,
+      'total': total,
+      'visibility': visibility,
+      'form': form,
+      'visibleIndex': visibleIndex,
+    };
+  }
+
+  factory ReportDesign.fromMap(Map<String, dynamic> map) {
+    return ReportDesign(
+      auto: map['Auto']?.toInt() ?? 0,
+      caption: map['Caption'] ?? '',
+      align: map['Align'] ?? '',
+      width: map['Width'] ?? '',
+      total: map['Total'] != null
+          ? map['Total'] == 1
+              ? true
+              : false
+          : false,
+      visibility: map['Visibility'] != null
+          ? map['Visibility'] == 1
+              ? true
+              : false
+          : false,
+      form: map['Form'] ?? '',
+      visibleIndex: map['VisibleIndex']?.toInt() ?? 0,
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory ReportDesign.fromJson(String source) =>
+      ReportDesign.fromMap(json.decode(source));
+
+  @override
+  String toString() {
+    return 'ReportDesign(auto: $auto, caption: $caption, align: $align, width: $width, total: $total, visibility: $visibility, form: $form, visibleIndex: $visibleIndex)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is ReportDesign &&
+        other.auto == auto &&
+        other.caption == caption &&
+        other.align == align &&
+        other.width == width &&
+        other.total == total &&
+        other.visibility == visibility &&
+        other.form == form &&
+        other.visibleIndex == visibleIndex;
+  }
+
+  @override
+  int get hashCode {
+    return auto.hashCode ^
+        caption.hashCode ^
+        align.hashCode ^
+        width.hashCode ^
+        total.hashCode ^
+        visibility.hashCode ^
+        form.hashCode ^
+        visibleIndex.hashCode;
+  }
+}

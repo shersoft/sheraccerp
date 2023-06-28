@@ -439,6 +439,40 @@ class DioService {
     return ret;
   }
 
+  Future<bool> renameProduct(var body) async {
+    bool ret = false;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/rename/$dataBase',
+          data: json.encode(body),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+        if (jsonResponse['message'] == 'success') {
+          ret = true;
+        } else {
+          ret = false;
+        }
+      } else {
+        ret = false;
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
   Future<bool> addOpeningStock(var body) async {
     bool ret = false;
     SharedPreferences pref = await SharedPreferences.getInstance();
@@ -1481,6 +1515,36 @@ class DioService {
               apiV +
               'Product/getByName/$dataBase',
           queryParameters: {'name': _name});
+
+      if (response.statusCode == 200) {
+        var data = response.data;
+        if (data != null) {
+          model = ProductRegisterModel.fromMap(data[0]);
+        } else {
+          // model = ;
+          debugPrint('Unexpected error occurred!');
+        }
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return model;
+  }
+
+  Future<ProductRegisterModel> getProductByCode(String _code) async {
+    ProductRegisterModel model;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/getByCode/$dataBase',
+          queryParameters: {'code': _code});
 
       if (response.statusCode == 200) {
         var data = response.data;
@@ -3258,6 +3322,37 @@ class DioService {
               apiV +
               'sale/previous_bills/$dataBase',
           queryParameters: {'id': ledger, 'fyId': currentFinancialYear.id});
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+
+        _items = jsonResponse;
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<dynamic> fetchItemBills(sDate, eDate) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    dynamic _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'sale/Item_bills/$dataBase',
+          queryParameters: {
+            'sDate': sDate,
+            'eDate': eDate,
+            'fyId': currentFinancialYear.id
+          });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 

@@ -171,6 +171,32 @@ class InventoryReportMenu extends StatelessWidget {
             Navigator.pushNamed(context, '/damageReport');
           },
         ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Icon(
+                    Icons.price_change_outlined,
+                    color: Colors.brown[500],
+                    size: 90.0,
+                  ),
+                  const Text(
+                    'Price List',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            Navigator.pushNamed(context, '/priceList');
+          },
+        ),
       ],
     );
   }

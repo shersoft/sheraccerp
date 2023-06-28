@@ -13,6 +13,7 @@ mixin CompanyScopeModel on Model {
   CompanyInformation _company;
   final List<FinancialYear> _financialYear = [];
   final List<CompanySettings> _settings = [];
+  List<ReportDesign> _reportDesign = [];
   var dio = Dio();
 
   CompanyInformation getCompanySettings() {
@@ -25,6 +26,10 @@ mixin CompanyScopeModel on Model {
 
   List<FinancialYear> getFinancialYear() {
     return _financialYear;
+  }
+
+  List<ReportDesign> getReportDesign() {
+    return _reportDesign;
   }
 
   getCompanySettingsAll(cId) async {
@@ -56,6 +61,53 @@ mixin CompanyScopeModel on Model {
       } else {
         _company = null;
         throw Exception('Failed to load data');
+      }
+    } on DioError {
+      // print(e.message);
+    }
+  }
+
+  getReportDesignAll(cId) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    // String code = pref.get("DBName") ?? 'csharp';
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'companySettings/$cId');
+      if (response.statusCode == 200) {
+        List<dynamic> _data = response.data;
+        for (var data in _data[1]) {
+          _reportDesign.add(ReportDesign.fromMap(data));
+        }
+        notifyListeners();
+      } else {
+        _reportDesign = [];
+        // throw Exception('Failed to load data');
+      }
+    } on DioError {
+      // print(e.message);
+    }
+  }
+
+  getReportDesignByName(String cId, String form) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    // String code = pref.get("DBName") ?? 'csharp';
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'reportDesignerByName/$cId',
+          queryParameters: {'name': form});
+      if (response.statusCode == 200) {
+        List<dynamic> _data = response.data;
+        for (var data in _data) {
+          _reportDesign.add(ReportDesign.fromMap(data));
+        }
+        notifyListeners();
+      } else {
+        _reportDesign = [];
+        // throw Exception('Failed to load data');
       }
     } on DioError {
       // print(e.message);

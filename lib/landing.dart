@@ -900,6 +900,8 @@ class _LandingState extends State<Landing> {
           ? pref.getString('DBName')
           : pref.getString('DBNameT');
       ScopedModel.of<MainModel>(context).getCompanySettingsAll(dataBase);
+      ScopedModel.of<MainModel>(context)
+          .getReportDesignByName(dataBase, 'Ledger_Report_Qty');
     }
   }
 

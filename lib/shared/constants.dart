@@ -20,7 +20,7 @@ bool isUsingHive = true;
 String deviceId = '0';
 const String isApp = '1';
 
-const String apiV = 'v17/';
+const String apiV = 'v18/';
 const currencySymbol = '₹';
 // const bool isVariant = false;
 const bool isKFC = false;
@@ -248,6 +248,34 @@ class ComSettings {
       //s_Value,Status,Name
       if (option.name == name) {
         status = option.value;
+        break;
+      } else {
+        status = '';
+      }
+    }
+    return status;
+  }
+
+  static getReportDesignStatus(String name, List<ReportDesign> data) {
+    bool status = false;
+    for (var option in data) {
+      //s_Value,Status,Name
+      if (option.visibility == name) {
+        status = option.visibility;
+        break;
+      } else {
+        status = false;
+      }
+    }
+    return status;
+  }
+
+  static getReportDesignValue(String name, List<ReportDesign> data) {
+    String status = '';
+    for (var option in data) {
+      //s_Value,Status,Name
+      if (option.caption == name) {
+        status = option.caption;
         break;
       } else {
         status = '';
