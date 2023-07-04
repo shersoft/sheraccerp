@@ -23,6 +23,7 @@ class StockReport extends StatefulWidget {
 }
 
 class _StockReportState extends State<StockReport> {
+  bool isPageMode = true;
   String fromDate;
   String toDate;
   var _data;
@@ -369,78 +370,111 @@ class _StockReportState extends State<StockReport> {
             }
             _data = data;
 
-            return Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Center(
-                        child:
-                            Text('Date: From ' + fromDate + ' To ' + toDate)),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        headingRowColor: MaterialStateColor.resolveWith(
-                            (states) => Colors.grey.shade200),
-                        border:
-                            TableBorder.all(width: 1.0, color: Colors.black),
-                        columnSpacing: 12,
-                        dataRowHeight: 20,
-                        headingRowHeight: 30,
-                        columns: [
-                          for (int i = 0; i < tableColumn.length; i++)
-                            DataColumn(
-                              label: Align(
-                                alignment: Alignment.center,
-                                child: Text(
-                                  tableColumn[i],
-                                  style: const TextStyle(
-                                      // fontSize: 10.0,
-                                      fontWeight: FontWeight.bold),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
+            return isPageMode
+                ? SingleChildScrollView(
+                    child: PaginatedDataTable(
+                    header: Text(
+                      'Date: From ' + fromDate + ' To ' + toDate,
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                    rowsPerPage: 100,
+                    horizontalMargin: 10,
+                    columnSpacing: 10,
+                    showFirstLastButtons: true,
+                    arrowHeadColor: black,
+                    // columnSpacing: 100,
+                    // horizontalMargin: 10,
+                    dataRowHeight: 20,
+                    headingRowHeight: 30,
+                    showCheckboxColumn: true,
+                    columns: [
+                      for (int i = 0; i < col.length; i++)
+                        DataColumn(
+                          label: Align(
+                            alignment: Alignment.center,
+                            child: Text(
+                              col[i],
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
                             ),
-                        ],
-                        rows: data
-                            .map(
-                              (values) => DataRow(
-                                cells: [
-                                  for (int i = 0; i < values.length; i++)
-                                    DataCell(
-                                      Align(
-                                        alignment: ComSettings.oKNumeric(
-                                          values[tableColumn[i]] != null
-                                              ? values[tableColumn[i]]
-                                                  .toString()
-                                              : '',
-                                        )
-                                            ? Alignment.centerRight
-                                            : Alignment.centerLeft,
-                                        child: Text(
-                                          values[tableColumn[i]] != null
-                                              ? values[tableColumn[i]]
-                                                  .toString()
-                                              : '',
-                                          softWrap: true,
-                                          overflow: TextOverflow.ellipsis,
-                                          // style: TextStyle(fontSize: 6),
-                                        ),
+                          ),
+                        ),
+                    ],
+                    source: DTS(context, _data),
+                  ))
+                : Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Center(
+                              child: Text(
+                                  'Date: From ' + fromDate + ' To ' + toDate)),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: DataTable(
+                              headingRowColor: MaterialStateColor.resolveWith(
+                                  (states) => Colors.grey.shade200),
+                              border: TableBorder.all(
+                                  width: 1.0, color: Colors.black),
+                              columnSpacing: 12,
+                              dataRowHeight: 20,
+                              headingRowHeight: 30,
+                              columns: [
+                                for (int i = 0; i < tableColumn.length; i++)
+                                  DataColumn(
+                                    label: Align(
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        tableColumn[i],
+                                        style: const TextStyle(
+                                            // fontSize: 10.0,
+                                            fontWeight: FontWeight.bold),
+                                        textAlign: TextAlign.center,
                                       ),
                                     ),
-                                ],
-                              ),
-                            )
-                            .toList(),
+                                  ),
+                              ],
+                              rows: data
+                                  .map(
+                                    (values) => DataRow(
+                                      cells: [
+                                        for (int i = 0; i < values.length; i++)
+                                          DataCell(
+                                            Align(
+                                              alignment: ComSettings.oKNumeric(
+                                                values[tableColumn[i]] != null
+                                                    ? values[tableColumn[i]]
+                                                        .toString()
+                                                    : '',
+                                              )
+                                                  ? Alignment.centerRight
+                                                  : Alignment.centerLeft,
+                                              child: Text(
+                                                values[tableColumn[i]] != null
+                                                    ? values[tableColumn[i]]
+                                                        .toString()
+                                                    : '',
+                                                softWrap: true,
+                                                overflow: TextOverflow.ellipsis,
+                                                // style: TextStyle(fontSize: 6),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ),
+                          // SizedBox(height: 500),
+                        ],
                       ),
                     ),
-                    // SizedBox(height: 500),
-                  ],
-                ),
-              ),
-            );
+                  );
           } else {
             return Center(
               child: Column(
@@ -529,7 +563,7 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/location'),
-                dropdownSearchDecoration: InputDecoration(
+                dropdownSearchDecoration: const InputDecoration(
                     border: OutlineInputBorder(), hintText: 'Select Branch'),
                 onChanged: (dynamic data) {
                   location = data;
@@ -537,20 +571,34 @@ class _StockReportState extends State<StockReport> {
                 showSearchBox: true,
               ),
               const Divider(),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    title = 'Stock';
-                    loadReport = true;
-                  });
-                },
-                child: const Text('Show'),
-                style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(kPrimaryColor),
-                  foregroundColor:
-                      MaterialStateProperty.all<Color>(Colors.white),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        title = 'Stock';
+                        loadReport = true;
+                      });
+                    },
+                    child: const Text('Show'),
+                    style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(kPrimaryColor),
+                      foregroundColor:
+                          MaterialStateProperty.all<Color>(Colors.white),
+                    ),
+                  ),
+                  const Text('Page'),
+                  Checkbox(
+                    value: isPageMode,
+                    onChanged: (value) {
+                      setState(() {
+                        isPageMode = value;
+                      });
+                    },
+                  )
+                ],
               ),
               const Divider(),
               stockMethod(),
@@ -729,20 +777,34 @@ class _StockReportState extends State<StockReport> {
                 showSearchBox: true,
               ),
               const Divider(),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    title = 'Stock Ledger';
-                    loadReport = true;
-                  });
-                },
-                child: const Text('Show'),
-                style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(kPrimaryColor),
-                  foregroundColor:
-                      MaterialStateProperty.all<Color>(Colors.white),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        title = 'Stock Ledger';
+                        loadReport = true;
+                      });
+                    },
+                    child: const Text('Show'),
+                    style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(kPrimaryColor),
+                      foregroundColor:
+                          MaterialStateProperty.all<Color>(Colors.white),
+                    ),
+                  ),
+                  const Text('Page'),
+                  Checkbox(
+                    value: isPageMode,
+                    onChanged: (value) {
+                      setState(() {
+                        isPageMode = value;
+                      });
+                    },
+                  )
+                ],
               ),
               const Divider(),
               DropdownSearch<dynamic>(
@@ -1294,4 +1356,47 @@ class _StockReportState extends State<StockReport> {
           sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
     }
   }
+}
+
+class DTS extends DataTableSource {
+  final List<dynamic> data;
+  final BuildContext context;
+
+  DTS(this.context, this.data);
+  @override
+  DataRow getRow(int index) {
+    final tableColumn = data[0].keys.toList();
+    final values = data[index];
+    return DataRow.byIndex(index: index, cells: [
+      for (int i = 0; i < values.length; i++)
+        DataCell(
+          Align(
+            alignment: ComSettings.oKNumeric(
+              values[tableColumn[i]] != null
+                  ? values[tableColumn[i]].toString()
+                  : '',
+            )
+                ? Alignment.centerRight
+                : Alignment.centerLeft,
+            child: Text(
+              values[tableColumn[i]] != null
+                  ? values[tableColumn[i]].toString()
+                  : '',
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
+              // style: TextStyle(fontSize: 6),
+            ),
+          ),
+        ),
+    ]);
+  }
+
+  @override
+  bool get isRowCountApproximate => false;
+
+  @override
+  int get rowCount => data.length;
+
+  @override
+  int get selectedRowCount => 0;
 }

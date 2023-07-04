@@ -267,21 +267,7 @@ class _OrderItemListState extends State<OrderItemList> {
                                               color: Colors.black,
                                               fontSize: 12,
                                             )),
-                                        Text(
-                                            information[index]['SType'] != null
-                                                ? information[index]['SType'] ==
-                                                        '1'
-                                                    ? 'B2B SALE'
-                                                    : information[index]
-                                                                ['SType'] ==
-                                                            '2'
-                                                        ? 'B2C SALE'
-                                                        : information[index]
-                                                                    ['SType'] ==
-                                                                '3'
-                                                            ? 'ESTIMATE'
-                                                            : 'CASH SALE'
-                                                : 'SALES INVOICE',
+                                        Text(information[index]['ToName'],
                                             style: const TextStyle(
                                               color: Colors.deepOrange,
                                               fontSize: 12,
@@ -333,8 +319,8 @@ class _OrderItemListState extends State<OrderItemList> {
                                           RichText(
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            strutStyle:
-                                                StrutStyle(fontSize: 12.0),
+                                            strutStyle: const StrutStyle(
+                                                fontSize: 12.0),
                                             text: TextSpan(
                                                 text: "${item['itemname']}",
                                                 style: const TextStyle(
@@ -539,7 +525,7 @@ class _OrderItemListState extends State<OrderItemList> {
                                                                             information[index]['CGST'].toStringAsFixed(
                                                                                 2),
                                                                             style:
-                                                                                TextStyle(
+                                                                                const TextStyle(
                                                                               color: Colors.black,
                                                                               fontSize: 14,
                                                                             ))
@@ -563,7 +549,7 @@ class _OrderItemListState extends State<OrderItemList> {
                                                                             information[index]['SGST'].toStringAsFixed(
                                                                                 2),
                                                                             style:
-                                                                                TextStyle(
+                                                                                const TextStyle(
                                                                               color: Colors.black,
                                                                               fontSize: 14,
                                                                             ))
@@ -611,7 +597,7 @@ class _OrderItemListState extends State<OrderItemList> {
                                           fontSize: 14,
                                         )),
                                     Text(items.length.toString(),
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           color: Colors.black,
                                           fontSize: 12,
                                         ))
@@ -620,7 +606,7 @@ class _OrderItemListState extends State<OrderItemList> {
                                   flex: 0,
                                   child: Text(
                                       "\u20B9 ${information[index]['GrandTotal'].toStringAsFixed(2)}",
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         color: Colors.black,
                                         fontSize: 14,
                                       )))

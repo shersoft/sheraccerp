@@ -171,45 +171,33 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
     var title = widget.title;
     return Scaffold(
         appBar: AppBar(
-          title: Text(title + ' Preview'),
+          title: Text(title),
           actions: [
             IconButton(
                 icon: const Icon(Icons.picture_as_pdf),
                 onPressed: () {
                   setState(
                     () {
-                      // Future.delayed(const Duration(milliseconds: 1000), () {
-                      // _createPDF(
-                      //         title +
-                      //             '_ref_${dataInformation['RealEntryNo']}',
-                      //         companySettings,
-                      //         settings,
-                      //         data,
-                      //         customerBalance)
-                      //     .then((value) =>
-
                       Navigator.of(context).push(MaterialPageRoute(
                           builder: (_) => PDFScreen(
                                 pathPDF: pdfPath,
                                 subject: title,
                                 text: 'this is ' + title,
                               )));
-
-                      // );
-                      // try {
-                      //   debugPrint('pdf generating');
-                      //   LayoutCallbackWithData builder;
-                      //   PdfPageFormat pageFormat;
-                      //   builder = generateInvoice;
-                      //   // generateInvoice(pageFormat, data).then((value) {
-                      //   //   build(context);
-                      //   debugPrint('pdf generated sucess');
-                      //   // });
-                      // } catch (ex) {
-                      //   debugPrint(ex.toString());
-                      // }
-                      // });
                     },
+                  );
+                }),
+            IconButton(
+                icon: const Icon(Icons.list),
+                onPressed: () {
+                  argumentsPass = {
+                    'mode': 'selectedLedger',
+                    'name': bill['name'],
+                    'id': dataParticulars[0]['Ledid']
+                  };
+                  Navigator.pushNamed(
+                    context,
+                    '/select_ledger',
                   );
                 }),
             // IconButton(

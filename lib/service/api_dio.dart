@@ -3112,9 +3112,13 @@ class DioService {
               '/stock/selectStockById/$dataBase',
           queryParameters: {'id': id, 'location': location});
       if (response.statusCode == 200) {
-        var jsonResponse = response.data;
-        for (var product in jsonResponse) {
-          _items.add(double.tryParse(product['Qty'].toString()));
+        List<dynamic> jsonResponse = response.data;
+        if (jsonResponse.isNotEmpty) {
+          for (var product in jsonResponse) {
+            _items.add(double.tryParse(product['Qty'].toString()));
+          }
+        } else {
+          _items.add(0);
         }
       } else {
         debugPrint('Unexpected error Occurred!');

@@ -13,8 +13,9 @@ class PriceList extends StatefulWidget {
 }
 
 class _PriceListState extends State<PriceList> {
-  List<dynamic> dataList;
-  bool loadReport = false;
+  List<dynamic> _dataList;
+  List<dynamic> displayDataList;
+  bool loadReport = false, isPageMode = true;
   DioService api = DioService();
   var itemId,
       itemName,
@@ -23,6 +24,12 @@ class _PriceListState extends State<PriceList> {
   final controller = ScrollController();
   double offset = 0;
   var dropDownBranchId;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -59,7 +66,8 @@ class _PriceListState extends State<PriceList> {
     api.getStockReport(query).then((value) {
       setState(() {
         loadReport = true;
-        dataList = value;
+        _dataList = value;
+        displayDataList = _dataList;
       });
     });
   }
@@ -70,10 +78,18 @@ class _PriceListState extends State<PriceList> {
         appBar: AppBar(
           actions: [
             IconButton(
-                icon: const Icon(Icons.share_rounded),
+              icon: const Icon(Icons.search),
+              onPressed: () async {
+                _displaySearchDialog(context);
+              },
+            ),
+            IconButton(
+                icon: const Icon(Icons.list_alt_rounded),
                 onPressed: () {
                   setState(
-                    () {},
+                    () {
+                      isPageMode = !isPageMode;
+                    },
                   );
                 }),
           ],
@@ -83,40 +99,217 @@ class _PriceListState extends State<PriceList> {
   }
 
   report() {
-    var col = dataList[0].keys.toList();
-    return SingleChildScrollView(
-      child: PaginatedDataTable(
-        // header: Text('DataTable Header'),
-        rowsPerPage: 100,
-        horizontalMargin: 10,
-        columnSpacing: 10,
-        showFirstLastButtons: true,
-        arrowHeadColor: black,
-        // columnSpacing: 100,
-        // horizontalMargin: 10,
-        dataRowHeight: 20,
-        headingRowHeight: 30,
-        showCheckboxColumn: true,
-        columns: [
-          for (int i = 0; i < col.length; i++)
-            DataColumn(
-              label: Align(
-                alignment: Alignment.center,
+    return isPageMode ? reportPagination() : reportList();
+  }
+
+  TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  reportList() {
+    var col = _dataList[0].keys.toList();
+    return Padding(
+      padding: const EdgeInsets.all(5.0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.vertical,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  labelText: 'Search by name',
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      setState(() {
+                        _searchController.clear();
+                        _searchQuery = '';
+                      });
+                    },
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
+              ),
+            ),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                headingRowColor: MaterialStateColor.resolveWith(
+                    (states) => Colors.grey.shade200),
+                border: TableBorder.all(width: 1.0, color: Colors.black),
+                columnSpacing: 12,
+                dataRowHeight: 20,
+                headingRowHeight: 30,
+                columns: [
+                  for (int i = 0; i < col.length; i++)
+                    DataColumn(
+                      label: Align(
+                        alignment: Alignment.center,
+                        child: Text(
+                          col[i],
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+                rows: _buildRows(col),
+              ),
+            ),
+            // SizedBox(height: 500),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<DataRow> _buildRows(col) {
+    List<DataRow> rows = [];
+    List<dynamic> data = _dataList;
+
+    List<dynamic> filteredData = data
+        .where((item) =>
+            item['ItemName']
+                .toLowerCase()
+                .contains(_searchQuery.toLowerCase()) ||
+            item['ItemCode'].toLowerCase().contains(_searchQuery.toLowerCase()))
+        .toList();
+
+    for (var values in filteredData) {
+      rows.add(DataRow(
+        onLongPress: () {
+          String name = values['ItemName'];
+          Navigator.pushNamed(context, '/product', arguments: {'name': name});
+        },
+        cells: [
+          for (int i = 0; i < values.length; i++)
+            DataCell(
+              Align(
+                alignment: ComSettings.oKNumeric(
+                  values[col[i]] != null ? values[col[i]].toString() : '',
+                )
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
                 child: Text(
-                  col[i],
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
+                  values[col[i]] != null ? values[col[i]].toString() : '',
+                  softWrap: true,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
         ],
-        source: DTS(context, dataList),
-        // onRowsPerPageChanged: (value) {
-        //   setState(() {
-        //     _rowPerPage = value;
-        //   });
-        // },
-      ),
+      ));
+    }
+
+    return rows;
+  }
+
+  reportPagination() {
+    if (displayDataList.isNotEmpty) {
+      var col = displayDataList[0].keys.toList();
+      return SingleChildScrollView(
+        child: PaginatedDataTable(
+          // header: Text('DataTable Header'),
+          rowsPerPage: 100,
+          horizontalMargin: 10,
+          columnSpacing: 10,
+          showFirstLastButtons: true,
+          arrowHeadColor: black,
+          // columnSpacing: 100,
+          // horizontalMargin: 10,
+          dataRowHeight: 20,
+          headingRowHeight: 30,
+          showCheckboxColumn: true,
+          columns: [
+            for (int i = 0; i < col.length; i++)
+              DataColumn(
+                label: Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    col[i],
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+          source: DTS(context, displayDataList),
+          // onRowsPerPageChanged: (value) {
+          //   setState(() {
+          //     _rowPerPage = value;
+          //   });
+          // },
+        ),
+      );
+    } else {
+      return Center(
+          child: ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  displayDataList = _dataList;
+                  loadReport = true;
+                });
+              },
+              child: const Text('Select agin')));
+    }
+  }
+
+  Future<void> _displaySearchDialog(BuildContext context) async {
+    String _search = '';
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Search'),
+          content: TextField(
+            // controller: _textFieldController,
+            decoration: const InputDecoration(hintText: "type here"),
+            onChanged: (value) => _search = value,
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('CANCEL'),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() {
+                  if (_search.isNotEmpty) {
+                    loadReport = true;
+                    var _displayDataList = _dataList
+                        .where((element) =>
+                            element['ItemName']
+                                .toString()
+                                .toLowerCase()
+                                .contains(_search.toLowerCase()) ||
+                            element['ItemCode']
+                                .toString()
+                                .toLowerCase()
+                                .contains(_search.toLowerCase()))
+                        .toList();
+                    var _d = _displayDataList;
+                    displayDataList = _d;
+                  } else {
+                    setState(() {
+                      loadReport = false;
+                    });
+                  }
+                });
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -169,135 +362,7 @@ class DTS extends DataTableSource {
   @override
   int get selectedRowCount => 0;
 }
-//   TextEditingController _searchController = TextEditingController();
-//   String _searchQuery = '';
 
-//   @override
-//   void dispose() {
-//     _searchController.dispose();
-//     super.dispose();
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//         appBar: AppBar(
-//           actions: [
-//             IconButton(
-//                 icon: const Icon(Icons.share_rounded),
-//                 onPressed: () {
-//                   setState(
-//                     () {},
-//                   );
-//                 }),
-//           ],
-//           title: const Text('Price List'),
-//         ),
-//         body: loadReport ? report() : const Loading() //reportView()
-//         );
-//   }
-
-//   report() {
-//     var col = dataList[0].keys.toList();
-//     return Padding(
-//       padding: const EdgeInsets.all(5.0),
-//       child: SingleChildScrollView(
-//         scrollDirection: Axis.vertical,
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             Padding(
-//               padding: const EdgeInsets.all(8.0),
-//               child: TextField(
-//                 controller: _searchController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Search by name',
-//                   suffixIcon: IconButton(
-//                     icon: const Icon(Icons.clear),
-//                     onPressed: () {
-//                       setState(() {
-//                         _searchController.clear();
-//                         _searchQuery = '';
-//                       });
-//                     },
-//                   ),
-//                 ),
-//                 onChanged: (value) {
-//                   setState(() {
-//                     _searchQuery = value;
-//                   });
-//                 },
-//               ),
-//             ),
-//             SingleChildScrollView(
-//               scrollDirection: Axis.horizontal,
-//               child: DataTable(
-//                 headingRowColor: MaterialStateColor.resolveWith(
-//                     (states) => Colors.grey.shade200),
-//                 border: TableBorder.all(width: 1.0, color: Colors.black),
-//                 columnSpacing: 12,
-//                 dataRowHeight: 20,
-//                 headingRowHeight: 30,
-//                 columns: [
-//                   for (int i = 0; i < col.length; i++)
-//                     DataColumn(
-//                       label: Align(
-//                         alignment: Alignment.center,
-//                         child: Text(
-//                           col[i],
-//                           style: const TextStyle(fontWeight: FontWeight.bold),
-//                           textAlign: TextAlign.center,
-//                         ),
-//                       ),
-//                     ),
-//                 ],
-//                 rows: _buildRows(col),
-//               ),
-//             ),
-//             // SizedBox(height: 500),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   List<DataRow> _buildRows(col) {
-//     List<DataRow> rows = [];
-//     List<dynamic> data = dataList;
-
-//     List<dynamic> filteredData = data
-//         .where((item) =>
-//             item['ItemName'].toLowerCase().contains(_searchQuery.toLowerCase()))
-//         .toList();
-
-//     for (var values in filteredData) {
-//       rows.add(DataRow(
-//         onLongPress: () {
-//           String name = values['ItemName'];
-//           Navigator.pushNamed(context, '/product', arguments: {'name': name});
-//         },
-//         cells: [
-//           for (int i = 0; i < values.length; i++)
-//             DataCell(
-//               Align(
-//                 alignment: ComSettings.oKNumeric(
-//                   values[col[i]] != null ? values[col[i]].toString() : '',
-//                 )
-//                     ? Alignment.centerRight
-//                     : Alignment.centerLeft,
-//                 child: Text(
-//                   values[col[i]] != null ? values[col[i]].toString() : '',
-//                   softWrap: true,
-//                   overflow: TextOverflow.ellipsis,
-//                 ),
-//               ),
-//             ),
-//         ],
-//       ));
-//     }
-
-//     return rows;
-//   }
 
 //   reportView() {
 //     var data = {

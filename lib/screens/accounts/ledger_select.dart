@@ -202,6 +202,14 @@ class _LedgerSelectState extends State<LedgerSelect> {
           selectedGroupValues = items[0]['name'];
           selectedStockValue = itemDisplay[0]['name'];
         });
+      } else if (mode == 'selectedLedger') {
+        setState(() {
+          _loading = false;
+          _ledger = arguments['name'];
+          _id = arguments['id'];
+          _showQty = true;
+          mode = 'ledger';
+        });
       }
     }
 

@@ -29,7 +29,7 @@ class _ProductRegisterState extends State<ProductRegister> {
   DataJson productModel;
   Size deviceSize;
   String productId = '';
-  List<DataJson> productList = [];
+  List<DataJson> productList0 = [];
   bool _isLoading = false, isExist = false, buttonEvent = false;
   DataJson itemId,
       itemName,
@@ -54,7 +54,6 @@ class _ProductRegisterState extends State<ProductRegister> {
   List<DataJson> unitModel = [];
   List<DataJson> rateTypeModel = [];
   List<UnitDetailModel> unitDetail = [];
-  String _result;
   String isItemName = '';
 
   @override
@@ -77,6 +76,8 @@ class _ProductRegisterState extends State<ProductRegister> {
             .toList()
             .map((s) => s as String)
             .toList()));
+        // productList.addAll(List<dynamic>.from(productData[0]['ItemName'])
+        //     .map((item) => (DataJson(id: item['id'], name: item['name']))));
 
         unitModel.addAll(DataJson.fromJsonList(productData[0]['Unit']));
         rateTypeModel = [
@@ -116,20 +117,27 @@ class _ProductRegisterState extends State<ProductRegister> {
       appBar: AppBar(
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.clear),
             onPressed: () async {
-              // var result = await showSearch<List<DataJson>>(
-              //   context: context,
-              //   delegate: CustomDelegateProduct(productList),
-              // );
-
               setState(() {
-                // _result = result[0].name;
-                // pItemName = _result;
-                // productId = result[0].id.toString();
-                if (pItemName.isNotEmpty) {
-                  findProduct(pItemName);
-                }
+                pHSNCode = '';
+                pItemCode = '';
+                pItemName = '';
+                mrpController.text = '';
+                retailController.text = '';
+                wholeSaleController.text = '';
+                spRetailController.text = '';
+                branchController.text = '';
+                hsnController.text = '';
+                itemCodeController.text = '';
+                itemNameController.text = '';
+                packingController.text = '';
+                maxOrderLevelController.text = '';
+                reOrderLevelController.text = '';
+                cessController.text = '';
+                addCessController.text = '';
+                isExist = false;
+                nextWidget = 0;
               });
             },
           ),
@@ -489,6 +497,9 @@ class _ProductRegisterState extends State<ProductRegister> {
                     border: OutlineInputBorder(), labelText: 'Item Code'),
                 textSubmitted: (data) {
                   pItemCode = data;
+                  if (pItemCode.isNotEmpty) {
+                    findProductByCode(pItemCode);
+                  }
                 },
               ),
               const Divider(),
@@ -501,6 +512,9 @@ class _ProductRegisterState extends State<ProductRegister> {
                     border: OutlineInputBorder(), labelText: 'Item Name'),
                 textSubmitted: (data) {
                   pItemName = data;
+                  if (pItemName.isNotEmpty) {
+                    findProduct(pItemName);
+                  }
                 },
               ),
               const Divider(),
@@ -1106,96 +1120,110 @@ class _ProductRegisterState extends State<ProductRegister> {
     api.getProductByName(pItemName).then((value) {
       if (value != null) {
         if (value.slno > 0) {
-          setState(() {
-            itemNameController.text = value.itemname;
-            productId = value.slno.toString();
-            pHSNCode = value.hsncode;
-            hsnController.text = value.hsncode;
-            pItemCode = value.itemcode;
-            itemCodeController.text = value.itemcode;
-            unit = DataJson(id: value.unitId, name: '');
-            mfr = DataJson(id: value.unitId, name: '');
-            category = DataJson(id: value.unitId, name: '');
-            subCategory = DataJson(id: value.unitId, name: '');
-            cessController.text = value.cess.toString();
-            addCessController.text = value.adcessper.toString();
-            mrpController.text = value.mrp.toString();
-            active = value.active == 1 ? true : false;
-            wholeSaleController.text = value.wsrate.toString();
-            retailController.text = value.retail.toString();
-            spRetailController.text = value.sprate.toString();
-            branchController.text = value.branch.toString();
-            dropDownStockValuation = value.stockvaluation.trim().toUpperCase();
-            dropDownTypeOfSupply = value.typeofsupply.trim().toUpperCase();
-            packingController.text = value.packing.toString();
-            rack = DataJson(id: value.rackId, name: '');
-            reOrderLevelController.text = value.reorder.toString();
-            maxOrderLevelController.text = value.maxorder.toString();
-
-            isExist = true;
-          });
-
-          api
-              .getTaxGroupData(value.tax.toString(), 'sales_list/taxGroup')
-              .then((taxData) {
-            setState(() {
-              taxGroup = taxData
-                  .firstWhere((element) => element.name == value.taxGroupName);
-            });
-          });
-
-          // api.getSalesListData('filter', 'sales_list/unit');
+          addData(value);
         }
       }
     });
   }
 
-  void findProductByCode(String pItemName) {
-    api.getProductByName(pItemName).then((value) {
+  void findProductByCode(String itemCode) {
+    api.getProductByCode(itemCode).then((value) {
       if (value != null) {
-        if (value.slno > 0) {
-          setState(() {
-            itemNameController.text = value.itemname;
-            productId = value.slno.toString();
-            pHSNCode = value.hsncode;
-            hsnController.text = value.hsncode;
-            pItemCode = value.itemcode;
-            itemCodeController.text = value.itemcode;
-            unit = DataJson(id: value.unitId, name: '');
-            mfr = DataJson(id: value.unitId, name: '');
-            category = DataJson(id: value.unitId, name: '');
-            subCategory = DataJson(id: value.unitId, name: '');
-            cessController.text = value.cess.toString();
-            addCessController.text = value.adcessper.toString();
-            mrpController.text = value.mrp.toString();
-            active = value.active == 1 ? true : false;
-            wholeSaleController.text = value.wsrate.toString();
-            retailController.text = value.retail.toString();
-            spRetailController.text = value.sprate.toString();
-            branchController.text = value.branch.toString();
-            dropDownStockValuation = value.stockvaluation.trim().toUpperCase();
-            dropDownTypeOfSupply = value.typeofsupply.trim().toUpperCase();
-            packingController.text = value.packing.toString();
-            rack = DataJson(id: value.rackId, name: '');
-            reOrderLevelController.text = value.reorder.toString();
-            maxOrderLevelController.text = value.maxorder.toString();
-
-            isExist = true;
-          });
-
-          api
-              .getTaxGroupData(value.tax.toString(), 'sales_list/taxGroup')
-              .then((taxData) {
-            setState(() {
-              taxGroup = taxData
-                  .firstWhere((element) => element.name == value.taxGroupName);
-            });
-          });
-
-          // api.getSalesListData('filter', 'sales_list/unit');
-        }
+        addData(value);
       }
     });
+  }
+
+  addData(ProductRegisterModel value) {
+    setState(() {
+      productId = value.slno.toString();
+      pItemName = value.itemname;
+      itemNameController.text = value.itemname;
+      pHSNCode = value.hsncode;
+      hsnController.text = value.hsncode;
+      pItemCode = value.itemcode;
+      itemCodeController.text = value.itemcode;
+      if (value.unitId > 0) {
+        unit = unitModel.firstWhere((element) => element.id == value.unitId,
+            orElse: () => DataJson(id: value.unitId, name: ''));
+      }
+      if (value.mfrId > 0) {
+        mfr = DataJson(id: value.mfrId, name: '');
+      }
+      if (value.catagoryId > 0) {
+        category = DataJson(id: value.catagoryId, name: '');
+      }
+      if (value.subcatagoryId > 0) {
+        subCategory = DataJson(id: value.subcatagoryId, name: '');
+      }
+      cessController.text = value.cess.toString();
+      addCessController.text = value.adcessper.toString();
+      mrpController.text = value.mrp.toString();
+      active = value.active == 1 ? true : false;
+      wholeSaleController.text = value.wsrate.toString();
+      retailController.text = value.retail.toString();
+      spRetailController.text = value.sprate.toString();
+      branchController.text = value.branch.toString();
+      dropDownStockValuation = value.stockvaluation.trim().toUpperCase();
+      dropDownTypeOfSupply = value.typeofsupply.trim().toUpperCase();
+      packingController.text = value.packing.toString();
+      if (value.rackId > 0) {
+        rack = DataJson(id: value.rackId, name: '');
+      }
+      reOrderLevelController.text = value.reorder.toString();
+      maxOrderLevelController.text = value.maxorder.toString();
+
+      isExist = true;
+    });
+
+    if (value.taxGroupName.isNotEmpty) {
+      api
+          .getTaxGroupData(value.tax.toString(), 'sales_list/taxGroup')
+          .then((taxData) {
+        setState(() {
+          taxGroup = taxData
+              .firstWhere((element) => element.name == value.taxGroupName);
+        });
+      });
+    }
+
+    if (value.mfrId > 0) {
+      api.getSalesListData('', 'sales_list/manufacture').then((data) {
+        setState(() {
+          mfr = data.firstWhere((element) => element.id == value.mfrId,
+              orElse: () => DataJson(id: value.mfrId, name: ''));
+        });
+      });
+    }
+
+    if (value.rackId > 0) {
+      api.getSalesListData('', 'sales_list/rack').then((data) {
+        setState(() {
+          rack = data.firstWhere((element) => element.id == value.rackId,
+              orElse: () => DataJson(id: value.rackId, name: ''));
+        });
+      });
+    }
+
+    if (value.catagoryId > 0) {
+      api.getSalesListData('', 'sales_list/category').then((data) {
+        setState(() {
+          category = data.firstWhere(
+              (element) => element.id == value.catagoryId,
+              orElse: () => DataJson(id: value.catagoryId, name: ''));
+        });
+      });
+    }
+
+    if (value.subcatagoryId > 0) {
+      api.getSalesListData('', 'sales_list/subCategory').then((data) {
+        setState(() {
+          subCategory = data.firstWhere(
+              (element) => element.id == value.subcatagoryId,
+              orElse: () => DataJson(id: value.subcatagoryId, name: ''));
+        });
+      });
+    }
   }
 
   TextEditingController _textFieldController = TextEditingController();
@@ -1333,47 +1361,6 @@ class _ProductRegisterState extends State<ProductRegister> {
               },
             ),
           ],
-        );
-      },
-    );
-  }
-}
-
-class CustomDelegateProduct extends SearchDelegate<List<DataJson>> {
-  List<DataJson> data;
-  CustomDelegateProduct(this.data);
-
-  @override
-  List<Widget> buildActions(BuildContext context) =>
-      [IconButton(icon: const Icon(Icons.clear), onPressed: () => query = '')];
-
-  @override
-  Widget buildLeading(BuildContext context) => IconButton(
-      icon: const Icon(Icons.chevron_left),
-      onPressed: () => close(context, []));
-
-  @override
-  Widget buildResults(BuildContext context) => Container();
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    List<DataJson> listToShow;
-    if (query.isNotEmpty) {
-      listToShow = data
-          .where((e) =>
-              e.name.toLowerCase().contains(query.toLowerCase()) &&
-              e.name.toLowerCase().startsWith(query.toLowerCase()))
-          .toList();
-    } else {
-      listToShow = data;
-    }
-    return ListView.builder(
-      itemCount: listToShow.length,
-      itemBuilder: (_, i) {
-        var noun = listToShow[i];
-        return ListTile(
-          title: Text(noun.name),
-          onTap: () => close(context, [noun]),
         );
       },
     );

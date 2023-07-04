@@ -4147,26 +4147,26 @@ class _SaleState extends State<Sale> {
     cartItem[index].quantity = qty;
 
     cartItem[index].gross = CommonService.getRound(
-        2, (cartItem[index].rRate * cartItem[index].quantity));
+        4, (cartItem[index].rRate * cartItem[index].quantity));
     cartItem[index].net = CommonService.getRound(
-        2, (cartItem[index].gross - cartItem[index].rDiscount));
+        4, (cartItem[index].gross - cartItem[index].rDiscount));
     if (cartItem[index].taxP > 0) {
       cartItem[index].tax = CommonService.getRound(
-          2, ((cartItem[index].net * cartItem[index].taxP) / 100));
+          4, ((cartItem[index].net * cartItem[index].taxP) / 100));
       if (companyTaxMode == 'INDIA') {
         cartItem[index].fCess = 0; //isKFC
         //     ? CommonService.getRound(decimal, ((cartItem[index].net * kfcPer) / 100))
         //     : 0;
         double csPer = cartItem[index].taxP / 2;
-        double csGST = CommonService.getRound(
-            decimal, ((cartItem[index].net * csPer) / 100));
+        double csGST =
+            CommonService.getRound(4, ((cartItem[index].net * csPer) / 100));
         cartItem[index].sGST = csGST;
         cartItem[index].cGST = csGST;
       } else if (companyTaxMode == 'GULF') {
         cartItem[index].cGST = 0;
         cartItem[index].sGST = 0;
         cartItem[index].iGST = CommonService.getRound(
-            2, ((cartItem[index].net * cartItem[index].taxP) / 100));
+            4, ((cartItem[index].net * cartItem[index].taxP) / 100));
       } else {
         cartItem[index].cGST = 0;
         cartItem[index].sGST = 0;
@@ -4174,7 +4174,7 @@ class _SaleState extends State<Sale> {
       }
     }
     cartItem[index].total = CommonService.getRound(
-        2,
+        4,
         (cartItem[index].net +
             cartItem[index].cGST +
             cartItem[index].sGST +
@@ -4183,7 +4183,7 @@ class _SaleState extends State<Sale> {
             cartItem[index].fCess +
             cartItem[index].adCess));
     cartItem[index].profitPer = CommonService.getRound(
-        2,
+        4,
         cartItem[index].total -
             cartItem[index].rPRate * cartItem[index].quantity);
 
@@ -4278,12 +4278,12 @@ class _SaleState extends State<Sale> {
       }
     }
     cartItem[index].gross = CommonService.getRound(
-        2, (cartItem[index].rRate * cartItem[index].quantity));
+        4, (cartItem[index].rRate * cartItem[index].quantity));
     cartItem[index].net = CommonService.getRound(
-        2, (cartItem[index].gross - cartItem[index].rDiscount));
+        4, (cartItem[index].gross - cartItem[index].rDiscount));
     if (cartItem[index].taxP > 0) {
       cartItem[index].tax = CommonService.getRound(
-          2, ((cartItem[index].net * cartItem[index].taxP) / 100));
+          4, ((cartItem[index].net * cartItem[index].taxP) / 100));
       if (companyTaxMode == 'INDIA') {
         cartItem[index].fCess = 0;
         double csPer = cartItem[index].taxP / 2;
@@ -4295,7 +4295,7 @@ class _SaleState extends State<Sale> {
         cartItem[index].cGST = 0;
         cartItem[index].sGST = 0;
         cartItem[index].iGST = CommonService.getRound(
-            2, ((cartItem[index].net * cartItem[index].taxP) / 100));
+            4, ((cartItem[index].net * cartItem[index].taxP) / 100));
       } else {
         cartItem[index].cGST = 0;
         cartItem[index].sGST = 0;
@@ -4303,7 +4303,7 @@ class _SaleState extends State<Sale> {
       }
     }
     cartItem[index].total = CommonService.getRound(
-        2,
+        4,
         (cartItem[index].net +
             cartItem[index].cGST +
             cartItem[index].sGST +
@@ -4312,7 +4312,7 @@ class _SaleState extends State<Sale> {
             cartItem[index].fCess +
             cartItem[index].adCess));
     cartItem[index].profitPer = CommonService.getRound(
-        2,
+        4,
         cartItem[index].total -
             cartItem[index].rPRate * cartItem[index].quantity);
 
@@ -5098,7 +5098,7 @@ class _SaleState extends State<Sale> {
               tax: double.tryParse(product['CGST'].toString()) +
                   double.tryParse(product['SGST'].toString()) +
                   double.tryParse(product['IGST'].toString()),
-              taxP: 0,
+              taxP: double.tryParse(product['igst'].toString()),
               unitId: product['Unit'],
               unitValue: double.tryParse(product['UnitValue'].toString()),
               pRate: double.tryParse(product['Prate'].toString()),
