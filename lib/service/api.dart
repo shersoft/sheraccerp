@@ -180,7 +180,7 @@ Future<ApiResponse> createUser(
 
   try {
     final response = await dio.post(
-        pref.getString('api' ?? '127.0.0.1:80/api/') + '' + 'companyUser/add',
+        pref.getString('api' ?? '127.0.0.1:80/api/') + apiV + 'companyUser/add',
         data: json.encode({
           'registrationId': regId,
           'username': username,
@@ -196,27 +196,23 @@ Future<ApiResponse> createUser(
         _apiResponse.Data = null;
         break;
       case 201:
-        List<dynamic> output = response.data;
-        var output1 = output[0];
-        if (output1[0]['error'].toString() == 'Saved') {
+        var output = response.data;
+        if (output['error'].toString() == 'Saved') {
           _apiResponse.Data = null;
         } else {
-          List<dynamic> output = response.data;
-          var output1 = output[0];
-          Map<dynamic, dynamic> responseBody = output1[0];
+          var output = response.data;
+          Map<dynamic, dynamic> responseBody = output;
           _apiResponse.ApiError = ApiError.fromJson(responseBody);
         }
         break;
       case 401:
-        List<dynamic> output = response.data;
-        var output1 = output[0];
-        Map<dynamic, dynamic> responseBody = output1[0];
+        var output = response.data;
+        Map<dynamic, dynamic> responseBody = output;
         _apiResponse.ApiError = ApiError.fromJson(responseBody);
         break;
       default:
-        List<dynamic> output = response.data;
-        var output1 = output[0];
-        Map<dynamic, dynamic> responseBody = output1[0];
+        var output = response.data;
+        Map<dynamic, dynamic> responseBody = output;
         _apiResponse.ApiError = ApiError.fromJson(responseBody);
         break;
     }

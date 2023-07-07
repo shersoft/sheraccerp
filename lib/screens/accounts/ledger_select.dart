@@ -1,6 +1,7 @@
 // @dart = 2.11
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:sheraccerp/models/ledger_parent.dart';
 import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/screens/report_view.dart';
@@ -31,6 +32,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
   String radioButtonItem = 'All';
   int rdId = 1;
   String selectedGroupValues = '', selectedStockValue = '';
+  dynamic selectedItem;
 
   @override
   void initState() {
@@ -173,34 +175,48 @@ class _LedgerSelectState extends State<LedgerSelect> {
         _loading = false;
         List<dynamic> groupValues = [
           {'id': '1', 'name': 'Normal'},
-          {'id': '2', 'name': 'Invoice Wise'}
+          // {'id': '2', 'name': 'Invoice Wise'},
+          // {'id': '3', 'name': 'Detailed'},
+          // {'id': '4', 'name': 'Due Bill Date'},
         ];
-        List<dynamic> stockValue = [
-          {'id': '1', 'name': 'SUPPLIERS'},
-          {'id': '2', 'name': 'ACCOUNTS PAYABLE'}
-        ];
+        // List<dynamic> stockValue = [
+        //   {'id': '13', 'name': 'SUPPLIERS'},
+        //   {'id': '9', 'name': 'ACCOUNTS PAYABLE'}
+        // ];
         setState(() {
           items.addAll(groupValues);
-          itemDisplay.addAll(stockValue);
           selectedGroupValues = items[0]['name'];
-          selectedStockValue = itemDisplay[0]['name'];
+        });
+        api.getLedgerGroupAll().then((value) {
+          setState(() {
+            itemDisplay.addAll(value);
+            selectedItem = itemDisplay.firstWhere(
+                (element) => element.name == 'SUPPLIERS',
+                orElse: (() => {'id': 13, 'name': 'SUPPLIERS'}));
+            selectedStockValue = selectedItem.name;
+          });
         });
       } else if (mode == 'Receivable') {
         statement = 'ReceivblesDebitOnly';
         _loading = false;
         List<dynamic> groupValues = [
           {'id': '1', 'name': 'Normal'},
-          {'id': '2', 'name': 'Invoice Wise'}
-        ];
-        List<dynamic> stockValue = [
-          {'id': '1', 'name': 'CUSTOMERS'},
-          {'id': '2', 'name': 'ACCOUNTS RECEIVABLE'}
+          // {'id': '2', 'name': 'Invoice Wise'},
+          // {'id': '3', 'name': 'Detailed'},
+          // {'id': '4', 'name': 'Due Bill Date'},
         ];
         setState(() {
           items.addAll(groupValues);
-          itemDisplay.addAll(stockValue);
           selectedGroupValues = items[0]['name'];
-          selectedStockValue = itemDisplay[0]['name'];
+        });
+        api.getLedgerGroupAll().then((value) {
+          setState(() {
+            itemDisplay.addAll(value);
+            selectedItem = itemDisplay.firstWhere(
+                (element) => element.name == 'CUSTOMERS',
+                orElse: (() => {'id': 12, 'name': 'CUSTOMERS'}));
+            selectedStockValue = selectedItem.name;
+          });
         });
       } else if (mode == 'selectedLedger') {
         setState(() {
@@ -1850,21 +1866,39 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                     const SizedBox(
                                                                         width:
                                                                             10),
-                                                                    Expanded(
-                                                                      child: DropdownButton(
-                                                                          items: itemDisplay.map((dynamic items) {
-                                                                            return DropdownMenuItem(
-                                                                              value: items['name'],
-                                                                              child: Text(items['name'].toString()),
-                                                                            );
-                                                                          }).toList(),
-                                                                          value: selectedStockValue,
-                                                                          onChanged: ((value) {
-                                                                            setState(() {
-                                                                              selectedStockValue = value;
-                                                                            });
-                                                                          })),
-                                                                    ),
+                                                                    itemDisplay
+                                                                            .isEmpty
+                                                                        ? DropdownButton(
+                                                                            items:
+                                                                                [
+                                                                              LedgerParent(id: 12, name: 'CUSTOMERS'),
+                                                                            ].map((dynamic items) {
+                                                                              return DropdownMenuItem(
+                                                                                value: items,
+                                                                                child: Text(items.name.toString()),
+                                                                              );
+                                                                            }).toList(),
+                                                                            value: selectedItem,
+                                                                            onChanged: ((value) {
+                                                                              setState(() {
+                                                                                selectedItem = value;
+                                                                              });
+                                                                            }))
+                                                                        : Expanded(
+                                                                            child: DropdownButton(
+                                                                                items: itemDisplay.map((dynamic items) {
+                                                                                  return DropdownMenuItem(
+                                                                                    value: items,
+                                                                                    child: Text(items.name.toString()),
+                                                                                  );
+                                                                                }).toList(),
+                                                                                value: selectedItem,
+                                                                                onChanged: ((value) {
+                                                                                  setState(() {
+                                                                                    selectedItem = value;
+                                                                                  });
+                                                                                })),
+                                                                          ),
                                                                   ],
                                                                 ),
                                                                 TextButton(
@@ -1874,12 +1908,12 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                         context,
                                                                         MaterialPageRoute(
                                                                             builder: (BuildContext context) => ReportView(
-                                                                                '0',
+                                                                                selectedItem.id.toString(),
                                                                                 '1',
                                                                                 DateUtil.dateDMY2YMD(fromDate),
                                                                                 DateUtil.dateDMY2YMD(toDate),
                                                                                 mode,
-                                                                                selectedStockValue,
+                                                                                selectedItem.name,
                                                                                 mode == 'Payable' ? 'ReceivblesCreditOnly' : 'ReceivblesDebitOnly',
                                                                                 // selectedGroupValues == '' ? '' : '',
                                                                                 salesMan,
