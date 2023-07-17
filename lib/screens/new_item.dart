@@ -179,7 +179,7 @@ class NewProductPage extends StatelessWidget {
                                             ),
                                             decoration: InputDecoration(
                                               border: InputBorder.none,
-                                              hintText: "Product Name",
+                                              label: const Text("Product Name"),
                                               filled: true,
                                               fillColor: Colors.transparent,
                                               hintStyle: TextStyle(
@@ -245,7 +245,7 @@ class NewProductPage extends StatelessWidget {
                                                   ),
                                                   decoration: InputDecoration(
                                                     border: InputBorder.none,
-                                                    hintText: "Cost",
+                                                    label: const Text("Cost"),
                                                     filled: true,
                                                     fillColor:
                                                         Colors.transparent,
@@ -313,7 +313,8 @@ class NewProductPage extends StatelessWidget {
                                                   ),
                                                   decoration: InputDecoration(
                                                     border: InputBorder.none,
-                                                    hintText: "Quantity",
+                                                    label:
+                                                        const Text("Quantity"),
                                                     filled: true,
                                                     fillColor:
                                                         Colors.transparent,
@@ -367,7 +368,7 @@ class NewProductPage extends StatelessWidget {
                                             ),
                                             decoration: InputDecoration(
                                               border: InputBorder.none,
-                                              hintText: "Company",
+                                              label: const Text("Company"),
                                               filled: true,
                                               fillColor: Colors.transparent,
                                               hintStyle: TextStyle(
@@ -416,7 +417,7 @@ class NewProductPage extends StatelessWidget {
                                             ),
                                             decoration: InputDecoration(
                                               border: InputBorder.none,
-                                              hintText: "Description",
+                                              label: const Text("Description"),
                                               filled: true,
                                               fillColor: Colors.transparent,
                                               hintStyle: TextStyle(

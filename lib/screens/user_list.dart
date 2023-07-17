@@ -140,14 +140,14 @@ class _UserScreenState extends State<UserScreen> {
                     textInputAction: TextInputAction.go,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(),
-                        hintText: "Enter new password"),
+                        label: Text("Enter new password")),
                   ),
                   TextField(
                     controller: _textFieldController1,
                     textInputAction: TextInputAction.go,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(),
-                        hintText: "Confirm password"),
+                        label: Text("Confirm password")),
                   ),
                 ],
               ),
@@ -342,7 +342,7 @@ class _UserScreenState extends State<UserScreen> {
                   child: const Text('Change Password')),
               // TextFormField(
               //   decoration: InputDecoration(
-              //     border: OutlineInputBorder(),hintText: "Password",
+              //     border: OutlineInputBorder(),label: Text("Password"),
               //     suffixIcon: IconButton(
               //       icon: const Icon(Icons.visibility),
               //       color: kPrimaryColor,

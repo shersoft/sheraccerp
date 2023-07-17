@@ -269,7 +269,7 @@ class _PriceListState extends State<PriceList> {
           title: const Text('Search'),
           content: TextField(
             // controller: _textFieldController,
-            decoration: const InputDecoration(hintText: "type here"),
+            decoration: const InputDecoration(label: Text("type here")),
             onChanged: (value) => _search = value,
           ),
           actions: <Widget>[

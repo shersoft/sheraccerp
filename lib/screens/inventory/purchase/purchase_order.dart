@@ -480,7 +480,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                               child: TextField(
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
-                                  hintText: 'Search...',
+                                  label: Text('Search...'),
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
@@ -696,7 +696,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                               child: TextField(
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
-                                  hintText: 'Search...',
+                                  label: Text('Search...'),
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
@@ -1217,7 +1217,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
             TextField(
               controller: controllerQuantity,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Quantity'),
+                  border: OutlineInputBorder(), label: Text('Quantity')),
               keyboardType: TextInputType.number,
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1237,7 +1237,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
               onFind: (String filter) =>
                   dio.getSalesListData(filter, 'sales_list/unit'),
               dropdownSearchDecoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Select Unit'),
+                  border: OutlineInputBorder(), label: Text('Select Unit')),
               onChanged: (dynamic data) {
                 unit = data;
                 calculate();
@@ -1248,7 +1248,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
             TextField(
               controller: controllerRate,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'P Rate'),
+                  border: OutlineInputBorder(), label: Text('P Rate')),
               keyboardType: TextInputType.number,
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1281,7 +1281,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                   child: TextField(
                     controller: controllerDiscountPer,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: ' % '),
+                        border: OutlineInputBorder(), label: Text(' % ')),
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1302,7 +1302,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                   child: TextField(
                     controller: controllerDiscount,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'discount'),
+                        border: OutlineInputBorder(), label: Text('discount')),
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1329,7 +1329,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                   child: TextField(
                     controller: controllerMrp,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'MRP'),
+                        border: OutlineInputBorder(), label: Text('MRP')),
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1350,7 +1350,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                   child: TextField(
                     controller: controllerRetail,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Retail'),
+                        border: OutlineInputBorder(), label: Text('Retail')),
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1379,7 +1379,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                   child: TextField(
                     controller: controllerWholeSale,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'WholeSale'),
+                        border: OutlineInputBorder(), label: Text('WholeSale')),
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1400,7 +1400,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                   child: TextField(
                     controller: controllerBranch,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Branch'),
+                        border: OutlineInputBorder(), label: Text('Branch')),
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1586,7 +1586,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                           allow: true, replacementString: '.')
                     ],
                     decoration: const InputDecoration(
-                      hintText: 'Cash Paid: ',
+                      label: Text('Cash Paid: '),
                       border: OutlineInputBorder(),
                     ),
                     controller: cashPaidController,

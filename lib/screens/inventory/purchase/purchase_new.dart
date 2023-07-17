@@ -426,7 +426,7 @@ class LedgerWidget extends StatelessWidget {
                               child: TextField(
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
-                                  hintText: 'Search...',
+                                  label: Text('Search...'),
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();

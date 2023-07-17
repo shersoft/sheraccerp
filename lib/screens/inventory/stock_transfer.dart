@@ -598,7 +598,7 @@ class _StockTransferState extends State<StockTransfer> {
                                 child: TextField(
                                   decoration: const InputDecoration(
                                     border: OutlineInputBorder(),
-                                    hintText: 'Search...',
+                                    label: Text('Search...'),
                                   ),
                                   onChanged: (text) {
                                     text = text.toLowerCase();
@@ -1129,8 +1129,9 @@ class _StockTransferState extends State<StockTransfer> {
               controller: controllerQuantity,
               textAlign: TextAlign.right,
               decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  hintText: 'Available Quantity is ${product.quantity}'),
+                border: const OutlineInputBorder(),
+                label: Text('Available Quantity is ${product.quantity}'),
+              ),
               keyboardType: TextInputType.number,
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1149,7 +1150,7 @@ class _StockTransferState extends State<StockTransfer> {
               controller: controllerRate,
               textAlign: TextAlign.right,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'P Rate'),
+                  border: OutlineInputBorder(), label: Text('P Rate')),
               keyboardType: TextInputType.number,
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1182,7 +1183,7 @@ class _StockTransferState extends State<StockTransfer> {
                     controller: controllerMrp,
                     textAlign: TextAlign.right,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'MRP'),
+                        border: OutlineInputBorder(), label: Text('MRP')),
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1204,7 +1205,7 @@ class _StockTransferState extends State<StockTransfer> {
                     controller: controllerRetail,
                     textAlign: TextAlign.right,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Retail'),
+                        border: OutlineInputBorder(), label: Text('Retail')),
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1234,7 +1235,7 @@ class _StockTransferState extends State<StockTransfer> {
                     controller: controllerWholeSale,
                     textAlign: TextAlign.right,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'WholeSale'),
+                        border: OutlineInputBorder(), label: Text('WholeSale')),
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1256,7 +1257,7 @@ class _StockTransferState extends State<StockTransfer> {
                     controller: controllerBranch,
                     textAlign: TextAlign.right,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Branch'),
+                        border: OutlineInputBorder(), label: Text('Branch')),
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),

@@ -273,47 +273,47 @@ class _ProfileState extends State<Profile> {
             TextField(
               controller: _nameC,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Name'),
+                  border: OutlineInputBorder(), labelText: 'Name'),
             ),
             TextField(
               controller: _add1C,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Address 1'),
+                  border: OutlineInputBorder(), labelText: 'Address 1'),
             ),
             TextField(
               controller: _add2C,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Address 2'),
+                  border: OutlineInputBorder(), label: Text('Address 2')),
             ),
             TextField(
               controller: _add3C,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Address 3'),
+                  border: OutlineInputBorder(), label: Text('Address 3')),
             ),
             TextField(
               controller: _add4C,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Address 4'),
+                  border: OutlineInputBorder(), label: Text('Address 4')),
             ),
             TextField(
               controller: _add5C,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Address 5'),
+                  border: OutlineInputBorder(), label: Text('Address 5')),
             ),
             TextField(
               controller: _taxNoC,
               decoration: InputDecoration(
-                  border: OutlineInputBorder(), hintText: _taxNoHint),
+                  border: OutlineInputBorder(), label: Text(_taxNoHint)),
             ),
             TextField(
               controller: _emailC,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Mail Id'),
+                  border: OutlineInputBorder(), label: Text('Mail Id')),
             ),
             TextField(
               controller: _mobileC,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Mobile No'),
+                  border: OutlineInputBorder(), label: Text('Mobile No')),
             ),
             Row(
               // mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -345,17 +345,17 @@ class _ProfileState extends State<Profile> {
             TextField(
               controller: _pinC,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'PinCode'),
+                  border: OutlineInputBorder(), label: Text('PinCode')),
             ),
             TextField(
               controller: _sCurrencyC,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Currency'),
+                  border: OutlineInputBorder(), label: Text('Currency')),
             ),
             TextField(
               controller: _sNameC,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Second Name'),
+                  border: OutlineInputBorder(), label: Text('Second Name')),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -381,12 +381,12 @@ class _ProfileState extends State<Profile> {
             TextField(
               controller: _telephoneC,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Telephone'),
+                  border: OutlineInputBorder(), label: Text('Telephone')),
             ),
             TextField(
               controller: _tinC,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Tin No'),
+                  border: OutlineInputBorder(), label: Text('Tin No')),
             ),
           ],
         ),

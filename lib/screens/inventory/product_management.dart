@@ -221,7 +221,7 @@ class _ProductManagementState extends State<ProductManagement> {
                             controller: controllerOBarcode,
                             decoration: const InputDecoration(
                                 border: OutlineInputBorder(),
-                                hintText: 'Old Barcode'),
+                                label: Text('Old Barcode')),
                             onChanged: (value) {
                               setState(() {
                                 // editableRate = true;
@@ -241,7 +241,7 @@ class _ProductManagementState extends State<ProductManagement> {
                                   controller: controllerMrp,
                                   decoration: const InputDecoration(
                                       border: OutlineInputBorder(),
-                                      hintText: 'MRP'),
+                                      label: Text('MRP')),
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [
                                     FilteringTextInputFormatter(
@@ -265,7 +265,7 @@ class _ProductManagementState extends State<ProductManagement> {
                                   controller: controllerRetail,
                                   decoration: const InputDecoration(
                                       border: OutlineInputBorder(),
-                                      hintText: 'Retail'),
+                                      label: Text('Retail')),
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [
                                     FilteringTextInputFormatter(
@@ -298,7 +298,7 @@ class _ProductManagementState extends State<ProductManagement> {
                                   controller: controllerWholeSale,
                                   decoration: const InputDecoration(
                                       border: OutlineInputBorder(),
-                                      hintText: 'WholeSale'),
+                                      label: Text('WholeSale')),
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [
                                     FilteringTextInputFormatter(
@@ -323,7 +323,7 @@ class _ProductManagementState extends State<ProductManagement> {
                                   controller: controllerBranch,
                                   decoration: const InputDecoration(
                                       border: OutlineInputBorder(),
-                                      hintText: 'Branch'),
+                                      label: Text('Branch')),
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [
                                     FilteringTextInputFormatter(

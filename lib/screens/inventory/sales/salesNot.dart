@@ -428,7 +428,7 @@ class _SalesState extends State<Sales> {
             child: TextField(
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                hintText: 'Search...',
+                labelText: 'Search...',
               ),
               onChanged: (text) {
                 text = text.toLowerCase();

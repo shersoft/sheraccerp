@@ -293,7 +293,7 @@ class Report extends StatelessWidget {
               onFind: (String filter) =>
                   api.getSalesListData(filter, 'sales_list/location'),
               dropdownSearchDecoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: "Select Branch"),
+                  border: OutlineInputBorder(), labelText: "Select Branch"),
               onChanged: (dynamic data) {
                 location = data;
               },

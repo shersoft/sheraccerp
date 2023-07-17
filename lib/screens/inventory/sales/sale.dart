@@ -24,6 +24,7 @@ import 'package:sheraccerp/screens/inventory/sales/previous_bill.dart';
 import 'package:sheraccerp/screens/inventory/sales/sales_return.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
+import 'package:sheraccerp/service/generate_e_invoice.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/color_palette.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
@@ -42,6 +43,7 @@ class Sale extends StatefulWidget {
 class _SaleState extends State<Sale> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   List<SalesType> salesTypeDisplay = [];
+  dynamic salesData;
   bool _defaultSale = false,
       thisSale = false,
       _isLoading = false,
@@ -1407,7 +1409,7 @@ class _SaleState extends State<Sale> {
                               child: TextField(
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
-                                  hintText: 'Search...',
+                                  label: Text('Search...'),
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
@@ -1550,7 +1552,7 @@ class _SaleState extends State<Sale> {
                               child: TextField(
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
-                                  hintText: 'Search...',
+                                  label: Text('Search...'),
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
@@ -1789,7 +1791,7 @@ class _SaleState extends State<Sale> {
                           child: TextField(
                             decoration: const InputDecoration(
                               border: OutlineInputBorder(),
-                              hintText: 'Customer Name : ',
+                              label: Text('Customer Name : '),
                             ),
                             onChanged: (value) {
                               setState(() {
@@ -2144,7 +2146,7 @@ class _SaleState extends State<Sale> {
                         child: TextField(
                           decoration: const InputDecoration(
                               border: OutlineInputBorder(),
-                              hintText: 'Search...'),
+                              label: Text('Search...')),
                           onChanged: (text) {
                             text = text.toLowerCase();
                             setState(() {
@@ -4344,6 +4346,45 @@ class _SaleState extends State<Sale> {
             const SizedBox(
               width: 10,
             ),
+
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.settings, color: blue),
+              onSelected: (value) {
+                setState(() {
+                  if (value == 'Generate E-Way Bill') {
+                    //
+                  } else if (value == 'Generate e-Invoice') {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => GenerateE_Invoice(
+                                  data: salesData,
+                                )));
+                  } else if (value == 'Edit  e-Invoice') {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => GenerateE_Invoice(
+                                  data: salesData,
+                                )));
+                  }
+                });
+              },
+              itemBuilder: (BuildContext context) => [
+                const PopupMenuItem<String>(
+                  value: 'Generate E-Way Bill',
+                  child: Text('Generate E-Way Bill'),
+                ),
+                const PopupMenuItem<String>(
+                  value: 'Generate e-Invoice',
+                  child: Text('Generate e-Invoice'),
+                ),
+                const PopupMenuItem<String>(
+                  value: 'Edit  e-Invoice',
+                  child: Text('Edit  e-Invoice Details'),
+                ),
+              ],
+            ),
             // const Text(
             //   'Cash Bill: ',
             //   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
@@ -4478,7 +4519,7 @@ class _SaleState extends State<Sale> {
                     ],
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      hintText: 'Cash Received : ',
+                      label: Text('Cash Received : '),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -4531,7 +4572,7 @@ class _SaleState extends State<Sale> {
                         child: TextField(
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),
-                            hintText: 'Narration...',
+                            labelText: 'Narration...',
                           ),
                           onChanged: (value) {
                             setState(() {
@@ -4551,7 +4592,7 @@ class _SaleState extends State<Sale> {
                             controller: returnEntryNoController,
                             decoration: const InputDecoration(
                               border: OutlineInputBorder(),
-                              hintText: 'Bill No :',
+                              labelText: 'Bill No :',
                             ),
                             keyboardType: TextInputType.number,
                             inputFormatters: [
@@ -4585,7 +4626,7 @@ class _SaleState extends State<Sale> {
                             controller: returnAmountController,
                             decoration: const InputDecoration(
                               border: OutlineInputBorder(),
-                              hintText: 'Amount :',
+                              labelText: 'Amount :',
                             ),
                             keyboardType: TextInputType.number,
                             inputFormatters: [
@@ -4855,7 +4896,7 @@ class _SaleState extends State<Sale> {
               },
               controller: _controller,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: "value"),
+                  border: OutlineInputBorder(), labelText: "value"),
               keyboardType: TextInputType.number,
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -4911,7 +4952,7 @@ class _SaleState extends State<Sale> {
                 });
               },
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: "barcode"),
+                  border: OutlineInputBorder(), labelText: "barcode"),
               keyboardType: TextInputType.number,
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -5039,6 +5080,7 @@ class _SaleState extends State<Sale> {
 
     api.fetchSalesInvoice(data['Id'], salesTypeData.id).then((value) {
       if (value != null) {
+        salesData = value;
         var information = value['Information'][0];
         var particulars = value['Particulars'];
         // var serialNO = value['SerialNO'];

@@ -11,6 +11,7 @@ import 'package:sheraccerp/models/tax_group_model.dart';
 import 'package:sheraccerp/models/unit_model.dart';
 import 'package:sheraccerp/screens/accounts/ledger.dart';
 import 'package:sheraccerp/service/api_dio.dart';
+import 'package:sheraccerp/service/com_service.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/util/show_confirm_alert_box.dart';
@@ -45,8 +46,6 @@ class _ProductRegisterState extends State<ProductRegister> {
   List<String> itemNameList = [];
   List<String> itemCodeList = [];
   List<dynamic> productData = [];
-  List<String> stockValuationData = ['AVERAGE VALUE', 'LAST PRATE', 'REAL'];
-  List<String> typeOfSupplyData = ['GOODS', 'SERVICE'];
   var pItemCode = '', pItemName = '', pHSNCode = '';
   bool active = true;
   var dropDownStockValuation = 'AVERAGE VALUE', dropDownTypeOfSupply = 'GOODS';
@@ -282,13 +281,16 @@ class _ProductRegisterState extends State<ProductRegister> {
                         ']';
 
                     final body = {'product': data, 'unitDetails': items};
-                    bool _state = await api.editProduct(body);
+                    var result = await api.editProduct(body);
                     setState(() {
                       _isLoading = false;
                     });
-                    _state
-                        ? showInSnackBar('Product Edited')
-                        : showInSnackBar('Error');
+                    if (CommonService().isNumeric(result) &&
+                        int.tryParse(result) > 0) {
+                      showInSnackBar('Product Edited');
+                    } else {
+                      showInSnackBar(result.toString());
+                    }
                   },
                   icon: const Icon(Icons.edit))
               : IconButton(
@@ -395,13 +397,16 @@ class _ProductRegisterState extends State<ProductRegister> {
                         ']';
 
                     final body = {'product': data, 'unitDetails': items};
-                    bool _state = await api.addProduct(body);
+                    var result = await api.addProduct(body);
                     setState(() {
                       _isLoading = false;
                     });
-                    _state
-                        ? showInSnackBar('Product Saved')
-                        : showInSnackBar('Error');
+                    if (CommonService().isNumeric(result) &&
+                        int.tryParse(result) > 0) {
+                      showInSnackBar('Product Saved');
+                    } else {
+                      showInSnackBar(result.toString());
+                    }
                   },
                   icon: const Icon(Icons.save)),
         ],
@@ -523,7 +528,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                 onFind: (String filter) =>
                     api.getTaxGroupData(filter, 'sales_list/taxGroup'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "TaxGroup"),
+                    border: OutlineInputBorder(), label: Text("TaxGroup")),
                 onChanged: (dynamic data) {
                   taxGroup = data;
                 },
@@ -537,7 +542,8 @@ class _ProductRegisterState extends State<ProductRegister> {
                     onFind: (String filter) =>
                         api.getSalesListData(filter, 'sales_list/unit'),
                     dropdownSearchDecoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Select Unit'),
+                        border: OutlineInputBorder(),
+                        label: Text('Select Unit')),
                     onChanged: (dynamic data) {
                       unit = data;
                     },
@@ -562,7 +568,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                     api.getSalesListData(filter, 'sales_list/manufacture'),
                 dropdownSearchDecoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    hintText: 'Select Manufacture'),
+                    label: Text('Select Manufacture')),
                 onChanged: (dynamic data) {
                   mfr = data;
                 },
@@ -575,7 +581,8 @@ class _ProductRegisterState extends State<ProductRegister> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/category'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: 'Select Category'),
+                    border: OutlineInputBorder(),
+                    label: Text('Select Category')),
                 onChanged: (dynamic data) {
                   category = data;
                 },
@@ -589,7 +596,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                     api.getSalesListData(filter, 'sales_list/subCategory'),
                 dropdownSearchDecoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    hintText: 'Select SubCategory'),
+                    label: Text('Select SubCategory')),
                 onChanged: (dynamic data) {
                   subCategory = data;
                 },
@@ -796,7 +803,19 @@ class _ProductRegisterState extends State<ProductRegister> {
                 ],
               ),
               const Divider(),
-              const Text('More'),
+              const Card(
+                elevation: 5,
+                child: Center(
+                    child: Text(
+                  'More',
+                  style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.underline),
+                )),
+              ),
+              const Divider(),
               Row(
                 children: [
                   Expanded(
@@ -823,12 +842,23 @@ class _ProductRegisterState extends State<ProductRegister> {
                           api.getSalesListData(filter, 'sales_list/rack'),
                       dropdownSearchDecoration: const InputDecoration(
                           border: OutlineInputBorder(),
-                          hintText: 'Select Rack'),
+                          label: Text('Select Rack')),
                       onChanged: (dynamic data) {
                         rack = data;
                       },
                       selectedItem: rack,
                       showSearchBox: true,
+                      emptyBuilder: (context, searchEntry) {
+                        return Center(
+                          child: ElevatedButton(
+                              onPressed: () {
+                                searchEntry = '';
+                                rack = DataJson(
+                                    id: -1, name: searchEntry.toUpperCase());
+                              },
+                              child: const Text('add new')),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -1035,7 +1065,8 @@ class _ProductRegisterState extends State<ProductRegister> {
                                   : 0,
                               unitId: dropDownUnitData,
                               pUnitId: dropDownUnitPurchase,
-                              sUnitId: dropDownUnitSale));
+                              sUnitId: dropDownUnitSale,
+                              gatePass: 0));
                         });
                       },
                       child: const Text('Add Unit')),
@@ -1226,7 +1257,7 @@ class _ProductRegisterState extends State<ProductRegister> {
     }
   }
 
-  TextEditingController _textFieldController = TextEditingController();
+  final TextEditingController _textFieldController = TextEditingController();
 
   _reNameNameDialog(BuildContext context) async {
     return showDialog(
@@ -1239,7 +1270,8 @@ class _ProductRegisterState extends State<ProductRegister> {
           ),
           content: TextField(
             controller: _textFieldController,
-            decoration: const InputDecoration(hintText: "Enter New Name"),
+            decoration: const InputDecoration(
+                border: OutlineInputBorder(), label: Text("Enter New Name")),
           ),
           actions: [
             TextButton(
@@ -1291,7 +1323,9 @@ class _ProductRegisterState extends State<ProductRegister> {
           ),
           content: TextField(
             controller: _textFieldController,
-            decoration: const InputDecoration(hintText: "Enter New ItemCode"),
+            decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                label: Text("Enter New ItemCode")),
           ),
           actions: <Widget>[
             TextButton(
@@ -1340,7 +1374,9 @@ class _ProductRegisterState extends State<ProductRegister> {
           title: const Text('ReName HSN'),
           content: TextField(
             controller: _textFieldController,
-            decoration: const InputDecoration(hintText: "Enter New HSN Code"),
+            decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                label: Text("Enter New HSN Code")),
           ),
           actions: <Widget>[
             TextButton(

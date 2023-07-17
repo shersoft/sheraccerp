@@ -15,14 +15,14 @@ import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/progress_hud.dart';
 
-class AlignmentEntry extends StatefulWidget {
-  AlignmentEntry({Key key}) : super(key: key);
+class ServiceEntry extends StatefulWidget {
+  ServiceEntry({Key key}) : super(key: key);
 
   @override
-  State<AlignmentEntry> createState() => _AlignmentEntryState();
+  State<ServiceEntry> createState() => _ServiceEntryState();
 }
 
-class _AlignmentEntryState extends State<AlignmentEntry> {
+class _ServiceEntryState extends State<ServiceEntry> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool thisSale = false, _isLoading = false, buttonEvent = false;
   DioService dio = DioService();
@@ -304,13 +304,13 @@ class _AlignmentEntryState extends State<AlignmentEntry> {
     return Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: const Text("AlignmentEntry"),
+          title: const Text("ServiceEntry"),
           actions: [
             Visibility(
               visible: previewData,
               child: TextButton(
                   child: Text(
-                    previewData ? "New AlignmentEntry" : 'AlignmentEntry',
+                    previewData ? "New ServiceEntry" : 'ServiceEntry',
                     style: const TextStyle(
                         color: Colors.white, fontWeight: FontWeight.bold),
                   ),
@@ -330,7 +330,7 @@ class _AlignmentEntryState extends State<AlignmentEntry> {
             ? Container(
                 child: previousBill(),
               )
-            : const Center(child: Text('Alignment Entry')));
+            : const Center(child: Text('Service Entry')));
   }
 
   final ScrollController _scrollController = ScrollController();
@@ -545,7 +545,7 @@ class _AlignmentEntryState extends State<AlignmentEntry> {
             child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("Empty AlignmentEntry"),
+              const Text("Empty ServiceEntry"),
               TextButton.icon(
                   style: ButtonStyle(
                     backgroundColor:
@@ -559,29 +559,9 @@ class _AlignmentEntryState extends State<AlignmentEntry> {
                     });
                   },
                   icon: const Icon(Icons.shopping_bag),
-                  label: const Text('Take New AlignmentEntry'))
+                  label: const Text('Take New ServiceEntry'))
             ],
           ));
-  }
-
-  showEditDialog(context, dataDynamic) {
-    ConfirmAlertBox(
-        buttonColorForNo: Colors.red,
-        buttonColorForYes: Colors.green,
-        icon: Icons.check,
-        onPressedNo: () {
-          Navigator.of(context).pop();
-        },
-        onPressedYes: () {
-          Navigator.of(context).pop();
-          // fetchEntry(context, dataDynamic);
-        },
-        buttonTextForNo: 'No',
-        buttonTextForYes: 'YES',
-        infoMessage:
-            'Do you want to edit or delete\nRefNo:${dataDynamic['Id']}',
-        title: 'Update',
-        context: context);
   }
 
   int nextWidget = 0;
@@ -738,8 +718,8 @@ class _AlignmentEntryState extends State<AlignmentEntry> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(children: const [
-                          SizedBox(
+                        Row(children: [
+                          const SizedBox(
                             width: 40,
                           ),
                         ]),
@@ -761,7 +741,7 @@ class _AlignmentEntryState extends State<AlignmentEntry> {
                           child: TextField(
                             decoration: const InputDecoration(
                               border: OutlineInputBorder(),
-                              label: Text('Customer Name'),
+                              label: Text('Customer Name : '),
                             ),
                             onChanged: (value) {
                               // setState(() {
@@ -991,6 +971,26 @@ class _AlignmentEntryState extends State<AlignmentEntry> {
         );
       },
     );
+  }
+
+  showEditDialog(context, dataDynamic) {
+    ConfirmAlertBox(
+        buttonColorForNo: Colors.red,
+        buttonColorForYes: Colors.green,
+        icon: Icons.check,
+        onPressedNo: () {
+          Navigator.of(context).pop();
+        },
+        onPressedYes: () {
+          Navigator.of(context).pop();
+          // fetchEntry(context, dataDynamic);
+        },
+        buttonTextForNo: 'No',
+        buttonTextForYes: 'YES',
+        infoMessage:
+            'Do you want to edit or delete\nRefNo:${dataDynamic['Id']}',
+        title: 'Update',
+        context: context);
   }
 
   callNumber(number) async {

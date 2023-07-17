@@ -209,7 +209,7 @@ class _CartPageState extends State<CartPage> {
                 },
                 controller: _controller,
                 decoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "value"),
+                    border: OutlineInputBorder(), label: Text("value")),
                 keyboardType: TextInputType.number,
                 inputFormatters: [
                   FilteringTextInputFormatter(RegExp(r'[0-9]'),

@@ -366,7 +366,7 @@ class _DamageEntryState extends State<DamageEntry> {
                               child: TextField(
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
-                                  hintText: 'Search...',
+                                  label: Text('Search...'),
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
@@ -478,7 +478,7 @@ class _DamageEntryState extends State<DamageEntry> {
                         child: TextField(
                           decoration: const InputDecoration(
                               border: OutlineInputBorder(),
-                              hintText: 'Search...'),
+                              label: Text('Search...')),
                           onChanged: (text) {
                             text = text.toLowerCase();
                             setState(() {
@@ -1497,7 +1497,7 @@ class _DamageEntryState extends State<DamageEntry> {
                     child: TextField(
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
-                        hintText: 'Narration...',
+                        label: Text('Narration...'),
                       ),
                       onChanged: (value) {
                         setState(() {
@@ -1593,7 +1593,7 @@ class _DamageEntryState extends State<DamageEntry> {
               },
               controller: _controller,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: "value"),
+                  border: OutlineInputBorder(), label: Text("value")),
               keyboardType: TextInputType.number,
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),

@@ -35,7 +35,7 @@ class _ProductListState extends State<ProductList> {
             child: TextFormField(
               controller: _searchTextController,
               decoration: const InputDecoration(
-                hintText: "  Search...",
+                label: Text("  Search..."),
                 border: InputBorder.none,
               ),
               validator: (value) {

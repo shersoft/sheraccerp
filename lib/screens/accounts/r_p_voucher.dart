@@ -331,7 +331,7 @@ class _RPVoucherState extends State<RPVoucher> {
                     ],
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      hintText: 'Amount',
+                      label: Text('Amount'),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -361,7 +361,7 @@ class _RPVoucherState extends State<RPVoucher> {
                     ],
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      hintText: 'Discount',
+                      label: Text('Discount'),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -397,7 +397,7 @@ class _RPVoucherState extends State<RPVoucher> {
                     controller: _controllerNarration,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      hintText: 'Narration...',
+                      label: Text('Narration'),
                     ),
                     onChanged: (value) {
                       setState(() {

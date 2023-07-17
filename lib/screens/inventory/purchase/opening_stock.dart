@@ -538,7 +538,7 @@ class _OpeningStockState extends State<OpeningStock> {
                               child: TextField(
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
-                                  hintText: 'Search...',
+                                  label: Text('Search...'),
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
@@ -728,7 +728,7 @@ class _OpeningStockState extends State<OpeningStock> {
                               child: TextField(
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
-                                  hintText: 'Search...',
+                                  label: Text('Search...'),
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
@@ -1281,7 +1281,7 @@ class _OpeningStockState extends State<OpeningStock> {
               controller: controllerQuantity,
               focusNode: _focusNodeQuantity,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Quantity'),
+                  border: OutlineInputBorder(), label: Text('Quantity')),
               keyboardType: TextInputType.number,
               textAlign: TextAlign.right,
               inputFormatters: [
@@ -1301,7 +1301,7 @@ class _OpeningStockState extends State<OpeningStock> {
               onFind: (String filter) =>
                   dio.getSalesListData(filter, 'sales_list/unit'),
               dropdownSearchDecoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Select Unit'),
+                  border: OutlineInputBorder(), label: Text('Select Unit')),
               onChanged: (dynamic data) {
                 unit = data;
                 calculate();
@@ -1313,7 +1313,7 @@ class _OpeningStockState extends State<OpeningStock> {
               controller: controllerRate,
               focusNode: _focusNodeRate,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'P Rate'),
+                  border: OutlineInputBorder(), label: Text('P Rate')),
               keyboardType: TextInputType.number,
               textAlign: TextAlign.right,
               inputFormatters: [
@@ -1347,7 +1347,7 @@ class _OpeningStockState extends State<OpeningStock> {
                     controller: controllerDiscountPer,
                     focusNode: _focusNodeDiscountPer,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: ' % '),
+                        border: OutlineInputBorder(), label: Text(' % ')),
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.right,
                     inputFormatters: [
@@ -1369,7 +1369,7 @@ class _OpeningStockState extends State<OpeningStock> {
                     controller: controllerDiscount,
                     focusNode: _focusNodeDiscount,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'discount'),
+                        border: OutlineInputBorder(), label: Text('discount')),
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.right,
                     inputFormatters: [
@@ -1397,7 +1397,7 @@ class _OpeningStockState extends State<OpeningStock> {
                     controller: controllerMrp,
                     focusNode: _focusNodeMrp,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'MRP'),
+                        border: OutlineInputBorder(), label: Text('MRP')),
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.right,
                     inputFormatters: [
@@ -1419,7 +1419,7 @@ class _OpeningStockState extends State<OpeningStock> {
                     controller: controllerRetail,
                     focusNode: _focusNodeRetail,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Retail'),
+                        border: OutlineInputBorder(), label: Text('Retail')),
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.right,
                     inputFormatters: [
@@ -1449,7 +1449,7 @@ class _OpeningStockState extends State<OpeningStock> {
                     controller: controllerWholeSale,
                     focusNode: _focusNodeWholeSale,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'WholeSale'),
+                        border: OutlineInputBorder(), label: Text('WholeSale')),
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.right,
                     inputFormatters: [
@@ -1471,7 +1471,7 @@ class _OpeningStockState extends State<OpeningStock> {
                     controller: controllerBranch,
                     focusNode: _focusNodeBranch,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Branch'),
+                        border: OutlineInputBorder(), label: Text('Branch')),
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.right,
                     inputFormatters: [

@@ -1,13 +1,15 @@
 // @dart = 2.11
 import 'dart:typed_data';
+import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+import 'package:esc_pos_utils_x/esc_pos_utils_x.dart';
 import 'package:flutter_bluetooth_basic/flutter_bluetooth_basic.dart' as pos;
-import 'package:blue_print_pos/blue_print_pos.dart';
-import 'package:blue_print_pos/models/blue_device.dart';
+// import 'package:blue_print_pos/blue_print_pos.dart';
+// import 'package:blue_print_pos/models/blue_device.dart';
 import 'package:esc_pos_bluetooth/esc_pos_bluetooth.dart';
 
-import 'package:esc_pos_utils/esc_pos_utils.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:image/image.dart' as img;
 import 'package:sheraccerp/models/company.dart';
@@ -31,9 +33,9 @@ class _BtPrintState extends State<BtPrint> {
   List<PrinterBluetooth> _devices = [];
   bool _connected = false;
   bool _isLoading = false;
-  BlueDevice _device;
+  BluetoothDevice _device;
   String tips = 'no device connect';
-  List<BlueDevice> _blueDevices = [];
+  List<BluetoothDevice> _blueDevices = [];
   var companyTaxMode = '';
   int printModel = 2;
 
@@ -45,11 +47,11 @@ class _BtPrintState extends State<BtPrint> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _onScanPressed());
   }
 
-  final BluePrintPos _bluePrintPos = BluePrintPos.instance;
+  final BlueThermalPrinter _bluePrintPos = BlueThermalPrinter.instance;
 
   Future<void> _onScanPressed() async {
     setState(() => _isLoading = true);
-    _bluePrintPos.scan().then((List<BlueDevice> devices) {
+    _bluePrintPos.getBondedDevices().then((List<BluetoothDevice> devices) {
       debugPrint(devices.toString());
       if (devices.isNotEmpty) {
         var map = devices.map((e) {
@@ -144,7 +146,7 @@ class _BtPrintState extends State<BtPrint> {
                               Text(_devices[index].name ?? ''),
                               Text(_devices[index].address ?? ''),
                               Text(
-                                'Click to print a test receipt',
+                                'Click to print receipt',
                                 style: TextStyle(color: Colors.grey[700]),
                               ),
                             ],
@@ -160,7 +162,7 @@ class _BtPrintState extends State<BtPrint> {
           }),
       floatingActionButton: FutureBuilder(
         future: getResult(),
-        initialData: [],
+        initialData: const [],
         builder: (c, snapshot) {
           if (snapshot.hasData) {
             return FloatingActionButton(
@@ -197,7 +199,9 @@ class _BtPrintState extends State<BtPrint> {
     } else if (printerSize == "3") {
       PaperSize.mm80;
     } else if (printerSize == "4") {
-      PaperSize.mm80;
+      PaperSize.mm112;
+    } else if (printerSize == "5") {
+      PaperSize.mm58;
     }
 
     if (widget.data.isNotEmpty) {

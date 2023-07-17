@@ -397,7 +397,7 @@ class _PurchaseListState extends State<PurchaseList> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/location'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: 'Select Branch'),
+                    border: OutlineInputBorder(), label: Text('Select Branch')),
                 onChanged: (dynamic data) {
                   locationId = data;
                 },
@@ -445,7 +445,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/ItemCode'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: 'Select Item Code'),
+                    border: OutlineInputBorder(),
+                    label: Text('Select Item Code')),
                 onChanged: (dynamic data) {
                   itemId = data;
                 },
@@ -457,7 +458,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/itemName'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: 'Select Item Name'),
+                    border: OutlineInputBorder(),
+                    label: Text('Select Item Name')),
                 onChanged: (dynamic data) {
                   itemName = data;
                 },
@@ -469,7 +471,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/supplier'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: 'Select Supplier'),
+                    border: OutlineInputBorder(),
+                    label: Text('Select Supplier')),
                 onChanged: (dynamic data) {
                   supplier = data;
                 },
@@ -481,7 +484,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/manufacture'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: 'Select Item MFR'),
+                    border: OutlineInputBorder(),
+                    label: Text('Select Item MFR')),
                 onChanged: (dynamic data) {
                   mfr = data;
                 },
@@ -493,7 +497,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/category'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: 'Select Category'),
+                    border: OutlineInputBorder(),
+                    label: Text('Select Category')),
                 onChanged: (dynamic data) {
                   category = data;
                 },
@@ -506,7 +511,7 @@ class _PurchaseListState extends State<PurchaseList> {
                     api.getSalesListData(filter, 'sales_list/subCategory'),
                 dropdownSearchDecoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    hintText: 'Select SubCategory'),
+                    label: Text('Select SubCategory')),
                 onChanged: (dynamic data) {
                   subCategory = data;
                 },
@@ -518,7 +523,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/salesMan'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: 'Select SalesMan'),
+                    border: OutlineInputBorder(),
+                    label: Text('Select SalesMan')),
                 onChanged: (dynamic data) {
                   salesMan = data;
                 },
@@ -530,7 +536,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/project'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: 'Select Project'),
+                    border: OutlineInputBorder(),
+                    label: Text('Select Project')),
                 onChanged: (dynamic data) {
                   project = data;
                 },
@@ -542,7 +549,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/taxGroup'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: 'Select TaxGroup'),
+                    border: OutlineInputBorder(),
+                    label: Text('Select TaxGroup')),
                 onChanged: (dynamic data) {
                   taxGroup = data;
                 },

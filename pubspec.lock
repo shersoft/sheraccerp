@@ -50,19 +50,14 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.0"
-  blue_print_pos:
-    dependency: "direct main"
-    description:
-      name: blue_print_pos
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.0.13"
   blue_thermal_printer:
     dependency: "direct main"
     description:
-      name: blue_thermal_printer
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: "."
+      ref: HEAD
+      resolved-ref: "3fad8c082e402311140a65386af1b764f8887dcd"
+      url: "https://github.com/safvanp/blue_thermal_printer_plus.git"
+    source: git
     version: "1.2.3"
   boolean_selector:
     dependency: transitive
@@ -162,13 +157,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.2.0"
-  convert:
-    dependency: transitive
-    description:
-      name: convert
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.1.1"
   crypto:
     dependency: transitive
     description:
@@ -261,19 +249,19 @@ packages:
     source: hosted
     version: "0.4.1"
   esc_pos_utils:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: esc_pos_utils
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.1.0"
-  esc_pos_utils_plus:
-    dependency: transitive
+  esc_pos_utils_x:
+    dependency: "direct main"
     description:
-      name: esc_pos_utils_plus
+      name: esc_pos_utils_x
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.1+6"
+    version: "1.1.0"
   fake_async:
     dependency: transitive
     description:
@@ -377,13 +365,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.1"
-  flutter_blue:
-    dependency: transitive
-    description:
-      name: flutter_blue
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.8.0"
   flutter_bluetooth_basic:
     dependency: transitive
     description:
@@ -828,13 +809,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "4.2.4"
-  protobuf:
-    dependency: transitive
-    description:
-      name: protobuf
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.1.0"
   provider:
     dependency: "direct main"
     description:
@@ -856,13 +830,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.1"
-  qr_flutter:
-    dependency: transitive
-    description:
-      name: qr_flutter
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "4.0.0"
   rxdart:
     dependency: transitive
     description:

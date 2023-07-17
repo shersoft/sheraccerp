@@ -42,6 +42,8 @@ import 'package:sheraccerp/screens/dash_report/expense_list.dart';
 import 'package:sheraccerp/screens/home/home.dart';
 import 'package:sheraccerp/screens/accounts/ledger.dart';
 import 'package:sheraccerp/screens/accounts/ledger_select.dart';
+import 'package:sheraccerp/screens/inventory/service_entry.dart';
+import 'package:sheraccerp/screens/inventory/stock_management.dart';
 import 'package:sheraccerp/screens/login_screen.dart';
 import 'package:sheraccerp/screens/home/owner_home.dart';
 import 'package:sheraccerp/screens/passcode_authentication.dart';
@@ -52,7 +54,7 @@ import 'package:sheraccerp/screens/inventory/purchase/purchase.dart';
 import 'package:sheraccerp/screens/inventory/purchase/purchase_list.dart';
 import 'package:sheraccerp/screens/report_view.dart';
 import 'package:sheraccerp/screens/inventory/sales/sale.dart';
-import 'package:sheraccerp/screens/inventory/sales/sales.dart';
+import 'package:sheraccerp/screens/inventory/sales/salesNot.dart';
 import 'package:sheraccerp/screens/inventory/sales/sales_list.dart';
 import 'package:sheraccerp/screens/inventory/sales/sales_return.dart';
 import 'package:sheraccerp/screens/inventory/sales/sales_return_list.dart';
@@ -137,6 +139,7 @@ class MyApp extends StatelessWidget {
               '/expense_list': (context) => ExpenseList(null, 0),
               '/sales': (context) => const Sale(),
               '/AlignmentEntry': (context) => AlignmentEntry(),
+              '/ServiceEntry': (context) => ServiceEntry(),
               '/purchase': (context) => const Purchase(),
               '/add_product': (context) => const ProductsListPage(),
               '/cart': (context) => const CartPage(),
@@ -180,7 +183,7 @@ class MyApp extends StatelessWidget {
               '/purchaseReturn': (context) => const PurchaseReturn(),
               '/purchaseOrder': (context) => const PurchaseOrder(),
               '/stockTransfer': (context) => const StockTransfer(),
-              '/sale': (context) => const Sales(),
+              '/StockManagement': (context) => const StockManagement(),
               '/InvRPVoucher': (context) => const InvRPVoucher(),
               '/InvoiceModels': (context) => const InvoiceModels(),
               '/ProductManagement': (context) => ProductManagement(),

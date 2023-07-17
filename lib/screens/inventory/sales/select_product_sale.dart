@@ -120,7 +120,7 @@ class _AddProductsaleState extends State<AddProductsale> {
                         child: TextField(
                           decoration: const InputDecoration(
                               border: OutlineInputBorder(),
-                              hintText: 'Search...'),
+                              labelText: 'Search...'),
                           onChanged: (text) {
                             text = text.toLowerCase();
                             setState(() {
@@ -902,7 +902,7 @@ class _ProductAddSaleState extends State<ProductAddSale> {
     //                       },
     //                       keyboardType: TextInputType.number,
     //                       decoration: const InputDecoration(border: OutlineInputBorder(),
-    //                           labelText: 'Quantity', hintText: '0.0'),
+    //                           labelText: 'Quantity', labelText: '0.0'),
     //                       onChanged: (value) {
     //                         if (value.isNotEmpty) {
     //                           bool cartQ = false;
@@ -1034,7 +1034,7 @@ class _ProductAddSaleState extends State<ProductAddSale> {
     //                         // autofocus: true,
     //                         keyboardType: TextInputType.number,
     //                         decoration: const InputDecoration(border: OutlineInputBorder(),
-    //                             labelText: 'Price', hintText: '0.0'),
+    //                             labelText: 'Price', labelText: '0.0'),
     //                         onChanged: (value) {
     //                           if (value.isNotEmpty) {
     //                             if (isMinimumRate) {
@@ -1171,7 +1171,7 @@ class _ProductAddSaleState extends State<ProductAddSale> {
     //                         // autofocus: true,
     //                         keyboardType: TextInputType.number,
     //                         decoration: const InputDecoration(border: OutlineInputBorder(),
-    //                             labelText: 'Discount', hintText: '0.0'),
+    //                             labelText: 'Discount', labelText: '0.0'),
     //                         onChanged: (value) {
     //                           setState(() {
     //                             calculate();

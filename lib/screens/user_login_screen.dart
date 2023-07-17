@@ -147,7 +147,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                                               Icons.person,
                                               color: kPrimaryColor,
                                             ),
-                                            hintText: "User Name",
+                                            label: Text("User Name"),
                                             border: InputBorder.none,
                                           ),
                                           keyboardType: TextInputType.text,
@@ -175,7 +175,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                                         ),
                                         child: TextFormField(
                                           decoration: InputDecoration(
-                                            hintText: "Password",
+                                            label: const Text("Password"),
                                             icon: const Icon(
                                               Icons.lock,
                                               color: kPrimaryColor,

@@ -15,12 +15,26 @@ import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/models/unit_model.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 
+const gstBaseApi = "https://api.mastergst.com";
+const gstApi = "https://api.mastergst.com/einvoice/authenticate"; //get
+const gstAuthApi = "/einvoice/authenticate"; //get
+const gstDetailsApi = "/einvoice/type/GSTNDETAILS/version/V1_03"; //get
+const gstSyncCpApi = "/einvoice/type/SYNC_GSTIN_FROMCP/version/V1_03"; //get
+const gstIrnApi = "/einvoice/type/GENERATE/version/V1_03"; //post
+const gstEInvDetailsApi = "/einvoice/type/GETIRN/version/V1_03"; //get
+const gstIrnByDocApi = "/einvoice/type/GETIRNBYDOCDETAILS/version/V1_03"; //get
+const gstCancelIrnApi = "/einvoice/type/CANCEL/version/V1_03"; //post
+const gstEWayBillApi = "/einvoice/type/GENERATE_EWAYBILL/version/V1_03"; //post
+const gstEWayDetailsByIrnApi =
+    "/einvoice/type/GETEWAYBILLIRN/version/V1_03"; //get
+const gstB2BQRDetailsApi = "/einvoice/qrcode";
+
 bool isDarkTheme = false;
 bool isUsingHive = true;
 String deviceId = '0';
 const String isApp = '1';
 
-const String apiV = 'v17/';
+const String apiV = 'v18/';
 const currencySymbol = '₹';
 // const bool isVariant = false;
 const bool isKFC = false;
@@ -74,6 +88,13 @@ String companyTaxMode = '';
 List<dynamic> dataDynamic = [];
 var argumentsPass;
 Uint8List byteImageQr;
+const List<String> stockValuationData = [
+  'AVERAGE VALUE',
+  'LAST PRATE',
+  'REAL',
+  'MRP CHANGE'
+];
+const List<String> typeOfSupplyData = ['GOODS', 'SERVICE'];
 
 class ComSettings {
   fetchOtherData() {

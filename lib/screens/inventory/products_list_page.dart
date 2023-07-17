@@ -503,7 +503,7 @@ class _ProductsListPageState extends State<ProductsListPage> {
       padding: const EdgeInsets.all(8.0),
       child: TextField(
         decoration: const InputDecoration(
-            border: OutlineInputBorder(), hintText: 'Search...'),
+            border: OutlineInputBorder(), label: Text('Search...')),
         onChanged: (text) {
           text = text.toLowerCase();
           setState(() {
@@ -1088,7 +1088,7 @@ class _ProductsListPageState extends State<ProductsListPage> {
                 },
                 controller: _controller,
                 decoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "value"),
+                    border: OutlineInputBorder(), label: Text("value")),
                 keyboardType: TextInputType.number,
                 inputFormatters: [
                   FilteringTextInputFormatter(RegExp(r'[0-9]'),

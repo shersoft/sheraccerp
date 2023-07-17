@@ -252,7 +252,8 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
             maxHeight: 300,
             onFind: (String filter) => api.getLedgerData(filter),
             dropdownSearchDecoration: const InputDecoration(
-                border: OutlineInputBorder(), hintText: 'Select Ledger Name'),
+                border: OutlineInputBorder(),
+                label: Text('Select Ledger Name')),
             onChanged: (LedgerModel data) {
               ledData = data;
               setState(() {
@@ -449,7 +450,7 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
                     ],
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      hintText: 'Amount',
+                      label: Text('Amount'),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -476,7 +477,7 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
                 ],
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  hintText: 'Discount',
+                  label: Text('Discount'),
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -507,7 +508,7 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
                 controller: _controllerNarration,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  hintText: 'Narration...',
+                  label: Text('Narration...'),
                 ),
                 onChanged: (value) {
                   setState(() {

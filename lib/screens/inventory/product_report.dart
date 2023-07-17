@@ -364,7 +364,7 @@ class _ProductReportState extends State<ProductReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/unit'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: 'Select Unit'),
+                    border: OutlineInputBorder(), label: Text('Select Unit')),
                 onChanged: (dynamic data) {
                   unit = data;
                 },
@@ -376,7 +376,7 @@ class _ProductReportState extends State<ProductReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/manufacture'),
                 dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Item MFR"),
+                    const InputDecoration(label: Text("Select Item MFR")),
                 onChanged: (dynamic data) {
                   mfr = data;
                 },
@@ -388,7 +388,8 @@ class _ProductReportState extends State<ProductReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/category'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Select Category"),
+                    border: OutlineInputBorder(),
+                    label: Text("Select Category")),
                 onChanged: (dynamic data) {
                   category = data;
                 },
@@ -401,7 +402,7 @@ class _ProductReportState extends State<ProductReport> {
                     api.getSalesListData(filter, 'sales_list/subCategory'),
                 dropdownSearchDecoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    hintText: "Select SubCategory"),
+                    label: Text("Select SubCategory")),
                 onChanged: (dynamic data) {
                   subCategory = data;
                 },
@@ -429,7 +430,8 @@ class _ProductReportState extends State<ProductReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/taxGroup'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Select TaxGroup"),
+                    border: OutlineInputBorder(),
+                    label: Text("Select TaxGroup")),
                 onChanged: (dynamic data) {
                   taxGroup = data;
                 },
@@ -441,7 +443,8 @@ class _ProductReportState extends State<ProductReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'Product/getHsnCodeList'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Select HSN Code"),
+                    border: OutlineInputBorder(),
+                    label: Text("Select HSN Code")),
                 onChanged: (dynamic data) {
                   hsnCode = data;
                 },
@@ -454,7 +457,7 @@ class _ProductReportState extends State<ProductReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/rack'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Select Rack"),
+                    border: OutlineInputBorder(), label: Text("Select Rack")),
                 onChanged: (dynamic data) {
                   rack = data;
                 },
@@ -468,7 +471,7 @@ class _ProductReportState extends State<ProductReport> {
                     child: TextField(
                       controller: taxPController,
                       decoration: const InputDecoration(
-                          border: OutlineInputBorder(), hintText: 'TAX %'),
+                          border: OutlineInputBorder(), label: Text('TAX %')),
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -483,7 +486,7 @@ class _ProductReportState extends State<ProductReport> {
                       child: TextField(
                     controller: reorderController,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Reorder'),
+                        border: OutlineInputBorder(), label: Text('Reorder')),
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),

@@ -310,9 +310,61 @@ class InventoryMenu extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: const [
+                  Icon(
+                    Icons.miscellaneous_services_rounded,
+                    color: green,
+                    size: 90.0,
+                  ),
+                  Text(
+                    'Service Entry',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            Navigator.pushNamed(context, '/ServiceEntry');
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: const [
+                  Icon(
+                    Icons.add_task,
+                    color: red,
+                    size: 90.0,
+                  ),
+                  Text(
+                    'Stock Management',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            Navigator.pushNamed(context, '/StockManagement');
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: const [
                   // Icon(
-                  //   Icons.shopping_bag_sharp,
-                  //   color: green[500],
+                  //   Icons.miscellaneous_services_rounded,
+                  //   color: green,
                   //   size: 90.0,
                   // ),
                   Text(
@@ -325,10 +377,7 @@ class InventoryMenu extends StatelessWidget {
             ),
           ),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => AboutSherSoft()),
-            );
+            //
           },
         ),
       ],

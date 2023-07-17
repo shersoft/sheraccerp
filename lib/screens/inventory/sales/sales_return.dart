@@ -843,7 +843,7 @@ class _SalesReturnState extends State<SalesReturn> {
                               child: TextField(
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
-                                  hintText: 'Search...',
+                                  labelText: 'Search...',
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
@@ -1139,7 +1139,7 @@ class _SalesReturnState extends State<SalesReturn> {
                         child: TextField(
                           decoration: const InputDecoration(
                               border: OutlineInputBorder(),
-                              hintText: 'Search...'),
+                              labelText: 'Search...'),
                           onChanged: (text) {
                             text = text.toLowerCase();
                             setState(() {
@@ -2254,7 +2254,7 @@ class _SalesReturnState extends State<SalesReturn> {
                       child: TextField(
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
-                          hintText: 'Narration...',
+                          labelText: 'Narration...',
                         ),
                         onChanged: (value) {
                           setState(() {

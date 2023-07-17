@@ -73,6 +73,15 @@ class _StockReportState extends State<StockReport> {
                     onPressed: () {
                       setState(() {
                         loadReport = false;
+                        location = DataJson(id: 1, name: defaultLocation);
+                        itemId = null;
+                        itemName = null;
+                        supplier = null;
+                        mfr = null;
+                        category = null;
+                        subCategory = null;
+                        rack = null;
+                        taxGroup = null;
                       });
                     }),
                 PopupMenuButton(
@@ -303,7 +312,9 @@ class _StockReportState extends State<StockReport> {
           };
 
     return FutureBuilder<List<dynamic>>(
-      future: api.getStockReport(dataJson),
+      future: title == 'Stock'
+          ? api.getStockReport(dataJson)
+          : api.getStockLedgerReport(dataJson),
       builder: (ctx, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
@@ -564,7 +575,7 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/location'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: 'Select Branch'),
+                    border: OutlineInputBorder(), label: Text('Select Branch')),
                 onChanged: (dynamic data) {
                   location = data;
                 },
@@ -610,7 +621,8 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/ItemCode'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: 'Select Item Code'),
+                    border: OutlineInputBorder(),
+                    label: Text('Select Item Code')),
                 onChanged: (dynamic data) {
                   itemId = data;
                 },
@@ -622,7 +634,8 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/itemName'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: 'Select Item Name'),
+                    border: OutlineInputBorder(),
+                    label: Text('Select Item Name')),
                 onChanged: (dynamic data) {
                   itemName = data;
                 },
@@ -634,7 +647,8 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/manufacture'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: 'Select Item MFR'),
+                    border: OutlineInputBorder(),
+                    label: Text('Select Item MFR')),
                 onChanged: (dynamic data) {
                   mfr = data;
                 },
@@ -646,7 +660,8 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/category'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: 'Select Category'),
+                    border: OutlineInputBorder(),
+                    label: Text('Select Category')),
                 onChanged: (dynamic data) {
                   category = data;
                 },
@@ -659,7 +674,7 @@ class _StockReportState extends State<StockReport> {
                     api.getSalesListData(filter, 'sales_list/subCategory'),
                 dropdownSearchDecoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    hintText: 'Select SubCategory'),
+                    label: Text('Select SubCategory')),
                 onChanged: (dynamic data) {
                   subCategory = data;
                 },
@@ -671,7 +686,7 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/rack'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Select Rack"),
+                    border: OutlineInputBorder(), label: Text("Select Rack")),
                 onChanged: (dynamic data) {
                   rack = data;
                 },
@@ -683,7 +698,8 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/taxGroup'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Select TaxGroup"),
+                    border: OutlineInputBorder(),
+                    label: Text("Select TaxGroup")),
                 onChanged: (dynamic data) {
                   taxGroup = data;
                 },
@@ -695,7 +711,8 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/supplier'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Select Supplier"),
+                    border: OutlineInputBorder(),
+                    label: Text("Select Supplier")),
                 onChanged: (dynamic data) {
                   supplier = data;
                 },
@@ -707,7 +724,7 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/unit'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Select Unit"),
+                    border: OutlineInputBorder(), label: Text("Select Unit")),
                 onChanged: (dynamic data) {
                   unit = data;
                 },
@@ -770,7 +787,7 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/location'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Select Branch"),
+                    border: OutlineInputBorder(), label: Text("Select Branch")),
                 onChanged: (dynamic data) {
                   location = data;
                 },
@@ -812,7 +829,8 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/ItemCode'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Select Item Code"),
+                    border: OutlineInputBorder(),
+                    label: Text("Select Item Code")),
                 onChanged: (dynamic data) {
                   itemId = data;
                 },
@@ -824,7 +842,8 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/itemName'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Select Item Name"),
+                    border: OutlineInputBorder(),
+                    label: Text("Select Item Name")),
                 onChanged: (dynamic data) {
                   itemName = data;
                 },
@@ -836,7 +855,8 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/manufacture'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Select Item MFR"),
+                    border: OutlineInputBorder(),
+                    label: Text("Select Item MFR")),
                 onChanged: (dynamic data) {
                   mfr = data;
                 },
@@ -848,7 +868,8 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/category'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Select Category"),
+                    border: OutlineInputBorder(),
+                    label: Text("Select Category")),
                 onChanged: (dynamic data) {
                   category = data;
                 },
@@ -861,7 +882,7 @@ class _StockReportState extends State<StockReport> {
                     api.getSalesListData(filter, 'sales_list/subCategory'),
                 dropdownSearchDecoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    hintText: "Select SubCategory"),
+                    label: Text("Select SubCategory")),
                 onChanged: (dynamic data) {
                   subCategory = data;
                 },
@@ -873,7 +894,7 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/rack'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Select Rack"),
+                    border: OutlineInputBorder(), label: Text("Select Rack")),
                 onChanged: (dynamic data) {
                   rack = data;
                 },
@@ -885,7 +906,8 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/taxGroup'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Select TaxGroup"),
+                    border: OutlineInputBorder(),
+                    label: Text("Select TaxGroup")),
                 onChanged: (dynamic data) {
                   taxGroup = data;
                 },
@@ -897,7 +919,8 @@ class _StockReportState extends State<StockReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/supplier'),
                 dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Select Supplier"),
+                    border: OutlineInputBorder(),
+                    label: Text("Select Supplier")),
                 onChanged: (dynamic data) {
                   supplier = data;
                 },

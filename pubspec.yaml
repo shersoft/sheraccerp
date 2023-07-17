@@ -37,7 +37,11 @@ dependencies:
   # syncfusion_flutter_pdfviewer:
   pdf_viewer_plugin:
   printing:
-  esc_pos_utils: ^1.0.0
+  # esc_pos_utils: ^1.0.0
+  # flutter_esc_pos_utils:
+  #   git:
+  #     url: https://github.com/safvanp/flutter_esc_pos_utils_plus.git
+  esc_pos_utils_x: ^1.1.0
   esc_pos_bluetooth:
   dio:
   #  data_tables:
@@ -69,8 +73,11 @@ dependencies:
   sqflite:
   charset_converter: ^2.1.0
   #  printer problem solving
-  blue_thermal_printer: ^1.2.0
-  blue_print_pos:
+  # blue_thermal_printer: ^1.2.0
+  blue_thermal_printer:
+    git:
+      url: https://github.com/safvanp/blue_thermal_printer_plus.git
+  # blue_print_pos:                                                                         
   csv: ^5.0.1
   form_field_validator: ^1.1.0
   permission_handler: ^10.2.0
