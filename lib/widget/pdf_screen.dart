@@ -14,20 +14,6 @@ class PDFScreen extends StatelessWidget {
   final List<String> paths = [];
   @override
   Widget build(BuildContext context) {
-    //   return PDFViewerScaffold(
-    //       appBar: AppBar(
-    //         title: Text("PDF Document"),
-    //         actions: <Widget>[
-    //           IconButton(
-    //             icon: Icon(Icons.share),
-    //             onPressed: () {
-    //               paths.add(pathPDF);
-    //               urlFileShare(context, text, subject, paths);
-    //             },
-    //           ),
-    //         ],
-    //       ),
-    //       path: pathPDF);
     return Scaffold(
         appBar: AppBar(
           title: const Text("PDF Document"),

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'package:pdf/widgets.dart';
 
 import 'package:sheraccerp/app_settings_page.dart';
 import 'package:sheraccerp/models/company.dart';
@@ -422,7 +423,17 @@ class ComSettings {
             ? true
             : false;
   }
+
+  static billLineValue(int d) {
+    int result = 0;
+    result = d - 1;
+    printLines = result;
+    return result;
+  }
 }
+
+Document documentPDF;
+int printLines;
 
 class UnitSettings {
   static getUnitName(int id) {
