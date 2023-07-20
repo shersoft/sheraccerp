@@ -2438,10 +2438,6 @@ Future<pw.Document> makePDF(
 
   final pdf = pw.Document();
   var _pageFormat = PdfPageFormat.a4;
-  var _base = await PdfGoogleFonts.openSansRegular();
-  var _bold = await PdfGoogleFonts.openSansBold();
-  var _icons = await PdfGoogleFonts.materialIcons();
-  var _italic = await PdfGoogleFonts.openSansItalic();
 
   if (model == 2) {
     taxSale
@@ -5084,7 +5080,7 @@ Future<pw.Document> makePDF(
     int col = 11;
     //GST
     pdf.addPage(pw.MultiPage(
-      pageTheme: _buildTheme(_pageFormat, _base, _bold, _italic),
+      pageTheme: _buildTheme(_pageFormat),
       /*company*/
       maxPages: 10,
       header: (context) => pw.Column(children: [
@@ -5281,7 +5277,7 @@ Future<pw.Document> makePDF(
                   ]),
                   pw.TableRow(children: [
                     pw.Text(
-                      ' Name:        ${dataInformation['ToName']}',
+                      'Name:        ${dataInformation['ToName']}',
                       textAlign: pw.TextAlign.left,
                       style: const pw.TextStyle(
                         fontSize: 9.0,
@@ -5307,8 +5303,8 @@ Future<pw.Document> makePDF(
                     pw.RichText(
                       text: pw.TextSpan(
                           text: dataLedger['add2'].toString().isEmpty
-                              ? ' Address:  ' + dataLedger['add1']
-                              : ' Address:  ' +
+                              ? 'Address:  ' + dataLedger['add1']
+                              : 'Address:  ' +
                                   dataLedger['add1'] +
                                   '\n' +
                                   dataLedger['add2'],
@@ -5334,23 +5330,6 @@ Future<pw.Document> makePDF(
                     ),
                     pw.SizedBox(height: 1 * PdfPageFormat.mm),
                   ]),
-                  // pw.TableRow(children: [
-                  //   pw.Text(
-                  //     '                   KOOTHATTUKULAM ERNAKULAM',
-                  //     textAlign: pw.TextAlign.left,
-                  //     style: const pw.TextStyle(
-                  //       fontSize: 8.0,
-                  //     ),
-                  //   ),
-                  //   pw.Text(
-                  //     '  ',
-                  //     textAlign: pw.TextAlign.left,
-                  //     style: const pw.TextStyle(
-                  //       fontSize: 8.0,
-                  //     ),
-                  //   ),
-                  //   pw.SizedBox(height: 1 * PdfPageFormat.mm),
-                  // ]),
                   pw.TableRow(children: [
                     pw.Text(
                       ' Mobile:     ${dataLedger['Mobile']}',
@@ -5407,7 +5386,7 @@ Future<pw.Document> makePDF(
       ]),
       build: (context) => [
         pw.Table(
-          border: pw.TableBorder.all(width: 0.2),
+          border: pw.TableBorder.all(width: 0.7),
           defaultColumnWidth: const pw.IntrinsicColumnWidth(),
           children: [
             pw.TableRow(
@@ -5516,171 +5495,285 @@ Future<pw.Document> makePDF(
             for (var i = 0; i < dataParticulars.length; i++)
               // dataParticulars
               pw.TableRow(children: [
-                pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
+                // pw.Column(
+                //     crossAxisAlignment: pw.CrossAxisAlignment.end,
+                //     mainAxisAlignment: pw.MainAxisAlignment.center,
+                //     children: [
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(2.0),
+                  child: pw.Text('${dataParticulars[i]['slno']}',
+                      textAlign: pw.TextAlign.right,
+                      style: const pw.TextStyle(fontSize: 8)),
+                  // pw.Divider(thickness: 1)
+                ),
+                // ]),
+                // pw.Column(
+                //     crossAxisAlignment: pw.CrossAxisAlignment.start,
+                //     mainAxisAlignment: pw.MainAxisAlignment.center,
+                //     children: [
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(2.0),
+                  child: pw.SizedBox(
+                      width: 100,
+                      child: pw.Text(dataParticulars[i]['itemname'],
+                          softWrap: true,
+                          overflow: pw.TextOverflow.clip,
+                          style: const pw.TextStyle(fontSize: 8))),
+                  // pw.Divider(thickness: 1)
+                ),
+                // ]),
+                // pw.Column(
+                //     crossAxisAlignment: pw.CrossAxisAlignment.start,
+                //     mainAxisAlignment: pw.MainAxisAlignment.center,
+                //     children: [
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(2.0),
+                  child: pw.Text(dataParticulars[i]['hsncode'],
+                      style: const pw.TextStyle(fontSize: 8)),
+                  // pw.Divider(thickness: 1)
+                ),
+                // ]),
+                // pw.Column(
+                //     crossAxisAlignment: pw.CrossAxisAlignment.end,
+                //     mainAxisAlignment: pw.MainAxisAlignment.center,
+                //     children: [
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(2.0),
+                  child: pw.Text('${dataParticulars[i]['Qty']}',
+                      textAlign: pw.TextAlign.right,
+                      style: const pw.TextStyle(fontSize: 8)),
+                  // pw.Divider(thickness: 1)
+                ),
+                // ]),
+                // pw.Column(
+                //     crossAxisAlignment: pw.CrossAxisAlignment.center,
+                //     mainAxisAlignment: pw.MainAxisAlignment.center,
+                //     children: [
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(2.0),
+                  child: pw.Text(dataParticulars[i]['unitName'].toString(),
+                      style: const pw.TextStyle(fontSize: 8)),
+                  // pw.Divider(thickness: 1)
+                ),
+                // ]),
+                // pw.Column(
+                //     crossAxisAlignment: pw.CrossAxisAlignment.end,
+                //     mainAxisAlignment: pw.MainAxisAlignment.center,
+                //     children: [
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(2.0),
+                  child: pw.Text(
+                      double.tryParse(dataParticulars[i]['RealRate'].toString())
+                          .toStringAsFixed(decimal),
+                      textAlign: pw.TextAlign.right,
+                      style: const pw.TextStyle(fontSize: 8)),
+                  // pw.Divider(thickness: 1)
+                ),
+                // ]),
+                // pw.Column(
+                //     crossAxisAlignment: pw.CrossAxisAlignment.end,
+                //     mainAxisAlignment: pw.MainAxisAlignment.center,
+                //     children: [
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(2.0),
+                  child: pw.Text(
+                      double.tryParse(dataParticulars[i]['Net']
+                              .toStringAsFixed(decimal))
+                          .toStringAsFixed(decimal),
+                      textAlign: pw.TextAlign.right,
+                      style: const pw.TextStyle(fontSize: 8)),
+                  // pw.Divider(thickness: 1)
+                ),
+                // ]),
+                // pw.Column(
+                //     crossAxisAlignment: pw.CrossAxisAlignment.end,
+                //     mainAxisAlignment: pw.MainAxisAlignment.center,
+                //     children: [
+                pw.Table(
+                    columnWidths: {
+                      0: const pw.FlexColumnWidth(4),
+                      1: const pw.FlexColumnWidth(9),
+                    },
+                    border: pw.TableBorder.symmetric(
+                      outside: pw.BorderSide.none,
+                      inside: const pw.BorderSide(
+                          width: 0.7,
+                          color: PdfColors.black,
+                          style: pw.BorderStyle.solid),
+                    ),
                     children: [
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(2.0),
-                        child: pw.Text('${dataParticulars[i]['slno']}',
-                            style: const pw.TextStyle(fontSize: 8)),
-                        // pw.Divider(thickness: 1)
-                      )
-                    ]),
-                pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
-                    children: [
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(2.0),
-                        child: pw.SizedBox(
-                            width: 100,
-                            child: pw.Text(dataParticulars[i]['itemname'],
-                                softWrap: true,
-                                overflow: pw.TextOverflow.clip,
-                                style: const pw.TextStyle(fontSize: 8))),
-                        // pw.Divider(thickness: 1)
-                      )
-                    ]),
-                pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
-                    children: [
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(2.0),
-                        child: pw.Text(dataParticulars[i]['hsncode'],
-                            style: const pw.TextStyle(fontSize: 8)),
-                        // pw.Divider(thickness: 1)
-                      )
-                    ]),
-                pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
-                    children: [
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(2.0),
-                        child: pw.Text('${dataParticulars[i]['Qty']}',
-                            style: const pw.TextStyle(fontSize: 8)),
-                        // pw.Divider(thickness: 1)
-                      )
-                    ]),
-                pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.center,
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
-                    children: [
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(2.0),
-                        child: pw.Text(
-                            dataParticulars[i]['unitName'].toString(),
-                            style: const pw.TextStyle(fontSize: 8)),
-                        // pw.Divider(thickness: 1)
-                      )
-                    ]),
-                pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
-                    children: [
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(2.0),
-                        child: pw.Text(
-                            double.tryParse(
-                                    dataParticulars[i]['RealRate'].toString())
-                                .toStringAsFixed(decimal),
-                            style: const pw.TextStyle(fontSize: 8)),
-                        // pw.Divider(thickness: 1)
-                      )
-                    ]),
-                pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
-                    children: [
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(2.0),
-                        child: pw.Text(
-                            double.tryParse(
-                                    dataParticulars[i]['Net'].toString())
-                                .toStringAsFixed(decimal),
-                            style: const pw.TextStyle(fontSize: 8)),
-                        // pw.Divider(thickness: 1)
-                      )
-                    ]),
-                pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
-                    children: [
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(2.0),
-                        child: pw.Row(children: [
-                          pw.Text(
-                              '${int.parse(dataParticulars[i]['igst'].toString()) / 2} %',
+                      pw.TableRow(children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(2.0),
+                          child: pw.Text(
+                              '${ComSettings.removeZero(int.parse(dataParticulars[i]['igst'].toString()) / 2)}%',
+                              style: const pw.TextStyle(fontSize: 7)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(2.0),
+                          child: pw.Text(
+                              dataParticulars[i]['CGST']
+                                  .toStringAsFixed(decimal),
+                              textAlign: pw.TextAlign.right,
                               style: const pw.TextStyle(fontSize: 8)),
-                          pw.Text(dataParticulars[i]['CGST'].toString(),
-                              style: const pw.TextStyle(fontSize: 8)),
-                        ]),
-                        // pw.Divider(thickness: 1)
-                      )
+                        )
+                      ]),
                     ]),
-                pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
+                // ]),
+                // pw.Column(
+                //     crossAxisAlignment: pw.CrossAxisAlignment.end,
+                //     mainAxisAlignment: pw.MainAxisAlignment.center,
+                //     children: [
+                pw.Table(
+                    columnWidths: {
+                      0: const pw.FlexColumnWidth(4),
+                      1: const pw.FlexColumnWidth(9),
+                    },
+                    border: pw.TableBorder.symmetric(
+                      outside: pw.BorderSide.none,
+                      inside: const pw.BorderSide(
+                          width: 0.7,
+                          color: PdfColors.black,
+                          style: pw.BorderStyle.solid),
+                    ),
                     children: [
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(2.0),
-                        child: pw.Row(children: [
-                          pw.Text(
-                              '${int.parse(dataParticulars[i]['igst'].toString()) / 2} %',
+                      pw.TableRow(children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(2.0),
+                          child: pw.Text(
+                              '${ComSettings.removeZero(int.parse(dataParticulars[i]['igst'].toString()) / 2)}%',
+                              style: const pw.TextStyle(fontSize: 7)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(2.0),
+                          child: pw.Text(
+                              dataParticulars[i]['SGST']
+                                  .toStringAsFixed(decimal),
+                              textAlign: pw.TextAlign.right,
                               style: const pw.TextStyle(fontSize: 8)),
-                          pw.Text(dataParticulars[i]['SGST'].toString(),
-                              style: const pw.TextStyle(fontSize: 8)),
-                        ]),
-                        // pw.Divider(thickness: 1)
-                      )
+                        )
+                      ]),
                     ]),
-                pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
+                // ]),
+                // pw.Column(
+                //     crossAxisAlignment: pw.CrossAxisAlignment.end,
+                //     mainAxisAlignment: pw.MainAxisAlignment.center,
+                //     children: [
+                pw.Table(
+                    // columnWidths: {
+                    //   0: const pw.FlexColumnWidth(15),
+                    //   1: const pw.FlexColumnWidth(15),
+                    // },
+                    border: pw.TableBorder.symmetric(
+                      outside: pw.BorderSide.none,
+                      inside: const pw.BorderSide(
+                          width: 0.7,
+                          color: PdfColors.black,
+                          style: pw.BorderStyle.solid),
+                    ),
                     children: [
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(2.0),
-                        child: pw.Row(children: [
-                          pw.Text('${dataParticulars[i]['igst']} %',
+                      pw.TableRow(children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(2.0),
+                          child: pw.Text(
+                              '${ComSettings.removeZero(dataParticulars[i]['igst'].toDouble())}%',
+                              style: const pw.TextStyle(fontSize: 7)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(2.0),
+                          child: pw.Text(
+                              dataParticulars[i]['IGST']
+                                  .toStringAsFixed(decimal),
+                              textAlign: pw.TextAlign.right,
                               style: const pw.TextStyle(fontSize: 8)),
-                          pw.Text(dataParticulars[i]['IGST'].toString(),
-                              style: const pw.TextStyle(fontSize: 8)),
-                        ]),
-                        // pw.Divider(thickness: 1)
-                      )
+                        )
+                      ]),
                     ]),
-                pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
-                    children: [
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(2.0),
-                        child: pw.Text(
-                            double.tryParse(
-                                    dataParticulars[i]['Total'].toString())
-                                .toStringAsFixed(decimal),
-                            style: const pw.TextStyle(fontSize: 8)),
-                        // pw.Divider(thickness: 1)
-                      )
-                    ]),
+                // ]),
+                // pw.Column(
+                //     crossAxisAlignment: pw.CrossAxisAlignment.end,
+                //     mainAxisAlignment: pw.MainAxisAlignment.center,
+                //     children: [
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(2.0),
+                  child: pw.Text(
+                      double.tryParse(dataParticulars[i]['Total'].toString())
+                          .toStringAsFixed(decimal),
+                      textAlign: pw.TextAlign.right,
+                      style: const pw.TextStyle(fontSize: 8)),
+                  // pw.Divider(thickness: 1)
+                )
               ]),
+            // ]),
             //add bill total line
             for (var i = 0; i < addLines; i++)
               pw.TableRow(children: [
                 for (var j = 0; j < col; j++)
-                  pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      mainAxisAlignment: pw.MainAxisAlignment.center,
-                      children: [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(2.0),
-                          child: pw.SizedBox(
-                            height: 8,
+                  j == 7 || j == 8
+                      ? pw.Table(
+                          columnWidths: {
+                            0: const pw.FlexColumnWidth(4),
+                            1: const pw.FlexColumnWidth(9),
+                          },
+                          border: pw.TableBorder.symmetric(
+                            outside: pw.BorderSide.none,
+                            inside: const pw.BorderSide(
+                                width: 0.7,
+                                color: PdfColors.black,
+                                style: pw.BorderStyle.solid),
                           ),
-                        )
-                      ]),
+                          children: [
+                            pw.TableRow(children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.SizedBox(
+                                  height: 8,
+                                ),
+                              ),
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.SizedBox(
+                                  height: 8,
+                                ),
+                              )
+                            ]),
+                          ])
+                      : j == 9
+                          ? pw.Table(
+                              border: pw.TableBorder.symmetric(
+                                outside: pw.BorderSide.none,
+                                inside: const pw.BorderSide(
+                                    width: 0.7,
+                                    color: PdfColors.black,
+                                    style: pw.BorderStyle.solid),
+                              ),
+                              children: [
+                                  pw.TableRow(children: [
+                                    pw.Padding(
+                                      padding: const pw.EdgeInsets.all(2.0),
+                                      child: pw.SizedBox(
+                                        height: 8,
+                                      ),
+                                    ),
+                                    pw.Padding(
+                                      padding: const pw.EdgeInsets.all(2.0),
+                                      child: pw.SizedBox(
+                                        height: 8,
+                                      ),
+                                    )
+                                  ]),
+                                ])
+                          : pw.Column(
+                              crossAxisAlignment: pw.CrossAxisAlignment.end,
+                              mainAxisAlignment: pw.MainAxisAlignment.center,
+                              children: [
+                                  pw.Padding(
+                                    padding: const pw.EdgeInsets.all(2.0),
+                                    child: pw.SizedBox(
+                                      height: 8,
+                                    ),
+                                  )
+                                ]),
               ]),
             pw.TableRow(children: [
               pw.Column(
@@ -5894,22 +5987,19 @@ Future<pw.Document> makePDF(
                                     softWrap: true,
                                     maxLines: 3,
                                     text: pw.TextSpan(
-                                        style: const pw.TextStyle(
-                                            decoration:
-                                                pw.TextDecoration.underline,
-                                            fontSize: 8),
+                                        style: const pw.TextStyle(fontSize: 8),
                                         text: NumberToWord().convert(
                                             'en',
                                             double.tryParse(dataInformation[
                                                         'GrandTotal']
                                                     .toString())
                                                 .round())))),
-                            pw.SizedBox(height: 1 * PdfPageFormat.mm),
+                            pw.SizedBox(height: 5 * PdfPageFormat.mm),
                           ]),
                           pw.TableRow(children: [
                             pw.Text(
-                              'Bank Details',
-                              textAlign: pw.TextAlign.center,
+                              '          Bank Details',
+                              textAlign: pw.TextAlign.left,
                               style: const pw.TextStyle(
                                   decoration: pw.TextDecoration.underline,
                                   fontSize: 8),
@@ -5954,104 +6044,113 @@ Future<pw.Document> makePDF(
                             pw.SizedBox(height: 20 * PdfPageFormat.mm),
                           ]),
                         ]),
-                    pw.Column(children: [
-                      pw.Table(
-                          // columnWidths: {
-                          //   0: const pw.FlexColumnWidth(100),
-                          //   1: const pw.FlexColumnWidth(60),
-                          // },
-                          border: pw.TableBorder.all(width: 0.2
-                              // verticalInside: pw.BorderSide(
-                              //     width: 1,
-                              //     color: PdfColors.black,
-                              //     style: pw.BorderStyle.solid)
-                              ),
-                          children: [
-                            pw.TableRow(children: [
-                              pw.Text(
-                                ' ',
-                                textAlign: pw.TextAlign.center,
-                                style: const pw.TextStyle(
-                                  fontSize: 9,
-                                ),
-                              ),
-                              pw.Text(
-                                '  ',
-                                textAlign: pw.TextAlign.center,
-                                style: const pw.TextStyle(
-                                  fontSize: 9,
-                                ),
-                              ),
-                              pw.SizedBox(height: 1 * PdfPageFormat.mm),
-                            ]),
-                            pw.TableRow(children: [
-                              pw.Text(
-                                'TCS ',
-                                textAlign: pw.TextAlign.center,
-                                style: const pw.TextStyle(
-                                  fontSize: 9,
-                                ),
-                              ),
-                              pw.Text(
-                                '0.00',
-                                textAlign: pw.TextAlign.center,
-                                style: const pw.TextStyle(
-                                  fontSize: 9,
-                                ),
-                              ),
-                              pw.SizedBox(height: 1 * PdfPageFormat.mm),
-                            ]),
-                            pw.TableRow(children: [
-                              pw.Text(
-                                'Round Off ',
-                                textAlign: pw.TextAlign.center,
-                                style: const pw.TextStyle(
-                                  fontSize: 9,
-                                ),
-                              ),
-                              pw.Text(
-                                '0.00',
-                                textAlign: pw.TextAlign.center,
-                                style: const pw.TextStyle(
-                                  fontSize: 9,
-                                ),
-                              ),
-                              pw.SizedBox(height: 1 * PdfPageFormat.mm),
-                            ]),
-                            pw.TableRow(children: [
-                              pw.Text(
-                                'Total ',
-                                textAlign: pw.TextAlign.center,
-                                style: pw.TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: pw.FontWeight.bold),
-                              ),
-                              pw.Text(
-                                '1076.49.00',
-                                textAlign: pw.TextAlign.center,
-                                style: pw.TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: pw.FontWeight.bold),
-                              ),
-                              pw.SizedBox(height: 1 * PdfPageFormat.mm),
-                            ]),
-                          ]),
-                      pw.Text(
-                        'SAN TRADING',
-                        textAlign: pw.TextAlign.center,
-                        style: pw.TextStyle(
-                            fontSize: 10, fontWeight: pw.FontWeight.bold),
-                      ),
-                      pw.SizedBox(height: 10 * PdfPageFormat.mm),
-                      pw.Text(
-                        'Authorised Signatuory',
-                        textAlign: pw.TextAlign.center,
-                        style: const pw.TextStyle(
-                          fontSize: 10,
-                        ),
-                      ),
-                      pw.SizedBox(height: 10 * PdfPageFormat.mm),
-                    ]),
+                    pw.Padding(
+                        padding: pw.EdgeInsets.all(5),
+                        child: pw.Column(children: [
+                          pw.Table(
+                              // columnWidths: {
+                              //   0: const pw.FlexColumnWidth(100),
+                              //   1: const pw.FlexColumnWidth(60),
+                              // },
+                              border: pw.TableBorder.all(width: 0.2
+                                  // verticalInside: pw.BorderSide(
+                                  //     width: 1,
+                                  //     color: PdfColors.black,
+                                  //     style: pw.BorderStyle.solid)
+                                  ),
+                              children: [
+                                pw.TableRow(children: [
+                                  pw.Text(
+                                    '                          ',
+                                    textAlign: pw.TextAlign.center,
+                                    style: const pw.TextStyle(
+                                      fontSize: 9,
+                                    ),
+                                  ),
+                                  pw.Text(
+                                    '                          ',
+                                    textAlign: pw.TextAlign.center,
+                                    style: const pw.TextStyle(
+                                      fontSize: 9,
+                                    ),
+                                  ),
+                                  pw.SizedBox(height: 1 * PdfPageFormat.mm),
+                                ]),
+                                pw.TableRow(children: [
+                                  pw.Text(
+                                    '      TCS                ',
+                                    textAlign: pw.TextAlign.center,
+                                    style: const pw.TextStyle(
+                                      fontSize: 9,
+                                    ),
+                                  ),
+                                  pw.Text(
+                                    double.tryParse(
+                                            dataInformation['TCS'].toString())
+                                        .toStringAsFixed(decimal),
+                                    textAlign: pw.TextAlign.center,
+                                    style: const pw.TextStyle(
+                                      fontSize: 9,
+                                    ),
+                                  ),
+                                  pw.SizedBox(height: 1 * PdfPageFormat.mm),
+                                ]),
+                                pw.TableRow(children: [
+                                  pw.Text(
+                                    'Round Off',
+                                    textAlign: pw.TextAlign.center,
+                                    style: const pw.TextStyle(
+                                      fontSize: 9,
+                                    ),
+                                  ),
+                                  pw.Text(
+                                    double.tryParse(dataInformation['Roundoff']
+                                            .toString())
+                                        .toStringAsFixed(decimal),
+                                    textAlign: pw.TextAlign.center,
+                                    style: const pw.TextStyle(
+                                      fontSize: 9,
+                                    ),
+                                  ),
+                                  pw.SizedBox(height: 1 * PdfPageFormat.mm),
+                                ]),
+                                pw.TableRow(children: [
+                                  pw.Text(
+                                    'Total',
+                                    textAlign: pw.TextAlign.center,
+                                    style: pw.TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                  pw.Text(
+                                    double.tryParse(
+                                            dataInformation['GrandTotal']
+                                                .toString())
+                                        .toStringAsFixed(decimal),
+                                    textAlign: pw.TextAlign.center,
+                                    style: pw.TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                  pw.SizedBox(height: 1 * PdfPageFormat.mm),
+                                ]),
+                              ]),
+                          pw.Text(
+                            companySettings.name,
+                            textAlign: pw.TextAlign.center,
+                            style: pw.TextStyle(
+                                fontSize: 10, fontWeight: pw.FontWeight.bold),
+                          ),
+                          pw.SizedBox(height: 10 * PdfPageFormat.mm),
+                          pw.Text(
+                            'Authorised Signatuory',
+                            textAlign: pw.TextAlign.center,
+                            style: const pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.SizedBox(height: 10 * PdfPageFormat.mm),
+                        ])),
                   ])),
           pw.Text(
             'Certified that the particular given above are true and correct',
@@ -10038,8 +10137,7 @@ pw.Widget _buildFooter(pw.Context context) {
   );
 }
 
-pw.PageTheme _buildTheme(
-    PdfPageFormat pageFormat, pw.Font base, pw.Font bold, pw.Font italic) {
+pw.PageTheme _buildTheme(PdfPageFormat pageFormat) {
   return pw.PageTheme(
     pageFormat: pageFormat,
     buildBackground: (context) => pw.Container(
@@ -10050,11 +10148,11 @@ pw.PageTheme _buildTheme(
     ),
     orientation: pw.PageOrientation.portrait,
     // margin: pw.EdgeInsets.all(10),
-    theme: pw.ThemeData.withFont(
-      base: base,
-      bold: bold,
-      italic: italic,
-    ),
+    // theme: pw.ThemeData.withFont(
+    //   base: base,
+    //   bold: bold,
+    //   italic: italic,
+    // ),
   );
 }
 

@@ -404,8 +404,10 @@ class ComSettings {
     int result;
     if (userControlData.isNotEmpty) {
       bool status = userControlData
-          .where((element) => element.title == name.toUpperCase())
-          .toList()[0]
+          .firstWhere(
+            (element) => element.title == name.toUpperCase(),
+            orElse: () => FormModel(id: 0, title: name, isChecked: false),
+          )
           .isChecked;
       if (status) {
         result = 1;
@@ -429,6 +431,22 @@ class ComSettings {
     result = d - 1;
     printLines = result;
     return result;
+  }
+
+  static String removeZero(double money) {
+    var response = money.toString();
+
+    if (money.toString().split(".").isNotEmpty) {
+      var decimalPoint = money.toString().split(".")[1];
+      if (decimalPoint == "0") {
+        response = response.split(".0").join("");
+      }
+      if (decimalPoint == "00") {
+        response = response.split(".00").join("");
+      }
+    }
+
+    return response;
   }
 }
 
