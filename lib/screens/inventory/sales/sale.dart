@@ -30,6 +30,7 @@ import 'package:sheraccerp/util/color_palette.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/util/dbhelper.dart';
 import 'package:sheraccerp/util/res_color.dart';
+import 'package:sheraccerp/widget/loading.dart';
 import 'package:sheraccerp/widget/progress_hud.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -75,7 +76,9 @@ class _SaleState extends State<Sale> {
       isFreeItem = false,
       isStockProductOnlyInSalesQO = false,
       isSalesManWiseLedger = false,
-      isFreeQty = false;
+      isFreeQty = false,
+      gstVerified = false,
+      gstValidation = false;
   final List<TextEditingController> _controllers = [];
   DateTime now = DateTime.now();
   String formattedDate, _narration = '';
@@ -1903,13 +1906,49 @@ class _SaleState extends State<Sale> {
                                 " ," +
                                 snapshot.data.address4,
                             style: const TextStyle(fontSize: 18)),
-                        const Text(
-                          'Tax No',
-                          style: TextStyle(
-                              color: blue, fontWeight: FontWeight.bold),
-                        ),
-                        Text(snapshot.data.taxNumber,
-                            style: const TextStyle(fontSize: 18)),
+                        snapshot.data.taxNumber.isNotEmpty
+                            ? Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Tax No',
+                                    style: TextStyle(
+                                        color: blue,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(snapshot.data.taxNumber,
+                                      style: const TextStyle(fontSize: 18)),
+                                  gstValidation
+                                      ? const Loading()
+                                      : OutlinedButton.icon(
+                                          onPressed: () {
+                                            setState(() {
+                                              gstValidation = true;
+                                              gstVerified = true;
+                                              //check
+                                              gstValidation = false;
+                                              gstVerified = true;
+                                            });
+                                          },
+                                          label: const Text(
+                                            'validate',
+                                            style: TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 10),
+                                          ),
+                                          icon: Icon(Icons.verified_rounded,
+                                              color: gstVerified
+                                                  ? Colors.green
+                                                  : Colors.red),
+                                        )
+                                ],
+                              )
+                            : Text(
+                                'Tax No ${snapshot.data.taxNumber}',
+                                style: const TextStyle(
+                                    color: blue, fontWeight: FontWeight.bold),
+                              ),
                         const Text(
                           'Phone',
                           style: TextStyle(
