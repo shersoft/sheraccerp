@@ -624,6 +624,17 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                         double.tryParse(dataInformation['SGST'].toString()) +
                         double.tryParse(dataInformation['IGST'].toString()))
                     .toStringAsFixed(2));
+            if (Settings.getValue<bool>('key-print-balance', false)) {
+              //
+            } else {
+              var bal = double.tryParse(dataInformation['Balance'].toString()) +
+                  (double.tryParse(dataInformation['GrandTotal'].toString()) -
+                      double.tryParse(
+                          dataInformation['CashReceived'].toString()));
+              bluetooth.printNewLine();
+              bluetooth.printCustom('Party Balance: ${bal.toStringAsFixed(2)}',
+                  Enu.Size.medium.val, Enu.Align.left.val);
+            }
             bluetooth.printQRcode(qrData, 200, 200, Enu.Align.center.val);
             bluetooth.printNewLine();
             bluetooth.printNewLine();

@@ -13,7 +13,9 @@ class InventoryMenu extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
-      crossAxisCount: 2,
+      crossAxisCount: MediaQuery.of(context).size.width > 500
+          ? (MediaQuery.of(context).size.width ~/ 250).toInt()
+          : (MediaQuery.of(context).size.width ~/ 150).toInt(),
       children: [
         GestureDetector(
           child: Card(

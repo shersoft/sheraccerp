@@ -242,7 +242,9 @@ class _ProductManagementState extends State<ProductManagement> {
                                   decoration: const InputDecoration(
                                       border: OutlineInputBorder(),
                                       label: Text('MRP')),
-                                  keyboardType: TextInputType.number,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
                                   inputFormatters: [
                                     FilteringTextInputFormatter(
                                         RegExp(r'[0-9]'),
@@ -266,7 +268,9 @@ class _ProductManagementState extends State<ProductManagement> {
                                   decoration: const InputDecoration(
                                       border: OutlineInputBorder(),
                                       label: Text('Retail')),
-                                  keyboardType: TextInputType.number,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
                                   inputFormatters: [
                                     FilteringTextInputFormatter(
                                         RegExp(r'[0-9]'),
@@ -299,7 +303,9 @@ class _ProductManagementState extends State<ProductManagement> {
                                   decoration: const InputDecoration(
                                       border: OutlineInputBorder(),
                                       label: Text('WholeSale')),
-                                  keyboardType: TextInputType.number,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
                                   inputFormatters: [
                                     FilteringTextInputFormatter(
                                         RegExp(r'[0-9]'),
@@ -324,7 +330,9 @@ class _ProductManagementState extends State<ProductManagement> {
                                   decoration: const InputDecoration(
                                       border: OutlineInputBorder(),
                                       label: Text('Branch')),
-                                  keyboardType: TextInputType.number,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
                                   inputFormatters: [
                                     FilteringTextInputFormatter(
                                         RegExp(r'[0-9]'),

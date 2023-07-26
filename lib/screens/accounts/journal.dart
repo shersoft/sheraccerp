@@ -277,7 +277,8 @@ class _JournalState extends State<Journal> {
                   child: TextField(
                     controller: _controllerAmount,
                     focusNode: _focusNode,
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),

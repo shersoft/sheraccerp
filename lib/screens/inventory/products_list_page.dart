@@ -782,7 +782,9 @@ class _ProductsListPageState extends State<ProductsListPage> {
                                 }
                                 return null;
                               },
-                              keyboardType: TextInputType.number,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
                               inputFormatters: [
                                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                     allow: true, replacementString: '.')
@@ -907,7 +909,9 @@ class _ProductsListPageState extends State<ProductsListPage> {
                               child: TextField(
                                 controller: _rateController,
                                 // autofocus: true,
-                                keyboardType: TextInputType.number,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                        decimal: true),
                                 inputFormatters: [
                                   FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                       allow: true, replacementString: '.')
@@ -942,7 +946,9 @@ class _ProductsListPageState extends State<ProductsListPage> {
                             child: TextField(
                               controller: _discountController,
                               // autofocus: true,
-                              keyboardType: TextInputType.number,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
                               inputFormatters: [
                                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                     allow: true, replacementString: '.')
@@ -1089,7 +1095,8 @@ class _ProductsListPageState extends State<ProductsListPage> {
                 controller: _controller,
                 decoration: const InputDecoration(
                     border: OutlineInputBorder(), label: Text("value")),
-                keyboardType: TextInputType.number,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter(RegExp(r'[0-9]'),
                       allow: true, replacementString: '.')

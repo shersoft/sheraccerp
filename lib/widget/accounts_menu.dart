@@ -11,7 +11,9 @@ class AccountsMenu extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
-      crossAxisCount: 2,
+      crossAxisCount: MediaQuery.of(context).size.width > 400
+          ? (MediaQuery.of(context).size.width ~/ 250).toInt()
+          : (MediaQuery.of(context).size.width ~/ 150).toInt(),
       children: <Widget>[
         GestureDetector(
           child: Card(

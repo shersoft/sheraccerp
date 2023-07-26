@@ -20,7 +20,9 @@ class Report extends StatelessWidget {
       padding: const EdgeInsets.all(5),
       crossAxisSpacing: 0,
       mainAxisSpacing: 0,
-      crossAxisCount: 2,
+      crossAxisCount: MediaQuery.of(context).size.width > 400
+          ? (MediaQuery.of(context).size.width ~/ 250).toInt()
+          : (MediaQuery.of(context).size.width ~/ 150).toInt(),
       children: <Widget>[
         GestureDetector(
           child: Card(

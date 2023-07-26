@@ -857,7 +857,8 @@ class _DamageEntryState extends State<DamageEntry> {
                         padding: const EdgeInsets.all(2.0),
                         child: TextFormField(
                           controller: _quantityController,
-                          keyboardType: TextInputType.number,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           inputFormatters: [
                             FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                 allow: true, replacementString: '.')
@@ -965,7 +966,8 @@ class _DamageEntryState extends State<DamageEntry> {
                           child: TextField(
                             controller: _rateController,
                             // autofocus: true,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             inputFormatters: [
                               FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                   allow: true, replacementString: '.')
@@ -1594,7 +1596,8 @@ class _DamageEntryState extends State<DamageEntry> {
               controller: _controller,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text("value")),
-              keyboardType: TextInputType.number,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')

@@ -1604,6 +1604,35 @@ class DioService {
     return model;
   }
 
+  Future<ProductRegisterModel> getProductById(String id) async {
+    ProductRegisterModel model;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/getById/$dataBase/$id');
+
+      if (response.statusCode == 200) {
+        var data = response.data;
+        if (data != null) {
+          model = ProductRegisterModel.fromMap(data[0]);
+        } else {
+          // model = ;
+          debugPrint('Unexpected error occurred!');
+        }
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return model;
+  }
+
   Future<bool> getUserLogin(name, password) async {
     bool ret = false;
     SharedPreferences pref = await SharedPreferences.getInstance();
@@ -4126,6 +4155,66 @@ class DioService {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
       return false;
+    }
+  }
+
+  Future<bool> stockManagementDelete(entryNo) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.delete(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'stock/deleteStockManagement/$dataBase',
+          queryParameters: {
+            'fyId': currentFinancialYear.id,
+            'entryNo': entryNo
+          },
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        debugPrint('Failed to load data');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
+  }
+
+  Future<List<dynamic>> stockManagementFind(String entryNo) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'stock/findStockManagement/$dataBase',
+          queryParameters: {
+            'fyId': currentFinancialYear.id,
+            'entryNo': entryNo
+          },
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        debugPrint('Failed to load data');
+        return null;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return null;
     }
   }
 

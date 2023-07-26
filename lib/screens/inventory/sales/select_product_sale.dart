@@ -900,7 +900,7 @@ class _ProductAddSaleState extends State<ProductAddSale> {
     //                         }
     //                         return null;
     //                       },
-    //                       keyboardType: TextInputType.number,
+    //                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
     //                       decoration: const InputDecoration(border: OutlineInputBorder(),
     //                           labelText: 'Quantity', labelText: '0.0'),
     //                       onChanged: (value) {
@@ -1032,7 +1032,7 @@ class _ProductAddSaleState extends State<ProductAddSale> {
     //                         controller: _rateController,
     //                         readOnly: isItemRateEditLocked,
     //                         // autofocus: true,
-    //                         keyboardType: TextInputType.number,
+    //                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
     //                         decoration: const InputDecoration(border: OutlineInputBorder(),
     //                             labelText: 'Price', labelText: '0.0'),
     //                         onChanged: (value) {
@@ -1153,7 +1153,7 @@ class _ProductAddSaleState extends State<ProductAddSale> {
     //                       child: TextField(
     //                         controller: _discountPercentController,
     //                         // autofocus: true,
-    //                         keyboardType: TextInputType.number,
+    //                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
     //                         decoration: const InputDecoration(border: OutlineInputBorder(),
     //                             labelText: ' % ', hintText: '0.0'),
     //                         onChanged: (value) {
@@ -1169,7 +1169,7 @@ class _ProductAddSaleState extends State<ProductAddSale> {
     //                       child: TextField(
     //                         controller: _discountController,
     //                         // autofocus: true,
-    //                         keyboardType: TextInputType.number,
+    //                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
     //                         decoration: const InputDecoration(border: OutlineInputBorder(),
     //                             labelText: 'Discount', labelText: '0.0'),
     //                         onChanged: (value) {

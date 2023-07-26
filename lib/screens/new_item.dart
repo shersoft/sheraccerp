@@ -230,7 +230,9 @@ class NewProductPage extends StatelessWidget {
                                                       TextInputAction.next,
                                                   key: UniqueKey(),
                                                   keyboardType:
-                                                      TextInputType.number,
+                                                      const TextInputType
+                                                              .numberWithOptions(
+                                                          decimal: true),
                                                   inputFormatters: [
                                                     FilteringTextInputFormatter(
                                                         RegExp(r'[0-9]'),
@@ -298,7 +300,9 @@ class NewProductPage extends StatelessWidget {
                                                       TextInputAction.next,
                                                   key: UniqueKey(),
                                                   keyboardType:
-                                                      TextInputType.number,
+                                                      const TextInputType
+                                                              .numberWithOptions(
+                                                          decimal: true),
                                                   inputFormatters: [
                                                     FilteringTextInputFormatter(
                                                         RegExp(r'[0-9]'),

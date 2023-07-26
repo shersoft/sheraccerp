@@ -324,7 +324,8 @@ class _RPVoucherState extends State<RPVoucher> {
                 Expanded(
                   child: TextField(
                     controller: _controllerAmount,
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -354,7 +355,8 @@ class _RPVoucherState extends State<RPVoucher> {
                 Expanded(
                   child: TextField(
                     controller: _controllerDiscount,
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')

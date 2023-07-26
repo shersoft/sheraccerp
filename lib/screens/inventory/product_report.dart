@@ -472,7 +472,8 @@ class _ProductReportState extends State<ProductReport> {
                       controller: taxPController,
                       decoration: const InputDecoration(
                           border: OutlineInputBorder(), label: Text('TAX %')),
-                      keyboardType: TextInputType.number,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
                         FilteringTextInputFormatter(RegExp(r'[0-9]'),
                             allow: true, replacementString: '.')
@@ -487,7 +488,8 @@ class _ProductReportState extends State<ProductReport> {
                     controller: reorderController,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('Reorder')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')

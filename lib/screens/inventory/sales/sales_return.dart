@@ -1533,7 +1533,8 @@ class _SalesReturnState extends State<SalesReturn> {
                         padding: const EdgeInsets.all(2.0),
                         child: TextFormField(
                           controller: _quantityController,
-                          keyboardType: TextInputType.number,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           inputFormatters: [
                             FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                 allow: true, replacementString: '.')
@@ -1642,7 +1643,8 @@ class _SalesReturnState extends State<SalesReturn> {
                           child: TextField(
                             controller: _rateController,
                             // autofocus: true,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             inputFormatters: [
                               FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                   allow: true, replacementString: '.')
@@ -1677,7 +1679,8 @@ class _SalesReturnState extends State<SalesReturn> {
                         child: TextField(
                           controller: _discountController,
                           // autofocus: true,
-                          keyboardType: TextInputType.number,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           inputFormatters: [
                             FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                 allow: true, replacementString: '.')
@@ -2301,7 +2304,8 @@ class _SalesReturnState extends State<SalesReturn> {
                                                                 index]['Amount']
                                                             .toString()
                                                             .length))),
-                                        keyboardType: TextInputType.number,
+                                        keyboardType: const TextInputType
+                                            .numberWithOptions(decimal: true),
                                         inputFormatters: [
                                           FilteringTextInputFormatter(
                                               RegExp(r'[0-9]'),
@@ -2478,7 +2482,8 @@ class _SalesReturnState extends State<SalesReturn> {
               controller: _controller,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), hintText: "value"),
-              keyboardType: TextInputType.number,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')

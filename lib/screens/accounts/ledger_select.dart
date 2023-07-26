@@ -175,9 +175,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
         _loading = false;
         List<dynamic> groupValues = [
           {'id': '1', 'name': 'Normal'},
-          // {'id': '2', 'name': 'Invoice Wise'},
-          // {'id': '3', 'name': 'Detailed'},
-          // {'id': '4', 'name': 'Due Bill Date'},
+          {'id': '2', 'name': 'Invoice Wise'},
+          {'id': '3', 'name': 'Detailed'},
+          {'id': '4', 'name': 'Due Bill Date'},
         ];
         // List<dynamic> stockValue = [
         //   {'id': '13', 'name': 'SUPPLIERS'},
@@ -201,9 +201,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
         _loading = false;
         List<dynamic> groupValues = [
           {'id': '1', 'name': 'Normal'},
-          // {'id': '2', 'name': 'Invoice Wise'},
-          // {'id': '3', 'name': 'Detailed'},
-          // {'id': '4', 'name': 'Due Bill Date'},
+          {'id': '2', 'name': 'Invoice Wise'},
+          {'id': '3', 'name': 'Detailed'},
+          {'id': '4', 'name': 'Due Bill Date'},
         ];
         setState(() {
           items.addAll(groupValues);
@@ -1905,6 +1905,24 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                 TextButton(
                                                                   onPressed:
                                                                       () {
+                                                                    statement = mode ==
+                                                                            'Payable'
+                                                                        ? selectedGroupValues ==
+                                                                                'Invoice Wise'
+                                                                            ? 'InvoiceWiseBalanceSuppliers'
+                                                                            : selectedGroupValues == 'Detailed'
+                                                                                ? 'Receivable_Details'
+                                                                                : selectedGroupValues == 'Due Bill Date'
+                                                                                    ? 'DueBillBalance_Report'
+                                                                                    : 'ReceivblesCreditOnly'
+                                                                        : selectedGroupValues == 'Invoice Wise'
+                                                                            ? 'InvoiceWiseBalanceCustomers'
+                                                                            : selectedGroupValues == 'Detailed'
+                                                                                ? 'Receivable_Master_Detail'
+                                                                                : selectedGroupValues == 'Due Bill Date'
+                                                                                    ? 'DueBillBalance_Report'
+                                                                                    : 'ReceivblesDebitOnly';
+
                                                                     Navigator.push(
                                                                         context,
                                                                         MaterialPageRoute(
@@ -1915,8 +1933,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                                 DateUtil.dateDMY2YMD(toDate),
                                                                                 mode,
                                                                                 selectedItem.name,
-                                                                                mode == 'Payable' ? 'ReceivblesCreditOnly' : 'ReceivblesDebitOnly',
-                                                                                // selectedGroupValues == '' ? '' : '',
+                                                                                statement,
                                                                                 salesMan,
                                                                                 locationId != null ? [locationId.id] : [_dropDownBranchId],
                                                                                 area,

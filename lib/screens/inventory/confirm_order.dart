@@ -715,7 +715,9 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
                               Expanded(
                                 child: TextField(
                                   controller: _controllerCashReceived,
-                                  keyboardType: TextInputType.number,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
                                   inputFormatters: [
                                     FilteringTextInputFormatter(
                                         RegExp(r'[0-9]'),
@@ -784,7 +786,8 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
                 controller: _controller,
                 decoration: const InputDecoration(
                     border: OutlineInputBorder(), label: Text("value")),
-                keyboardType: TextInputType.number,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter(RegExp(r'[0-9]'),
                       allow: true, replacementString: '.')

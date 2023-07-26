@@ -284,8 +284,9 @@ class _ReportViewState extends State<ReportView> {
               var filterItems = data;
               for (ReportDesign design in reportDesign) {
                 if (!design.visibility) {
-                  filterItems
-                      .forEach((item) => item..remove(design.caption.trim()));
+                  for (var item in filterItems) {
+                    item.remove(design.caption.trim());
+                  }
                 }
               }
               // Map<String, dynamic> singleItem = {"type": "P"};

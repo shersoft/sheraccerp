@@ -1652,7 +1652,8 @@ class _PurchaseState extends State<Purchase> {
                     controller: controllerQuantity,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('Quantity')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1674,7 +1675,8 @@ class _PurchaseState extends State<Purchase> {
                       decoration: const InputDecoration(
                           border: OutlineInputBorder(),
                           label: Text('Free Qty')),
-                      keyboardType: TextInputType.number,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
                         FilteringTextInputFormatter(RegExp(r'[0-9]'),
                             allow: true, replacementString: '.')
@@ -1733,7 +1735,8 @@ class _PurchaseState extends State<Purchase> {
               controller: controllerRate,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('P Rate')),
-              keyboardType: TextInputType.number,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')
@@ -1768,7 +1771,8 @@ class _PurchaseState extends State<Purchase> {
                     controller: controllerDiscountPer,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text(' % ')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1789,7 +1793,8 @@ class _PurchaseState extends State<Purchase> {
                     controller: controllerDiscount,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('Discount')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1816,7 +1821,8 @@ class _PurchaseState extends State<Purchase> {
                     controller: controllerMrp,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('MRP')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1837,7 +1843,8 @@ class _PurchaseState extends State<Purchase> {
                     controller: controllerRetail,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('Retail')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1866,7 +1873,8 @@ class _PurchaseState extends State<Purchase> {
                     controller: controllerWholeSale,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('WholeSale')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1887,7 +1895,8 @@ class _PurchaseState extends State<Purchase> {
                     controller: controllerBranch,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('Branch')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -2093,7 +2102,8 @@ class _PurchaseState extends State<Purchase> {
                   // width: 30,
                   height: 40,
                   child: TextField(
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')

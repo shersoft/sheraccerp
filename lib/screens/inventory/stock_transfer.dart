@@ -1132,7 +1132,8 @@ class _StockTransferState extends State<StockTransfer> {
                 border: const OutlineInputBorder(),
                 label: Text('Available Quantity is ${product.quantity}'),
               ),
-              keyboardType: TextInputType.number,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')
@@ -1151,7 +1152,8 @@ class _StockTransferState extends State<StockTransfer> {
               textAlign: TextAlign.right,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('P Rate')),
-              keyboardType: TextInputType.number,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')
@@ -1184,7 +1186,8 @@ class _StockTransferState extends State<StockTransfer> {
                     textAlign: TextAlign.right,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('MRP')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1206,7 +1209,8 @@ class _StockTransferState extends State<StockTransfer> {
                     textAlign: TextAlign.right,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('Retail')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1236,7 +1240,8 @@ class _StockTransferState extends State<StockTransfer> {
                     textAlign: TextAlign.right,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('WholeSale')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1258,7 +1263,8 @@ class _StockTransferState extends State<StockTransfer> {
                     textAlign: TextAlign.right,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('Branch')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')

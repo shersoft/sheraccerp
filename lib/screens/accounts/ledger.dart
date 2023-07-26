@@ -410,7 +410,9 @@ class _LedgerState extends State<Ledger> {
                                 inputFormatters: [
                                   LengthLimitingTextInputFormatter(50),
                                 ],
-                                keyboardType: TextInputType.number,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                        decimal: true),
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
                                   labelText: 'Debit Amount',
@@ -426,7 +428,9 @@ class _LedgerState extends State<Ledger> {
                                 inputFormatters: [
                                   LengthLimitingTextInputFormatter(50),
                                 ],
-                                keyboardType: TextInputType.number,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                        decimal: true),
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
                                   labelText: 'Credit Amount',

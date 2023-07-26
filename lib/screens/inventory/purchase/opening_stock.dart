@@ -1282,7 +1282,8 @@ class _OpeningStockState extends State<OpeningStock> {
               focusNode: _focusNodeQuantity,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Quantity')),
-              keyboardType: TextInputType.number,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               textAlign: TextAlign.right,
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1314,7 +1315,8 @@ class _OpeningStockState extends State<OpeningStock> {
               focusNode: _focusNodeRate,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('P Rate')),
-              keyboardType: TextInputType.number,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               textAlign: TextAlign.right,
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1348,7 +1350,8 @@ class _OpeningStockState extends State<OpeningStock> {
                     focusNode: _focusNodeDiscountPer,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text(' % ')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1370,7 +1373,8 @@ class _OpeningStockState extends State<OpeningStock> {
                     focusNode: _focusNodeDiscount,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('discount')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1398,7 +1402,8 @@ class _OpeningStockState extends State<OpeningStock> {
                     focusNode: _focusNodeMrp,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('MRP')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1420,7 +1425,8 @@ class _OpeningStockState extends State<OpeningStock> {
                     focusNode: _focusNodeRetail,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('Retail')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1450,7 +1456,8 @@ class _OpeningStockState extends State<OpeningStock> {
                     focusNode: _focusNodeWholeSale,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('WholeSale')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
@@ -1472,7 +1479,8 @@ class _OpeningStockState extends State<OpeningStock> {
                     focusNode: _focusNodeBranch,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('Branch')),
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),

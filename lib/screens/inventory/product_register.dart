@@ -608,7 +608,8 @@ class _ProductRegisterState extends State<ProductRegister> {
                 Expanded(
                   child: TextFormField(
                     controller: cessController,
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -625,7 +626,8 @@ class _ProductRegisterState extends State<ProductRegister> {
                 Expanded(
                   child: TextFormField(
                     controller: addCessController,
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -644,7 +646,8 @@ class _ProductRegisterState extends State<ProductRegister> {
                 Expanded(
                   child: TextFormField(
                     controller: mrpController,
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -679,7 +682,8 @@ class _ProductRegisterState extends State<ProductRegister> {
                   Expanded(
                     child: TextField(
                       controller: wholeSaleController,
-                      keyboardType: TextInputType.number,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
                         FilteringTextInputFormatter(RegExp(r'[0-9]'),
                             allow: true, replacementString: '.')
@@ -696,7 +700,8 @@ class _ProductRegisterState extends State<ProductRegister> {
                   Expanded(
                     child: TextField(
                       controller: retailController,
-                      keyboardType: TextInputType.number,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
                         FilteringTextInputFormatter(RegExp(r'[0-9]'),
                             allow: true, replacementString: '.')
@@ -714,7 +719,8 @@ class _ProductRegisterState extends State<ProductRegister> {
                 Expanded(
                   child: TextField(
                     controller: spRetailController,
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -731,7 +737,8 @@ class _ProductRegisterState extends State<ProductRegister> {
                 Expanded(
                   child: TextField(
                     controller: branchController,
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -821,7 +828,8 @@ class _ProductRegisterState extends State<ProductRegister> {
                   Expanded(
                     child: TextFormField(
                       controller: packingController,
-                      keyboardType: TextInputType.number,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
                         FilteringTextInputFormatter(RegExp(r'[0-9]'),
                             allow: true, replacementString: '.')
@@ -870,7 +878,8 @@ class _ProductRegisterState extends State<ProductRegister> {
                   Expanded(
                     child: TextField(
                       controller: reOrderLevelController,
-                      keyboardType: TextInputType.number,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
                         FilteringTextInputFormatter(RegExp(r'[0-9]'),
                             allow: true, replacementString: '.')
@@ -887,7 +896,8 @@ class _ProductRegisterState extends State<ProductRegister> {
                   Expanded(
                     child: TextField(
                       controller: maxOrderLevelController,
-                      keyboardType: TextInputType.number,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
                         FilteringTextInputFormatter(RegExp(r'[0-9]'),
                             allow: true, replacementString: '.')
@@ -990,7 +1000,8 @@ class _ProductRegisterState extends State<ProductRegister> {
                       Expanded(
                         child: TextField(
                           controller: conversionController,
-                          keyboardType: TextInputType.number,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           inputFormatters: [
                             FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                 allow: true, replacementString: '.')
@@ -1028,7 +1039,8 @@ class _ProductRegisterState extends State<ProductRegister> {
                     Expanded(
                       child: TextField(
                         controller: barcodeController,
-                        keyboardType: TextInputType.number,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
                         inputFormatters: [
                           FilteringTextInputFormatter(RegExp(r'[0-9]'),
                               allow: true)

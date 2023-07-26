@@ -551,7 +551,7 @@ class _SaleState extends State<Sale> {
                 locationId.toString(),
                 salesTypeData.id.toString(),
                 DateUtil.dateYMD(formattedDate),
-                salesManId.toString())
+                salesManId > 0 ? salesManId.toString() : '')
             .then((value) {
           if (value.isEmpty) {
             return;
@@ -3137,7 +3137,8 @@ class _SaleState extends State<Sale> {
                             }
                             return null;
                           },
-                          keyboardType: TextInputType.number,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           inputFormatters: [
                             FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                 allow: true, replacementString: '.')
@@ -3204,7 +3205,8 @@ class _SaleState extends State<Sale> {
                               }
                               return null;
                             },
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             inputFormatters: [
                               FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                   allow: true, replacementString: '.')
@@ -3385,7 +3387,8 @@ class _SaleState extends State<Sale> {
                             focusNode: _focusNodeRate,
                             readOnly: isItemRateEditLocked,
                             // autofocus: true,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             inputFormatters: [
                               FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                   allow: true, replacementString: '.')
@@ -3537,7 +3540,8 @@ class _SaleState extends State<Sale> {
                           child: TextField(
                             controller: _discountPercentController,
                             focusNode: _focusNodeDiscountPer,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             inputFormatters: [
                               FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                   allow: true, replacementString: '.')
@@ -3559,7 +3563,8 @@ class _SaleState extends State<Sale> {
                           child: TextField(
                             focusNode: _focusNodeDiscount,
                             controller: _discountController,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             inputFormatters: [
                               FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                   allow: true, replacementString: '.')
@@ -4551,7 +4556,8 @@ class _SaleState extends State<Sale> {
                 Expanded(
                   child: TextField(
                     controller: _controllerCashReceived,
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -4633,7 +4639,8 @@ class _SaleState extends State<Sale> {
                               border: OutlineInputBorder(),
                               labelText: 'Bill No :',
                             ),
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             inputFormatters: [
                               FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                   allow: true)
@@ -4667,7 +4674,8 @@ class _SaleState extends State<Sale> {
                               border: OutlineInputBorder(),
                               labelText: 'Amount :',
                             ),
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             inputFormatters: [
                               FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                   allow: true, replacementString: '.')
@@ -4723,7 +4731,8 @@ class _SaleState extends State<Sale> {
                                                                   ['Amount']
                                                               .toString()
                                                               .length))),
-                                          keyboardType: TextInputType.number,
+                                          keyboardType: const TextInputType
+                                              .numberWithOptions(decimal: true),
                                           inputFormatters: [
                                             FilteringTextInputFormatter(
                                                 RegExp(r'[0-9]'),
@@ -4936,7 +4945,8 @@ class _SaleState extends State<Sale> {
               controller: _controller,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), labelText: "value"),
-              keyboardType: TextInputType.number,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')
@@ -4992,7 +5002,8 @@ class _SaleState extends State<Sale> {
               },
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), labelText: "barcode"),
-              keyboardType: TextInputType.number,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')
