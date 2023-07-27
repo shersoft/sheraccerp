@@ -120,9 +120,10 @@ class _OrderListState extends State<OrderList> {
   List dataDisplayHead = [];
 
   selectData(title) {
-    dropDownBranchId = ComSettings.appSettings(
+    int _branchId = ComSettings.appSettings(
             'int', 'key-dropdown-default-location-view', 0) -
         1;
+    dropDownBranchId = _branchId > 0 ? _branchId : dropDownBranchId;
     // var _idp = locationList.isNotEmpty
     //     ? Map.fromIterable(locationList,
     //         key: (e) => e.key + 1, value: (e) => e.value)
@@ -274,7 +275,8 @@ class _OrderListState extends State<OrderList> {
               'mfr': '0',
               'category': '0',
               'subcategory': '0',
-              'location': dropDownBranchId.toString(),
+              'location':
+                  dropDownBranchId > 0 ? dropDownBranchId.toString() : '1',
               'project': '0',
               'salesman': salesManId.toString(),
               'salesType': dataSType != null

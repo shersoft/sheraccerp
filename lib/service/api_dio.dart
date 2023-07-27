@@ -4484,8 +4484,16 @@ class DataJson {
     return DataJson(id: json['id'], name: json['name']);
   }
 
+  factory DataJson.fromJsonX(Map<String, dynamic> json) {
+    return DataJson(id: json['auto'], name: json['Name']);
+  }
+
   static List<DataJson> fromJsonList(List list) {
     return list.map((item) => DataJson.fromJson(item)).toList();
+  }
+
+  static List<DataJson> fromJsonListX(List list) {
+    return list.map((item) => DataJson.fromJsonX(item)).toList();
   }
 
   String userAsString() {

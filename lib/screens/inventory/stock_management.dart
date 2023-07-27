@@ -389,8 +389,8 @@ class _StockManagementState extends State<StockManagement> {
                         subtitle: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            Text('Id:${data[0].productId}'),
-                            Text('Qty: ${data[0].quantity}'),
+                            Text('Id:${data[index].productId}'),
+                            Text('Qty: ${data[index].quantity}'),
                           ],
                         ),
                       ),

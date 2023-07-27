@@ -38,6 +38,7 @@ class _ProductRegisterState extends State<ProductRegister> {
       mfr,
       category,
       subCategory,
+      brand,
       location = DataJson(id: 1, name: defaultLocation),
       rack,
       unit;
@@ -45,6 +46,19 @@ class _ProductRegisterState extends State<ProductRegister> {
   List<String> hsnList = [];
   List<String> itemNameList = [];
   List<String> itemCodeList = [];
+  List<String> categoryList = [];
+  List<DataJson> taxGroupDataList = [];
+  List<DataJson> categoryDataList = [];
+  List<String> subCategoryList = [];
+  List<DataJson> subCategoryDataList = [];
+  List<String> unitList = [];
+  List<DataJson> unitDataList = [];
+  List<String> brandList = [];
+  List<DataJson> brandDataList = [];
+  List<String> rackList = [];
+  List<DataJson> rackDataList = [];
+  List<String> mfrList = [];
+  List<DataJson> mfrDataList = [];
   List<dynamic> productData = [];
   var pItemCode = '', pItemName = '', pHSNCode = '';
   bool active = true;
@@ -57,6 +71,48 @@ class _ProductRegisterState extends State<ProductRegister> {
 
   @override
   void initState() {
+    categoryDataList
+        .addAll(DataJson.fromJsonListX(otherRegistrationList[0]['category']));
+    categoryList.addAll(List<String>.from(categoryDataList
+        .map((item) => (item.name))
+        .toList()
+        .map((s) => s)
+        .toList()));
+    subCategoryDataList.addAll(
+        DataJson.fromJsonListX(otherRegistrationList[0]['sub_category']));
+    subCategoryList.addAll(List<String>.from(subCategoryDataList
+        .map((item) => (item.name))
+        .toList()
+        .map((s) => s)
+        .toList()));
+    rackDataList
+        .addAll(DataJson.fromJsonListX(otherRegistrationList[0]['rack']));
+    rackList.addAll(List<String>.from(rackDataList
+        .map((item) => (item.name))
+        .toList()
+        .map((s) => s)
+        .toList()));
+    unitDataList
+        .addAll(DataJson.fromJsonListX(otherRegistrationList[0]['unit']));
+    unitList.addAll(List<String>.from(unitDataList
+        .map((item) => (item.name))
+        .toList()
+        .map((s) => s)
+        .toList()));
+    brandDataList
+        .addAll(DataJson.fromJsonListX(otherRegistrationList[0]['brand']));
+    brandList.addAll(List<String>.from(brandDataList
+        .map((item) => (item.name))
+        .toList()
+        .map((s) => s)
+        .toList()));
+    mfrDataList.addAll(DataJson.fromJsonListX(otherRegistrationList[0]['mfr']));
+    mfrList.addAll(List<String>.from(mfrDataList
+        .map((item) => (item.name))
+        .toList()
+        .map((s) => s)
+        .toList()));
+
     api.getProductData().then((value) {
       setState(() {
         productData = value.values.toList();
@@ -75,10 +131,14 @@ class _ProductRegisterState extends State<ProductRegister> {
             .toList()
             .map((s) => s as String)
             .toList()));
+        taxGroupDataList
+            .addAll(DataJson.fromJsonList(productData[0]['TaxGroup']));
+
         // productList.addAll(List<dynamic>.from(productData[0]['ItemName'])
         //     .map((item) => (DataJson(id: item['id'], name: item['name']))));
 
-        unitModel.addAll(DataJson.fromJsonList(productData[0]['Unit']));
+        unitModel
+            .addAll(DataJson.fromJsonList(otherRegistrationList[0]['unit']));
         rateTypeModel = [
           DataJson(id: 0, name: ''),
           DataJson(id: 1, name: 'MRP'),
@@ -277,6 +337,10 @@ class _ProductRegisterState extends State<ProductRegister> {
                           'bom': 0,
                           'serialNo': 0,
                           'user': 0,
+                          'speedBill': 0,
+                          'expiry': 0,
+                          'brand': brand != null ? brand.id : 0,
+                          'lc': 0.0
                         }) +
                         ']';
 
@@ -393,6 +457,10 @@ class _ProductRegisterState extends State<ProductRegister> {
                           'bom': 0,
                           'serialNo': 0,
                           'user': 0,
+                          'speedBill': 0,
+                          'expiry': 0,
+                          'brand': brand != null ? brand.id : 0,
+                          'lc': 0.0
                         }) +
                         ']';
 
@@ -419,6 +487,12 @@ class _ProductRegisterState extends State<ProductRegister> {
 
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
   GlobalKey<AutoCompleteTextFieldState<String>> keyHsn = GlobalKey();
+  GlobalKey<AutoCompleteTextFieldState<String>> keyCategory = GlobalKey();
+  GlobalKey<AutoCompleteTextFieldState<String>> keySubCategory = GlobalKey();
+  GlobalKey<AutoCompleteTextFieldState<String>> keyMFR = GlobalKey();
+  GlobalKey<AutoCompleteTextFieldState<String>> keyBrand = GlobalKey();
+  GlobalKey<AutoCompleteTextFieldState<String>> keyRack = GlobalKey();
+  GlobalKey<AutoCompleteTextFieldState<String>> keyUnit = GlobalKey();
   GlobalKey<AutoCompleteTextFieldState<String>> keyItemCode = GlobalKey();
   GlobalKey<AutoCompleteTextFieldState<String>> keyItemName = GlobalKey();
   int nextWidget = 0;
@@ -427,6 +501,12 @@ class _ProductRegisterState extends State<ProductRegister> {
   TextEditingController wholeSaleController = TextEditingController();
   TextEditingController spRetailController = TextEditingController();
   TextEditingController branchController = TextEditingController();
+  TextEditingController categoryController = TextEditingController();
+  TextEditingController subCategoryController = TextEditingController();
+  TextEditingController brandController = TextEditingController();
+  TextEditingController mfrController = TextEditingController();
+  TextEditingController rackController = TextEditingController();
+  TextEditingController unitController = TextEditingController();
   TextEditingController hsnController = TextEditingController();
 
   TextEditingController itemCodeController = TextEditingController();
@@ -562,83 +642,112 @@ class _ProductRegisterState extends State<ProductRegister> {
                       },
                       child: const Text('Details'))),
               const Divider(),
-              DropdownSearch<dynamic>(
-                maxHeight: 300,
-                onFind: (String filter) =>
-                    api.getSalesListData(filter, 'sales_list/manufacture'),
-                dropdownSearchDecoration: const InputDecoration(
+              // DropdownSearch<dynamic>(
+              //   maxHeight: 300,
+              //   onFind: (String filter) =>
+              //       api.getSalesListData(filter, 'sales_list/manufacture'),
+              //   dropdownSearchDecoration: const InputDecoration(
+              //       border: OutlineInputBorder(),
+              //       label: Text('Select Manufacture')),
+              //   onChanged: (dynamic data) {
+              //     mfr = data;
+              //   },
+              //   showSearchBox: true,
+              //   selectedItem: mfr,
+              // ),
+              SimpleAutoCompleteTextField(
+                clearOnSubmit: false,
+                key: keyMFR,
+                suggestions: mfrList,
+                decoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    label: Text('Select Manufacture')),
-                onChanged: (dynamic data) {
-                  mfr = data;
+                    hintText: 'Select Manufacture',
+                    labelText: 'Manufacture'),
+                textSubmitted: (data) {
+                  mfr = mfrDataList.firstWhere(
+                    (element) => element.name == data,
+                    orElse: () => null,
+                  );
                 },
-                showSearchBox: true,
-                selectedItem: mfr,
+                controller: mfrController,
               ),
               const Divider(),
-              DropdownSearch<dynamic>(
-                maxHeight: 300,
-                onFind: (String filter) =>
-                    api.getSalesListData(filter, 'sales_list/category'),
-                dropdownSearchDecoration: const InputDecoration(
+              // DropdownSearch<dynamic>(
+              //   maxHeight: 300,
+              //   onFind: (String filter) =>
+              //       api.getSalesListData(filter, 'sales_list/category'),
+              //   dropdownSearchDecoration: const InputDecoration(
+              //       border: OutlineInputBorder(),
+              //       label: Text('Select Category')),
+              //   onChanged: (dynamic data) {
+              //     category = data;
+              //   },
+              //   selectedItem: category,
+              //   showSearchBox: true,
+              // ),
+              SimpleAutoCompleteTextField(
+                clearOnSubmit: false,
+                key: keyCategory,
+                suggestions: categoryList,
+                decoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    label: Text('Select Category')),
-                onChanged: (dynamic data) {
-                  category = data;
+                    hintText: 'Select Category',
+                    labelText: 'Category'),
+                textSubmitted: (data) {
+                  category = categoryDataList.firstWhere(
+                    (element) => element.name == data,
+                    orElse: () => null,
+                  );
                 },
-                selectedItem: category,
-                showSearchBox: true,
+                controller: categoryController,
               ),
               const Divider(),
-              DropdownSearch<dynamic>(
-                maxHeight: 300,
-                onFind: (String filter) =>
-                    api.getSalesListData(filter, 'sales_list/subCategory'),
-                dropdownSearchDecoration: const InputDecoration(
+              // DropdownSearch<dynamic>(
+              //   maxHeight: 300,
+              //   onFind: (String filter) =>
+              //       api.getSalesListData(filter, 'sales_list/subCategory'),
+              //   dropdownSearchDecoration: const InputDecoration(
+              //       border: OutlineInputBorder(),
+              //       label: Text('Select SubCategory')),
+              //   onChanged: (dynamic data) {
+              //     subCategory = data;
+              //   },
+              //   selectedItem: subCategory,
+              //   showSearchBox: true,
+              // ),
+              SimpleAutoCompleteTextField(
+                clearOnSubmit: false,
+                key: keySubCategory,
+                suggestions: subCategoryList,
+                decoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    label: Text('Select SubCategory')),
-                onChanged: (dynamic data) {
-                  subCategory = data;
+                    hintText: 'Select SubCategory',
+                    labelText: 'SubCategory'),
+                textSubmitted: (data) {
+                  subCategory = subCategoryDataList.firstWhere(
+                    (element) => element.name == data,
+                    orElse: () => null,
+                  );
                 },
-                selectedItem: subCategory,
-                showSearchBox: true,
+                controller: subCategoryController,
               ),
               const Divider(),
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: cessController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter(RegExp(r'[0-9]'),
-                          allow: true, replacementString: '.')
-                    ],
-                    decoration: const InputDecoration(
-                      labelText: 'CESS',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  width: 10,
-                ),
-                Expanded(
-                  child: TextFormField(
-                    controller: addCessController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter(RegExp(r'[0-9]'),
-                          allow: true, replacementString: '.')
-                    ],
-                    decoration: const InputDecoration(
-                      labelText: 'ADD CESS',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                )
-              ]),
+              SimpleAutoCompleteTextField(
+                clearOnSubmit: false,
+                key: keyBrand,
+                suggestions: brandList,
+                decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Select Brand',
+                    labelText: 'Brand'),
+                textSubmitted: (data) {
+                  brand = brandDataList.firstWhere(
+                    (element) => element.name == data,
+                    orElse: () => null,
+                  );
+                },
+                controller: brandController,
+              ),
               const Divider(),
               const Text('Selling Rates'),
               const Divider(),
@@ -844,29 +953,47 @@ class _ProductRegisterState extends State<ProductRegister> {
                     width: 10,
                   ),
                   Expanded(
-                    child: DropdownSearch<dynamic>(
-                      maxHeight: 300,
-                      onFind: (String filter) =>
-                          api.getSalesListData(filter, 'sales_list/rack'),
-                      dropdownSearchDecoration: const InputDecoration(
+                    child:
+                        // DropdownSearch<dynamic>(
+                        //   maxHeight: 300,
+                        //   onFind: (String filter) =>
+                        //       api.getSalesListData(filter, 'sales_list/rack'),
+                        //   dropdownSearchDecoration: const InputDecoration(
+                        //       border: OutlineInputBorder(),
+                        //       label: Text('Select Rack')),
+                        //   onChanged: (dynamic data) {
+                        //     rack = data;
+                        //   },
+                        //   selectedItem: rack,
+                        //   showSearchBox: true,
+                        //   emptyBuilder: (context, searchEntry) {
+                        //     return Center(
+                        //       child: ElevatedButton(
+                        //           onPressed: () {
+                        //             searchEntry = '';
+                        //             rack = DataJson(
+                        //                 id: -1, name: searchEntry.toUpperCase());
+                        //           },
+                        //           child: const Text('add new')),
+                        //     );
+                        //   },
+                        // ),
+
+                        SimpleAutoCompleteTextField(
+                      clearOnSubmit: false,
+                      key: keyRack,
+                      suggestions: rackList,
+                      decoration: const InputDecoration(
                           border: OutlineInputBorder(),
-                          label: Text('Select Rack')),
-                      onChanged: (dynamic data) {
-                        rack = data;
-                      },
-                      selectedItem: rack,
-                      showSearchBox: true,
-                      emptyBuilder: (context, searchEntry) {
-                        return Center(
-                          child: ElevatedButton(
-                              onPressed: () {
-                                searchEntry = '';
-                                rack = DataJson(
-                                    id: -1, name: searchEntry.toUpperCase());
-                              },
-                              child: const Text('add new')),
+                          hintText: 'Select Rack',
+                          labelText: 'Rack'),
+                      textSubmitted: (data) {
+                        rack = rackDataList.firstWhere(
+                          (element) => element.name == data,
+                          orElse: () => null,
                         );
                       },
+                      controller: rackController,
                     ),
                   ),
                 ],
@@ -910,6 +1037,42 @@ class _ProductRegisterState extends State<ProductRegister> {
                   ),
                 ],
               ),
+              const Divider(),
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: cessController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                          allow: true, replacementString: '.')
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: 'CESS',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                Expanded(
+                  child: TextFormField(
+                    controller: addCessController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                          allow: true, replacementString: '.')
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: 'ADD CESS',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                )
+              ]),
             ],
           )
         : Column(children: [
@@ -1187,17 +1350,31 @@ class _ProductRegisterState extends State<ProductRegister> {
       pItemCode = value.itemcode;
       itemCodeController.text = value.itemcode;
       if (value.unitId > 0) {
-        unit = unitModel.firstWhere((element) => element.id == value.unitId,
+        unit = unitDataList.firstWhere((element) => element.id == value.unitId,
             orElse: () => DataJson(id: value.unitId, name: ''));
+        unitController.text = unit.name;
       }
       if (value.mfrId > 0) {
-        mfr = DataJson(id: value.mfrId, name: '');
+        mfr = mfrDataList.firstWhere((element) => element.id == value.mfrId,
+            orElse: () => DataJson(id: value.mfrId, name: ''));
+        mfrController.text = mfr.name;
       }
       if (value.catagoryId > 0) {
-        category = DataJson(id: value.catagoryId, name: '');
+        category = categoryDataList.firstWhere(
+            (element) => element.id == value.catagoryId,
+            orElse: () => DataJson(id: value.catagoryId, name: ''));
+        categoryController.text = category.name;
       }
       if (value.subcatagoryId > 0) {
-        subCategory = DataJson(id: value.subcatagoryId, name: '');
+        subCategory = subCategoryDataList.firstWhere(
+            (element) => element.id == value.subcatagoryId,
+            orElse: () => DataJson(id: value.subcatagoryId, name: ''));
+        subCategoryController.text = subCategory.name;
+      }
+      if (value.brand > 0) {
+        brand = brandDataList.firstWhere((element) => element.id == value.brand,
+            orElse: () => DataJson(id: value.brand, name: ''));
+        brandController.text = brand.name;
       }
       cessController.text = value.cess.toString();
       addCessController.text = value.adcessper.toString();
@@ -1211,7 +1388,9 @@ class _ProductRegisterState extends State<ProductRegister> {
       dropDownTypeOfSupply = value.typeofsupply.trim().toUpperCase();
       packingController.text = value.packing.toString();
       if (value.rackId > 0) {
-        rack = DataJson(id: value.rackId, name: '');
+        rack = rackDataList.firstWhere((element) => element.id == value.rackId,
+            orElse: () => DataJson(id: value.rackId, name: ''));
+        rackController.text = rack.name;
       }
       reOrderLevelController.text = value.reorder.toString();
       maxOrderLevelController.text = value.maxorder.toString();
@@ -1226,44 +1405,6 @@ class _ProductRegisterState extends State<ProductRegister> {
         setState(() {
           taxGroup = taxData
               .firstWhere((element) => element.name == value.taxGroupName);
-        });
-      });
-    }
-
-    if (value.mfrId > 0) {
-      api.getSalesListData('', 'sales_list/manufacture').then((data) {
-        setState(() {
-          mfr = data.firstWhere((element) => element.id == value.mfrId,
-              orElse: () => DataJson(id: value.mfrId, name: ''));
-        });
-      });
-    }
-
-    if (value.rackId > 0) {
-      api.getSalesListData('', 'sales_list/rack').then((data) {
-        setState(() {
-          rack = data.firstWhere((element) => element.id == value.rackId,
-              orElse: () => DataJson(id: value.rackId, name: ''));
-        });
-      });
-    }
-
-    if (value.catagoryId > 0) {
-      api.getSalesListData('', 'sales_list/category').then((data) {
-        setState(() {
-          category = data.firstWhere(
-              (element) => element.id == value.catagoryId,
-              orElse: () => DataJson(id: value.catagoryId, name: ''));
-        });
-      });
-    }
-
-    if (value.subcatagoryId > 0) {
-      api.getSalesListData('', 'sales_list/subCategory').then((data) {
-        setState(() {
-          subCategory = data.firstWhere(
-              (element) => element.id == value.subcatagoryId,
-              orElse: () => DataJson(id: value.subcatagoryId, name: ''));
         });
       });
     }
