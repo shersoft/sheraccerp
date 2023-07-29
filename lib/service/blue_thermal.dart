@@ -555,46 +555,56 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
             line = "11";
             bluetooth.printCustom(
                 printerLine, Enu.Size.medium.val, Enu.Align.center.val);
-            bluetooth.printCustom(
-                'Total Gross Amount:${dataInformation['NetAmount'].toStringAsFixed(2)}  ',
+            bluetooth.print3Column(
+                'Total Gross Amount',
+                ':',
+                '${dataInformation['NetAmount'].toStringAsFixed(2)}',
                 Enu.Size.bold.val,
-                Enu.Align.right.val);
-            bluetooth.printCustom(
-                'Discount Amount   :${dataInformation['OtherDiscount'].toStringAsFixed(2)}  ',
+                format: "%-30s %-10s %20s %n");
+            bluetooth.print3Column(
+                'Discount Amount',
+                ':',
+                '${dataInformation['OtherDiscount'].toStringAsFixed(2)}',
                 Enu.Size.bold.val,
-                Enu.Align.right.val);
+                format: "%-30s %-10s %20s %n");
             line = "12";
-            bluetooth.printCustom(
-                'OtherCharges      :${dataInformation['OtherCharges'].toStringAsFixed(2)}  ',
+            bluetooth.print3Column(
+                'OtherCharges',
+                ':',
+                '${dataInformation['OtherCharges'].toStringAsFixed(2)}',
                 Enu.Size.bold.val,
-                Enu.Align.right.val);
-            bluetooth.printCustom(
-                'Net Amount        :${dataInformation['NetAmount'].toStringAsFixed(2)}  ',
+                format: "%-30s %-10s %20s %n");
+            bluetooth.print3Column(
+                'Net Amount',
+                ':',
+                '${dataInformation['NetAmount'].toStringAsFixed(2)}',
                 Enu.Size.bold.val,
-                Enu.Align.right.val);
+                format: "%-30s %-10s %20s %n");
             line = "13";
-            bluetooth.printCustom('Excise Duty       : 0.00  ',
-                Enu.Size.bold.val, Enu.Align.right.val);
+            bluetooth.print3Column(
+                'Excise Duty', ':', '0.00', Enu.Size.bold.val,
+                format: "%-30s %-10s %20s %n");
             line = "14";
-            bluetooth.printCustom(
-                'Vat Amount        : ' +
-                    (double.tryParse(dataInformation['CGST'].toString()) +
-                            double.tryParse(
-                                dataInformation['SGST'].toString()) +
-                            double.tryParse(dataInformation['IGST'].toString()))
-                        .toStringAsFixed(2) +
-                    '  ',
+            bluetooth.print3Column(
+                'Vat Amount',
+                ':',
+                (double.tryParse(dataInformation['CGST'].toString()) +
+                        double.tryParse(dataInformation['SGST'].toString()) +
+                        double.tryParse(dataInformation['IGST'].toString()))
+                    .toStringAsFixed(2),
                 Enu.Size.bold.val,
-                Enu.Align.right.val);
+                format: "%-30s %-10s %20s %n");
             bluetooth.printCustom(
                 printerLine, Enu.Size.medium.val, Enu.Align.center.val);
             line = "15";
-            bluetooth.printCustom(
-                'Total Amount      :${dataInformation['GrandTotal'].toStringAsFixed(2)}',
+            bluetooth.print3Column(
+                'Total Amount',
+                ':',
+                '${dataInformation['GrandTotal'].toStringAsFixed(2)}',
                 Enu.Size.bold.val,
-                Enu.Align.right.val);
+                format: "%-30s %-10s %20s %n");
             bluetooth.printCustom(
-                'Amount In Words : ${NumberToWord().convert('en', double.tryParse(dataInformation['GrandTotal'].toString()).round())}',
+                'Amount In Words : ${NumberToWord().convertDouble('en', double.tryParse(dataInformation['GrandTotal'].toString()))}',
                 Enu.Size.medium.val,
                 Enu.Align.left.val);
             bluetooth.printCustom(
@@ -611,19 +621,6 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
             bluetooth.print4Column("Receiver Name & Sign :", "____________",
                 "Salesman Sign", "____________", Enu.Size.bold.val,
                 format: "%-16s %-15s %-16s %-15s %n");
-            var qrData = SaudiConversion.getBase64(
-                companySettings.name,
-                ComSettings.getValue('GST-NO', settings),
-                DateUtil.dateTimeQrDMY(
-                    DateUtil.datedYMD(dataInformation['DDate']) +
-                        ' ' +
-                        DateUtil.timeHMS(dataInformation['BTime'])),
-                double.tryParse(dataInformation['GrandTotal'].toString())
-                    .toStringAsFixed(2),
-                (double.tryParse(dataInformation['CGST'].toString()) +
-                        double.tryParse(dataInformation['SGST'].toString()) +
-                        double.tryParse(dataInformation['IGST'].toString()))
-                    .toStringAsFixed(2));
             if (Settings.getValue<bool>('key-print-balance', false)) {
               //
             } else {
@@ -635,7 +632,8 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
               bluetooth.printCustom('Party Balance: ${bal.toStringAsFixed(2)}',
                   Enu.Size.medium.val, Enu.Align.left.val);
             }
-            bluetooth.printQRcode(qrData, 200, 200, Enu.Align.center.val);
+            bluetooth.printQRcode(
+                companySettings.email, 200, 200, Enu.Align.center.val);
             bluetooth.printNewLine();
             bluetooth.printNewLine();
             bluetooth.printNewLine();

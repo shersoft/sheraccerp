@@ -221,6 +221,33 @@ class DioService {
     return ret;
   }
 
+  Future<List<dynamic>> findLedger(id) async {
+    List<dynamic> ret = [];
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Ledger/find/$dataBase',
+          queryParameters: {'id': id});
+
+      if (response.statusCode == 200) {
+        ret = response.data;
+      } else {
+        ret = [];
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
   Future<bool> spLedgerAdd(data) async {
     bool ret = false;
     SharedPreferences pref = await SharedPreferences.getInstance();

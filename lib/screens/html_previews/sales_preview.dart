@@ -525,7 +525,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                             </table>
                             <table width="100%">
                       <tr>
-                          <td style="font-size:10px;">${NumberToWord().convert('en', double.tryParse(dataInformation['GrandTotal'].toString()).round())}</td>
+                          <td style="font-size:10px;">${NumberToWord().convertDouble('en', double.tryParse(dataInformation['GrandTotal'].toString()))}</td>
                         </tr>
                         </table>
                           <hr></hr>
@@ -610,7 +610,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                             </table>
                             <table width="100%">
                       <tr>
-                          <td style="font-size:10px;"> Amount in Words: ${NumberToWord().convert('en', double.tryParse(dataInformation['GrandTotal'].toString()).round())}</td>
+                          <td style="font-size:10px;"> Amount in Words: ${NumberToWord().convertDouble('en', double.tryParse(dataInformation['GrandTotal'].toString()))}</td>
                         </tr>
                         </table>
                         <hr></hr>
@@ -5988,12 +5988,11 @@ Future<pw.Document> makePDF(
                                     maxLines: 3,
                                     text: pw.TextSpan(
                                         style: const pw.TextStyle(fontSize: 8),
-                                        text: NumberToWord().convert(
+                                        text: NumberToWord().convertDouble(
                                             'en',
-                                            double.tryParse(dataInformation[
-                                                        'GrandTotal']
-                                                    .toString())
-                                                .round())))),
+                                            double.tryParse(
+                                                dataInformation['GrandTotal']
+                                                    .toString()))))),
                             pw.SizedBox(height: 5 * PdfPageFormat.mm),
                           ]),
                           pw.TableRow(children: [

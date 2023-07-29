@@ -677,7 +677,7 @@ class _BtPrintState extends State<BtPrint> {
         }
         // bytes += ticket.hr();
         // bytes += ticket.text(
-        //     'Amount in Words: ${NumberToWord().convert('en', double.tryParse(dataInformation['GrandTotal'].toString()).round())}',
+        //     'Amount in Words: ${NumberToWord().convertToDouble('en', double.tryParse(dataInformation['GrandTotal'].toString()))}',
         //     linesAfter: 1);
         if (Settings.getValue<bool>('key-print-balance', false)) {
           bytes += ticket.hr();
@@ -1259,7 +1259,7 @@ class _BtPrintState extends State<BtPrint> {
         ]);
         bytes += ticket.hr();
         bytes += ticket.text(
-            'Amount in Words: ${NumberToWord().convert('en', double.tryParse(dataInformation['GrandTotal'].toString()).round())}',
+            'Amount in Words: ${NumberToWord().convertDouble('en', double.tryParse(dataInformation['GrandTotal'].toString()))}',
             linesAfter: 1);
 
         // ticket.feed(1);
@@ -3366,7 +3366,7 @@ class _BtPrintState extends State<BtPrint> {
         ]);
         bytes += ticket.hr();
         bytes += ticket.text(
-            'Amount in Words: ${NumberToWord().convert('en', double.tryParse(dataInformation['GrandTotal'].toString()).round())}',
+            'Amount in Words: ${NumberToWord().convertDouble('en', double.tryParse(dataInformation['GrandTotal'].toString()))}',
             linesAfter: 1);
 
         if (taxSale) {
@@ -4396,7 +4396,7 @@ class _BtPrintState extends State<BtPrint> {
         ]);
         bytes += ticket.hr();
         bytes += ticket.text(
-            'Amount in Words: ${NumberToWord().convert('en', double.tryParse(dataInformation['GrandTotal'].toString()).round())}',
+            'Amount in Words: ${NumberToWord().convertDouble('en', double.tryParse(dataInformation['GrandTotal'].toString()))}',
             linesAfter: 1);
 
         if (Settings.getValue<bool>('key-print-balance', false)) {
@@ -5419,7 +5419,7 @@ class _BtPrintState extends State<BtPrint> {
         ]);
         bytes += ticket.hr();
         bytes += ticket.text(
-            'Amount in Words: ${NumberToWord().convert('en', double.tryParse(dataInformation['GrandTotal'].toString()).round())}',
+            'Amount in Words: ${NumberToWord().convertDouble('en', double.tryParse(dataInformation['GrandTotal'].toString()))}',
             linesAfter: 1);
 
         // ticket.feed(1);

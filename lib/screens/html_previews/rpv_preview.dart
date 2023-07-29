@@ -334,7 +334,7 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
                           </table>
                           <table width="100%">
                                          <tr>
-                         <td style="font-size:10px;"> Amount in Words: ${NumberToWord().convert('en', double.tryParse(bill['total'].toString())!.round())}</td>
+                         <td style="font-size:10px;"> Amount in Words: ${NumberToWord().convertDouble('en', double.tryParse(bill['total'].toString()))}</td>
                          
                        </tr>
                        </table>
@@ -1671,7 +1671,7 @@ Future<pw.Document> makePDF(
             pw.Container(
                 alignment: pw.Alignment.center,
                 child: pw.Text(
-                  ' Amount in Words: ${NumberToWord().convert('en', double.tryParse(information['total'].toString())!.round())}',
+                  ' Amount in Words: ${NumberToWord().convertDouble('en', double.tryParse(information['total'].toString()))}',
                 )),
             pw.Column(children: [
               pw.Row(

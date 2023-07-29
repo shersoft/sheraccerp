@@ -1,5 +1,25 @@
 class NumberToWord {
-  String convert(String locale, int digit) {
+  //arabic => ar
+  // french => fr
+  // english => en
+  // spanish => es
+  String convertDouble(String locale, double? number) {
+    if (number == null) return '';
+    int firstNumber = int.parse(number.toString().split('.')[0]);
+    int secondNumber = int.parse(number.toString().split('.')[1]);
+    String numberInCharacters;
+    numberInCharacters =
+        firstNumber == 0 ? zeroWord(locale) : convertInt(locale, firstNumber);
+    numberInCharacters +=
+        (secondNumber == 0 ? "" : " and  ${convertInt(locale, secondNumber)}");
+    return numberInCharacters;
+  }
+
+  String zeroWord(String locale) {
+    return '';
+  }
+
+  String convertInt(String locale, int digit) {
     final int number = digit;
     String numberString = '0000000000' + number.toString();
     numberString =
