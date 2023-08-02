@@ -437,40 +437,40 @@ class _SaleState extends State<Sale> {
                     color: white,
                     iconSize: 40,
                     onPressed: () {
-                      // if (buttonEvent) {
-                      //   return;
-                      // } else {
-                      if (companyUserData.insertData) {
-                        if (totalItem > 0) {
-                          setState(() {
-                            _isLoading = true;
-                            buttonEvent = true;
-                          });
-                          _insert(
-                              'SAVE DateTime:' +
-                                  formattedDate +
-                                  timeIs +
-                                  ' location:' +
-                                  lId.toString() +
-                                  ' ' +
-                                  CartItem.encodeCartToJson(cartItem)
-                                      .toString(),
-                              0);
-                          saveSale();
+                      if (buttonEvent) {
+                        return;
+                      } else {
+                        if (companyUserData.insertData) {
+                          if (totalItem > 0) {
+                            setState(() {
+                              _isLoading = true;
+                              buttonEvent = true;
+                            });
+                            _insert(
+                                'SAVE DateTime:' +
+                                    formattedDate +
+                                    timeIs +
+                                    ' location:' +
+                                    lId.toString() +
+                                    ' ' +
+                                    CartItem.encodeCartToJson(cartItem)
+                                        .toString(),
+                                0);
+                            saveSale();
+                          } else {
+                            Fluttertoast.showToast(
+                                msg: 'Please add at least one item');
+                            setState(() {
+                              buttonEvent = false;
+                            });
+                          }
                         } else {
                           Fluttertoast.showToast(
-                              msg: 'Please add at least one item');
+                              msg: 'Permission denied\ncan`t save');
                           setState(() {
                             buttonEvent = false;
                           });
                         }
-                        //   } else {
-                        //     Fluttertoast.showToast(
-                        //         msg: 'Permission denied\ncan`t save');
-                        //     setState(() {
-                        //       buttonEvent = false;
-                        //     });
-                        //   }
                       }
                     },
                     icon: const Icon(Icons.save)),

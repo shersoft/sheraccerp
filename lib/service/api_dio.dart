@@ -3500,7 +3500,7 @@ class DioService {
     return _items;
   }
 
-  Future<dynamic> findSale(int id, int type, String statement) async {
+  Future<dynamic> fetchSalesReturnInvoice(String id, int type) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
@@ -3511,7 +3511,12 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'sale/find/$dataBase/$id/$type/$statement');
+              'sale/findReturn/$dataBase',
+          queryParameters: {
+            'id': id,
+            'type': type,
+            'fyId': currentFinancialYear.id,
+          });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 

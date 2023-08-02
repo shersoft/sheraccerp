@@ -1,6 +1,5 @@
 // @dart = 2.11
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,6 +16,7 @@ import 'package:sheraccerp/models/stock_product.dart';
 import 'package:sheraccerp/models/unit_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
+import 'package:sheraccerp/service/blue_thermal.dart';
 import 'package:sheraccerp/service/bt_print.dart';
 import 'package:sheraccerp/service/com_service.dart';
 import 'package:sheraccerp/shared/constants.dart';
@@ -68,6 +68,7 @@ class _SalesReturnState extends State<SalesReturn> {
   int lId = 0, groupId = 0, acId = 0;
   var salesManId = 0;
   int saleFormId = 1;
+  int printerType = 0, printerDevice = 0, printModel = 2;
 
   @override
   void initState() {
@@ -89,9 +90,15 @@ class _SalesReturnState extends State<SalesReturn> {
             'int', 'key-dropdown-default-location-view', 2) -
         1;
 
-    // dio.getSalesAccountList().then((value) {
-    //   saleAccount = value;
-    // });
+    printerType =
+        ComSettings.appSettings('int', 'key-dropdown-printer-type-view', 0);
+    printerDevice =
+        ComSettings.appSettings('int', 'key-dropdown-printer-device-view', 0);
+    printModel =
+        ComSettings.appSettings('int', "key-dropdown-printer-model-view", 2);
+    printLines = ComSettings.billLineValue(
+        ComSettings.appSettings('int', "key-dropdown-print-line", 2));
+
     groupId =
         ComSettings.appSettings('int', 'key-dropdown-default-group-view', 0) -
             1;
@@ -113,7 +120,7 @@ class _SalesReturnState extends State<SalesReturn> {
         int refId = widget.data[0]['id'];
         if (refId > 0) {
           var dataS = {'Id': refId};
-          fetchSaleReturn(context, dataS);
+          fetchSaleReturn(context, refId);
         } else {
           nextWidget = 2;
           widgetID = false;
@@ -482,7 +489,7 @@ class _SalesReturnState extends State<SalesReturn> {
           json.encode({
             'statement': 'SalesReturnInsert',
             'entryNo': 0,
-            'invoiceNo': 0,
+            'invoiceNo': '0',
             'saleFormId': saleFormId,
             'saleFormType': '',
             'taxType': taxType,
@@ -2554,16 +2561,41 @@ class _SalesReturnState extends State<SalesReturn> {
             'otherAmount': '[{}]'
           };
 
-          dio.spSaleFind(body).then((data) {
+          dio
+              .fetchSalesReturnInvoice(dataDynamic[0]['EntryNo'].toString(), 1)
+              .then((data) {
             if (data != null) {
               var dataAll = {
-                'Information': data[0],
-                'Particulars': data[1],
-                'otherAmount': data[2],
-                'balance': ledgerModel.balance.toString()
+                'Information': data['Information'][0],
+                'Particulars': data['Particulars'],
+                'otherAmount': data['otherAmount'],
+                'balance': data['BalanceAmount'].toString()
               };
-              printBluetooth(context, title, companySettings, settings, dataAll,
-                  byteImage, size, form);
+              // var information = data['Information'][0];
+              // var particulars = data['Particulars'];
+              // var serialNO = value['SerialNO'];
+              // var deliveryNoteDetails = value['DeliveryNote'];
+              // var message = data['message'];
+              // otherAmountList = value['otherAmount'];
+
+              if (printerType == 2) {
+                //2: 'Bluetooth',
+                if (printerDevice == 2) {
+                  //2: 'Default',
+                } else if (printerDevice == 3) {
+                  //3: 'Line',
+                } else if (printerDevice == 4) {
+                  //                4: 'Local',
+                } else if (printerDevice == 5) {
+                  //                5: 'ESC/POS',
+                  printBluetooth(context, title, companySettings, settings,
+                      dataAll, byteImage, size, form);
+                } else if (printerDevice == 6) {
+                  //                6: 'Thermal',
+                  _selectBtThermalPrint(context, title, companySettings,
+                      settings, dataAll, byteImage, "4");
+                }
+              }
             }
           });
         },
@@ -2596,7 +2628,7 @@ class _SalesReturnState extends State<SalesReturn> {
         },
         onPressedYes: () {
           Navigator.of(context).pop();
-          fetchSaleReturn(context, dataDynamic);
+          fetchSaleReturn(context, dataDynamic['Id']);
         },
         buttonTextForNo: 'No',
         buttonTextForYes: 'YES',
@@ -2606,33 +2638,19 @@ class _SalesReturnState extends State<SalesReturn> {
         context: context);
   }
 
-  fetchSaleReturn(context, dataS) {
+  fetchSaleReturn(context, id) {
     rateType = '1';
     double billTotal = 0;
     String narration = ' ';
 
-    var data = '[' +
-        json.encode({
-          'statement': 'SalesReturnFind',
-          'entryNo': dataS['Id'].toString(),
-          'saleFormId': saleFormId,
-          'fyId': currentFinancialYear.id
-        }) +
-        ']';
-    final body = {
-      'information': '[{}]',
-      'data': data,
-      'particular': '[{}]',
-      'otherAmount': '[{}]'
-    };
-
-    dio.spSaleFind(body).then((value) {
+    dio.fetchSalesReturnInvoice(id.toString(), 1).then((value) {
       if (value != null) {
-        var information = value[0][0];
-        var particulars = value[1];
-        // var serialNO = value[2];
-        // var deliveryNoteDetails = value[3];
-        // otherAmountList = value[4];
+        var information = value['Information'][0];
+        var particulars = value['Particulars'];
+        // var serialNO = value['SerialNO'];
+        // var deliveryNoteDetails = value['DeliveryNote'];
+        var message = value['message'];
+        // otherAmountList = value['otherAmount'];
 
         formattedDate = DateUtil.dateDMY(information['DDate']);
 
@@ -2648,7 +2666,7 @@ class _SalesReturnState extends State<SalesReturn> {
         narration = information['Narration'];
         CustomerModel cModel = CustomerModel(
             id: information['Customer'],
-            name: information['Toname'],
+            name: information['ToName'],
             address1: information['Add1'],
             address2: information['Add2'],
             address3: information['Add3'],
@@ -2660,15 +2678,16 @@ class _SalesReturnState extends State<SalesReturn> {
             route: '',
             state: '',
             stateCode: '',
-            taxNumber: '',
-            remarks: '');
+            taxNumber: information['gstno'],
+            remarks: '',
+            pinNo: '');
         ledgerModel = cModel;
         ScopedModel.of<MainModel>(context).addCustomer(cModel);
         for (var product in particulars) {
           addProduct(CartItem(
               id: totalItem + 1,
-              itemId: product['ItemID'],
-              itemName: product['ProductName'],
+              itemId: product['ItemId'],
+              itemName: product['itemname'],
               quantity: double.tryParse(product['Qty'].toString()),
               rate: double.tryParse(product['Rate'].toString()),
               rRate: double.tryParse(product['RealRate'].toString()),
@@ -2683,7 +2702,7 @@ class _SalesReturnState extends State<SalesReturn> {
               tax: double.tryParse(product['CGST'].toString()) +
                   double.tryParse(product['SGST'].toString()) +
                   double.tryParse(product['IGST'].toString()),
-              taxP: double.tryParse(product['Tax'].toString()),
+              taxP: double.tryParse(product['igst'].toString()),
               unitId: product['Unit'],
               unitValue: double.tryParse(product['UnitValue'].toString()),
               pRate: double.tryParse(product['Prate'].toString()),
@@ -2698,7 +2717,7 @@ class _SalesReturnState extends State<SalesReturn> {
                   double.tryParse(product['GrossValue'].toString()), //subTotal,
               cess: double.tryParse(product['cess'].toString()), //cess,
               total: double.tryParse(product['Total'].toString()), //total,
-              profitPer: double.tryParse(product['Profit'].toString()),
+              profitPer: 0,
               fUnitValue:
                   double.tryParse(product['FValue'].toString()), //fUnitValue,
               adCess: double.tryParse(product['adcess'].toString()), //adCess,
@@ -2728,6 +2747,22 @@ class _SalesReturnState extends State<SalesReturn> {
     ByteData bytes = await rootBundle.load('assets/logo.png');
     final buffer = bytes.buffer;
     byteImage = Uint8List.view(buffer);
+  }
+
+  _selectBtThermalPrint(
+      BuildContext context,
+      String title,
+      CompanyInformation companySettings,
+      List<CompanySettings> settings,
+      data,
+      byteImage,
+      size) async {
+    var dataAll = [companySettings, settings, data, size, "SALES RETURN"];
+    // dataAll.add('Settings[' + settings + ']');b
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) => BlueThermalPrint(dataAll, byteImage)));
   }
 
   Future<dynamic> printBluetooth(
