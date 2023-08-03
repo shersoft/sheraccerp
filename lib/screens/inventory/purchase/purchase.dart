@@ -76,6 +76,7 @@ class _PurchaseState extends State<Purchase> {
       });
     });
     loadSettings();
+    setCursorPosition();
   }
 
   loadSettings() {
@@ -109,6 +110,22 @@ class _PurchaseState extends State<Purchase> {
         : 2;
 
     isFreeQty = ComSettings.getStatus('KEY FREE QTY IN PURCHASE', settings);
+  }
+
+  setCursorPosition() {
+    // controllerQuantity.text = '';
+    focusNodeQuantity.addListener(
+      () {
+        controllerQuantity.selection = TextSelection.fromPosition(
+            TextPosition(offset: controllerQuantity.text.length));
+      },
+    );
+    focusNodeRate.addListener(
+      () {
+        controllerRate.selection = TextSelection.fromPosition(
+            TextPosition(offset: controllerRate.text.length));
+      },
+    );
   }
 
   @override
@@ -420,6 +437,29 @@ class _PurchaseState extends State<Purchase> {
   @override
   void dispose() {
     _scrollController.dispose();
+    focusNodeQuantity.dispose();
+    focusNodeFreeQuantity.dispose();
+    focusNodeRate.dispose();
+    focusNodeDiscountPer.dispose();
+    focusNodeDiscount.dispose();
+    focusNodeMrp.dispose();
+    focusNodeRetail.dispose();
+    focusNodeWholeSale.dispose();
+    focusNodeBranch.dispose();
+    focusNodeSerialNo.dispose();
+    controllerBranch.dispose();
+    controllerDiscount.dispose();
+    controllerDiscountPer.dispose();
+    controllerFreeQuantity.dispose();
+    controllerMrp.dispose();
+    controllerQuantity.dispose();
+    controllerRate.dispose();
+    controllerRetail.dispose();
+    controllerSerialNo.dispose();
+    controllerWholeSale.dispose();
+    cashPaidController.dispose();
+    invNoController.dispose();
+
     super.dispose();
   }
 
@@ -1204,6 +1244,16 @@ class _PurchaseState extends State<Purchase> {
   TextEditingController controllerWholeSale = TextEditingController();
   TextEditingController controllerBranch = TextEditingController();
   TextEditingController controllerSerialNo = TextEditingController();
+  FocusNode focusNodeQuantity = FocusNode();
+  FocusNode focusNodeFreeQuantity = FocusNode();
+  FocusNode focusNodeRate = FocusNode();
+  FocusNode focusNodeDiscountPer = FocusNode();
+  FocusNode focusNodeDiscount = FocusNode();
+  FocusNode focusNodeMrp = FocusNode();
+  FocusNode focusNodeRetail = FocusNode();
+  FocusNode focusNodeWholeSale = FocusNode();
+  FocusNode focusNodeBranch = FocusNode();
+  FocusNode focusNodeSerialNo = FocusNode();
 
   double quantity = 0,
       freeQuantity = 0,
@@ -1649,7 +1699,9 @@ class _PurchaseState extends State<Purchase> {
               children: [
                 Expanded(
                   child: TextField(
+                    textAlign: TextAlign.right,
                     controller: controllerQuantity,
+                    focusNode: focusNodeQuantity,
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), label: Text('Quantity')),
                     keyboardType:
@@ -1733,6 +1785,8 @@ class _PurchaseState extends State<Purchase> {
             const Divider(),
             TextField(
               controller: controllerRate,
+              focusNode: focusNodeRate,
+              textAlign: TextAlign.right,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('P Rate')),
               keyboardType:
@@ -2263,6 +2317,7 @@ class _PurchaseState extends State<Purchase> {
         otherAmountList = value['otherAmount'];
 
         formattedDate = DateUtil.dateDMY(information['DDate']);
+        invDate = DateUtil.dateDMY(information['InvDate']);
 
         dataDynamic = [
           {
@@ -2317,7 +2372,9 @@ class _PurchaseState extends State<Purchase> {
               serialNo: product['serialno'],
               spRetail: double.tryParse(product['Spretail'].toString()),
               spRetailPer: double.tryParse(product['spretailp'].toString()),
-              tax: double.tryParse(product['IGST'].toString()),
+              tax: double.tryParse(product['SGST'].toString()) +
+                  double.tryParse(product['CGST'].toString()) +
+                  double.tryParse(product['IGST'].toString()),
               taxP: double.tryParse(product['tax'].toString()),
               total: double.tryParse(product['Total'].toString()),
               uniqueCode: product['UniqueCode'],

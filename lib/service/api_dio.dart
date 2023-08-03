@@ -1461,7 +1461,7 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'stock_ledger_report/$dataBase',
+              'stock_report_new/$dataBase',
           queryParameters: data,
           options: Options(headers: {'Content-Type': 'application/json'}));
 

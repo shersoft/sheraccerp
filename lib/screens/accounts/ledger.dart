@@ -22,7 +22,6 @@ class Ledger extends StatefulWidget {
 }
 
 class _LedgerState extends State<Ledger> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final _nameCtr = TextEditingController();
   final _add1Ctr = TextEditingController();
@@ -110,6 +109,16 @@ class _LedgerState extends State<Ledger> {
   Widget build(BuildContext context) {
     final routes =
         ModalRoute.of(context).settings.arguments as Map<String, String>;
+    if (routes != null) {
+      var parentName = routes['parent'] ?? '';
+      _dropDownValue = parentName.isNotEmpty
+          ? ledgerGroupList
+              .firstWhere((element) => element.name == parentName,
+                  orElse: () => LedgerModel(id: 0, name: ''))
+              .id
+          : 0;
+      var fss = _dropDownValue;
+    }
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
@@ -134,20 +143,14 @@ class _LedgerState extends State<Ledger> {
     setState(() {
       _isLoading = true;
     });
-    final FormState form = _formKey.currentState;
-    if (!form.validate()) {
-      showInSnackBar('Please fix the errors in red before submitting.');
+    bool result = await api.spLedgerDelete(ledgerId);
+    if (result) {
+      setState(() {
+        _isLoading = false;
+        showInSnackBar('Deleted : Ledger removed.');
+      });
     } else {
-      form.save();
-      bool result = await api.spLedgerDelete(ledgerId);
-      if (result) {
-        setState(() {
-          _isLoading = false;
-          showInSnackBar('Deleted : Ledger removed.');
-        });
-      } else {
-        showInSnackBar('error : Cannot delete this Ledger.');
-      }
+      showInSnackBar('error : Cannot delete this Ledger.');
     }
   }
 
@@ -155,63 +158,58 @@ class _LedgerState extends State<Ledger> {
     setState(() {
       _isLoading = true;
     });
-    final FormState form = _formKey.currentState;
-    if (!form.validate()) {
-      showInSnackBar('Please fix the errors in red before submitting.');
-    } else {
-      form.save();
-      var name = _nameCtr.text,
-          add1 = _add1Ctr.text,
-          add2 = _add2Ctr.text,
-          add3 = _add3Ctr.text,
-          add4 = _add4Ctr.text,
-          city = _cityCtr.text.isNotEmpty ? 1 : 0,
-          route = _routeCtr.text.isNotEmpty ? 1 : 0,
-          state = _dropDownState,
-          stateCode = _stateCode,
-          mobile = _phoneNumberCtr.text,
-          email = _emailCtr.text,
-          taxNo = _taxNoCtr.text;
-      double crAmount = _creditAmountCtr.text.isNotEmpty
-              ? double.tryParse(_creditAmountCtr.text)
-              : 0,
-          drAmount = _debitAmountCtr.text.isNotEmpty
-              ? double.tryParse(_debitAmountCtr.text)
-              : 0;
-      var data = [
-        {
-          'name': name.toUpperCase(),
-          'parent': _dropDownValue,
-          'add1': add1.toUpperCase(),
-          'add2': add2.toUpperCase(),
-          'add3': add3.toUpperCase(),
-          'add4': add4.toUpperCase(),
-          'city': city,
-          'route': route,
-          'state': state.toUpperCase(),
-          'stateCode': stateCode,
-          'mobile': mobile,
-          'email': email,
-          'taxNo': taxNo,
-          'active': valueActive ? 1 : 0,
-          'obDate': DateUtil.dateDMY2YMD(obDate),
-          'credit': crAmount,
-          'debit': drAmount,
-          'location': locationId,
-          'id': ledgerId.isNotEmpty ? ledgerId : 0
-        }
-      ];
-      bool result = action == 'edit'
-          ? await api.spLedgerEdit(data)
-          : await api.spLedgerAdd(data);
 
-      if (result) {
-        _saveAndRedirectToHome(action);
-      } else {
-        showInSnackBar(action == 'edit'
-            ? 'error : Cannot edit this Ledger.'
-            : 'error : Cannot save this Ledger.');
+    var name = _nameCtr.text,
+        add1 = _add1Ctr.text,
+        add2 = _add2Ctr.text,
+        add3 = _add3Ctr.text,
+        add4 = _add4Ctr.text,
+        city = _cityCtr.text.isNotEmpty ? 1 : 0,
+        route = _routeCtr.text.isNotEmpty ? 1 : 0,
+        state = _dropDownState,
+        stateCode = _stateCode,
+        mobile = _phoneNumberCtr.text,
+        email = _emailCtr.text,
+        taxNo = _taxNoCtr.text;
+    double crAmount = _creditAmountCtr.text.isNotEmpty
+            ? double.tryParse(_creditAmountCtr.text)
+            : 0,
+        drAmount = _debitAmountCtr.text.isNotEmpty
+            ? double.tryParse(_debitAmountCtr.text)
+            : 0;
+    var data = [
+      {
+        'name': name.toUpperCase(),
+        'parent': _dropDownValue,
+        'add1': add1.toUpperCase(),
+        'add2': add2.toUpperCase(),
+        'add3': add3.toUpperCase(),
+        'add4': add4.toUpperCase(),
+        'city': city,
+        'route': route,
+        'state': state.toUpperCase(),
+        'stateCode': stateCode,
+        'mobile': mobile,
+        'email': email,
+        'taxNo': taxNo,
+        'active': valueActive ? 1 : 0,
+        'obDate': DateUtil.dateDMY2YMD(obDate),
+        'credit': crAmount,
+        'debit': drAmount,
+        'location': locationId,
+        'id': ledgerId.isNotEmpty ? ledgerId : 0
       }
+    ];
+    bool result = action == 'edit'
+        ? await api.spLedgerEdit(data)
+        : await api.spLedgerAdd(data);
+
+    if (result) {
+      _saveAndRedirectToHome(action);
+    } else {
+      showInSnackBar(action == 'edit'
+          ? 'error : Cannot edit this Ledger.'
+          : 'error : Cannot save this Ledger.');
     }
   }
 
@@ -268,7 +266,7 @@ class _LedgerState extends State<Ledger> {
         var _SalesMan = data['SalesMan'].toString();
         var _bpr = data['bpr'].toString();
         var _rent = data['Rent'].toString();
-        int location = data['Location'] != null ? data['Location'] : 0;
+        int location = data['Location'] ?? 0;
         var orderDate = data['OrderDate'];
         var deliveryData = data['DeliveryData'];
         var cPerson = data['CPerson'];
@@ -766,7 +764,7 @@ class _LedgerState extends State<Ledger> {
                                 ),
                               );
                             }).toList(),
-                            value: salesManId.toString(),
+                            // value: salesManId.toString(),
                             onChanged: (value) {
                               setState(() {
                                 salesManId = int.parse(value);
