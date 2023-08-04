@@ -3144,7 +3144,9 @@ class _SaleState extends State<Sale> {
                                 allow: true, replacementString: '.')
                           ],
                           decoration: const InputDecoration(
-                              labelText: 'Quantity', hintText: '0.0'),
+                              labelText: 'Quantity',
+                              hintText: '0.0',
+                              border: OutlineInputBorder()),
                           onChanged: (value) {
                             if (value.isNotEmpty) {
                               bool cartQ = false;
@@ -3291,70 +3293,122 @@ class _SaleState extends State<Sale> {
                                         name: snapshot.data[i].name,
                                         pUnit: snapshot.data[i].pUnit,
                                         sUnit: snapshot.data[i].sUnit,
-                                        unit: snapshot.data[i].unit));
+                                        unit: snapshot.data[i].unit,
+                                        rate: snapshot.data[i].rate));
                                   }
                                 }
                                 return snapshot.data != null &&
                                         snapshot.data.length > 0
-                                    ? DropdownButton<String>(
-                                        hint: Text(_dropDownUnit > 0
-                                            ? UnitSettings.getUnitName(
-                                                _dropDownUnit)
-                                            : 'SKU'),
-                                        items: snapshot.data
-                                            .map<DropdownMenuItem<String>>(
-                                                (item) {
-                                          return DropdownMenuItem<String>(
-                                            value: item.id.toString(),
-                                            child: Text(item.name),
-                                          );
-                                        }).toList(),
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _dropDownUnit = int.tryParse(value);
-                                            for (var i = 0;
-                                                i < unitListData.length;
-                                                i++) {
-                                              UnitModel _unit = unitListData[i];
-                                              if (_unit.unit ==
-                                                  int.tryParse(value)) {
-                                                _conversion = _unit.conversion;
-                                                break;
-                                              }
-                                            }
-                                            calculate();
-                                          });
-                                        },
+                                    ? DecoratedBox(
+                                        decoration: BoxDecoration(
+                                            border: Border.all(
+                                                color: black, width: 0.8),
+                                            borderRadius:
+                                                BorderRadius.circular(10)),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(2.0),
+                                          child: Center(
+                                            child: DropdownButton<String>(
+                                              hint: Text(_dropDownUnit > 0
+                                                  ? UnitSettings.getUnitName(
+                                                      _dropDownUnit)
+                                                  : 'SKU'),
+                                              items: snapshot.data.map<
+                                                      DropdownMenuItem<String>>(
+                                                  (item) {
+                                                return DropdownMenuItem<String>(
+                                                  value: item.id.toString(),
+                                                  child: Text(item.name),
+                                                );
+                                              }).toList(),
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _dropDownUnit =
+                                                      int.tryParse(value);
+                                                  for (var i = 0;
+                                                      i < unitListData.length;
+                                                      i++) {
+                                                    UnitModel _unit =
+                                                        unitListData[i];
+                                                    if (_unit.unit ==
+                                                        int.tryParse(value)) {
+                                                      double _rate = _unit
+                                                                  .rate ==
+                                                              'MRP'
+                                                          ? product.sellingPrice
+                                                          : _unit.rate ==
+                                                                  'WHOLESALE'
+                                                              ? product
+                                                                  .wholeSalePrice
+                                                              : _unit.rate ==
+                                                                      'RETAIL'
+                                                                  ? product
+                                                                      .retailPrice
+                                                                  : _unit.rate ==
+                                                                          'SPRETAIL'
+                                                                      ? product
+                                                                          .spRetailPrice
+                                                                      : rate;
+                                                      rate = _rate;
+                                                      saleRate = _rate;
+                                                      _rateController.text =
+                                                          saleRate
+                                                              .toStringAsFixed(
+                                                                  2);
+                                                      _conversion =
+                                                          _unit.conversion;
+                                                      break;
+                                                    }
+                                                  }
+                                                  calculate();
+                                                });
+                                              },
+                                            ),
+                                          ),
+                                        ),
                                       )
-                                    : DropdownButton<String>(
-                                        hint: Text(_dropDownUnit > 0
-                                            ? UnitSettings.getUnitName(
-                                                _dropDownUnit)
-                                            : 'SKU'),
-                                        items: unitList
-                                            .map<DropdownMenuItem<String>>(
-                                                (item) {
-                                          return DropdownMenuItem<String>(
-                                            value: item.key.toString(),
-                                            child: Text(item.value),
-                                          );
-                                        }).toList(),
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _dropDownUnit = int.tryParse(value);
-                                            // for (var i = 0;
-                                            //     i < unitListData.length;
-                                            //     i++) {
-                                            //   UnitModel _unit = unitListData[i];
-                                            //   if (_unit.unit ==
-                                            //       int.tryParse(value)) {
-                                            //     _conversion = _unit.conversion;
-                                            //     break;
-                                            //   }
-                                            // }
-                                            // calculate();
-                                          });
-                                        },
+                                    : DecoratedBox(
+                                        decoration: BoxDecoration(
+                                            border: Border.all(
+                                                color: black, width: 0.8),
+                                            borderRadius:
+                                                BorderRadius.circular(10)),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(2.0),
+                                          child: Center(
+                                            child: DropdownButton<String>(
+                                              hint: Text(_dropDownUnit > 0
+                                                  ? UnitSettings.getUnitName(
+                                                      _dropDownUnit)
+                                                  : 'SKU'),
+                                              items: unitList.map<
+                                                      DropdownMenuItem<String>>(
+                                                  (item) {
+                                                return DropdownMenuItem<String>(
+                                                  value: item.key.toString(),
+                                                  child: Text(item.value),
+                                                );
+                                              }).toList(),
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _dropDownUnit =
+                                                      int.tryParse(value);
+                                                  // for (var i = 0;
+                                                  //     i < unitListData.length;
+                                                  //     i++) {
+                                                  //   UnitModel _unit = unitListData[i];
+                                                  //   if (_unit.unit ==
+                                                  //       int.tryParse(value)) {
+                                                  //     _conversion = _unit.conversion;
+                                                  //     break;
+                                                  //   }
+                                                  // }
+                                                  // calculate();
+                                                });
+                                              },
+                                            ),
+                                          ),
+                                        ),
                                       );
                               },
                             ),
@@ -3370,7 +3424,17 @@ class _SaleState extends State<Sale> {
                         child: Expanded(
                             child: Padding(
                           padding: const EdgeInsets.all(2.0),
-                          child: Text('$_conversion'),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                                border: Border.all(color: black, width: 0.8),
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(2.0),
+                              child: Center(
+                                child: Text('$_conversion'),
+                              ),
+                            ),
+                          ),
                         )),
                       ),
                     ],
@@ -3476,9 +3540,17 @@ class _SaleState extends State<Sale> {
                                             return Card(
                                               elevation: 5,
                                               child: ListTile(
-                                                  title: Text(rateData[index]
-                                                          .name +
-                                                      ' : ${rateData[index].rate}'),
+                                                  title: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                          rateData[index].name),
+                                                      Text(
+                                                          ' : ${rateData[index].rate}'),
+                                                    ],
+                                                  ),
                                                   // subtitle: Text(
                                                   //     'Quantity : ${rateData[index].quantity} Rate ${rateData[index].sellingPrice}'),
                                                   onTap: () {

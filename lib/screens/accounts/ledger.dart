@@ -49,6 +49,9 @@ class _LedgerState extends State<Ledger> {
   DioService api = DioService();
   bool _isLoading = false,
       valueActive = true,
+      valueCostCenter = false,
+      valueFranchisee = false,
+      valueBillWise = false,
       isExist = false,
       buttonEvent = false;
   String ledgerId = '';
@@ -76,7 +79,13 @@ class _LedgerState extends State<Ledger> {
     locationId = ComSettings.appSettings(
             'int', 'key-dropdown-default-location-view', 2) -
         1;
-    salesManList.add({'Auto': 0, 'Name': ''});
+    // var isIn = salesManList.isEmpty
+    //     ? null
+    //     : salesManList.firstWhere((element) => element['Auto'] == 0,
+    //         orElse: () => null);
+    // if (isIn == null) {
+    //   salesManList.add({'Auto': 0, 'Name': ''});
+    // }
 
     obDate = DateUtil.datePickerDMY(now);
     api.getLedgerAll().then(
@@ -116,8 +125,7 @@ class _LedgerState extends State<Ledger> {
               .firstWhere((element) => element.name == parentName,
                   orElse: () => LedgerModel(id: 0, name: ''))
               .id
-          : 0;
-      var fss = _dropDownValue;
+          : _dropDownValue;
     }
     return Scaffold(
       key: _scaffoldKey,
@@ -164,8 +172,8 @@ class _LedgerState extends State<Ledger> {
         add2 = _add2Ctr.text,
         add3 = _add3Ctr.text,
         add4 = _add4Ctr.text,
-        city = _cityCtr.text.isNotEmpty ? 1 : 0,
-        route = _routeCtr.text.isNotEmpty ? 1 : 0,
+        city = cityData != null ? cityData.id : 0,
+        route = routeData != null ? routeData.id : 0,
         state = _dropDownState,
         stateCode = _stateCode,
         mobile = _phoneNumberCtr.text,
@@ -190,6 +198,7 @@ class _LedgerState extends State<Ledger> {
         'state': state.toUpperCase(),
         'stateCode': stateCode,
         'mobile': mobile,
+        'salesMan': salesManId > 0 ? salesManId.toString() : '0',
         'email': email,
         'taxNo': taxNo,
         'active': valueActive ? 1 : 0,
@@ -197,7 +206,20 @@ class _LedgerState extends State<Ledger> {
         'credit': crAmount,
         'debit': drAmount,
         'location': locationId,
-        'id': ledgerId.isNotEmpty ? ledgerId : 0
+        'id': ledgerId.isNotEmpty ? ledgerId : 0,
+        'pan': _panCtr.text,
+        'cDays':
+            _creditDaysCtr.text.isNotEmpty ? int.parse(_creditDaysCtr.text) : 0,
+        'cAmount': _creditAmtCtr.text.isNotEmpty
+            ? double.parse(_creditAmtCtr.text)
+            : 0,
+        'cPerson': _personCtr.text.toUpperCase(),
+        'costCenter': valueCostCenter ? 1 : 0,
+        'franchisee': valueFranchisee ? 1 : 0,
+        'billWise': valueBillWise ? 1 : 0,
+        'pin': _pinCtr.text,
+        'secondName': _secondNameCtr.text,
+        'bpr': 0,
       }
     ];
     bool result = action == 'edit'
@@ -246,38 +268,42 @@ class _LedgerState extends State<Ledger> {
         _add3Ctr.text = data['add3'] ?? '';
         _add4Ctr.text = data['add4'] ?? '';
         if (data['city'] > 0) {
-          _cityCtr.text = '';
+          cityData = otherRegAreaList
+              .firstWhere((element) => element.id == data['city']);
+          _cityCtr.text = cityData.name;
         }
         if (data['route'] > 0) {
-          _routeCtr.text = '';
+          routeData = otherRegRouteList
+              .firstWhere((element) => element.id == data['route']);
+          _routeCtr.text = routeData.name;
         }
         if (data['lh_id'] > 0) {
           _dropDownValue = data['lh_id'];
         }
         _phoneNumberCtr.text = data['Mobile'];
-        var _pan = data['pan'];
+        _panCtr.text = data['pan'];
         _emailCtr.text = data['Email'];
         _dropDownState = data['state'].toString();
         _stateCode = data['stateCode'].toString();
         _taxNoCtr.text = data['gstno'].toString();
-        var _cDays = data['CDays'].toString();
-        var _cAmount = data['CAmount'].toString();
+        _creditDaysCtr.text = data['CDays'].toString();
+        _creditAmtCtr.text = data['CAmount'].toString();
         valueActive = data['Active'] == 1 ? true : false;
-        var _SalesMan = data['SalesMan'].toString();
+        salesManId = data['SalesMan'] ?? 0;
         var _bpr = data['bpr'].toString();
         var _rent = data['Rent'].toString();
-        int location = data['Location'] ?? 0;
+        locationId = data['Location'] ?? 0;
         var orderDate = data['OrderDate'];
         var deliveryData = data['DeliveryData'];
-        var cPerson = data['CPerson'];
-        var costCenter = data['CostCenter'];
-        var franchisee = data['Franchisee'];
+        _personCtr.text = data['CPerson'];
+        valueCostCenter = data['CostCenter'] == 1 ? true : false;
+        valueFranchisee = data['Franchisee'] == 1 ? true : false;
         var salesRate = data['SalesRate'];
-        var subGroup = data['SubGroup'];
-        var PinNo = data['PinNo'];
+        var subGroup = data['SubGroup'] == 1 ? true : false;
+        _pinCtr.text = data['PinNo'];
         var TCS_Status = data['TCS_Status'];
         var TCSLimit = data['TCSLimit'];
-        var SecondName = data['SecondName'];
+        _secondNameCtr.text = data['SecondName'];
 
         if (dataTransaction.isNotEmpty) {
           var d = dataTransaction[0];
@@ -456,6 +482,15 @@ class _LedgerState extends State<Ledger> {
                           },
                         ),
                         const Divider(),
+                        const Align(
+                            child: Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text(
+                                'Under',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            alignment: Alignment.centerLeft),
                         Card(
                           elevation: 10,
                           child: DropdownButton<String>(
@@ -480,7 +515,6 @@ class _LedgerState extends State<Ledger> {
                             onChanged: (value) {
                               setState(() {
                                 _dropDownValue = int.parse(value);
-                                ;
                               });
                             },
                           ),
@@ -502,7 +536,6 @@ class _LedgerState extends State<Ledger> {
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),
                             labelText: 'Address',
-                            icon: Icon(Icons.streetview),
                           ),
                         ),
                         const Divider(),
@@ -667,6 +700,7 @@ class _LedgerState extends State<Ledger> {
                             labelText: 'PAN',
                           ),
                         ),
+                        const Divider(),
                         TextFormField(
                           controller: _pinCtr,
                           inputFormatters: [
@@ -744,6 +778,7 @@ class _LedgerState extends State<Ledger> {
                           ),
                         ),
                         const Divider(),
+                        const Text('SalesMan'),
                         Card(
                           elevation: 10,
                           child: DropdownButton<String>(
@@ -764,7 +799,7 @@ class _LedgerState extends State<Ledger> {
                                 ),
                               );
                             }).toList(),
-                            // value: salesManId.toString(),
+                            value: salesManId.toString(),
                             onChanged: (value) {
                               setState(() {
                                 salesManId = int.parse(value);
@@ -816,6 +851,7 @@ class _LedgerState extends State<Ledger> {
                                   border: OutlineInputBorder(),
                                   labelText: 'Receive Amount',
                                 ),
+                                textAlign: TextAlign.right,
                               ),
                             ),
                             const SizedBox(
@@ -834,6 +870,7 @@ class _LedgerState extends State<Ledger> {
                                   border: OutlineInputBorder(),
                                   labelText: 'Pay Amount',
                                 ),
+                                textAlign: TextAlign.right,
                               ),
                             ),
                           ],
@@ -862,8 +899,12 @@ class _LedgerState extends State<Ledger> {
                                 ),
                                 Expanded(
                                   child: CheckboxListTile(
-                                    value: false,
-                                    onChanged: (value) => null,
+                                    value: valueCostCenter,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        valueCostCenter = value;
+                                      });
+                                    },
                                     title: const Text('Cost Center'),
                                   ),
                                 )
@@ -882,8 +923,12 @@ class _LedgerState extends State<Ledger> {
                                 children: [
                                   Expanded(
                                     child: CheckboxListTile(
-                                        value: false,
-                                        onChanged: (value) => null,
+                                        value: valueFranchisee,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            valueFranchisee = value;
+                                          });
+                                        },
                                         title: const Text('Franchisee')),
                                   ),
                                   const VerticalDivider(
@@ -892,8 +937,12 @@ class _LedgerState extends State<Ledger> {
                                   ),
                                   Expanded(
                                     child: CheckboxListTile(
-                                      value: false,
-                                      onChanged: (value) => null,
+                                      value: valueBillWise,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          valueBillWise = value;
+                                        });
+                                      },
                                       title: const Text(
                                           'Bill Wise (Receipt/Payment)'),
                                     ),

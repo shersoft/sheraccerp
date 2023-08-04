@@ -7,6 +7,7 @@ class UnitModel {
   int itemId;
   double conversion;
   String name;
+  String rate;
   UnitModel(
       {this.id,
       this.pUnit,
@@ -14,7 +15,8 @@ class UnitModel {
       this.unit,
       this.itemId,
       this.conversion,
-      this.name});
+      this.name,
+      this.rate});
 
   factory UnitModel.fromJson(Map<String, dynamic> json) {
     return UnitModel(
@@ -24,6 +26,7 @@ class UnitModel {
         unit: json['Unit'],
         itemId: json['ItemId'],
         conversion: double.tryParse(json['Conversion'].toString()),
+        rate: json['Rate'] ?? 'WHOLESALE',
         name: json['name']);
   }
 }
