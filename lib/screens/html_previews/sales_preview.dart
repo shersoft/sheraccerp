@@ -5821,7 +5821,7 @@ Future<pw.Document> makePDF(
                       child: pw.Text(
                           dataParticulars
                               .fold(
-                                  0,
+                                  0.0,
                                   (a, b) =>
                                       a + double.parse(b['Qty'].toString()))
                               .toStringAsFixed(0),
@@ -5851,7 +5851,7 @@ Future<pw.Document> makePDF(
                       child: pw.Text(
                           dataParticulars
                               .fold(
-                                  0,
+                                  0.0,
                                   (a, b) =>
                                       a +
                                       double.parse(b['RealRate'].toString()))
@@ -5870,7 +5870,7 @@ Future<pw.Document> makePDF(
                       child: pw.Text(
                           dataParticulars
                               .fold(
-                                  0,
+                                  0.0,
                                   (a, b) =>
                                       a + double.parse(b['Net'].toString()))
                               .toStringAsFixed(2),
@@ -5888,7 +5888,7 @@ Future<pw.Document> makePDF(
                       child: pw.Text(
                           dataParticulars
                               .fold(
-                                  0,
+                                  0.0,
                                   (a, b) =>
                                       a + double.parse(b['CGST'].toString()))
                               .toStringAsFixed(2),
@@ -5907,7 +5907,7 @@ Future<pw.Document> makePDF(
                       child: pw.Text(
                           dataParticulars
                               .fold(
-                                  0,
+                                  0.0,
                                   (a, b) =>
                                       a + double.parse(b['SGST'].toString()))
                               .toStringAsFixed(2),
@@ -5926,7 +5926,7 @@ Future<pw.Document> makePDF(
                       child: pw.Text(
                           dataParticulars
                               .fold(
-                                  0,
+                                  0.0,
                                   (a, b) =>
                                       a + double.parse(b['IGST'].toString()))
                               .toStringAsFixed(2),
@@ -5945,7 +5945,7 @@ Future<pw.Document> makePDF(
                       child: pw.Text(
                           dataParticulars
                               .fold(
-                                  0,
+                                  0.0,
                                   (a, b) =>
                                       a + double.parse(b['Total'].toString()))
                               .toStringAsFixed(2),

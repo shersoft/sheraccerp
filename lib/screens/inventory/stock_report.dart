@@ -12,7 +12,7 @@ import 'package:sheraccerp/util/res_color.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
-import 'package:share/share.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:sheraccerp/widget/pdf_screen.dart';
 
 class StockReport extends StatefulWidget {
@@ -361,7 +361,7 @@ class _StockReportState extends State<StockReport> {
                   col[i].toLowerCase() == ('rpamount')) {
                 cell = data
                     .fold(
-                        0,
+                        0.0,
                         (a, b) =>
                             a +
                             (b[col[i]] != null

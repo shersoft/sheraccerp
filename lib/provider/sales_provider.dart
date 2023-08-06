@@ -644,7 +644,7 @@ class SalesProvider with ChangeNotifier {
     }
     _grandTotal = totalCartValue +
         _otherAmountList.fold(
-            0,
+            0.0,
             (t, e) =>
                 double.parse(t.toString()) +
                 double.parse(e.symbol == '-'

@@ -28,7 +28,7 @@ dependencies:
   fluttertoast: ^8.0.3
   scoped_model:
   path_provider: ^2.0.9
-  share:
+  share_plus:
   json_table:
   flutter_awesome_alert_box:
   open_file: ^3.2.1

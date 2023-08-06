@@ -650,7 +650,7 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
 
                                                             var netTotal = cartTotal +
                                                                 otherAmountList.fold(
-                                                                    0,
+                                                                    0.0,
                                                                     (t, e) =>
                                                                         t +
                                                                         double.parse(e['symbol'] ==

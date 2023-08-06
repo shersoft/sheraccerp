@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:scoped_model/scoped_model.dart';
-import 'package:share/share.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
@@ -311,7 +311,7 @@ class _ReportViewState extends State<ReportView> {
                     tableColumn[i].toLowerCase() == ('total')) {
                   cell = data
                       .fold(
-                          0,
+                          0.0,
                           (a, b) =>
                               a + double.parse(b[tableColumn[i]].toString()))
                       .toStringAsFixed(2);
@@ -1567,7 +1567,7 @@ class _ReportViewState extends State<ReportView> {
                   tableColumn[i].toLowerCase() == ('total')) {
                 cell = data
                     .fold(
-                        0,
+                        0.0,
                         (a, b) =>
                             a + double.parse(b[tableColumn[i]].toString()))
                     .toStringAsFixed(2);
@@ -1893,7 +1893,7 @@ class _ReportViewState extends State<ReportView> {
                   tableColumn[i].toLowerCase() == ('total')) {
                 cell = data
                     .fold(
-                        0,
+                        0.0,
                         (a, b) =>
                             a + double.parse(b[tableColumn[i]].toString()))
                     .toStringAsFixed(2);

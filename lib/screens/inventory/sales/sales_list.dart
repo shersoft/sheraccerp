@@ -16,7 +16,7 @@ import 'dart:ui' as ui;
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
-import 'package:share/share.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:sheraccerp/widget/pdf_screen.dart';
 // import 'dart:html' as html;
 
@@ -375,7 +375,7 @@ class _SalesListState extends State<SalesList> {
                       col[i].toLowerCase() == ('balance')) {
                     cell = data
                         .fold(
-                            0,
+                            0.0,
                             (a, b) =>
                                 a +
                                 (b[col[i]] != null

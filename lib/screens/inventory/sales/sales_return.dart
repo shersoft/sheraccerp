@@ -2333,7 +2333,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                                         cartTotal));
                                             var netTotal = cartTotal +
                                                 otherAmountList.fold(
-                                                    0,
+                                                    0.0,
                                                     (t, e) =>
                                                         t +
                                                         double.parse(e[
@@ -2459,7 +2459,7 @@ class _SalesReturnState extends State<SalesReturn> {
 
     grandTotal = totalCartValue +
         otherAmountList.fold(
-            0,
+            0.0,
             (t, e) =>
                 t +
                 double.parse(e['Symbol'] == '-'

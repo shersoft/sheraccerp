@@ -34,8 +34,7 @@ class _PurchaseState extends State<Purchase> {
   var ledgerModel, productModel, cartModel;
   List<dynamic> purchaseAccountList = [];
   DateTime now = DateTime.now();
-  String formattedDate, invDate = '', _narration = '';
-  TextEditingController invNoController = TextEditingController();
+  String formattedDate, invDate = '';
   double _balance = 0;
   List<dynamic> otherAmountList = [];
   bool isTax = true,
@@ -53,7 +52,7 @@ class _PurchaseState extends State<Purchase> {
   int page = 1, pageTotal = 0, totalRecords = 0;
   List<dynamic> itemDisplay = [];
   List<dynamic> items = [];
-  List<dynamic> _ledger = [];
+  final List<dynamic> _ledger = [];
   bool enableMULTIUNIT = false,
       cessOnNetAmount = false,
       enableKeralaFloodCess = false,
@@ -239,12 +238,18 @@ class _PurchaseState extends State<Purchase> {
                             'net': totalNet,
                             'cess': totalCess,
                             'total': totalCartTotal,
-                            'otherCharges': 0,
-                            'otherDiscount': 0,
-                            'grandTotal': totalCartTotal,
+                            'otherCharges':
+                                _otherChargesController.text.isNotEmpty
+                                    ? _otherChargesController.text
+                                    : '0',
+                            'otherDiscount':
+                                _otherDiscountController.text.isNotEmpty
+                                    ? _otherDiscountController.text
+                                    : '0',
+                            'grandTotal': calculateGrandTotal(),
                             'taxType': isTax ? 'T' : 'N.T',
                             'purchaseAccount': purchaseAccountList[0]['id'],
-                            'narration': _narration,
+                            'narration': _narrationController.text,
                             'type': 'P',
                             'cashPaid': cashPaidController.text.isNotEmpty
                                 ? cashPaidController.text
@@ -314,12 +319,18 @@ class _PurchaseState extends State<Purchase> {
                             'net': totalNet,
                             'cess': totalCess,
                             'total': totalCartTotal,
-                            'otherCharges': 0,
-                            'otherDiscount': 0,
-                            'grandTotal': totalCartTotal,
+                            'otherCharges':
+                                _otherChargesController.text.isNotEmpty
+                                    ? _otherChargesController.text
+                                    : '0',
+                            'otherDiscount':
+                                _otherDiscountController.text.isNotEmpty
+                                    ? _otherDiscountController.text
+                                    : '0',
+                            'grandTotal': calculateGrandTotal(),
                             'taxType': isTax ? 'T' : 'N.T',
                             'purchaseAccount': purchaseAccountList[0]['id'],
-                            'narration': _narration,
+                            'narration': _narrationController.text,
                             'type': 'P',
                             'cashPaid': cashPaidController.text.isNotEmpty
                                 ? cashPaidController.text
@@ -364,6 +375,8 @@ class _PurchaseState extends State<Purchase> {
           inAsyncCall: _isLoading, opacity: 0.0, child: selectWidget()),
     );
   }
+
+  final bool _showBottomSheet = false;
 
   widgetPrefix() {
     return Scaffold(
@@ -2108,6 +2121,14 @@ class _PurchaseState extends State<Purchase> {
   }
 
   TextEditingController cashPaidController = TextEditingController();
+  TextEditingController invNoController = TextEditingController();
+  final TextEditingController _otherDiscountController =
+      TextEditingController();
+  final TextEditingController _otherChargesController = TextEditingController();
+  final TextEditingController _narrationController = TextEditingController();
+  final FocusNode _focusNodeOtherCharges = FocusNode();
+  final FocusNode _focusNodeOtherDiscount = FocusNode();
+
   footerWidget() {
     calculateTotal();
     return Container(
@@ -2115,29 +2136,22 @@ class _PurchaseState extends State<Purchase> {
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              ElevatedButton(
+                onPressed: () {
+                  showBottom(context);
+                },
+                child: const Text('More',
+                    style:
+                        TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold)),
+              ),
               const Text('GrandTotal : ',
                   style: TextStyle(
                       fontSize: 22.0,
                       fontWeight: FontWeight.bold,
                       color: Colors.red)),
-              Text(
-                  totalCartTotal > 0
-                      ? ComSettings.appSettings(
-                              'bool', 'key-round-off-amount', false)
-                          ? CommonService.getRound(decimal, totalCartTotal)
-                              .toString()
-                          : CommonService.getRound(decimal, totalCartTotal)
-                              .roundToDouble()
-                              .toString()
-                      : ComSettings.appSettings(
-                              'bool', 'key-round-off-amount', false)
-                          ? CommonService.getRound(decimal, totalCartTotal)
-                              .toString()
-                          : CommonService.getRound(
-                                  decimal, totalCartTotal.roundToDouble())
-                              .toString(),
+              Text(calculateGrandTotal(),
                   style: const TextStyle(
                       fontSize: 22.0,
                       fontWeight: FontWeight.bold,
@@ -2328,6 +2342,8 @@ class _PurchaseState extends State<Purchase> {
           }
         ];
         billCash = double.tryParse(information['CashPaid'].toString());
+        _otherDiscountController.text = information['OtherDiscount'].toString();
+        _otherChargesController.text = information['OtherCharges'].toString();
         billTotal = double.tryParse(information['GrandTotal'].toString());
         narration = information['Narration'];
         DataJson cModel =
@@ -2391,7 +2407,7 @@ class _PurchaseState extends State<Purchase> {
         if (billCash > 0) {
           cashPaidController.text = billCash.toStringAsFixed(decimal);
         }
-        _narration = narration;
+        _narrationController.text = narration;
         nextWidget = 4;
         oldBill = true;
       });
@@ -2449,6 +2465,79 @@ class _PurchaseState extends State<Purchase> {
         );
       }
     });
+  }
+
+  showBottom(BuildContext ctx) {
+    showModalBottomSheet(
+        isScrollControlled: true,
+        elevation: 5,
+        context: ctx,
+        builder: (ctx) => Padding(
+              padding: EdgeInsets.only(
+                  top: 15,
+                  left: 15,
+                  right: 15,
+                  bottom: MediaQuery.of(ctx).viewInsets.bottom + 15),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: _otherDiscountController,
+                    focusNode: _focusNodeOtherDiscount,
+                    keyboardType:
+                        TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(labelText: 'Other Discount'),
+                  ),
+                  TextField(
+                    controller: _otherChargesController,
+                    focusNode: _focusNodeOtherCharges,
+                    keyboardType:
+                        TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(labelText: 'Other Charges'),
+                  ),
+                  TextField(
+                    controller: _narrationController,
+                    decoration: InputDecoration(labelText: 'Narration'),
+                  ),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  Text(calculateGrandTotal()),
+                  Center(
+                      child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              calculateGrandTotal();
+                            });
+                          },
+                          child: const Text('Submit')))
+                ],
+              ),
+            ));
+  }
+
+  String calculateGrandTotal() {
+    String grandTotal = totalCartTotal > 0
+        ? ComSettings.appSettings('bool', 'key-round-off-amount', false)
+            ? CommonService.getRound(decimal, totalCartTotal).toString()
+            : CommonService.getRound(decimal, totalCartTotal)
+                .roundToDouble()
+                .toString()
+        : ComSettings.appSettings('bool', 'key-round-off-amount', false)
+            ? CommonService.getRound(decimal, totalCartTotal).toString()
+            : CommonService.getRound(decimal, totalCartTotal.roundToDouble())
+                .toString();
+    double otherCharges = 0, otherDiscount = 0;
+    otherCharges = _otherChargesController.text.isNotEmpty
+        ? double.parse(_otherChargesController.text)
+        : 0.0;
+    otherDiscount = _otherDiscountController.text.isNotEmpty
+        ? double.parse(_otherDiscountController.text)
+        : 0.0;
+    grandTotal = ((double.parse(grandTotal) + otherCharges) - otherDiscount)
+        .toStringAsFixed(2);
+    return grandTotal;
   }
 }
 

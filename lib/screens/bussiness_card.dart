@@ -8,7 +8,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:scoped_model/scoped_model.dart';
-import 'package:share/share.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/shared/constants.dart';

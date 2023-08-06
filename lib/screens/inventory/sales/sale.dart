@@ -1458,9 +1458,17 @@ class _SaleState extends State<Sale> {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const <Widget>[
-                  SizedBox(height: 20),
-                  Text('No Data Found..')
+                children: [
+                  const SizedBox(height: 20),
+                  const Text('No Data Found..'),
+                  ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          nameLike = 'a';
+                          nextWidget = nextWidget;
+                        });
+                      },
+                      child: const Text('Select Again'))
                 ],
               ),
             );
@@ -1601,9 +1609,16 @@ class _SaleState extends State<Sale> {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const <Widget>[
-                  SizedBox(height: 20),
-                  Text('No Data Found..')
+                children: [
+                  const SizedBox(height: 20),
+                  const Text('No Data Found..'),
+                  ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          nextWidget = nextWidget;
+                        });
+                      },
+                      child: const Text('Select Again'))
                 ],
               ),
             );
@@ -3299,116 +3314,93 @@ class _SaleState extends State<Sale> {
                                 }
                                 return snapshot.data != null &&
                                         snapshot.data.length > 0
-                                    ? DecoratedBox(
-                                        decoration: BoxDecoration(
-                                            border: Border.all(
-                                                color: black, width: 0.8),
-                                            borderRadius:
-                                                BorderRadius.circular(10)),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(2.0),
-                                          child: Center(
-                                            child: DropdownButton<String>(
-                                              hint: Text(_dropDownUnit > 0
-                                                  ? UnitSettings.getUnitName(
-                                                      _dropDownUnit)
-                                                  : 'SKU'),
-                                              items: snapshot.data.map<
-                                                      DropdownMenuItem<String>>(
-                                                  (item) {
-                                                return DropdownMenuItem<String>(
-                                                  value: item.id.toString(),
-                                                  child: Text(item.name),
-                                                );
-                                              }).toList(),
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  _dropDownUnit =
-                                                      int.tryParse(value);
-                                                  for (var i = 0;
-                                                      i < unitListData.length;
-                                                      i++) {
-                                                    UnitModel _unit =
-                                                        unitListData[i];
-                                                    if (_unit.unit ==
-                                                        int.tryParse(value)) {
-                                                      double _rate = _unit
-                                                                  .rate ==
-                                                              'MRP'
-                                                          ? product.sellingPrice
-                                                          : _unit.rate ==
-                                                                  'WHOLESALE'
-                                                              ? product
-                                                                  .wholeSalePrice
-                                                              : _unit.rate ==
-                                                                      'RETAIL'
-                                                                  ? product
-                                                                      .retailPrice
-                                                                  : _unit.rate ==
-                                                                          'SPRETAIL'
-                                                                      ? product
-                                                                          .spRetailPrice
-                                                                      : rate;
-                                                      rate = _rate;
-                                                      saleRate = _rate;
-                                                      _rateController.text =
-                                                          saleRate
-                                                              .toStringAsFixed(
-                                                                  2);
-                                                      _conversion =
-                                                          _unit.conversion;
-                                                      break;
-                                                    }
-                                                  }
-                                                  calculate();
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ),
+                                    ? DropdownButton<String>(
+                                        hint: Text(_dropDownUnit > 0
+                                            ? UnitSettings.getUnitName(
+                                                _dropDownUnit)
+                                            : 'SKU'),
+                                        items: snapshot.data
+                                            .map<DropdownMenuItem<String>>(
+                                                (item) {
+                                          return DropdownMenuItem<String>(
+                                            value: item.id.toString(),
+                                            child: Text(item.name),
+                                          );
+                                        }).toList(),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _dropDownUnit = int.tryParse(value);
+                                            for (var i = 0;
+                                                i < unitListData.length;
+                                                i++) {
+                                              UnitModel _unit = unitListData[i];
+                                              if (_unit.unit ==
+                                                  int.tryParse(value)) {
+                                                double _rate = _unit.rate ==
+                                                        'MRP'
+                                                    ? product.sellingPrice
+                                                    : _unit.rate == 'WHOLESALE'
+                                                        ? product.wholeSalePrice
+                                                        : _unit.rate == 'RETAIL'
+                                                            ? product
+                                                                .retailPrice
+                                                            : _unit.rate ==
+                                                                    'SPRETAIL'
+                                                                ? product
+                                                                    .spRetailPrice
+                                                                : rateType ==
+                                                                        '1'
+                                                                    ? product
+                                                                        .sellingPrice
+                                                                    : rateType ==
+                                                                            '2'
+                                                                        ? product
+                                                                            .retailPrice
+                                                                        : rateType ==
+                                                                                '3'
+                                                                            ? product.wholeSalePrice
+                                                                            : 0;
+                                                rate = _rate;
+                                                saleRate = _rate;
+                                                _rateController.text =
+                                                    saleRate.toStringAsFixed(2);
+                                                _conversion = _unit.conversion;
+                                                break;
+                                              }
+                                            }
+                                            calculate();
+                                          });
+                                        },
                                       )
-                                    : DecoratedBox(
-                                        decoration: BoxDecoration(
-                                            border: Border.all(
-                                                color: black, width: 0.8),
-                                            borderRadius:
-                                                BorderRadius.circular(10)),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(2.0),
-                                          child: Center(
-                                            child: DropdownButton<String>(
-                                              hint: Text(_dropDownUnit > 0
-                                                  ? UnitSettings.getUnitName(
-                                                      _dropDownUnit)
-                                                  : 'SKU'),
-                                              items: unitList.map<
-                                                      DropdownMenuItem<String>>(
-                                                  (item) {
-                                                return DropdownMenuItem<String>(
-                                                  value: item.key.toString(),
-                                                  child: Text(item.value),
-                                                );
-                                              }).toList(),
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  _dropDownUnit =
-                                                      int.tryParse(value);
-                                                  // for (var i = 0;
-                                                  //     i < unitListData.length;
-                                                  //     i++) {
-                                                  //   UnitModel _unit = unitListData[i];
-                                                  //   if (_unit.unit ==
-                                                  //       int.tryParse(value)) {
-                                                  //     _conversion = _unit.conversion;
-                                                  //     break;
-                                                  //   }
-                                                  // }
-                                                  // calculate();
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ),
+                                    : DropdownButton<String>(
+                                        hint: Text(_dropDownUnit > 0
+                                            ? UnitSettings.getUnitName(
+                                                _dropDownUnit)
+                                            : 'SKU'),
+                                        items: unitList
+                                            .map<DropdownMenuItem<String>>(
+                                                (item) {
+                                          return DropdownMenuItem<String>(
+                                            value: item.key.toString(),
+                                            child: Text(item.value),
+                                          );
+                                        }).toList(),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _dropDownUnit = int.tryParse(value);
+                                            // for (var i = 0;
+                                            //     i < unitListData.length;
+                                            //     i++) {
+                                            //   UnitModel _unit = unitListData[i];
+                                            //   if (_unit.unit ==
+                                            //       int.tryParse(value)) {
+                                            //     _conversion = _unit.conversion;
+                                            //     break;
+                                            //   }
+                                            // }
+                                            // calculate();
+                                          });
+                                        },
                                       );
                               },
                             ),
@@ -3424,17 +3416,7 @@ class _SaleState extends State<Sale> {
                         child: Expanded(
                             child: Padding(
                           padding: const EdgeInsets.all(2.0),
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                                border: Border.all(color: black, width: 0.8),
-                                borderRadius: BorderRadius.circular(10)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(2.0),
-                              child: Center(
-                                child: Text('$_conversion'),
-                              ),
-                            ),
-                          ),
+                          child: Text('$_conversion'),
                         )),
                       ),
                     ],
@@ -4826,7 +4808,7 @@ class _SaleState extends State<Sale> {
                                               var netTotal = (cartTotal -
                                                       returnAmount) +
                                                   otherAmountList.fold(
-                                                      0,
+                                                      0.0,
                                                       (t, e) =>
                                                           t +
                                                           double.parse(e[
@@ -4946,7 +4928,7 @@ class _SaleState extends State<Sale> {
     }
     grandTotal = (totalCartValue - returnAmount) +
         otherAmountList.fold(
-            0,
+            0.0,
             (t, e) =>
                 t +
                 double.parse(e['Symbol'] == '-'
@@ -5378,7 +5360,7 @@ class _SaleState extends State<Sale> {
 String _otherAmountTotal(var otherAmountData) {
   var data = otherAmountData;
   var a = data.fold(
-      0,
+      0.0,
       (t, e) =>
           t +
           double.parse(e['Symbol'] == '-'
