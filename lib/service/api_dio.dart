@@ -3,19 +3,20 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:sheraccerp/models/customer_model.dart';
+import 'package:sheraccerp/models/gst_auth_model.dart';
 import 'package:sheraccerp/models/ledger_name_model.dart';
 import 'package:sheraccerp/models/ledger_parent.dart';
 import 'package:sheraccerp/models/option_rate_type.dart';
+import 'package:sheraccerp/models/product_manage_model.dart';
+import 'package:sheraccerp/models/product_register_model.dart';
 import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/models/stock_item.dart';
 import 'package:sheraccerp/models/stock_product.dart';
 import 'package:sheraccerp/models/tax_group_model.dart';
 import 'package:sheraccerp/models/unit_model.dart';
-import 'package:sheraccerp/provider/app_provider.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/widget/simple_piediagram_pay_rec.dart';
 
@@ -34,10 +35,16 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      var response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'dashboard/Total/$dataBase/${Uri.encodeComponent(sType).toString()}/$sDate/$eDate/$branch');
+      var response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'dashboard/Total/$dataBase',
+          queryParameters: {
+            'statementType': sType,
+            'sDate': sDate,
+            'eDate': eDate,
+            'branch': branch
+          });
 
       if (response.statusCode == 200) {
         Map<dynamic, dynamic> responseBodyOfTotal;
@@ -46,10 +53,12 @@ class DioService {
         return responseBodyOfTotal;
       } else {
         debugPrint('Failed to load internet');
+        return {};
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return {};
     }
   }
 
@@ -63,10 +72,16 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      var response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'dashboard/SummaryList/$dataBase/${Uri.encodeComponent(sType).toString()}/$sDate/$eDate/$branch');
+      var response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'dashboard/SummaryList/$dataBase',
+          queryParameters: {
+            'statementType': sType,
+            'sDate': sDate,
+            'eDate': eDate,
+            'branch': branch
+          });
 
       if (response.statusCode == 200) {
         return response.data;
@@ -90,10 +105,16 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      var response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'dashboard/SummaryList/$dataBase/${Uri.encodeComponent(sType).toString()}/$sDate/$eDate/$branch');
+      var response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'dashboard/SummaryList/$dataBase',
+          queryParameters: {
+            'statementType': sType,
+            'sDate': sDate,
+            'eDate': eDate,
+            'branch': branch
+          });
       if (response.statusCode == 200) {
         return response.data;
       } else {
@@ -115,10 +136,16 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      var response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'dashboard/dayStatement/$dataBase/${Uri.encodeComponent(sType).toString()}/$sDate/$eDate/$branch');
+      var response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'dashboard/dayStatement/$dataBase',
+          queryParameters: {
+            'statementType': sType,
+            'sDate': sDate,
+            'eDate': eDate,
+            'branch': branch
+          });
 
       if (response.statusCode == 200) {
         return response.data;
@@ -138,10 +165,16 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      var response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'dashboard/dayStatement/$dataBase/${Uri.encodeComponent(head).toString()}/$sDate/$eDate/$branch');
+      var response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'dashboard/dayStatement/$dataBase',
+          queryParameters: {
+            'statementType': head,
+            'sDate': sDate,
+            'eDate': eDate,
+            'branch': branch
+          });
 
       if (response.statusCode == 200) {
         return response.data;
@@ -166,7 +199,7 @@ class DioService {
       final response = await dio.post(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'comapny/event/$dataBase',
+              'company/event/$dataBase',
           data: json.encode(data),
           options: Options(headers: {'Content-Type': 'application/json'}));
 
@@ -181,6 +214,33 @@ class DioService {
         debugPrint('Unexpected error Occurred!');
       }
       // }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
+  Future<List<dynamic>> findLedger(id) async {
+    List<dynamic> ret = [];
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Ledger/find/$dataBase',
+          queryParameters: {'id': id});
+
+      if (response.statusCode == 200) {
+        ret = response.data;
+      } else {
+        ret = [];
+        debugPrint('Unexpected error Occurred!');
+      }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
@@ -236,11 +296,11 @@ class DioService {
           options: Options(headers: {'Content-Type': 'application/json'}));
 
       if (response.statusCode == 201) {
-        if (response.data.toString() == "1") {
-          ret = true;
-        } else {
-          ret = false;
-        }
+        // if (response.data.toString() == "1") {
+        ret = true;
+        // } else {
+        //   ret = false;
+        // }
       } else {
         ret = false;
         debugPrint('Unexpected error Occurred!');
@@ -282,8 +342,36 @@ class DioService {
     return ret;
   }
 
-  Future<bool> addProduct(var body) async {
-    bool ret = false;
+  Future<dynamic> spLedger(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    var _item = [];
+    try {
+      final response = await dio.post(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Ledger/sp_ledger/$dataBase',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        List<dynamic> _data = response.data;
+        _item = _data;
+      } else {
+        debugPrint('Failed to load data');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _item;
+  }
+
+  Future<dynamic> addProduct(var body) async {
+    dynamic ret = '0';
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
@@ -300,7 +388,106 @@ class DioService {
 
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
-        if (jsonResponse['returnValue'] > 0) {
+        if (response.data['id'] > 0) {
+          ret = response.data['id'].toString();
+        } else {
+          ret = response.data['message'];
+        }
+      } else {
+        ret = 'Unexpected error occurred!';
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      ret = errorMessage;
+    }
+    return ret;
+  }
+
+  Future<dynamic> editProduct(var body) async {
+    dynamic ret = '0';
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/edit/$dataBase',
+          data: json.encode(body),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+        if (jsonResponse['message'] == 'success') {
+          ret = jsonResponse['message'];
+        } else {
+          ret = jsonResponse['message'];
+        }
+      } else {
+        ret = 'unexpected error';
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      ret = errorMessage.toString();
+    }
+    return ret;
+  }
+
+  Future<bool> deleteProduct(var id) async {
+    bool ret = false;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+
+    try {
+      final response = await dio.delete(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/delete/$dataBase',
+          queryParameters: {'id': id},
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        ret = response.data > 0 ? true : false;
+      } else {
+        ret = false;
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
+  Future<bool> renameProduct(var body) async {
+    bool ret = false;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/rename/$dataBase',
+          data: json.encode(body),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+        if (jsonResponse['message'] == 'success') {
           ret = true;
         } else {
           ret = false;
@@ -507,8 +694,8 @@ class DioService {
     return ret;
   }
 
-  Future<int> addSale(var body) async {
-    int ret = 0;
+  Future<dynamic> addSale(var body) async {
+    dynamic ret = '0';
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
@@ -523,20 +710,25 @@ class DioService {
           options: Options(headers: {'Content-Type': 'application/json'}));
 
       if (response.statusCode == 200) {
-        ret = response.data;
+        if (response.data['id'] > 0) {
+          ret = response.data['id'].toString();
+        } else {
+          ret = response.data['message'];
+        }
       } else {
-        ret = 0;
+        ret = 'Unexpected error occurred!';
         debugPrint('Unexpected error occurred!');
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      ret = errorMessage.toString();
     }
     return ret;
   }
 
-  Future<int> editSale(var body) async {
-    int ret = 0;
+  Future<dynamic> editSale(var body) async {
+    dynamic ret = 0;
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
@@ -551,14 +743,20 @@ class DioService {
           options: Options(headers: {'Content-Type': 'application/json'}));
 
       if (response.statusCode == 200) {
-        ret = response.data;
+        if (response.data['id'] > 0) {
+          ret = response.data['id'].toString();
+        } else {
+          ret = response.data['message'];
+        }
       } else {
-        ret = 0;
+        ret = '0';
         debugPrint('Unexpected error occurred!');
+        ret = 'Unexpected error occurred!';
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      ret = errorMessage.toString();
     }
     return ret;
   }
@@ -635,7 +833,8 @@ class DioService {
             'statement': data['statement'].toString(),
             'entryNo': data['entryNo'].toString(),
             'sType': data['sType'].toString(),
-            'grandTotal': data['grandTotal'].toString()
+            'grandTotal': data['grandTotal'].toString(),
+            'fyId': currentFinancialYear.id,
           });
 
       if (response.statusCode == 200) {
@@ -688,7 +887,13 @@ class DioService {
       final response = await dio.delete(
         pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
-            'sale/delete/$dataBase/$entryNo/$type/$form',
+            'sale/delete/$dataBase',
+        queryParameters: {
+          'entryNo': entryNo,
+          'type': type,
+          'form': form,
+          'fyId': currentFinancialYear.id,
+        },
       );
       if (response.statusCode == 200) {
         ret = response.data > 0 ? true : false;
@@ -725,10 +930,146 @@ class DioService {
         }
       } else {
         debugPrint('Unexpected error Occurred!');
+        return 0;
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return 0;
+    }
+  }
+
+  Future<int> deleteVoucher(String id, int fyId, String statementType) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.delete(
+        pref.getString('api' ?? '127.0.0.1:80/api/') +
+            apiV +
+            'Voucher/delete/$dataBase',
+        queryParameters: {
+          'id': id,
+          'statementType': statementType,
+          'fyId': currentFinancialYear.id
+        },
+      );
+
+      if (response.statusCode == 200) {
+        if (response.data['returnValue'] > 0) {
+          return response.data['returnValue'];
+        } else {
+          return 0;
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+        return 0;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return 0;
+    }
+  }
+
+  Future<int> addJournalVoucher(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.post(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Journal/add/$dataBase',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 201) {
+        if (response.data['returnValue'] > 0) {
+          return response.data['returnValue'];
+        } else {
+          return 0;
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+        return 0;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return 0;
+    }
+  }
+
+  Future<int> editJournalVoucher(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Journal/edit/$dataBase',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        if (response.data['returnValue'] > 0) {
+          return response.data['returnValue'];
+        } else {
+          return 0;
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+        return 0;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return 0;
+    }
+  }
+
+  Future<int> deleteJournalVoucher(id, date, user, time) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.delete(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Journal/delete/$dataBase',
+          queryParameters: {
+            'id': id,
+            'date': date,
+            'user': user,
+            'time': time,
+            'fyId': currentFinancialYear.id
+          },
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        if (response.data['returnValue'] > 0) {
+          return response.data['returnValue'];
+        } else {
+          return 0;
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+        return 0;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return 0;
     }
   }
 
@@ -754,10 +1095,12 @@ class DioService {
         }
       } else {
         debugPrint('Unexpected error Occurred!');
+        return 0;
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return 0;
     }
   }
 
@@ -783,10 +1126,12 @@ class DioService {
         }
       } else {
         debugPrint('Unexpected error Occurred!');
+        return 0;
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return 0;
     }
   }
 
@@ -800,7 +1145,8 @@ class DioService {
       final response = await dio.delete(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'InvoiceVoucher/delete/$dataBase/$id/$type',
+              'InvoiceVoucher/delete/$dataBase',
+          queryParameters: {'id': id, 'type': type},
           options: Options(headers: {'Content-Type': 'application/json'}));
 
       if (response.statusCode == 201) {
@@ -811,10 +1157,12 @@ class DioService {
         }
       } else {
         debugPrint('Unexpected error Occurred!');
+        return 0;
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return 0;
     }
   }
 
@@ -828,7 +1176,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'sales_list/$dataBase/$statement');
+              'sales_list/$dataBase',
+          queryParameters: {'statementType': statement});
       List<dynamic> _items = [];
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
@@ -838,10 +1187,12 @@ class DioService {
         return _items;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -864,10 +1215,12 @@ class DioService {
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -890,10 +1243,12 @@ class DioService {
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -916,10 +1271,12 @@ class DioService {
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -942,10 +1299,12 @@ class DioService {
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -966,10 +1325,12 @@ class DioService {
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -992,19 +1353,35 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'purchaseReport/$dataBase/$branchId/$statement/$sDate/$eDate/$supplierId/$project/$itemId/$mfr/$category/$subcategory/$salesman/$taxGroup');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'purchaseReport/$dataBase',
+          queryParameters: {
+            'sDate': '$sDate',
+            'eDate': '$eDate',
+            'branchId': branchId,
+            'statementType': statement,
+            'supplierId': supplierId,
+            'project': project,
+            'itemId': itemId,
+            'mfr': mfr,
+            'category': category,
+            'subcategory': subcategory,
+            'salesman': salesman,
+            'taxGroup': taxGroup
+          });
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -1018,17 +1395,19 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'purchaseReportMonthly/$dataBase/$branchId');
+              'purchaseReportMonthly/$dataBase');
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -1039,22 +1418,76 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      final response = await dio.post(
+      final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'stock_report/$dataBase',
-          data: data,
+              'stock_report_new/$dataBase',
+          queryParameters: data,
           options: Options(headers: {'Content-Type': 'application/json'}));
 
       if (response.statusCode == 200) {
-        List<dynamic> data = response.data['recordset'];
+        List<dynamic> data = response.data;
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return e.response.statusCode == 400
+          ? [
+              {
+                'error': errorMessage,
+                'respond': e.response.statusCode.toString(),
+              }
+            ]
+          : [
+              {
+                'error': errorMessage,
+                'respond': e.response.statusCode.toString(),
+              }
+            ];
+    }
+  }
+
+  Future<List<dynamic>> getStockLedgerReport(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'stock_report_new/$dataBase',
+          queryParameters: data,
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        return data;
+      } else {
+        debugPrint('Failed to load data');
+        return [];
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return e.response.statusCode == 400
+          ? [
+              {
+                'error': errorMessage,
+                'respond': e.response.statusCode.toString(),
+              }
+            ]
+          : [
+              {
+                'error': errorMessage,
+                'respond': e.response.statusCode.toString(),
+              }
+            ];
     }
   }
 
@@ -1075,10 +1508,12 @@ class DioService {
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -1092,17 +1527,20 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'inventory_report/EventDetails/$dataBase/$date');
+              'inventory_report/EventDetails/$dataBase',
+          queryParameters: {'date': date});
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         return data;
       } else {
         debugPrint('Failed to load data');
+        return [];
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
+      return [];
     }
   }
 
@@ -1133,6 +1571,95 @@ class DioService {
     return ret;
   }
 
+  Future<ProductRegisterModel> getProductByName(String _name) async {
+    ProductRegisterModel model;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/getByName/$dataBase',
+          queryParameters: {'name': _name});
+
+      if (response.statusCode == 200) {
+        var data = response.data;
+        if (data != null) {
+          model = ProductRegisterModel.fromMap(data[0]);
+        } else {
+          // model = ;
+          debugPrint('Unexpected error occurred!');
+        }
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return model;
+  }
+
+  Future<ProductRegisterModel> getProductByCode(String _code) async {
+    ProductRegisterModel model;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/getByCode/$dataBase',
+          queryParameters: {'code': _code});
+
+      if (response.statusCode == 200) {
+        var data = response.data;
+        if (data != null) {
+          model = ProductRegisterModel.fromMap(data[0]);
+        } else {
+          // model = ;
+          debugPrint('Unexpected error occurred!');
+        }
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return model;
+  }
+
+  Future<ProductRegisterModel> getProductById(String id) async {
+    ProductRegisterModel model;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/getById/$dataBase/$id');
+
+      if (response.statusCode == 200) {
+        var data = response.data;
+        if (data != null) {
+          model = ProductRegisterModel.fromMap(data[0]);
+        } else {
+          // model = ;
+          debugPrint('Unexpected error occurred!');
+        }
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return model;
+  }
+
   Future<bool> getUserLogin(name, password) async {
     bool ret = false;
     SharedPreferences pref = await SharedPreferences.getInstance();
@@ -1144,7 +1671,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'users/find/$dataBase/${Uri.encodeComponent(name).toString()}');
+              'users/find/$dataBase',
+          queryParameters: {'name': name});
 
       if (response.statusCode == 200) {
         List<dynamic> jsonResponse = response.data;
@@ -1185,6 +1713,7 @@ class DioService {
         return response.data;
       } else {
         debugPrint('Failed to load data');
+        return {};
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
@@ -1221,7 +1750,6 @@ class DioService {
   }
 
   Future<List<DataJson>> getSupplierListData(filter) async {
-    // /Ledger/getSupplierList/:dataBase/:name
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
@@ -1233,7 +1761,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'Ledger/getSupplierList/$dataBase/$filter');
+              'Ledger/getSupplierList/$dataBase',
+          queryParameters: {'name': filter});
       final data = response.data;
       if (data != null && data.isNotEmpty) {
         _items = DataJson.fromJsonList(data);
@@ -1258,8 +1787,8 @@ class DioService {
         pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
             statement +
-            '/$dataBase/$filter',
-        queryParameters: {"filter": filter},
+            '/$dataBase',
+        queryParameters: {"value": filter},
       );
       final data = response.data;
       if (data != null) {
@@ -1284,8 +1813,8 @@ class DioService {
       final response = await dio.get(
         pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
-            Uri.encodeComponent(statement).toString() +
-            '/$dataBase/$filter',
+            statement +
+            '/$dataBase',
         queryParameters: {"filter": filter},
       );
       final data = response.data;
@@ -1312,7 +1841,7 @@ class DioService {
         pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
             statement +
-            '/$dataBase/$filter',
+            '/$dataBase',
         queryParameters: {"filter": filter},
       );
       final data = response.data;
@@ -1362,8 +1891,6 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<LedgerParent> _items = [];
     try {
-      // getMainHead
-      //LedCode'], value: element['LedName
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
@@ -1371,8 +1898,7 @@ class DioService {
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var group in jsonResponse) {
-          _items.add(LedgerParent.fromJson(
-              group)); //{'Ledcode': group['lh_id'], 'LedName': group['lh_name']});
+          _items.add(LedgerParent.fromJson(group));
         }
         return _items;
       } else {
@@ -1394,10 +1920,11 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<dynamic> _items = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'Ledger/getLedger/$dataBase/${Uri.encodeComponent(name).toString()}');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Ledger/getLedger/$dataBase',
+          queryParameters: {'name': name});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         _items = jsonResponse;
@@ -1421,10 +1948,24 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<dynamic> _items = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'listPage/$dataBase/$statement/$page/$location/$type/$date/$salesMan');
+      final response = await dio.get(
+        pref.getString('api' ?? '127.0.0.1:80/api/') +
+            apiV +
+            'listPage/$dataBase',
+        queryParameters: {
+          'statementType': statement,
+          'page': page,
+          'location': location,
+          'type': type,
+          'date': date,
+          'salesMan': salesMan,
+          'fyId': currentFinancialYear.id
+        },
+      ).onError((error, stackTrace) {
+        debugPrint('Erorr:' + error.toString());
+      })
+          // .timeout(const Duration(seconds: 10));
+          ;
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         _items = jsonResponse;
@@ -1448,10 +1989,16 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<dynamic> _items = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'damage_report/$dataBase/$statementType/$sDate/$eDate/$condition');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'damage_report/$dataBase',
+          queryParameters: {
+            'statementType': statementType,
+            'sDate': sDate,
+            'eDate': eDate,
+            'condition': condition
+          });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         _items = jsonResponse;
@@ -1474,10 +2021,11 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<dynamic> _items = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'Ledger/getLedgerByType/$dataBase/${Uri.encodeComponent(type).toString()}');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Ledger/getLedgerByType/$dataBase',
+          queryParameters: {'type': type});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         _items = jsonResponse;
@@ -1644,8 +2192,14 @@ class DioService {
         response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'Ledger/getLedgerByParent/$dataBase/$_groupId/$_areaId/$_routeId/$_salesman',
-          queryParameters: {"filter": filter},
+              'Ledger/getLedgerByParent/$dataBase',
+          queryParameters: {
+            'groupId': _groupId,
+            'areaId': _areaId,
+            'routeId': _routeId,
+            'salesman': _salesman,
+            'filter': filter
+          },
         );
       } else {
         response = await dio.get(
@@ -1710,6 +2264,7 @@ class DioService {
         for (var ledger in jsonResponse) {
           _items.add(OptionRateType.fromJson(ledger));
         }
+        optionRateTypeList = _items;
       } else {
         debugPrint('Failed to load data');
       }
@@ -1762,9 +2317,17 @@ class DioService {
             _areaId = areaId > 1 ? areaId : 0,
             _routeId = routeId > 1 ? routeId : 0,
             _salesman = 0;
-        response = await dio.get(pref.getString('api' ?? '127.0.0.1:80/api/') +
-            apiV +
-            'Ledger/getLedgerByParent/$dataBase/$_groupId/$_areaId/$_routeId/$_salesman');
+        response = await dio.get(
+            pref.getString('api' ?? '127.0.0.1:80/api/') +
+                apiV +
+                'Ledger/getLedgerByParent/$dataBase',
+            queryParameters: {
+              'groupId': _groupId,
+              'areaId': _areaId,
+              'routeId': _routeId,
+              'salesman': _salesman,
+              'filter': ''
+            });
       } else {
         response = await dio.get(pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
@@ -1800,13 +2363,64 @@ class DioService {
             _areaId = areaId > 1 ? areaId : 0,
             _routeId = routeId > 1 ? routeId : 0,
             _salesman = 0;
-        response = await dio.get(pref.getString('api' ?? '127.0.0.1:80/api/') +
-            apiV +
-            'Ledger/getLedgerByParentLike/$dataBase/$_groupId/$_areaId/$_routeId/$_salesman/$like');
+        response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Ledger/getLedgerByParentLike/$dataBase',
+          queryParameters: {
+            'groupId': _groupId,
+            'areaId': _areaId,
+            'routeId': _routeId,
+            'salesman': _salesman,
+            'like': like
+          },
+        );
       } else {
-        response = await dio.get(pref.getString('api' ?? '127.0.0.1:80/api/') +
-            apiV +
-            'Ledger/getLedgerListLike/$dataBase/$like');
+        response = await dio.get(
+            pref.getString('api' ?? '127.0.0.1:80/api/') +
+                apiV +
+                'Ledger/getLedgerListLike/$dataBase',
+            queryParameters: {'name': like});
+      }
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+        for (var ledger in jsonResponse) {
+          _items.add(LedgerModel.fromJson(ledger));
+        }
+      } else {
+        debugPrint('Failed to load data');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<List<LedgerModel>> getLedgerBySalesManLike(
+      int salesman, String like) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    List<LedgerModel> _items = [];
+    try {
+      Response response;
+      if (salesman > 1) {
+        var _salesman = salesman > 1 ? salesman : 0;
+        response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Ledger/getLedgerBySalesManLike/$dataBase',
+          queryParameters: {'salesman': _salesman, 'like': like},
+        );
+      } else {
+        response = await dio.get(
+            pref.getString('api' ?? '127.0.0.1:80/api/') +
+                apiV +
+                'Ledger/getLedgerListLike/$dataBase',
+            queryParameters: {'name': like});
       }
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
@@ -1974,10 +2588,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'Ledger/getLedgerByType/' +
-              dataBase +
-              '/' +
-              Uri.encodeComponent(sType).toString());
+              'Ledger/getLedgerByType/$dataBase',
+          queryParameters: {'type': sType});
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         _items = List.from(data);
@@ -1999,13 +2611,12 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<Map<String, dynamic>> _items = [];
     try {
-      final response = await dio.post(
+      final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
               'accounts_report/ProfitAndLoss/' +
               dataBase,
-          data: data,
-          options: Options(headers: {'Content-Type': 'application/json'}));
+          queryParameters: data);
       if (response.statusCode == 200) {
         if (response.data.toString().isNotEmpty) {
           List<dynamic> data = response.data;
@@ -2029,13 +2640,39 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<Map<String, dynamic>> _items = [];
     try {
-      final response = await dio.post(
+      final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
               'inventory_report/ClosingReport/' +
               dataBase,
-          data: data,
-          options: Options(headers: {'Content-Type': 'application/json'}));
+          queryParameters: data);
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        _items = List.from(data);
+      } else {
+        debugPrint('Failed to load data');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<List<dynamic>> fetchClosingReportAll(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    List<dynamic> _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'inventory_report/ClosingReportAll/' +
+              dataBase,
+          queryParameters: data);
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         _items = List.from(data);
@@ -2234,7 +2871,7 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     if (locationList.isNotEmpty) {
       location = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first
           .toString();
@@ -2250,7 +2887,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'stock/getStockSaleListByBarcode/$dataBase/$id/$location');
+              'stock/getStockSaleListByBarcode/$dataBase',
+          queryParameters: {'Id': id, 'location': location});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {
@@ -2274,7 +2912,7 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     if (locationList.isNotEmpty) {
       location = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first
           .toString();
@@ -2293,7 +2931,53 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'stock/getStockSaleList/$dataBase/$id/$location/$date');
+              'stock/getStockSaleList/$dataBase',
+          queryParameters: {'id': id, 'location': location, 'date': date});
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+        for (var product in jsonResponse) {
+          //.map((data) => new StockProduct.fromJson(data))
+          _items.add(StockItem.fromJson(product));
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<List<StockItem>> fetchNoStockProduct(String date) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp', location = '0', id = '1';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    if (locationList.isNotEmpty) {
+      location = locationList
+          .where((element) => element.value == defaultLocation)
+          .map((e) => e.key)
+          .first
+          .toString();
+    }
+    int lId = ComSettings.appSettings(
+            'int', 'key-dropdown-default-location-view', 0) -
+        1;
+    location = lId.toString().trim().isNotEmpty
+        ? lId < 1
+            ? location
+            : lId.toString().trim()
+        : location;
+    List<StockItem> _items = [];
+
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/getProductList/$dataBase',
+          queryParameters: {'date': date});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {
@@ -2323,7 +3007,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'stock/getStockSaleList/$dataBase/$id/$location/$date');
+              'stock/getStockSaleList/$dataBase',
+          queryParameters: {'id': id, 'location': location, 'date': date});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {
@@ -2347,7 +3032,7 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     if (locationList.isNotEmpty) {
       location = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first
           .toString();
@@ -2362,11 +3047,52 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'stock/getStockVariant/$dataBase/$id/$location');
+              'stock/getStockVariant/$dataBase',
+          queryParameters: {'Id': id, 'location': location});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {
           _items.add(StockProduct.fromJson(product));
+        }
+      } else {
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<List<dynamic>> fetchNoStockVariant(String id) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp', location = '0';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    if (locationList.isNotEmpty) {
+      location = locationList
+          .where((element) => element.value == defaultLocation)
+          .map((e) => e.key)
+          .first
+          .toString();
+    }
+    int lId = ComSettings.appSettings(
+            'int', 'key-dropdown-default-location-view', 2) -
+        1;
+    location =
+        lId.toString().trim().isNotEmpty ? lId.toString().trim() : location;
+    List<dynamic> _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'stock/getNonStockVariant/$dataBase',
+          queryParameters: {'Id': id});
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+        for (var product in jsonResponse) {
+          _items.add(product);
         }
       } else {
         debugPrint('Unexpected error occurred!');
@@ -2386,7 +3112,7 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     if (locationList.isNotEmpty) {
       location = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first
           .toString();
@@ -2401,7 +3127,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'stock/getStockVariant/$dataBase/$id/$location');
+              'stock/getStockVariant/$dataBase',
+          queryParameters: {'Id': id, 'location': location});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {
@@ -2425,7 +3152,7 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     if (locationList.isNotEmpty) {
       location = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first
           .toString();
@@ -2440,7 +3167,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'stock/getStockItem/$dataBase/$id/$location');
+              'stock/getStockItem/$dataBase',
+          queryParameters: {'Id': id, 'location': location});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {
@@ -2464,7 +3192,7 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     if (locationList.isNotEmpty) {
       location = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first
           .toString();
@@ -2479,11 +3207,16 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              '/stock/selectStockById/$dataBase/$id/$location');
+              '/stock/selectStockById/$dataBase',
+          queryParameters: {'id': id, 'location': location});
       if (response.statusCode == 200) {
-        var jsonResponse = response.data;
-        for (var product in jsonResponse) {
-          _items.add(double.tryParse(product['Qty'].toString()));
+        List<dynamic> jsonResponse = response.data;
+        if (jsonResponse.isNotEmpty) {
+          for (var product in jsonResponse) {
+            _items.add(double.tryParse(product['Qty'].toString()));
+          }
+        } else {
+          _items.add(0);
         }
       } else {
         debugPrint('Unexpected error Occurred!');
@@ -2689,7 +3422,39 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'sale/previous_bills/$dataBase/$ledger');
+              'sale/previous_bills/$dataBase',
+          queryParameters: {'id': ledger, 'fyId': currentFinancialYear.id});
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+
+        _items = jsonResponse;
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<dynamic> fetchItemBills(sDate, eDate) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    dynamic _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'sale/Item_bills/$dataBase',
+          queryParameters: {
+            'sDate': sDate,
+            'eDate': eDate,
+            'fyId': currentFinancialYear.id
+          });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -2715,7 +3480,12 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'sale/find/$dataBase/$id/$type');
+              'sale/find/$dataBase',
+          queryParameters: {
+            'id': id,
+            'type': type,
+            'fyId': currentFinancialYear.id,
+          });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -2730,7 +3500,7 @@ class DioService {
     return _items;
   }
 
-  Future<dynamic> findSale(int id, int type, String statement) async {
+  Future<dynamic> fetchSalesReturnInvoice(String id, int type) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
@@ -2741,7 +3511,12 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'sale/find/$dataBase/$id/$type/$statement');
+              'sale/findReturn/$dataBase',
+          queryParameters: {
+            'id': id,
+            'type': type,
+            'fyId': currentFinancialYear.id,
+          });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -2793,7 +3568,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'Product/getProductListPurchaseLike/$dataBase/$name');
+              'Product/getProductListPurchaseLike/$dataBase',
+          queryParameters: {'name': name});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -2866,10 +3642,16 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'dashboard/Expense/$dataBase/${Uri.encodeComponent(sType).toString()}/$sDate/$eDate/$branch');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'dashboard/Expense/$dataBase',
+          queryParameters: {
+            'statementType': sType,
+            'sDate': sDate,
+            'eDate': eDate,
+            'branch': branch
+          });
 
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
@@ -2890,10 +3672,16 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'dashboard/getExpenseLedger/$dataBase/$sDate/$eDate/$name/$branch');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'dashboard/getExpenseLedger/$dataBase',
+          queryParameters: {
+            'sDate': sDate,
+            'eDate': eDate,
+            'name': name,
+            'branch': branch
+          });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         return jsonResponse;
@@ -2917,7 +3705,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'dashboard/getCashBankLedger/$dataBase/$sDate/$eDate/$branch');
+              'dashboard/getCashBankLedger/$dataBase',
+          queryParameters: {'sDate': sDate, 'eDate': eDate, 'branch': branch});
 
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
@@ -2940,10 +3729,11 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<ChartPayRec> data = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          'dashboard/getReceivableAndPayable/$dataBase/$sDate/$eDate/$branch');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'dashboard/getReceivableAndPayable/$dataBase',
+          queryParameters: {'sDate': sDate, 'eDate': eDate, 'branch': branch});
 
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
@@ -2968,10 +3758,15 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     dynamic _items = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          '/purchase/find/$dataBase/$id/${Uri.encodeComponent(type).toString()}');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              '/purchase/find/$dataBase',
+          queryParameters: {
+            'id': id,
+            'statement': type,
+            'fyId': currentFinancialYear.id
+          });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -2997,7 +3792,12 @@ class DioService {
       final response = await dio.delete(
         pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
-            'purchase/delete/$dataBase/$entryNo/$type',
+            'purchase/delete/$dataBase',
+        queryParameters: {
+          'entryNo': entryNo,
+          'type': type,
+          'fyId': currentFinancialYear.id
+        },
       );
       if (response.statusCode == 200) {
         ret = response.data['returnValue'] > 0 ? true : false;
@@ -3020,10 +3820,42 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     dynamic _items = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          '/Voucher/find/$dataBase/$id/${Uri.encodeComponent(type).toString()}');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              '/Voucher/find/$dataBase',
+          queryParameters: {
+            'id': id,
+            'type': type,
+            'fyId': currentFinancialYear.id
+          });
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+
+        _items = jsonResponse;
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<dynamic> fetchJournalVoucher(int id) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    dynamic _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              '/Journal/find/$dataBase',
+          queryParameters: {'id': id});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -3046,10 +3878,11 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     dynamic _items = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          '/InvoiceVoucher/find/$dataBase/$id/${Uri.encodeComponent(type).toString()}');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              '/InvoiceVoucher/find/$dataBase',
+          queryParameters: {'id': id, 'type': type});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         _items = jsonResponse;
@@ -3071,10 +3904,11 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     dynamic _items = [];
     try {
-      final response = await dio.get(pref
-              .getString('api' ?? '127.0.0.1:80/api/') +
-          apiV +
-          '/stock/stockTransferfind/$dataBase/$id/${Uri.encodeComponent(type).toString()}');
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              '/stock/stockTransferFind/$dataBase',
+          queryParameters: {'entryNo': id, 'fyId': currentFinancialYear.id});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -3100,7 +3934,12 @@ class DioService {
       final response = await dio.delete(
         pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
-            'stock/delete/$dataBase/$entryNo/$type',
+            'stock/delete/$dataBase',
+        queryParameters: {
+          'entryNo': entryNo,
+          'type': type,
+          'fyId': currentFinancialYear.id
+        },
       );
       if (response.statusCode == 200) {
         ret = response.data['returnValue'] > 0 ? true : false;
@@ -3123,13 +3962,11 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<Map<String, dynamic>> _items = [];
     try {
-      //localhost:8090/api/v7/inventory_report/QuickSearch/csharp/cable
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'inventory_report/QuickSearch/' +
-              dataBase +
-              '/${Uri.encodeComponent(value).toString()}');
+              'inventory_report/QuickSearch/$dataBase',
+          queryParameters: {'name': value});
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
@@ -3155,7 +3992,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'sale/getProductTracking/$dataBase/$id/$ledger');
+              'sale/getProductTracking/$dataBase',
+          queryParameters: {'id': id, 'ledger': ledger});
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
@@ -3169,6 +4007,503 @@ class DioService {
     }
     return _items;
   }
+
+  Future<List<ProductManageModel>> fetchProductDetails(id, String date) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp', location = '0';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    if (locationList.isNotEmpty) {
+      location = locationList
+          .where((element) => element.value == defaultLocation)
+          .map((e) => e.key)
+          .first
+          .toString();
+    }
+    int lId = ComSettings.appSettings(
+            'int', 'key-dropdown-default-location-view', 2) -
+        1;
+    location =
+        lId.toString().trim().isNotEmpty ? lId.toString().trim() : location;
+    List<ProductManageModel> _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'stock/getProductManagement/$dataBase',
+          queryParameters: {'id': id, 'location': location, 'date': date});
+
+      if (response.statusCode == 200) {
+        var data = response.data;
+        for (var row in data) {
+          _items.add(ProductManageModel.fromMap(row));
+        }
+      } else {
+        debugPrint('Failed to load data');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<bool> updateProductDetails(List<ProductManageModel> data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'stock/UpdateProductManagement/$dataBase',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        if (response.data['returnValue'] > 0) {
+          return response.data['returnValue'] > 0 ? true : false;
+        } else {
+          return false;
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
+  }
+
+  Future<List<dynamic>> getVoucherList(
+      String ledCode,
+      String location,
+      String groupCode,
+      String project,
+      String fromDate,
+      String toDate,
+      String sDate,
+      String eDate,
+      String where,
+      String cashId,
+      String salesman,
+      String statement,
+      String area,
+      String route) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    List<dynamic> _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'voucher_report/getListReport/$dataBase',
+          queryParameters: {
+            'ledCode': ledCode,
+            'location': location,
+            'groupCode': groupCode,
+            'project': project,
+            'fromDate': fromDate,
+            'toDate': toDate,
+            'sDate': sDate,
+            'eDate': eDate,
+            'where': where,
+            'cashId': cashId,
+            'salesman': salesman,
+            'statement': statement,
+            'areaId': area,
+            'routeId': route
+          });
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        _items = data;
+      } else {
+        debugPrint('Failed to load data');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<int> getStockManageMentId() async {
+    int ret = 0;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'stock/getStockManagementId/$dataBase',
+          queryParameters: {'fyId': currentFinancialYear.id});
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+        ret = jsonResponse['returnValue'] + 1;
+      } else {
+        ret = 0;
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
+  Future<bool> stockManagementUpdate(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.post(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'stock/stockManagement/$dataBase',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        debugPrint('Failed to load data');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
+  }
+
+  Future<bool> stockManagementDelete(entryNo) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.delete(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'stock/deleteStockManagement/$dataBase',
+          queryParameters: {
+            'fyId': currentFinancialYear.id,
+            'entryNo': entryNo
+          },
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        debugPrint('Failed to load data');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
+  }
+
+  Future<List<dynamic>> stockManagementFind(String entryNo) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'stock/findStockManagement/$dataBase',
+          queryParameters: {
+            'fyId': currentFinancialYear.id,
+            'entryNo': entryNo
+          },
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        debugPrint('Failed to load data');
+        return null;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return null;
+    }
+  }
+
+  Future<bool> companyUpdate(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'company/company/update',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        return response.data > 0 ? true : false;
+      } else {
+        debugPrint('Failed to load data');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
+  }
+
+  Future<dynamic> eInvoiceDetails() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'EInvoice/Details/$dataBase');
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        debugPrint('Unexpected error Occurred!');
+        return {};
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return {};
+    }
+  }
+
+  Future<bool> eInvoiceUpdate(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'EInvoice/$dataBase',
+          data: data,
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        debugPrint('Failed to load data');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
+  }
+
+  Future<dynamic> getPublicIp() async {
+    try {
+      final response = await dio.get("https://ipinfo.io/ip");
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        debugPrint('Unexpected error Occurred!');
+        return {};
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return {};
+    }
+  }
+
+  Future<AuthClass> authenticateGSTPortal(
+      username, password, ipAddress, clientId, clientSecret, gstIn) async {
+    AuthClass data;
+    try {
+      final response = await dio.get(gstBaseApi + gstAuthApi,
+          options: Options(headers: {
+            'accept': '*/*',
+            'username': username,
+            'password': password,
+            'ip_address': ipAddress,
+            'client_id': clientId,
+            'client_secret': clientSecret,
+            'gstin': gstIn,
+          }),
+          queryParameters: {'email': 'shersoftware@gmail.com'});
+
+      if (response.statusCode == 200) {
+        var _data = response.data;
+        data = AuthClass.fromMap(_data);
+        return data;
+      } else {
+        debugPrint('Failed to load data');
+        return data;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return data;
+    }
+  }
+
+  Future<GstNoResult> getGstResult(
+      String bClient,
+      String taxNumber,
+      String username,
+      String ipAddress,
+      clientId,
+      String clientSecret,
+      String authToken,
+      String companyGstNo) async {
+    GstNoResult data;
+    try {
+      final response = await dio.get(
+          "https://api.mastergst.com/einvoice/type/GSTNDETAILS/version/V1_03",
+          queryParameters: {
+            "param1": taxNumber,
+            "email": bClient != "SHERSOFT"
+                ? "ac.japansquare@gmail.com"
+                : "shersoftware@gmail.com"
+          },
+          options: Options(headers: {
+            'accept': '*/*',
+            'ip_address': ipAddress,
+            'client_id': clientId,
+            'client_secret': clientSecret,
+            'username': username,
+            'auth-token': authToken,
+            'gstin': companyGstNo,
+          }));
+
+      if (response.statusCode == 200) {
+        var _data = response.data;
+        data = GstNoResult.fromMap(_data);
+        return data;
+      } else {
+        debugPrint('Failed to load data');
+        return data;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return data;
+    }
+  }
+
+  Future<IRnResult> generateEInvoice(
+      String bClient,
+      String username,
+      String ipAddress,
+      clientId,
+      String clientSecret,
+      String authToken,
+      String companyGstNo,
+      data) async {
+    IRnResult data;
+    try {
+      final response = await dio.post(
+          "https://api.mastergst.com/einvoice/type/GENERATE/version/V1_03",
+          queryParameters: {
+            "email": bClient != "SHERSOFT"
+                ? "ac.japansquare@gmail.com"
+                : "shersoftware@gmail.com"
+          },
+          options: Options(headers: {
+            'accept': '*/*',
+            'ip_address': ipAddress,
+            'client_id': clientId,
+            'client_secret': clientSecret,
+            'username': username,
+            'auth-token': authToken,
+            'gstin': companyGstNo,
+            'Content-Type': 'application/json'
+          }),
+          data: data);
+
+      if (response.statusCode == 200) {
+        var _data = response.data;
+        data = IRnResult.fromMap(_data);
+        return data;
+      } else {
+        debugPrint('Failed to load data');
+        return data;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return data;
+    }
+  }
+
+  Future<IRnResult> cancelIRN(
+      String bClient,
+      String username,
+      String ipAddress,
+      clientId,
+      String clientSecret,
+      String authToken,
+      String companyGstNo,
+      data) async {
+    IRnResult data;
+    try {
+      final response = await dio.post(
+          "https://api.mastergst.com/einvoice/type/GENERATE/version/V1_03",
+          queryParameters: {
+            "email": bClient != "SHERSOFT"
+                ? "ac.japansquare@gmail.com"
+                : "shersoftware@gmail.com"
+          },
+          options: Options(headers: {
+            'accept': '*/*',
+            'ip_address': ipAddress,
+            'client_id': clientId,
+            'client_secret': clientSecret,
+            'username': username,
+            'auth-token': authToken,
+            'gstin': companyGstNo,
+            'Content-Type': 'application/json'
+          }),
+          data: data);
+
+      if (response.statusCode == 200) {
+        var _data = response.data;
+        data = IRnResult.fromMap(_data);
+        return data;
+      } else {
+        debugPrint('Failed to load data');
+        return data;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return data;
+    }
+  }
 }
 
 class DataJson {
@@ -3181,8 +4516,16 @@ class DataJson {
     return DataJson(id: json['id'], name: json['name']);
   }
 
+  factory DataJson.fromJsonX(Map<String, dynamic> json) {
+    return DataJson(id: json['auto'], name: json['Name']);
+  }
+
   static List<DataJson> fromJsonList(List list) {
     return list.map((item) => DataJson.fromJson(item)).toList();
+  }
+
+  static List<DataJson> fromJsonListX(List list) {
+    return list.map((item) => DataJson.fromJsonX(item)).toList();
   }
 
   String userAsString() {

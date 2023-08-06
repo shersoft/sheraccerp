@@ -1,0 +1,238 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+import 'package:sheraccerp/util/res_color.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+class CompanyAlert extends StatelessWidget {
+  CompanyAlert({Key? key}) : super(key: key);
+
+  launchURL() async {
+    const url = 'https://Shersoftware.com';
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'Shersoftware@Gmail.com',
+      queryParameters: {'subject': 'about as'});
+
+  launchPhone() async {
+    const url = 'tel:+91 9847997755';
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  callNumber() async {
+    const number = '9847997755'; //set the number here
+    // bool? res =
+    await FlutterPhoneDirectCaller.callNumber(number);
+  }
+
+  smsToNumber() async {
+    String url = "";
+    if (Platform.isAndroid) {
+      //FOR Android
+      url = 'sms:9847997755?body=message';
+      if (await canLaunch(url)) {
+        await launch(url);
+      } else {
+        throw 'Could not launch $url';
+      }
+    } else if (Platform.isIOS) {
+      //FOR IOS
+      url = 'sms:9847997755&body=message';
+      if (await canLaunch(url)) {
+        await launch(url);
+      } else {
+        throw 'Could not launch $url';
+      }
+    }
+  }
+
+  sentMail() async {
+    const url = "mailto:Shersoftware@gmail.com?subject=New&body=New%20plugin";
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: Stack(
+          children: [
+            Column(
+              children: [
+                AspectRatio(
+                  aspectRatio: 1.8,
+                  child: Container(
+                    color: Colors.blue,
+                  ),
+                ),
+                Expanded(
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: Container(
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+              ],
+            ),
+            Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 50.0),
+                child: Column(
+                  children: [
+                    Image.asset(
+                      'assets/logo.png',
+                      width: 63,
+                      height: 63,
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.all(4.0),
+                      child: Text(
+                        "SherSoft",
+                        style: TextStyle(color: Colors.white, fontSize: 20),
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.all(2.0),
+                      child: Text(
+                        "Software Company",
+                        style: TextStyle(color: Colors.white, fontSize: 15),
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.all(2.0),
+                      child: Text(
+                        "📌Kerala, Malappuram, Perinthalmanna",
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+            ListView(
+              shrinkWrap: true,
+              children: [
+                const SizedBox(
+                  height: 200,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      SizedBox(
+                        width: 20,
+                      ),
+                      Text(
+                        "SherAcc ERP",
+                        style: TextStyle(
+                            color: kPrimaryDarkColor,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold),
+                      )
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () => callNumber(),
+                        child: const Icon(
+                          Icons.phone,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 20,
+                      ),
+                      const Text(
+                        "+91 9847997755",
+                        style: TextStyle(color: Colors.blue, fontSize: 18),
+                      )
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () => launchURL(),
+                        child: const Icon(
+                          Icons.web,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 20,
+                      ),
+                      const Text(
+                        "SherSoftware.com",
+                        style: TextStyle(color: Colors.blue, fontSize: 18),
+                      )
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () => sentMail(),
+                        child: const Icon(
+                          Icons.mail,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 20,
+                      ),
+                      const Text(
+                        "Shersoftware@gmail.com",
+                        style: TextStyle(color: Colors.blue, fontSize: 18),
+                      )
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                    'You no longer available to use this company\nIf you want to continue contact as',
+                    style: TextStyle(
+                        color: red, fontWeight: FontWeight.bold, fontSize: 20)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

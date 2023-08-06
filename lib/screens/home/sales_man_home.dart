@@ -76,6 +76,60 @@ class _SalesManHomeState extends State<SalesManHome> {
     //             message: notificationAlert,
     //           ));
     // }
+
+    /***Test Data***/
+    // final dbHelper = DatabaseHelper.instance;
+    // final allRows = await dbHelper.queryAllRows();
+    // List<Carts> carts = [];
+    // for (var row in allRows) {
+    //   carts.add(Carts.fromMap(row));
+    // }
+    // if (carts.isNotEmpty) {
+    //   api.addEvent([
+    //     {'data': Carts.encodeCartToJson(carts).toString()}
+    //   ]).then((value) {
+    //     if (value) {
+    //       for (Carts carts in carts) {
+    //         _delete(carts.id, dbHelper);
+    //       }
+    //     }
+    //   });
+    // }
+  }
+
+  sentBachUpData() async {
+    // var token = await _firebaseMessaging.getToken();
+    // print("Instance ID: " + token);
+    //             showDialog(
+    // context: context, builder: (BuildContext context) => CustomDialog());
+    // showFancyCustomDialog(context);
+    // if (msg) {
+    //   showDialog(
+    //       context: context,
+    //       builder: (BuildContext context) => CustomAlertDialog(
+    //             title: messageTitle,
+    //             message: notificationAlert,
+    //           ));
+    // }
+
+    /***Test Data***/
+    final dbHelper = DatabaseHelper.instance;
+    final allRows = await dbHelper.queryAllRows();
+    List<Carts> carts = [];
+    for (var row in allRows) {
+      carts.add(Carts.fromMap(row));
+    }
+    if (carts.isNotEmpty) {
+      api.addEvent([
+        {'data': Carts.encodeCartToJson(carts).toString()}
+      ]).then((value) {
+        if (value) {
+          for (Carts carts in carts) {
+            _delete(carts.id, dbHelper);
+          }
+        }
+      });
+    }
   }
 
   void _delete(id, DatabaseHelper dbHelper) async {
@@ -102,6 +156,7 @@ class _SalesManHomeState extends State<SalesManHome> {
       firm = (pref.getString('CompanyName') ?? "");
       firmCode = (pref.getString('CustomerCode') ?? "");
       fId = (pref.getString('fId') ?? "");
+      setApiV = (pref.getString('apiV') ?? "v13");
     });
   }
 
@@ -208,7 +263,48 @@ class _SalesManHomeState extends State<SalesManHome> {
                           width: 2.0,
                         )),
                         child: TextButton(
-                          child: const Text('Take Order',
+                          child: const Text('Sales Order',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  fontFamily: 'Poppins')),
+                          onPressed: () {
+                            bool sType = true;
+                            salesTypeData = salesTypeList.firstWhere(
+                                (element) =>
+                                    element.name == 'Sales Order Entry');
+                            bool isSimpleSales = ComSettings.appSettings(
+                                    'bool', 'key-simple-sales', false)
+                                ? true
+                                : false;
+                            args.active == "false"
+                                ? _commonService.getTrialPeriod(args.atDate)
+                                    ? isSimpleSales
+                                        ? Navigator.pushNamed(
+                                            context, '/SimpleSale')
+                                        : Navigator.pushNamed(context, '/sales',
+                                            arguments: {'default': sType})
+                                    : _expire(args, context)
+                                : isSimpleSales
+                                    ? Navigator.pushNamed(
+                                        context, '/SimpleSale')
+                                    : Navigator.pushNamed(context, '/sales',
+                                        arguments: {'default': sType});
+                          },
+                        ),
+                      ),
+                    ),
+                    Visibility(
+                      visible: ComSettings.userControl('SALE'),
+                      child: Card(
+                        elevation: 2,
+                        shape: const StadiumBorder(
+                            side: BorderSide(
+                          color: blue,
+                          width: 2.0,
+                        )),
+                        child: TextButton(
+                          child: const Text('Sale',
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 20,
@@ -223,7 +319,7 @@ class _SalesManHomeState extends State<SalesManHome> {
                                             'key-item-sale-form-', false)[0]
                                         .name)
                                 : salesTypeList.firstWhere((element) =>
-                                    element.name == 'Sales Order Entry');
+                                    element.name == 'Sales Estimate Entry');
                             bool isSimpleSales = ComSettings.appSettings(
                                     'bool', 'key-simple-sales', false)
                                 ? true
@@ -300,6 +396,27 @@ class _SalesManHomeState extends State<SalesManHome> {
                       ),
                     ),
                     Visibility(
+                      visible: ComSettings.userControl('PURCHASE'),
+                      child: Card(
+                        elevation: 5,
+                        shape: const StadiumBorder(
+                            side: BorderSide(
+                          color: blue,
+                          width: 2.0,
+                        )),
+                        child: TextButton(
+                          child: const Text('Purchase',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  fontFamily: 'Poppins')),
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/purchase');
+                          },
+                        ),
+                      ),
+                    ),
+                    Visibility(
                       visible: ComSettings.userControl('ORDER LIST'),
                       child: Card(
                         elevation: 2,
@@ -321,6 +438,48 @@ class _SalesManHomeState extends State<SalesManHome> {
                       ),
                     ),
                     Visibility(
+                      visible: ComSettings.userControl('SALE'),
+                      child: Card(
+                        elevation: 2,
+                        shape: const StadiumBorder(
+                            side: BorderSide(
+                          color: blue,
+                          width: 2.0,
+                        )),
+                        child: TextButton(
+                          child: const Text('Bill List',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  fontFamily: 'Poppins')),
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/BillList');
+                          },
+                        ),
+                      ),
+                    ),
+                    Visibility(
+                      visible: ComSettings.userControl('Order Item List'),
+                      child: Card(
+                        elevation: 2,
+                        shape: const StadiumBorder(
+                            side: BorderSide(
+                          color: blue,
+                          width: 2.0,
+                        )),
+                        child: TextButton(
+                          child: const Text('Order Item List',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  fontFamily: 'Poppins')),
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/OrderItemList');
+                          },
+                        ),
+                      ),
+                    ),
+                    Visibility(
                       visible: ComSettings.userControl('SALE RETURN'),
                       child: Card(
                         elevation: 2,
@@ -337,6 +496,77 @@ class _SalesManHomeState extends State<SalesManHome> {
                                   fontFamily: 'Poppins')),
                           onPressed: () {
                             Navigator.pushNamed(context, '/salesReturn');
+                          },
+                        ),
+                      ),
+                    ),
+                    Visibility(
+                      visible: ComSettings.userControl('DAMAGE'),
+                      child: Card(
+                        elevation: 2,
+                        shape: const StadiumBorder(
+                            side: BorderSide(
+                          color: blue,
+                          width: 2.0,
+                        )),
+                        child: TextButton(
+                          child: const Text('Damage Entry',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  fontFamily: 'Poppins')),
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/damageEntry');
+                          },
+                        ),
+                      ),
+                    ),
+                    Visibility(
+                      visible: ComSettings.userControl('LEDGER REPORT'),
+                      child: Card(
+                        elevation: 2,
+                        shape: const StadiumBorder(
+                            side: BorderSide(
+                          color: blue,
+                          width: 2.0,
+                        )),
+                        child: TextButton(
+                          child: const Text('Ledger Report',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  fontFamily: 'Poppins')),
+                          onPressed: () {
+                            argumentsPass = {'mode': 'ledger'};
+                            Navigator.pushNamed(
+                              context,
+                              '/select_ledger',
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    Visibility(
+                      visible: ComSettings.userControl('GROUP LIST'),
+                      child: Card(
+                        elevation: 2,
+                        shape: const StadiumBorder(
+                            side: BorderSide(
+                          color: blue,
+                          width: 2.0,
+                        )),
+                        child: TextButton(
+                          child: const Text('Group List',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  fontFamily: 'Poppins')),
+                          onPressed: () {
+                            argumentsPass = {'mode': 'GroupList'};
+                            Navigator.pushNamed(
+                              context,
+                              '/select_ledger',
+                            );
                           },
                         ),
                       ),
@@ -363,6 +593,11 @@ class _SalesManHomeState extends State<SalesManHome> {
                         },
                       ),
                     ),
+                    OutlinedButton(
+                        onPressed: () async {
+                          sentBachUpData();
+                        },
+                        child: const Text('Share Catch File'))
                   ],
                 ),
               ));

@@ -118,8 +118,9 @@ class _AddProductsaleState extends State<AddProductsale> {
                     ? Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: TextField(
-                          decoration:
-                              const InputDecoration(hintText: 'Search...'),
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              labelText: 'Search...'),
                           onChanged: (text) {
                             text = text.toLowerCase();
                             setState(() {
@@ -899,9 +900,9 @@ class _ProductAddSaleState extends State<ProductAddSale> {
     //                         }
     //                         return null;
     //                       },
-    //                       keyboardType: TextInputType.number,
-    //                       decoration: const InputDecoration(
-    //                           labelText: 'Quantity', hintText: '0.0'),
+    //                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    //                       decoration: const InputDecoration(border: OutlineInputBorder(),
+    //                           labelText: 'Quantity', labelText: '0.0'),
     //                       onChanged: (value) {
     //                         if (value.isNotEmpty) {
     //                           bool cartQ = false;
@@ -1031,9 +1032,9 @@ class _ProductAddSaleState extends State<ProductAddSale> {
     //                         controller: _rateController,
     //                         readOnly: isItemRateEditLocked,
     //                         // autofocus: true,
-    //                         keyboardType: TextInputType.number,
-    //                         decoration: const InputDecoration(
-    //                             labelText: 'Price', hintText: '0.0'),
+    //                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    //                         decoration: const InputDecoration(border: OutlineInputBorder(),
+    //                             labelText: 'Price', labelText: '0.0'),
     //                         onChanged: (value) {
     //                           if (value.isNotEmpty) {
     //                             if (isMinimumRate) {
@@ -1152,8 +1153,8 @@ class _ProductAddSaleState extends State<ProductAddSale> {
     //                       child: TextField(
     //                         controller: _discountPercentController,
     //                         // autofocus: true,
-    //                         keyboardType: TextInputType.number,
-    //                         decoration: const InputDecoration(
+    //                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    //                         decoration: const InputDecoration(border: OutlineInputBorder(),
     //                             labelText: ' % ', hintText: '0.0'),
     //                         onChanged: (value) {
     //                           setState(() {
@@ -1168,9 +1169,9 @@ class _ProductAddSaleState extends State<ProductAddSale> {
     //                       child: TextField(
     //                         controller: _discountController,
     //                         // autofocus: true,
-    //                         keyboardType: TextInputType.number,
-    //                         decoration: const InputDecoration(
-    //                             labelText: 'Discount', hintText: '0.0'),
+    //                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    //                         decoration: const InputDecoration(border: OutlineInputBorder(),
+    //                             labelText: 'Discount', labelText: '0.0'),
     //                         onChanged: (value) {
     //                           setState(() {
     //                             calculate();

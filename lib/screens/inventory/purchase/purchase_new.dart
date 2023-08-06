@@ -425,7 +425,8 @@ class LedgerWidget extends StatelessWidget {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
-                                  hintText: 'Search...',
+                                  border: OutlineInputBorder(),
+                                  label: Text('Search...'),
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
@@ -574,7 +575,7 @@ class PurchaseHeaderWidget extends StatelessWidget {
                   child: Padding(
                     padding: EdgeInsets.only(right: 8.0),
                     child: Text(
-                      'Item +',
+                      'Add Item',
                       style: TextStyle(
                           color: blue,
                           fontSize: 25,

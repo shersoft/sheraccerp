@@ -4,16 +4,17 @@ import 'dart:io';
 
 import 'package:csv/csv.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'dart:html' as html;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:share/share.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
-import 'package:sheraccerp/widget/pdf_screen.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 class ProductReport extends StatefulWidget {
@@ -81,22 +82,13 @@ class _ProductReportState extends State<ProductReport> {
                   // debugPrint(menuId.toString());
                   if (menuId == 1) {
                     Future.delayed(const Duration(milliseconds: 1000), () {
-                      _createPDF('Product List').then((value) =>
-                          Navigator.of(context).push(MaterialPageRoute(
-                              builder: (_) => PDFScreen(
-                                    pathPDF: value,
-                                    subject: 'Product List',
-                                  ))));
+                      _createPDF('Product List').then((value) => null);
                     });
                   } else if (menuId == 2) {
                     Future.delayed(const Duration(milliseconds: 1000), () {
-                      _createCSV('Product List').then((value) {
-                        var text = 'Product List';
-                        var subject = 'Product List';
-                        List<String> paths = [];
-                        paths.add(value);
-                        urlFileShare(context, text, subject, paths);
-                      });
+                      _createCSV('Product List').then(
+                        (value) => null,
+                      );
                     });
                   }
                 });
@@ -117,7 +109,7 @@ class _ProductReportState extends State<ProductReport> {
           'statementType': statementType,
           // 'itemId': itemId != null ? itemId['id'] : '0',
           // 'itemName': itemId != null ? itemName['name'] : '0',
-          'mfr': mfr != null ? mfr['id'] : '',
+          'mfr': mfr != null ? mfr['id'] : '0',
           'category': category != null ? category['id'] : '0',
           'subcategory': subCategory != null ? subCategory['id'] : '0',
           'unit': unit != null ? unit['id'] : '0',
@@ -127,7 +119,7 @@ class _ProductReportState extends State<ProductReport> {
           'rLevel':
               reorderController.text.isNotEmpty ? reorderController.text : '0',
           'rack': rack ?? 0,
-          'hsn': hsnCode ?? 0
+          'hsn': hsnCode ?? ''
         }) +
         ']';
 
@@ -154,9 +146,12 @@ class _ProductReportState extends State<ProductReport> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade200),
+                        border:
+                            TableBorder.all(width: 1.0, color: Colors.black),
                         columnSpacing: 12,
                         dataRowHeight: 20,
-                        dividerThickness: 1,
                         headingRowHeight: 30,
                         columns: [
                           for (int i = 0; i < col.length; i++)
@@ -360,8 +355,8 @@ class _ProductReportState extends State<ProductReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/unit'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Unit'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), label: Text('Select Unit')),
                 onChanged: (dynamic data) {
                   unit = data;
                 },
@@ -373,7 +368,7 @@ class _ProductReportState extends State<ProductReport> {
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/manufacture'),
                 dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Item MFR"),
+                    const InputDecoration(label: Text("Select Item MFR")),
                 onChanged: (dynamic data) {
                   mfr = data;
                 },
@@ -384,8 +379,9 @@ class _ProductReportState extends State<ProductReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/category'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Category"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text("Select Category")),
                 onChanged: (dynamic data) {
                   category = data;
                 },
@@ -396,8 +392,9 @@ class _ProductReportState extends State<ProductReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/subCategory'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select SubCategory"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text("Select SubCategory")),
                 onChanged: (dynamic data) {
                   subCategory = data;
                 },
@@ -424,8 +421,9 @@ class _ProductReportState extends State<ProductReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/taxGroup'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select TaxGroup"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text("Select TaxGroup")),
                 onChanged: (dynamic data) {
                   taxGroup = data;
                 },
@@ -436,8 +434,9 @@ class _ProductReportState extends State<ProductReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'Product/getHsnCodeList'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select HSN Code"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text("Select HSN Code")),
                 onChanged: (dynamic data) {
                   hsnCode = data;
                 },
@@ -449,8 +448,8 @@ class _ProductReportState extends State<ProductReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/rack'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Rack"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), label: Text("Select Rack")),
                 onChanged: (dynamic data) {
                   rack = data;
                 },
@@ -463,8 +462,10 @@ class _ProductReportState extends State<ProductReport> {
                   Expanded(
                     child: TextField(
                       controller: taxPController,
-                      decoration: const InputDecoration(hintText: 'TAX %'),
-                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(), label: Text('TAX %')),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
                         FilteringTextInputFormatter(RegExp(r'[0-9]'),
                             allow: true, replacementString: '.')
@@ -477,8 +478,10 @@ class _ProductReportState extends State<ProductReport> {
                   Expanded(
                       child: TextField(
                     controller: reorderController,
-                    decoration: InputDecoration(hintText: 'Reorder'),
-                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                        border: OutlineInputBorder(), label: Text('Reorder')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -538,7 +541,7 @@ class _ProductReportState extends State<ProductReport> {
               pw.Text(title,
                   style: pw.TextStyle(
                       color: const PdfColor.fromInt(0),
-                      fontSize: 25,
+                      // fontSize: 25,
                       fontWeight: pw.FontWeight.bold)),
             ]),
         build: (context) => [
@@ -729,10 +732,31 @@ class _ProductReportState extends State<ProductReport> {
   }
 
   Future<String> savePreviewPDF(pw.Document pdf, var title) async {
-    var output = await getTemporaryDirectory();
-    final file = File('${output.path}/' + title + '.pdf');
-    await file.writeAsBytes(await pdf.save());
-    return file.path.toString();
+    title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
+    if (kIsWeb) {
+      try {
+        final bytes = await pdf.save();
+        final blob = html.Blob([bytes], 'application/pdf');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement()
+          ..href = url
+          ..style.display = 'none'
+          ..download = '$title.pdf';
+        html.document.body.children.add(anchor);
+        anchor.click();
+        html.document.body.children.remove(anchor);
+        html.Url.revokeObjectUrl(url);
+        return '';
+      } catch (ex) {
+        ex.toString();
+      }
+      return '';
+    } else {
+      var output = await getTemporaryDirectory();
+      final file = File('${output.path}/' + title + '.pdf');
+      await file.writeAsBytes(await pdf.save());
+      return file.path.toString();
+    }
   }
 
   Future<String> _createCSV(String title) async {
@@ -753,7 +777,9 @@ class _ProductReportState extends State<ProductReport> {
     for (var i = 0; i < dataList.length; i++) {
       List<dynamic> row1 = [];
       for (var columnName in col) {
-        row1.add(dataList[i][columnName].toString());
+        row1.add(dataList[i][columnName] != null
+            ? dataList[i][columnName].toString()
+            : '');
       }
       rows.add(row1);
     }
@@ -761,20 +787,30 @@ class _ProductReportState extends State<ProductReport> {
   }
 
   Future<String> savePreviewCSV(var csv, var title) async {
-    var output = await getTemporaryDirectory();
-    final file = File('${output.path}/' + title + '.csv');
-    await file.writeAsString(csv);
-    return file.path.toString();
-  }
-
-  Future<void> urlFileShare(
-      BuildContext context, String text, String subject, var paths) async {
-    final RenderBox box = context.findRenderObject() as RenderBox;
-    if (paths.isNotEmpty) {
-      await Share.shareFiles(paths,
-          text: text,
-          subject: subject,
-          sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
+    title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
+    if (kIsWeb) {
+      try {
+        final bytes = utf8.encode(csv);
+        final blob = html.Blob([bytes], 'application/csv');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement()
+          ..href = url
+          ..style.display = 'none'
+          ..download = '$title.csv';
+        html.document.body.children.add(anchor);
+        anchor.click();
+        html.document.body.children.remove(anchor);
+        html.Url.revokeObjectUrl(url);
+        return '';
+      } catch (ex) {
+        ex.toString();
+      }
+      return '';
+    } else {
+      var output = await getTemporaryDirectory();
+      final file = File('${output.path}/' + title + '.csv');
+      await file.writeAsString(csv);
+      return file.path.toString();
     }
   }
 }

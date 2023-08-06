@@ -20,7 +20,9 @@ class Report extends StatelessWidget {
       padding: const EdgeInsets.all(5),
       crossAxisSpacing: 0,
       mainAxisSpacing: 0,
-      crossAxisCount: 2,
+      crossAxisCount: MediaQuery.of(context).size.width > 500
+          ? (MediaQuery.of(context).size.width ~/ 250).toInt()
+          : (MediaQuery.of(context).size.width ~/ 150).toInt(),
       children: <Widget>[
         GestureDetector(
           child: Card(
@@ -206,8 +208,8 @@ class Report extends StatelessWidget {
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (BuildContext context) => const ReportView(
-                        '0', '1', '', '', 'Cheque', '', '', '', 0)));
+                    builder: (BuildContext context) => const ReportView('0',
+                        '1', '', '', 'Cheque', '', '', '', [0], '0', '0')));
           },
         ),
         GestureDetector(
@@ -246,7 +248,9 @@ class Report extends StatelessWidget {
                           '',
                           '',
                           '',
-                          0)));
+                          [0],
+                          '0',
+                          '0')));
             }
           },
         ),
@@ -290,8 +294,8 @@ class Report extends StatelessWidget {
               maxHeight: 300,
               onFind: (String filter) =>
                   api.getSalesListData(filter, 'sales_list/location'),
-              dropdownSearchDecoration:
-                  const InputDecoration(hintText: "Select Branch"),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(), labelText: "Select Branch"),
               onChanged: (dynamic data) {
                 location = data;
               },
@@ -320,7 +324,9 @@ class Report extends StatelessWidget {
                               '',
                               '',
                               '',
-                              location != null ? location.id : 0)));
+                              location != null ? [location.id] : [0],
+                              '0',
+                              '0')));
                 },
               ),
             ],

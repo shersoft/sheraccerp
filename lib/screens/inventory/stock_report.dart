@@ -4,8 +4,10 @@ import 'dart:io';
 
 import 'package:csv/csv.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:html' as html;
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
@@ -13,7 +15,6 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:share/share.dart';
-import 'package:sheraccerp/widget/pdf_screen.dart';
 
 class StockReport extends StatefulWidget {
   const StockReport({Key key}) : super(key: key);
@@ -23,11 +24,13 @@ class StockReport extends StatefulWidget {
 }
 
 class _StockReportState extends State<StockReport> {
+  bool isPageMode = true;
   String fromDate;
   String toDate;
   var _data;
   int menuId = 0;
   bool loadReport = false;
+  bool stockValuation = false;
   DateTime now = DateTime.now();
   DioService api = DioService();
   DataJson itemId,
@@ -40,11 +43,12 @@ class _StockReportState extends State<StockReport> {
       rack,
       unit,
       taxGroup;
-  var condition;
   final controller = ScrollController();
   double offset = 0;
   List<dynamic> resultData = [];
   DataJson dropdownValueStockMinus;
+  DataJson dropdownValueReportType;
+  DataJson dropdownValueLedgerReportType;
   String title = '';
   List<String> tableColumn = [];
 
@@ -54,7 +58,9 @@ class _StockReportState extends State<StockReport> {
     fromDate = DateFormat('dd-MM-yyyy').format(now);
     toDate = DateFormat('dd-MM-yyyy').format(now);
     dropdownValueStockMinus = minusStockList.first;
-    location = DataJson(id: 1, name: 'SHOP');
+    dropdownValueReportType = reportTypeList.first;
+    dropdownValueLedgerReportType = reportTypeLedgerList.first;
+    location = DataJson(id: 1, name: defaultLocation);
   }
 
   @override
@@ -68,6 +74,15 @@ class _StockReportState extends State<StockReport> {
                     onPressed: () {
                       setState(() {
                         loadReport = false;
+                        location = DataJson(id: 1, name: defaultLocation);
+                        itemId = null;
+                        itemName = null;
+                        supplier = null;
+                        mfr = null;
+                        category = null;
+                        subCategory = null;
+                        rack = null;
+                        taxGroup = null;
                       });
                     }),
                 PopupMenuButton(
@@ -89,40 +104,13 @@ class _StockReportState extends State<StockReport> {
                         Future.delayed(const Duration(milliseconds: 1000), () {
                           _createPDF(
                                   title + ' Date :' + fromDate + ' - ' + toDate)
-                              .then((value) =>
-                                  Navigator.of(context).push(MaterialPageRoute(
-                                      builder: (_) => PDFScreen(
-                                            pathPDF: value,
-                                            subject: title +
-                                                ' Date :' +
-                                                fromDate +
-                                                ' - ' +
-                                                toDate,
-                                            text: 'this is ' +
-                                                title +
-                                                ' Date :' +
-                                                fromDate +
-                                                ' - ' +
-                                                toDate,
-                                          ))));
+                              .then((value) => null);
                         });
                       } else if (menuId == 2) {
                         Future.delayed(const Duration(milliseconds: 1000), () {
                           _createCSV(
                                   title + ' Date :' + fromDate + ' - ' + toDate)
-                              .then((value) {
-                            var text = 'this is ' +
-                                title +
-                                ' Date :' +
-                                fromDate +
-                                ' - ' +
-                                toDate;
-                            var subject =
-                                title + ' Date :' + fromDate + ' - ' + toDate;
-                            List<String> paths = [];
-                            paths.add(value);
-                            urlFileShare(context, text, subject, paths);
-                          });
+                              .then((value) => null);
                         });
                       }
                     });
@@ -169,134 +157,309 @@ class _StockReportState extends State<StockReport> {
   }
 
   reportView(title) {
-    var statementType =
-        title == 'Stock' ? 'SimpleSummery' : 'StockLedger_Summery';
-    condition = '';
+    var statementType = title == 'Stock'
+        ? stockValuation
+            ? 'LastRate_StockValuation'
+            : dropdownValueReportType.id == reportTypeList[0].id
+                ? 'SimpleSummery'
+                : dropdownValueReportType.id == reportTypeList[1].id
+                    ? 'Stock Profit'
+                    : dropdownValueReportType.id == reportTypeList[2].id
+                        ? 'Category_Wise'
+                        : dropdownValueReportType.id == reportTypeList[3].id
+                            ? 'ZeroStockItems'
+                            : dropdownValueReportType.id == reportTypeList[4].id
+                                ? 'Stock_Ageing'
+                                : dropdownValueReportType.id ==
+                                        reportTypeList[5].id
+                                    ? 'LocationComparison'
+                                    : dropdownValueReportType.id ==
+                                            reportTypeList[6].id
+                                        ? 'SerialNo Report'
+                                        : dropdownValueReportType.id ==
+                                                reportTypeList[7].id
+                                            ? 'ReOrderLevelList'
+                                            : 'SimpleSummery'
+        : dropdownValueLedgerReportType.id == reportTypeLedgerList[0].id
+            ? 'StockLedger_Summery'
+            : dropdownValueLedgerReportType.id == reportTypeLedgerList[1].id
+                ? 'StockLedger_BatchWise'
+                : dropdownValueLedgerReportType.id == reportTypeLedgerList[2].id
+                    ? 'StockLedger_Summery_Daily'
+                    : dropdownValueLedgerReportType.id ==
+                            reportTypeLedgerList[6].id
+                        ? 'StockLedger_Wop'
+                        : 'StockLedger_Summery';
+    var _location = '',
+        _itemCode = '',
+        _itemName = '',
+        _supplier = '',
+        _mfr = '',
+        _category = '',
+        _subCategory = '',
+        _rack = '',
+        _taxGroup = '';
     if (location != null) {
-      condition += " and location='" + location.id.toString() + "'";
+      _location = location.id.toString() ?? '0';
     }
     if (itemId != null) {
-      condition += " and itemId='" + itemId.id.toString() + "'";
+      _itemCode = itemId.id.toString() ?? '';
     }
     if (itemName != null) {
-      condition += " and itemName='" + itemName.name.toString() + "'";
+      _itemName = itemName.name.toString() ?? '';
     }
     if (supplier != null) {
-      condition += " and supplier='" + supplier.id.toString() + "'";
+      _supplier = supplier.id.toString() ?? '';
     }
     if (mfr != null) {
-      condition += " and mfr='" + mfr.id.toString() + "'";
+      _mfr = mfr.id.toString() ?? '';
     }
     if (category != null) {
-      condition += " and category='" + category.id.toString() + "'";
+      _category = category.id.toString() ?? '';
     }
     if (subCategory != null) {
-      condition += " and subCategory='" + subCategory.id.toString() + "'";
+      _subCategory = subCategory.id.toString() ?? '';
     }
     if (rack != null) {
-      condition += " and rack='" + rack.id.toString() + "'";
+      _rack = rack.id.toString() ?? '';
     }
     if (taxGroup != null) {
-      condition += " and taxGroup='" + taxGroup.id.toString() + "'";
+      _taxGroup = taxGroup.id.toString() ?? '';
+    }
+    var stockMovingType = '';
+    if (title == 'Stock') {
+      stockMovingType = '';
+    } else {
+      stockMovingType = dropdownValueLedgerReportType.id ==
+              reportTypeLedgerList[3].id
+          ? 'FAST MOVING ITEMS'
+          : dropdownValueLedgerReportType.id == reportTypeLedgerList[4].id
+              ? 'SLOW MOVING ITEMS'
+              : dropdownValueLedgerReportType.id == reportTypeLedgerList[5].id
+                  ? 'NON MOVING ITEMS'
+                  : '';
     }
     var dataJson = title == 'Stock'
-        ? '[' +
-            json.encode({
-              'statementType': statementType.isEmpty ? '' : statementType,
-              'date': fromDate.isEmpty ? '' : formatYMD(fromDate),
-              'minus': dropdownValueStockMinus != null
-                  ? dropdownValueStockMinus.id.toString()
-                  : '',
-              'condition': condition ?? '',
-              'unitId': unit != null ? unit.id.toString() : null
-            }) +
-            ']'
-        : '[' +
-            json.encode({
-              'statementType': statementType.isEmpty ? '' : statementType,
-              'sDate': fromDate.isEmpty ? '' : formatYMD(fromDate),
-              'eDate': toDate.isEmpty ? '' : formatYMD(toDate),
-              'condition': condition ?? ''
-            }) +
-            ']';
+        ? {
+            'statementType': statementType.isEmpty ? '' : statementType,
+            'date': fromDate.isEmpty ? '' : formatYMD(fromDate),
+            'minus': dropdownValueStockMinus != null
+                ? dropdownValueStockMinus.id.toString()
+                : '',
+            "sDate": fromDate.isEmpty ? '' : formatYMD(fromDate),
+            "eDate": toDate.isEmpty ? '' : formatYMD(toDate),
+            "location": _location,
+            "uniqueCode": 0,
+            "itemId": 0,
+            "itemCode": _itemCode,
+            "itemName": _itemName,
+            "mfr": _mfr,
+            "category": _category,
+            "subCategory": _subCategory,
+            "rack": _rack,
+            "taxGroup": _taxGroup,
+            "supplier": _supplier,
+            'unitId': unit != null ? unit.id.toString() : '0',
+            "itemMovingType": stockMovingType
+          }
+        : {
+            'statementType': statementType.isEmpty ? '' : statementType,
+            'date': fromDate.isEmpty ? '' : formatYMD(fromDate),
+            'minus': dropdownValueStockMinus != null
+                ? dropdownValueStockMinus.id.toString()
+                : '',
+            "sDate": fromDate.isEmpty ? '' : formatYMD(fromDate),
+            "eDate": toDate.isEmpty ? '' : formatYMD(toDate),
+            "location": _location,
+            "uniqueCode": 0,
+            "itemId": 0,
+            "itemCode": _itemCode,
+            "itemName": _itemName,
+            "mfr": _mfr,
+            "category": _category,
+            "subCategory": _subCategory,
+            "rack": _rack,
+            "taxGroup": _taxGroup,
+            "supplier": _supplier,
+            'unitId': unit != null ? unit.id.toString() : 0,
+            "itemMovingType": stockMovingType
+          };
 
     return FutureBuilder<List<dynamic>>(
-      future: api.getStockReport(dataJson),
+      future: title == 'Stock'
+          ? api.getStockReport(dataJson)
+          : api.getStockLedgerReport(dataJson),
       builder: (ctx, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
             var data = snapshot.data;
-            _data = data;
             tableColumn = data[0].keys.toList();
-            return Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Center(
-                        child:
-                            Text('Date: From ' + fromDate + ' To ' + toDate)),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        columnSpacing: 12,
-                        dataRowHeight: 20,
-                        dividerThickness: 1,
-                        headingRowHeight: 30,
-                        columns: [
-                          for (int i = 0; i < tableColumn.length; i++)
-                            DataColumn(
-                              label: Align(
-                                alignment: Alignment.center,
-                                child: Text(
-                                  tableColumn[i],
-                                  style: const TextStyle(
-                                      // fontSize: 10.0,
-                                      fontWeight: FontWeight.bold),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
+            var col = tableColumn;
+            Map<String, dynamic> totalData = {};
+            for (int i = 0; i < col.length; i++) {
+              var cell = '';
+              if (col[i].toLowerCase() == ('realprate') ||
+                  col[i].toLowerCase() == ('mrp') ||
+                  col[i].toLowerCase() == ('retail') ||
+                  col[i].toLowerCase() == ('wsrate') ||
+                  col[i].toLowerCase() == ('wholsale') ||
+                  col[i].toLowerCase() == ('spretail') ||
+                  col[i].toLowerCase() == ('branch') ||
+                  col[i].toLowerCase() == ('qty') ||
+                  col[i].toLowerCase() == ('free') ||
+                  col[i].toLowerCase() == ('freeqty') ||
+                  col[i].toLowerCase() == ('rate') ||
+                  col[i].toLowerCase() == ('prate') ||
+                  col[i].toLowerCase() == ('srate') ||
+                  col[i].toLowerCase() == ('profit') ||
+                  col[i].toLowerCase() == ('total') ||
+                  col[i].toLowerCase() == ('amount') ||
+                  col[i].toLowerCase() == ('mrpamount') ||
+                  col[i].toLowerCase() == ('openingstock') ||
+                  col[i].toLowerCase() == ('openingstockentry') ||
+                  col[i].toLowerCase() == ('purchase') ||
+                  col[i].toLowerCase() == ('unrpurchase') ||
+                  col[i].toLowerCase() == ('sales') ||
+                  col[i].toLowerCase() == ('sreturn') ||
+                  col[i].toLowerCase() == ('preturn') ||
+                  col[i].toLowerCase() == ('damage') ||
+                  col[i].toLowerCase() == ('btr') ||
+                  col[i].toLowerCase() == ('replacement') ||
+                  col[i].toLowerCase() == ('rawmaterial') ||
+                  col[i].toLowerCase() == ('stocktransfer-') ||
+                  col[i].toLowerCase() == ('stocktransfer+') ||
+                  col[i].toLowerCase() == ('stockadj+') ||
+                  col[i].toLowerCase() == ('stockadj-') ||
+                  col[i].toLowerCase() == ('netqty') ||
+                  col[i].toLowerCase() == ('btr') ||
+                  col[i].toLowerCase() == ('rpamount')) {
+                cell = data
+                    .fold(
+                        0.0,
+                        (a, b) =>
+                            a +
+                            (b[col[i]] != null
+                                ? b[col[i]] == ''
+                                    ? 0
+                                    : double.parse(b[col[i]].toString())
+                                : 0))
+                    .toStringAsFixed(2);
+              }
+              if (i == 0) {
+                cell = 'Total';
+              }
+              totalData[col[i]] = cell;
+            }
+            if (totalData.isNotEmpty) {
+              data.add(totalData);
+            }
+            _data = data;
+
+            return isPageMode
+                ? SingleChildScrollView(
+                    child: PaginatedDataTable(
+                    header: Text(
+                      'Date: From ' + fromDate + ' To ' + toDate,
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                    rowsPerPage: 100,
+                    horizontalMargin: 10,
+                    columnSpacing: 10,
+                    showFirstLastButtons: true,
+                    arrowHeadColor: black,
+                    // columnSpacing: 100,
+                    // horizontalMargin: 10,
+                    dataRowHeight: 20,
+                    headingRowHeight: 30,
+                    showCheckboxColumn: true,
+                    columns: [
+                      for (int i = 0; i < col.length; i++)
+                        DataColumn(
+                          label: Align(
+                            alignment: Alignment.center,
+                            child: Text(
+                              col[i],
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
                             ),
-                        ],
-                        rows: data
-                            .map(
-                              (values) => DataRow(
-                                cells: [
-                                  for (int i = 0; i < values.length; i++)
-                                    DataCell(
-                                      Align(
-                                        alignment: ComSettings.oKNumeric(
-                                          values[tableColumn[i]] != null
-                                              ? values[tableColumn[i]]
-                                                  .toString()
-                                              : '',
-                                        )
-                                            ? Alignment.centerRight
-                                            : Alignment.centerLeft,
-                                        child: Text(
-                                          values[tableColumn[i]] != null
-                                              ? values[tableColumn[i]]
-                                                  .toString()
-                                              : '',
-                                          softWrap: true,
-                                          overflow: TextOverflow.ellipsis,
-                                          // style: TextStyle(fontSize: 6),
-                                        ),
+                          ),
+                        ),
+                    ],
+                    source: DTS(context, _data),
+                  ))
+                : Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Center(
+                              child: Text(
+                                  'Date: From ' + fromDate + ' To ' + toDate)),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: DataTable(
+                              headingRowColor: MaterialStateColor.resolveWith(
+                                  (states) => Colors.grey.shade200),
+                              border: TableBorder.all(
+                                  width: 1.0, color: Colors.black),
+                              columnSpacing: 12,
+                              dataRowHeight: 20,
+                              headingRowHeight: 30,
+                              columns: [
+                                for (int i = 0; i < tableColumn.length; i++)
+                                  DataColumn(
+                                    label: Align(
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        tableColumn[i],
+                                        style: const TextStyle(
+                                            // fontSize: 10.0,
+                                            fontWeight: FontWeight.bold),
+                                        textAlign: TextAlign.center,
                                       ),
                                     ),
-                                ],
-                              ),
-                            )
-                            .toList(),
+                                  ),
+                              ],
+                              rows: data
+                                  .map(
+                                    (values) => DataRow(
+                                      cells: [
+                                        for (int i = 0; i < values.length; i++)
+                                          DataCell(
+                                            Align(
+                                              alignment: ComSettings.oKNumeric(
+                                                values[tableColumn[i]] != null
+                                                    ? values[tableColumn[i]]
+                                                        .toString()
+                                                    : '',
+                                              )
+                                                  ? Alignment.centerRight
+                                                  : Alignment.centerLeft,
+                                              child: Text(
+                                                values[tableColumn[i]] != null
+                                                    ? values[tableColumn[i]]
+                                                        .toString()
+                                                    : '',
+                                                softWrap: true,
+                                                overflow: TextOverflow.ellipsis,
+                                                // style: TextStyle(fontSize: 6),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ),
+                          // SizedBox(height: 500),
+                        ],
                       ),
                     ),
-                    // SizedBox(height: 500),
-                  ],
-                ),
-              ),
-            );
+                  );
           } else {
             return Center(
               child: Column(
@@ -379,33 +542,51 @@ class _StockReportState extends State<StockReport> {
                 ),
               ),
               const Divider(),
+              dropDownReportType(),
+              const Divider(),
               DropdownSearch<dynamic>(
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/location'),
-                dropdownSearchDecoration:
-                    InputDecoration(hintText: 'Select Branch'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), label: Text('Select Branch')),
                 onChanged: (dynamic data) {
                   location = data;
                 },
                 showSearchBox: true,
               ),
               const Divider(),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    title = 'Stock';
-                    loadReport = true;
-                  });
-                },
-                child: const Text('Show'),
-                style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(kPrimaryColor),
-                  foregroundColor:
-                      MaterialStateProperty.all<Color>(Colors.white),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        title = 'Stock';
+                        loadReport = true;
+                      });
+                    },
+                    child: const Text('Show'),
+                    style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(kPrimaryColor),
+                      foregroundColor:
+                          MaterialStateProperty.all<Color>(Colors.white),
+                    ),
+                  ),
+                  const Text('Page'),
+                  Checkbox(
+                    value: isPageMode,
+                    onChanged: (value) {
+                      setState(() {
+                        isPageMode = value;
+                      });
+                    },
+                  )
+                ],
               ),
+              const Divider(),
+              stockMethod(),
               const Divider(),
               dropDownStockMinus(),
               const Divider(),
@@ -413,8 +594,9 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/ItemCode'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Item Code'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select Item Code')),
                 onChanged: (dynamic data) {
                   itemId = data;
                 },
@@ -425,8 +607,9 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/itemName'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Item Name'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select Item Name')),
                 onChanged: (dynamic data) {
                   itemName = data;
                 },
@@ -437,8 +620,9 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/manufacture'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Item MFR'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select Item MFR')),
                 onChanged: (dynamic data) {
                   mfr = data;
                 },
@@ -449,8 +633,9 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/category'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Category'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select Category')),
                 onChanged: (dynamic data) {
                   category = data;
                 },
@@ -461,8 +646,9 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/subCategory'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select SubCategory'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select SubCategory')),
                 onChanged: (dynamic data) {
                   subCategory = data;
                 },
@@ -473,8 +659,8 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/rack'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Rack"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), label: Text("Select Rack")),
                 onChanged: (dynamic data) {
                   rack = data;
                 },
@@ -485,8 +671,9 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/taxGroup'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select TaxGroup"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text("Select TaxGroup")),
                 onChanged: (dynamic data) {
                   taxGroup = data;
                 },
@@ -497,8 +684,9 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/supplier'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Supplier"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text("Select Supplier")),
                 onChanged: (dynamic data) {
                   supplier = data;
                 },
@@ -509,8 +697,8 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/unit'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Unit"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), label: Text("Select Unit")),
                 onChanged: (dynamic data) {
                   unit = data;
                 },
@@ -566,40 +754,57 @@ class _StockReportState extends State<StockReport> {
                 ),
               ),
               const Divider(),
+              dropDownLedgerReportType(),
+              const Divider(),
               DropdownSearch<dynamic>(
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/location'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Branch"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), label: Text("Select Branch")),
                 onChanged: (dynamic data) {
                   location = data;
                 },
                 showSearchBox: true,
               ),
               const Divider(),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    title = 'Stock Ledger';
-                    loadReport = true;
-                  });
-                },
-                child: const Text('Show'),
-                style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(kPrimaryColor),
-                  foregroundColor:
-                      MaterialStateProperty.all<Color>(Colors.white),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        title = 'Stock Ledger';
+                        loadReport = true;
+                      });
+                    },
+                    child: const Text('Show'),
+                    style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(kPrimaryColor),
+                      foregroundColor:
+                          MaterialStateProperty.all<Color>(Colors.white),
+                    ),
+                  ),
+                  const Text('Page'),
+                  Checkbox(
+                    value: isPageMode,
+                    onChanged: (value) {
+                      setState(() {
+                        isPageMode = value;
+                      });
+                    },
+                  )
+                ],
               ),
               const Divider(),
               DropdownSearch<dynamic>(
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/ItemCode'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Item Code"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text("Select Item Code")),
                 onChanged: (dynamic data) {
                   itemId = data;
                 },
@@ -610,8 +815,9 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/itemName'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Item Name"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text("Select Item Name")),
                 onChanged: (dynamic data) {
                   itemName = data;
                 },
@@ -622,8 +828,9 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/manufacture'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Item MFR"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text("Select Item MFR")),
                 onChanged: (dynamic data) {
                   mfr = data;
                 },
@@ -634,8 +841,9 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/category'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Category"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text("Select Category")),
                 onChanged: (dynamic data) {
                   category = data;
                 },
@@ -646,8 +854,9 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/subCategory'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select SubCategory"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text("Select SubCategory")),
                 onChanged: (dynamic data) {
                   subCategory = data;
                 },
@@ -658,8 +867,8 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/rack'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Rack"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), label: Text("Select Rack")),
                 onChanged: (dynamic data) {
                   rack = data;
                 },
@@ -670,8 +879,9 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/taxGroup'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select TaxGroup"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text("Select TaxGroup")),
                 onChanged: (dynamic data) {
                   taxGroup = data;
                 },
@@ -682,8 +892,9 @@ class _StockReportState extends State<StockReport> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/supplier'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Supplier"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text("Select Supplier")),
                 onChanged: (dynamic data) {
                   supplier = data;
                 },
@@ -716,31 +927,133 @@ class _StockReportState extends State<StockReport> {
   List<DataJson> minusStockList = [
     DataJson(id: 2, name: 'AVOID MINUS STOCK'),
     DataJson(id: 0, name: 'ONLY MINUS STOCK'),
-    DataJson(id: 1, name: 'INCLUDE MINUS STOCK')
+    DataJson(id: 1, name: 'INCLUDE MINUS STOCK'),
+    DataJson(id: 3, name: 'ONLY ZERO STOCK'),
+    DataJson(id: 4, name: 'PLUS & MINUS STOCK'),
   ];
 
+  List<DataJson> reportTypeList = [
+    DataJson(id: 0, name: 'Simple'),
+    DataJson(id: 1, name: 'Stock Profit'),
+    DataJson(id: 2, name: 'Category Wise'),
+    DataJson(id: 3, name: 'Zero Stock Items'),
+    DataJson(id: 4, name: 'Stock Ageing'),
+    DataJson(id: 5, name: 'Location Comparison'),
+    DataJson(id: 6, name: 'SerialNo Report'),
+    DataJson(id: 7, name: 'Below Reorder'),
+  ];
+
+  List<DataJson> reportTypeLedgerList = [
+    DataJson(id: 0, name: 'Detailed'),
+    DataJson(id: 1, name: 'Batch Wise'),
+    DataJson(id: 2, name: 'Daily'),
+    DataJson(id: 3, name: 'Fast Moving Items'),
+    DataJson(id: 4, name: 'Slow Moving Items'),
+    DataJson(id: 5, name: 'Non Moving Items'),
+    DataJson(id: 6, name: 'Summary w/o UNP'),
+  ];
+
+  dropDownLedgerReportType() {
+    return Card(
+      elevation: 5,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          const Text('Report Type'),
+          DropdownButton<DataJson>(
+            value: dropdownValueLedgerReportType,
+            icon: const Icon(Icons.arrow_drop_down),
+            onChanged: (DataJson data) {
+              setState(() {
+                dropdownValueLedgerReportType = data;
+              });
+            },
+            items: reportTypeLedgerList
+                .map<DropdownMenuItem<DataJson>>((DataJson value) {
+              return DropdownMenuItem<DataJson>(
+                value: value,
+                child: Text(value.name),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  dropDownReportType() {
+    return Card(
+      elevation: 5,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          const Text('Report Type'),
+          DropdownButton<DataJson>(
+            value: dropdownValueReportType,
+            icon: const Icon(Icons.arrow_drop_down),
+            onChanged: (DataJson data) {
+              setState(() {
+                dropdownValueReportType = data;
+              });
+            },
+            items: reportTypeList
+                .map<DropdownMenuItem<DataJson>>((DataJson value) {
+              return DropdownMenuItem<DataJson>(
+                value: value,
+                child: Text(value.name),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
   dropDownStockMinus() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        const Text('Minus Stock'),
-        DropdownButton<DataJson>(
-          value: dropdownValueStockMinus,
-          icon: const Icon(Icons.arrow_drop_down),
-          onChanged: (DataJson data) {
-            setState(() {
-              dropdownValueStockMinus = data;
-            });
-          },
-          items:
-              minusStockList.map<DropdownMenuItem<DataJson>>((DataJson value) {
-            return DropdownMenuItem<DataJson>(
-              value: value,
-              child: Text(value.name),
-            );
-          }).toList(),
-        ),
-      ],
+    return Card(
+      elevation: 5,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          const Text('Minus Stock'),
+          DropdownButton<DataJson>(
+            value: dropdownValueStockMinus,
+            icon: const Icon(Icons.arrow_drop_down),
+            onChanged: (DataJson data) {
+              setState(() {
+                dropdownValueStockMinus = data;
+              });
+            },
+            items: minusStockList
+                .map<DropdownMenuItem<DataJson>>((DataJson value) {
+              return DropdownMenuItem<DataJson>(
+                value: value,
+                child: Text(value.name),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  stockMethod() {
+    return Card(
+      elevation: 5,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          const Text('Stock Valuation Last P-Rate'),
+          Checkbox(
+            value: stockValuation,
+            onChanged: (value) {
+              setState(() {
+                stockValuation = value;
+              });
+            },
+          )
+        ],
+      ),
     );
   }
 
@@ -774,7 +1087,7 @@ class _StockReportState extends State<StockReport> {
               pw.Text(title,
                   style: pw.TextStyle(
                       color: const PdfColor.fromInt(0),
-                      fontSize: 25,
+                      // fontSize: 25,
                       fontWeight: pw.FontWeight.bold)),
             ]),
         build: (context) => [
@@ -956,9 +1269,20 @@ class _StockReportState extends State<StockReport> {
                             children: [
                               pw.Padding(
                                 padding: const pw.EdgeInsets.all(2.0),
-                                child: pw.Text(
-                                    data[i][tableColumn[l]].toString() ?? '',
-                                    style: const pw.TextStyle(fontSize: 6)),
+                                child: pw.Align(
+                                    alignment: ComSettings.oKNumeric(data[i]
+                                                    [tableColumn[l]] !=
+                                                null
+                                            ? data[i][tableColumn[l]].toString()
+                                            : '')
+                                        ? pw.Alignment.centerRight
+                                        : pw.Alignment.centerLeft,
+                                    child: pw.Text(
+                                        data[i][tableColumn[l]] != null
+                                            ? data[i][tableColumn[l]].toString()
+                                            : '',
+                                        style:
+                                            const pw.TextStyle(fontSize: 6))),
                                 // pw.Divider(thickness: 1)
                               ),
                             ]),
@@ -990,10 +1314,31 @@ class _StockReportState extends State<StockReport> {
   }
 
   Future<String> savePreviewPDF(pw.Document pdf, var title) async {
-    var output = await getTemporaryDirectory();
-    final file = File('${output.path}/' + title + '.pdf');
-    await file.writeAsBytes(await pdf.save());
-    return file.path.toString();
+    title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
+    if (kIsWeb) {
+      try {
+        final bytes = await pdf.save();
+        final blob = html.Blob([bytes], 'application/pdf');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement()
+          ..href = url
+          ..style.display = 'none'
+          ..download = '$title.pdf';
+        html.document.body.children.add(anchor);
+        anchor.click();
+        html.document.body.children.remove(anchor);
+        html.Url.revokeObjectUrl(url);
+        return '';
+      } catch (ex) {
+        ex.toString();
+      }
+      return '';
+    } else {
+      var output = await getTemporaryDirectory();
+      final file = File('${output.path}/' + title + '.pdf');
+      await file.writeAsBytes(await pdf.save());
+      return file.path.toString();
+    }
   }
 
   Future<String> _createCSV(String title) async {
@@ -1014,7 +1359,9 @@ class _StockReportState extends State<StockReport> {
     for (var i = 0; i < dataList.length; i++) {
       List<dynamic> row1 = [];
       for (var columnName in col) {
-        row1.add(dataList[i][columnName].toString());
+        row1.add(dataList[i][columnName] != null
+            ? dataList[i][columnName].toString()
+            : '');
       }
       rows.add(row1);
     }
@@ -1022,20 +1369,73 @@ class _StockReportState extends State<StockReport> {
   }
 
   Future<String> savePreviewCSV(var csv, var title) async {
-    var output = await getTemporaryDirectory();
-    final file = File('${output.path}/' + title + '.csv');
-    await file.writeAsString(csv);
-    return file.path.toString();
-  }
-
-  Future<void> urlFileShare(
-      BuildContext context, String text, String subject, var paths) async {
-    final RenderBox box = context.findRenderObject() as RenderBox;
-    if (paths.isNotEmpty) {
-      await Share.shareFiles(paths,
-          text: text,
-          subject: subject,
-          sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
+    title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
+    if (kIsWeb) {
+      try {
+        final bytes = utf8.encode(csv);
+        final blob = html.Blob([bytes], 'application/csv');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement()
+          ..href = url
+          ..style.display = 'none'
+          ..download = '$title.csv';
+        html.document.body.children.add(anchor);
+        anchor.click();
+        html.document.body.children.remove(anchor);
+        html.Url.revokeObjectUrl(url);
+        return '';
+      } catch (ex) {
+        ex.toString();
+      }
+      return '';
+    } else {
+      var output = await getTemporaryDirectory();
+      final file = File('${output.path}/' + title + '.csv');
+      await file.writeAsString(csv);
+      return file.path.toString();
     }
   }
+}
+
+class DTS extends DataTableSource {
+  final List<dynamic> data;
+  final BuildContext context;
+
+  DTS(this.context, this.data);
+  @override
+  DataRow getRow(int index) {
+    final tableColumn = data[0].keys.toList();
+    final values = data[index];
+    return DataRow.byIndex(index: index, cells: [
+      for (int i = 0; i < values.length; i++)
+        DataCell(
+          Align(
+            alignment: ComSettings.oKNumeric(
+              values[tableColumn[i]] != null
+                  ? values[tableColumn[i]].toString()
+                  : '',
+            )
+                ? Alignment.centerRight
+                : Alignment.centerLeft,
+            child: Text(
+              values[tableColumn[i]] != null
+                  ? values[tableColumn[i]].toString()
+                  : '',
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
+              // style: TextStyle(fontSize: 6),
+            ),
+          ),
+        ),
+    ]);
+  }
+
+  @override
+  bool get isRowCountApproximate => false;
+
+  @override
+  int get rowCount => data.length;
+
+  @override
+  int get selectedRowCount => 0;
 }

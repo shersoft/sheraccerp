@@ -483,7 +483,8 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
-                                  hintText: 'Search...',
+                                  border: OutlineInputBorder(),
+                                  label: Text('Search...'),
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
@@ -661,7 +662,7 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                   child: Padding(
                     padding: EdgeInsets.only(right: 8.0),
                     child: Text(
-                      'Item +',
+                      'Add Item',
                       style: TextStyle(
                           color: blue,
                           fontSize: 25,
@@ -704,7 +705,8 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
-                                  hintText: 'Search...',
+                                  border: OutlineInputBorder(),
+                                  label: Text('Search...'),
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
@@ -1391,8 +1393,9 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
               controller: controllerQuantity,
               decoration: InputDecoration(
                   border: const OutlineInputBorder(),
-                  hintText: 'Available Quantity is ${product.quantity}'),
-              keyboardType: TextInputType.number,
+                  label: Text('Available Quantity is ${product.quantity}')),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')
@@ -1410,8 +1413,8 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
               maxHeight: 300,
               onFind: (String filter) =>
                   dio.getSalesListData(filter, 'sales_list/unit'),
-              dropdownSearchDecoration:
-                  const InputDecoration(hintText: 'Select Unit'),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(), label: Text('Select Unit')),
               onChanged: (dynamic data) {
                 unit = data;
                 calculate();
@@ -1422,8 +1425,9 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
             TextField(
               controller: controllerRate,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'P Rate'),
-              keyboardType: TextInputType.number,
+                  border: OutlineInputBorder(), label: Text('P Rate')),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')
@@ -1455,8 +1459,9 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                   child: TextField(
                     controller: controllerDiscountPer,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: ' % '),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text(' % ')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1476,8 +1481,9 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                   child: TextField(
                     controller: controllerDiscount,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'discount'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('discount')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1503,8 +1509,9 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                   child: TextField(
                     controller: controllerMrp,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'MRP'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('MRP')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1524,8 +1531,9 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                   child: TextField(
                     controller: controllerRetail,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Retail'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('Retail')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1553,8 +1561,9 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                   child: TextField(
                     controller: controllerWholeSale,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'WholeSale'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('WholeSale')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1574,8 +1583,9 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                   child: TextField(
                     controller: controllerBranch,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Branch'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('Branch')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')

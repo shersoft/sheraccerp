@@ -20,7 +20,10 @@ class _DamageReportState extends State<DamageReport> {
   bool loadReport = false;
   DateTime now = DateTime.now();
   DioService api = DioService();
-  var itemId, itemName, location = {'id': 1, 'name': 'SHOP'}, title = '';
+  var itemId,
+      itemName,
+      location = {'id': 1, 'name': defaultLocation},
+      title = '';
   final controller = ScrollController();
   double offset = 0;
   var dropDownBranchId;
@@ -39,7 +42,7 @@ class _DamageReportState extends State<DamageReport> {
 
     if (locationList.isNotEmpty) {
       dropDownBranchId = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first;
     }
@@ -116,9 +119,12 @@ class _DamageReportState extends State<DamageReport> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade200),
+                        border:
+                            TableBorder.all(width: 1.0, color: Colors.black),
                         columnSpacing: 12,
                         dataRowHeight: 20,
-                        dividerThickness: 1,
                         headingRowHeight: 30,
                         columns: [
                           for (int i = 0; i < col.length; i++)
@@ -324,8 +330,9 @@ class _DamageReportState extends State<DamageReport> {
                 // maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/ItemCode'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Item Code'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select Item Code')),
                 onChanged: (dynamic data) {
                   itemId = data;
                 },
@@ -336,8 +343,9 @@ class _DamageReportState extends State<DamageReport> {
                 // maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/itemName'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Item Name'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select Item Name')),
                 onChanged: (dynamic data) {
                   itemName = data;
                 },

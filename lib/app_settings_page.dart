@@ -295,7 +295,7 @@ class AppSettings extends StatelessWidget {
                 ),
               ],
             )),
-        //Transaction
+        // //Transaction
         SingleChildScrollView(
           child: SimpleSettingsTile(
               title: 'Transaction',
@@ -510,7 +510,7 @@ class AppSettings extends StatelessWidget {
                 ],
               )),
         ),
-        //Item
+        // //Item
         SimpleSettingsTile(
             title: 'Item',
             subtitle: 'Item Settings',
@@ -720,7 +720,7 @@ class AppSettings extends StatelessWidget {
                 )
               ],
             )),
-        //Pinter
+        // //Pinter
         SimpleSettingsTile(
             title: 'Pinter',
             subtitle: 'Pinter Settings',
@@ -788,12 +788,8 @@ class AppSettings extends StatelessWidget {
                     2: 'Default',
                     3: 'VAT',
                     4: 'GST',
-                    5: 'ARABIC HALF',
-                    6: 'ARABIC FULL',
-                    7: 'MALAYALAM HALF',
-                    8: 'MALAYALAM FULL',
-                    9: 'HINDI',
-                    13: 'Other',
+                    5: 'VAT1',
+                    6: 'Other',
                   },
                   selected: 2,
                   onChange: (value) {
@@ -838,6 +834,26 @@ class AppSettings extends StatelessWidget {
                     9: '8',
                     10: '9',
                     11: '10',
+                    12: '11',
+                    13: '12',
+                    14: '13',
+                    15: '14',
+                    16: '15',
+                    17: '16',
+                    18: '17',
+                    19: '18',
+                    20: '19',
+                    21: '20',
+                    22: '21',
+                    23: '22',
+                    24: '23',
+                    25: '24',
+                    26: '25',
+                    27: '26',
+                    28: '27',
+                    29: '28',
+                    30: '29',
+                    31: '30',
                   },
                   selected: 2,
                   onChange: (value) {

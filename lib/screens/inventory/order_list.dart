@@ -25,6 +25,7 @@ class _OrderListState extends State<OrderList> {
   String fromDate = '', toDate = '';
   DateTime now = DateTime.now();
   DioService api = DioService();
+  var salesManId = 0;
 
   @override
   void initState() {
@@ -34,11 +35,14 @@ class _OrderListState extends State<OrderList> {
 
     if (locationList.isNotEmpty) {
       dropDownBranchId = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first;
     }
     salesTypeData = salesTypeList;
+    salesManId = ComSettings.appSettings(
+            'int', 'key-dropdown-default-salesman-view', 1) -
+        1;
   }
 
   void itemChange(bool val, int index) {
@@ -116,9 +120,10 @@ class _OrderListState extends State<OrderList> {
   List dataDisplayHead = [];
 
   selectData(title) {
-    dropDownBranchId = ComSettings.appSettings(
+    int _branchId = ComSettings.appSettings(
             'int', 'key-dropdown-default-location-view', 0) -
         1;
+    dropDownBranchId = _branchId > 0 ? _branchId : dropDownBranchId;
     // var _idp = locationList.isNotEmpty
     //     ? Map.fromIterable(locationList,
     //         key: (e) => e.key + 1, value: (e) => e.value)
@@ -237,15 +242,15 @@ class _OrderListState extends State<OrderList> {
   reportView(title) {
     controller.addListener(onScroll);
     List<dynamic> dataSType = [];
-    if (ComSettings.appSettings('bool', 'key-switch-sales-form-set', false)) {
-      for (var data in salesTypeData) {
-        if (data.stock) dataSType.add({'id': data.id});
-      }
-    } else {
-      for (var data in salesTypeData) {
-        if (data.name == 'Sales Order Entry') dataSType.add({'id': data.id});
-      }
+    // if (ComSettings.appSettings('bool', 'key-switch-sales-form-set', false)) {
+    //   for (var data in salesTypeData) {
+    //     if (data.stock) dataSType.add({'id': data.id});
+    //   }
+    // } else {
+    for (var data in salesTypeData) {
+      if (data.name == 'Sales Order Entry') dataSType.add({'id': data.id});
     }
+    // }
 
     return _saleListData('SalesList', dataSType, title);
   }
@@ -272,7 +277,7 @@ class _OrderListState extends State<OrderList> {
               'subcategory': '0',
               'location': dropDownBranchId.toString(),
               'project': '0',
-              'salesman': '0',
+              'salesman': salesManId.toString(),
               'salesType': dataSType != null
                   ? jsonEncode(dataSType)
                   : jsonEncode({'id': 0}),

@@ -42,7 +42,7 @@ class _OpeningStockState extends State<OpeningStock> {
       widgetID = true,
       oldBill = false,
       lastRecord = false,
-      realPRATEBASEDPROFITPERCENTAGE = false,
+      realPRateBasedProfitPercentage = false,
       buttonEvent = false;
   List<CartItemOP> cartItem = [];
   int page = 1, pageTotal = 0, totalRecords = 0;
@@ -53,8 +53,8 @@ class _OpeningStockState extends State<OpeningStock> {
   bool enableMULTIUNIT = false,
       cessOnNetAmount = false,
       enableKeralaFloodCess = false,
-      useUNIQUECODEASBARCODE = false,
-      useOLDBARCODE = false;
+      useUniqueCodeAsBarcode = false,
+      useOldBarcode = false;
   int locationId = 1, salesManId = 0, decimal = 2;
 
   @override
@@ -82,10 +82,10 @@ class _OpeningStockState extends State<OpeningStock> {
     companyTaxMode = ComSettings.getValue('PACKAGE', settings);
     cessOnNetAmount = ComSettings.getStatus('CESS ON NET AMOUNT', settings);
     enableKeralaFloodCess = false;
-    useUNIQUECODEASBARCODE =
+    useUniqueCodeAsBarcode =
         ComSettings.getStatus('USE UNIQUECODE AS BARCODE', settings);
-    useOLDBARCODE = ComSettings.getStatus('USE OLD BARCODE', settings);
-    realPRATEBASEDPROFITPERCENTAGE =
+    useOldBarcode = ComSettings.getStatus('USE OLD BARCODE', settings);
+    realPRateBasedProfitPercentage =
         ComSettings.getStatus('REAL PRATE BASED PROFIT PERCENTAGE', settings);
 
     salesManId = ComSettings.appSettings(
@@ -101,6 +101,24 @@ class _OpeningStockState extends State<OpeningStock> {
 
   @override
   Widget build(BuildContext context) {
+    controllerBranch.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerBranch.text.length));
+
+    controllerDiscount.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerDiscount.text.length));
+    controllerDiscountPer.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerDiscountPer.text.length));
+    controllerMrp.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerMrp.text.length));
+    controllerQuantity.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerQuantity.text.length));
+    controllerRate.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerRate.text.length));
+    controllerRetail.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerRetail.text.length));
+    controllerWholeSale.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerWholeSale.text.length));
+
     deviceSize = MediaQuery.of(context).size;
     return WillPopScope(
         onWillPop: _onWillPop,
@@ -166,67 +184,72 @@ class _OpeningStockState extends State<OpeningStock> {
                     if (buttonEvent) {
                       return;
                     } else {
-                      setState(() {
-                        _isLoading = true;
-                        buttonEvent = true;
-                      });
-                      var inf = '[' +
-                          json.encode({
-                            'id': '0',
-                            'name': '',
-                            'invNo': '0',
-                            'invDate': ''
-                          }) +
-                          ']';
-                      var jsonItem = CartItemOP.encodeCartToJson(cartItem);
-                      var items = json.encode(jsonItem);
-                      var stType = 'OP_Update';
-                      var data = '[' +
-                          json.encode({
-                            'entryNo': dataDynamic[0]['EntryNo'],
-                            'date': DateUtil.dateYMD(formattedDate),
-                            'grossValue': totalGrossValue,
-                            'discount': totalDiscount,
-                            'net': totalNet,
-                            'cess': totalCess,
-                            'total': totalCartTotal,
-                            'otherCharges': 0,
-                            'otherDiscount': 0,
-                            'grandTotal': totalCartTotal,
-                            'taxType': isTax ? 'T' : 'N.T',
-                            'purchaseAccount': purchaseAccountList[0]['id'],
-                            'narration': _narration,
-                            'type': 'OP',
-                            'cashPaid': '0',
-                            'igst': totalIgST,
-                            'cgst': totalCgST,
-                            'sgst': totalSgST,
-                            'fCess': totalFCess,
-                            'adCess': totalAdCess,
-                            'Salesman': salesManId,
-                            'location': locationId,
-                            'statementtype': stType
-                          }) +
-                          ']';
-
-                      final body = {
-                        'information': inf,
-                        'data': data,
-                        'particular': items
-                      };
-                      bool _state = await dio.addOpeningStock(body);
-                      setState(() {
-                        _isLoading = false;
-                      });
-                      if (_state) {
-                        cartItem.clear();
-                        showConfirmAlertBox(
-                            context, 'Open Stock', 'Opening Stock Edited');
-                      } else {
-                        showInSnackBar('Error enter data correctly');
+                      if (totalCartTotal > 0) {
                         setState(() {
-                          buttonEvent = false;
+                          _isLoading = true;
+                          buttonEvent = true;
                         });
+                        var inf = '[' +
+                            json.encode({
+                              'id': '0',
+                              'name': '',
+                              'invNo': '0',
+                              'invDate': ''
+                            }) +
+                            ']';
+                        var jsonItem = CartItemOP.encodeCartToJson(cartItem);
+                        var items = json.encode(jsonItem);
+                        var stType = 'OP_Update';
+                        var data = '[' +
+                            json.encode({
+                              'entryNo': dataDynamic[0]['EntryNo'],
+                              'date': DateUtil.dateYMD(formattedDate),
+                              'grossValue': totalGrossValue,
+                              'discount': totalDiscount,
+                              'net': totalNet,
+                              'cess': totalCess,
+                              'total': totalCartTotal,
+                              'otherCharges': 0,
+                              'otherDiscount': 0,
+                              'grandTotal': totalCartTotal,
+                              'taxType': isTax ? 'T' : 'N.T',
+                              'purchaseAccount': purchaseAccountList[0]['id'],
+                              'narration': _narration,
+                              'type': 'OP',
+                              'cashPaid': '0',
+                              'igst': totalIgST,
+                              'cgst': totalCgST,
+                              'sgst': totalSgST,
+                              'fCess': totalFCess,
+                              'adCess': totalAdCess,
+                              'Salesman': salesManId,
+                              'location': locationId,
+                              'statementtype': stType,
+                              'fyId': currentFinancialYear.id,
+                            }) +
+                            ']';
+
+                        final body = {
+                          'information': inf,
+                          'data': data,
+                          'particular': items
+                        };
+                        bool _state = await dio.addOpeningStock(body);
+                        setState(() {
+                          _isLoading = false;
+                        });
+                        if (_state) {
+                          cartItem.clear();
+                          showConfirmAlertBox(
+                              context, 'Open Stock', 'Opening Stock Edited');
+                        } else {
+                          showInSnackBar('Error enter data correctly');
+                          setState(() {
+                            buttonEvent = false;
+                          });
+                        }
+                      } else {
+                        showInSnackBar('Please Add Product');
                       }
                     }
                   },
@@ -235,74 +258,80 @@ class _OpeningStockState extends State<OpeningStock> {
                   color: blue,
                   iconSize: 40,
                   onPressed: () async {
-                    if (buttonEvent) {
-                      setState(() {
-                        buttonEvent = false;
-                      });
-
-                      return;
-                    } else {
-                      setState(() {
-                        _isLoading = true;
-                        buttonEvent = true;
-                      });
-                      var inf = '[' +
-                          json.encode({
-                            'id': '0',
-                            'name': '',
-                            'invNo': '0',
-                            'invDate': ''
-                          }) +
-                          ']';
-                      var jsonItem = CartItemOP.encodeCartToJson(cartItem);
-                      var items = json.encode(jsonItem);
-                      var stType = 'Op_Insert';
-                      var data = '[' +
-                          json.encode({
-                            'date': DateUtil.dateYMD(formattedDate),
-                            'grossValue': totalGrossValue,
-                            'discount': totalDiscount,
-                            'net': totalNet,
-                            'cess': totalCess,
-                            'total': totalCartTotal,
-                            'otherCharges': 0,
-                            'otherDiscount': 0,
-                            'grandTotal': totalCartTotal,
-                            'taxType': isTax ? 'T' : 'N.T',
-                            'purchaseAccount': purchaseAccountList[0]['id'],
-                            'narration': _narration,
-                            'type': 'OP',
-                            'cashPaid': '0',
-                            'igst': totalIgST,
-                            'cgst': totalCgST,
-                            'sgst': totalSgST,
-                            'fCess': totalFCess,
-                            'adCess': totalAdCess,
-                            'Salesman': salesManId,
-                            'location': locationId,
-                            'statementtype': stType
-                          }) +
-                          ']';
-
-                      final body = {
-                        'information': inf,
-                        'data': data,
-                        'particular': items
-                      };
-                      bool _state = await dio.addOpeningStock(body);
-                      setState(() {
-                        _isLoading = false;
-                      });
-                      if (_state) {
-                        cartItem.clear();
-                        showConfirmAlertBox(
-                            context, 'Open Stock', 'Opening Stock Saved');
-                      } else {
-                        showInSnackBar('Error enter data correctly');
+                    if (totalCartTotal > 0) {
+                      if (buttonEvent) {
                         setState(() {
                           buttonEvent = false;
                         });
+
+                        return;
+                      } else {
+                        setState(() {
+                          _isLoading = true;
+                          buttonEvent = true;
+                        });
+                        var inf = '[' +
+                            json.encode({
+                              'id': '0',
+                              'name': '',
+                              'invNo': '0',
+                              'invDate': ''
+                            }) +
+                            ']';
+                        var jsonItem = CartItemOP.encodeCartToJson(cartItem);
+                        var items = json.encode(jsonItem);
+                        var stType = 'Op_Insert';
+                        var data = '[' +
+                            json.encode({
+                              'date': DateUtil.dateYMD(formattedDate),
+                              'grossValue': totalGrossValue,
+                              'discount': totalDiscount,
+                              'net': totalNet,
+                              'cess': totalCess,
+                              'total': totalCartTotal,
+                              'otherCharges': 0,
+                              'otherDiscount': 0,
+                              'grandTotal': totalCartTotal,
+                              'taxType': isTax ? 'T' : 'N.T',
+                              'purchaseAccount': purchaseAccountList[0]['id'],
+                              'narration': _narration,
+                              'type': 'OP',
+                              'cashPaid': '0',
+                              'igst': totalIgST,
+                              'cgst': totalCgST,
+                              'sgst': totalSgST,
+                              'fCess': totalFCess,
+                              'adCess': totalAdCess,
+                              'Salesman': salesManId,
+                              'location': locationId,
+                              'statementtype': stType,
+                              'fyId': currentFinancialYear.id,
+                              'entryNo': 0,
+                            }) +
+                            ']';
+
+                        final body = {
+                          'information': inf,
+                          'data': data,
+                          'particular': items
+                        };
+                        bool _state = await dio.addOpeningStock(body);
+                        setState(() {
+                          _isLoading = false;
+                        });
+                        if (_state) {
+                          cartItem.clear();
+                          showConfirmAlertBox(
+                              context, 'Open Stock', 'Opening Stock Saved');
+                        } else {
+                          showInSnackBar('Error enter data correctly');
+                          setState(() {
+                            buttonEvent = false;
+                          });
+                        }
                       }
+                    } else {
+                      showInSnackBar('Please Add Product');
                     }
                   },
                   icon: const Icon(Icons.save)),
@@ -386,6 +415,14 @@ class _OpeningStockState extends State<OpeningStock> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _focusNodeQuantity.dispose();
+    _focusNodeBranch.dispose();
+    _focusNodeDiscount.dispose();
+    _focusNodeDiscountPer.dispose();
+    _focusNodeMrp.dispose();
+    _focusNodeRate.dispose();
+    _focusNodeRetail.dispose();
+    _focusNodeWholeSale.dispose();
     super.dispose();
   }
 
@@ -436,7 +473,7 @@ class _OpeningStockState extends State<OpeningStock> {
                   child: ListTile(
                     title: Text(dataDisplay[index]['Name']),
                     subtitle: Text('Date: ' +
-                        dataDisplay[index]['Date'] +
+                        dataDisplay[index]['DDate'] +
                         ' / EntryNo : ' +
                         dataDisplay[index]['Id'].toString()),
                     trailing: Text(
@@ -500,7 +537,8 @@ class _OpeningStockState extends State<OpeningStock> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
-                                  hintText: 'Search...',
+                                  border: OutlineInputBorder(),
+                                  label: Text('Search...'),
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
@@ -633,7 +671,7 @@ class _OpeningStockState extends State<OpeningStock> {
             ),
             ListTile(
               title: Text(
-                  purchaseAccountList.length > 0
+                  purchaseAccountList.isNotEmpty
                       ? purchaseAccountList[0]['name']
                       : '',
                   style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -646,7 +684,7 @@ class _OpeningStockState extends State<OpeningStock> {
                 child: Padding(
                   padding: EdgeInsets.only(right: 8.0),
                   child: Text(
-                    'Item +',
+                    'Item Add',
                     style: TextStyle(
                         color: blue, fontSize: 25, fontWeight: FontWeight.bold),
                   ),
@@ -689,7 +727,8 @@ class _OpeningStockState extends State<OpeningStock> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
-                                  hintText: 'Search...',
+                                  border: OutlineInputBorder(),
+                                  label: Text('Search...'),
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
@@ -809,6 +848,14 @@ class _OpeningStockState extends State<OpeningStock> {
   TextEditingController controllerRetail = TextEditingController();
   TextEditingController controllerWholeSale = TextEditingController();
   TextEditingController controllerBranch = TextEditingController();
+  FocusNode _focusNodeQuantity = FocusNode();
+  FocusNode _focusNodeRate = FocusNode();
+  FocusNode _focusNodeDiscountPer = FocusNode();
+  FocusNode _focusNodeDiscount = FocusNode();
+  FocusNode _focusNodeMrp = FocusNode();
+  FocusNode _focusNodeRetail = FocusNode();
+  FocusNode _focusNodeWholeSale = FocusNode();
+  FocusNode _focusNodeBranch = FocusNode();
 
   double quantity = 0,
       rate = 0,
@@ -851,14 +898,6 @@ class _OpeningStockState extends State<OpeningStock> {
   String expDate = '1900-01-01', serialNo = '';
   var unit;
   int uniqueCode = 0, fUnitId = 0, barcode = 0;
-  bool editableMrp = false,
-      editableRetail = false,
-      editableWSale = false,
-      editableBranch = false,
-      editableRate = false,
-      editableQuantity = false,
-      editableDiscount = false,
-      editableDiscountP = false;
 
   itemDetailWidget() {
     if (editItem) {
@@ -868,39 +907,39 @@ class _OpeningStockState extends State<OpeningStock> {
           id: cartItem.elementAt(position).supplierId,
           name: cartItem.elementAt(position).supplier);
       quantity = cartItem[position].quantity;
-      if (quantity > 0 && !editableQuantity) {
+      if (quantity > 0 && !_focusNodeQuantity.hasFocus) {
         controllerQuantity.text = quantity.toString();
       }
       rate = cartItem.elementAt(position).rate;
-      if (rate > 0 && !editableRate) {
+      if (rate > 0 && !_focusNodeRate.hasFocus) {
         controllerRate.text = rate.toString();
       }
       if (cartItem.elementAt(position).rRate > 0) {
         rRate = cartItem.elementAt(position).rRate;
       }
       mrp = cartItem.elementAt(position).mrp;
-      if (mrp > 0 && !editableMrp) {
+      if (mrp > 0 && !_focusNodeMrp.hasFocus) {
         controllerMrp.text = mrp.toString();
       }
       retail = cartItem.elementAt(position).retail;
-      if (retail > 0 && !editableRetail) {
+      if (retail > 0 && !_focusNodeRetail.hasFocus) {
         controllerRetail.text = retail.toString();
       }
       wholeSale = cartItem.elementAt(position).wholesale;
-      if (wholeSale > 0 && !editableWSale) {
+      if (wholeSale > 0 && !_focusNodeWholeSale.hasFocus) {
         controllerWholeSale.text = wholeSale.toString();
       }
       spRetail = cartItem.elementAt(position).spRetail;
       branch = cartItem.elementAt(position).branch;
-      if (branch > 0 && !editableBranch) {
+      if (branch > 0 && !_focusNodeBranch.hasFocus) {
         controllerBranch.text = branch.toString();
       }
       discount = cartItem.elementAt(position).discount;
-      if (discount > 0 && !editableDiscount) {
+      if (discount > 0 && !_focusNodeDiscount.hasFocus) {
         controllerDiscount.text = discount.toString();
       }
       discountPer = cartItem.elementAt(position).discountPercent;
-      if (discountPer > 0 && !editableDiscountP) {
+      if (discountPer > 0 && !_focusNodeDiscountPer.hasFocus) {
         controllerDiscountPer.text = discountPer.toString();
       }
       subTotal = cartItem.elementAt(position).gross;
@@ -921,27 +960,27 @@ class _OpeningStockState extends State<OpeningStock> {
       taxP = double.tryParse(productModel['tax'].toString());
       kfcP = double.tryParse(productModel['KFC'].toString());
       rate = double.tryParse(productModelPrize['prate'].toString());
-      if (rate > 0 && !editableRate) {
+      if (rate > 0 && !_focusNodeRate.hasFocus) {
         controllerRate.text = rate.toString();
       }
       if (double.tryParse(productModelPrize['realprate'].toString()) > 0) {
         rRate = double.tryParse(productModelPrize['realprate'].toString());
       }
       mrp = double.tryParse(productModelPrize['mrp'].toString());
-      if (mrp > 0 && !editableMrp) {
+      if (mrp > 0 && !_focusNodeMrp.hasFocus) {
         controllerMrp.text = mrp.toString();
       }
       retail = double.tryParse(productModelPrize['retail'].toString());
-      if (retail > 0 && !editableRetail) {
+      if (retail > 0 && !_focusNodeRetail.hasFocus) {
         controllerRetail.text = retail.toString();
       }
       wholeSale = double.tryParse(productModelPrize['wsrate'].toString());
-      if (wholeSale > 0 && !editableWSale) {
+      if (wholeSale > 0 && !_focusNodeWholeSale.hasFocus) {
         controllerWholeSale.text = wholeSale.toString();
       }
       spRetail = double.tryParse(productModelPrize['spretail'].toString());
       branch = double.tryParse(productModelPrize['branch'].toString());
-      if (branch > 0 && !editableBranch) {
+      if (branch > 0 && !_focusNodeBranch.hasFocus) {
         controllerBranch.text = branch.toString();
       }
     }
@@ -986,32 +1025,32 @@ class _OpeningStockState extends State<OpeningStock> {
           decimal, (net + csGST + csGST + iGST + cess + adCess));
       // total = net + tax;
       if (mrp > 0) {
-        profitPer = realPRATEBASEDPROFITPERCENTAGE
+        profitPer = realPRateBasedProfitPercentage
             ? CommonService.getRound(decimal, (((mrp - rRate) * 100) / rRate))
             : CommonService.getRound(decimal, (((mrp - rate) * 100) / rate));
       }
       if (retail > 0) {
-        retailPer = realPRATEBASEDPROFITPERCENTAGE
+        retailPer = realPRateBasedProfitPercentage
             ? CommonService.getRound(
                 decimal, (((retail - rRate) * 100) / rRate))
             : CommonService.getRound(decimal, (((retail - rate) * 100) / rate));
       }
       if (wholeSale > 0) {
-        wholesalePer = realPRATEBASEDPROFITPERCENTAGE
+        wholesalePer = realPRateBasedProfitPercentage
             ? CommonService.getRound(
                 decimal, (((wholeSale - rRate) * 100) / rRate))
             : CommonService.getRound(
                 decimal, (((wholeSale - rate) * 100) / rate));
       }
       if (spRetail > 0) {
-        spRetailPer = realPRATEBASEDPROFITPERCENTAGE
+        spRetailPer = realPRateBasedProfitPercentage
             ? CommonService.getRound(
                 decimal, (((spRetail - rRate) * 100) / rRate))
             : CommonService.getRound(
                 decimal, (((spRetail - rate) * 100) / rate));
       }
       if (branch > 0) {
-        branchPer = realPRATEBASEDPROFITPERCENTAGE
+        branchPer = realPRateBasedProfitPercentage
             ? CommonService.getRound(
                 decimal, (((branch - rRate) * 100) / rRate))
             : CommonService.getRound(decimal, (((branch - rate) * 100) / rate));
@@ -1240,16 +1279,18 @@ class _OpeningStockState extends State<OpeningStock> {
             ),
             TextField(
               controller: controllerQuantity,
+              focusNode: _focusNodeQuantity,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Quantity'),
-              keyboardType: TextInputType.number,
+                  border: OutlineInputBorder(), label: Text('Quantity')),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              textAlign: TextAlign.right,
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')
               ],
               onChanged: (value) {
                 setState(() {
-                  editableQuantity = true;
                   quantity = double.tryParse(value);
                   calculate();
                 });
@@ -1260,8 +1301,8 @@ class _OpeningStockState extends State<OpeningStock> {
               maxHeight: 300,
               onFind: (String filter) =>
                   dio.getSalesListData(filter, 'sales_list/unit'),
-              dropdownSearchDecoration:
-                  const InputDecoration(hintText: 'Select Unit'),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(), label: Text('Select Unit')),
               onChanged: (dynamic data) {
                 unit = data;
                 calculate();
@@ -1271,16 +1312,18 @@ class _OpeningStockState extends State<OpeningStock> {
             const Divider(),
             TextField(
               controller: controllerRate,
+              focusNode: _focusNodeRate,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'P Rate'),
-              keyboardType: TextInputType.number,
+                  border: OutlineInputBorder(), label: Text('P Rate')),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              textAlign: TextAlign.right,
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')
               ],
               onChanged: (value) {
                 setState(() {
-                  editableRate = true;
                   rate = double.tryParse(value);
                   calculate();
                 });
@@ -1304,16 +1347,18 @@ class _OpeningStockState extends State<OpeningStock> {
                   width: 50,
                   child: TextField(
                     controller: controllerDiscountPer,
+                    focusNode: _focusNodeDiscountPer,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: ' % '),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text(' % ')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     onChanged: (value) {
                       setState(() {
-                        editableDiscountP = true;
                         discountPer = double.tryParse(value);
                         calculate();
                       });
@@ -1325,16 +1370,18 @@ class _OpeningStockState extends State<OpeningStock> {
                   width: 100,
                   child: TextField(
                     controller: controllerDiscount,
+                    focusNode: _focusNodeDiscount,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'discount'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('discount')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     onChanged: (value) {
                       setState(() {
-                        editableDiscount = true;
                         discount = double.tryParse(value);
                         calculate();
                       });
@@ -1352,16 +1399,18 @@ class _OpeningStockState extends State<OpeningStock> {
                   width: 100,
                   child: TextField(
                     controller: controllerMrp,
+                    focusNode: _focusNodeMrp,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'MRP'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('MRP')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     onChanged: (value) {
                       setState(() {
-                        editableMrp = true;
                         mrp = double.tryParse(value);
                         calculateRate();
                       });
@@ -1373,16 +1422,18 @@ class _OpeningStockState extends State<OpeningStock> {
                   width: 100,
                   child: TextField(
                     controller: controllerRetail,
+                    focusNode: _focusNodeRetail,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Retail'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('Retail')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     onChanged: (value) {
                       setState(() {
-                        editableRetail = true;
                         retail = double.tryParse(value);
                         calculateRate();
                       });
@@ -1402,16 +1453,18 @@ class _OpeningStockState extends State<OpeningStock> {
                   width: 100,
                   child: TextField(
                     controller: controllerWholeSale,
+                    focusNode: _focusNodeWholeSale,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'WholeSale'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('WholeSale')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     onChanged: (value) {
                       setState(() {
-                        editableWSale = true;
                         wholeSale = double.tryParse(value);
                         calculateRate();
                       });
@@ -1423,16 +1476,18 @@ class _OpeningStockState extends State<OpeningStock> {
                   width: 100,
                   child: TextField(
                     controller: controllerBranch,
+                    focusNode: _focusNodeBranch,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Branch'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('Branch')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    textAlign: TextAlign.right,
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     onChanged: (value) {
                       setState(() {
-                        editableBranch = true;
                         branch = double.tryParse(value);
                         calculateRate();
                       });
@@ -1662,14 +1717,6 @@ class _OpeningStockState extends State<OpeningStock> {
     controllerMrp.text = '';
     controllerRetail.text = '';
     controllerWholeSale.text = '';
-    editableQuantity = false;
-    editableMrp = false;
-    editableRetail = false;
-    editableWSale = false;
-    editableBranch = false;
-    editableRate = false;
-    editableDiscount = false;
-    editableDiscountP = false;
   }
 
   Future _selectDate() async {

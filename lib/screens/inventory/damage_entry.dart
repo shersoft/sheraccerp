@@ -365,7 +365,8 @@ class _DamageEntryState extends State<DamageEntry> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
-                                  hintText: 'Search...',
+                                  border: OutlineInputBorder(),
+                                  label: Text('Search...'),
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
@@ -475,8 +476,9 @@ class _DamageEntryState extends State<DamageEntry> {
                     ? Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: TextField(
-                          decoration:
-                              const InputDecoration(hintText: 'Search...'),
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              label: Text('Search...')),
                           onChanged: (text) {
                             text = text.toLowerCase();
                             setState(() {
@@ -855,13 +857,16 @@ class _DamageEntryState extends State<DamageEntry> {
                         padding: const EdgeInsets.all(2.0),
                         child: TextFormField(
                           controller: _quantityController,
-                          keyboardType: TextInputType.number,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           inputFormatters: [
                             FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                 allow: true, replacementString: '.')
                           ],
                           decoration: const InputDecoration(
-                              labelText: 'quantity', hintText: '0.0'),
+                              border: OutlineInputBorder(),
+                              labelText: 'quantity',
+                              hintText: '0.0'),
                           onChanged: (value) {
                             setState(() {
                               calculate();
@@ -961,13 +966,16 @@ class _DamageEntryState extends State<DamageEntry> {
                           child: TextField(
                             controller: _rateController,
                             // autofocus: true,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             inputFormatters: [
                               FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                   allow: true, replacementString: '.')
                             ],
                             decoration: const InputDecoration(
-                                labelText: 'price', hintText: '0.0'),
+                                border: OutlineInputBorder(),
+                                labelText: 'price',
+                                hintText: '0.0'),
                             onChanged: (value) {
                               setState(() {
                                 rateEdited = _rateController.text.isNotEmpty
@@ -1389,7 +1397,7 @@ class _DamageEntryState extends State<DamageEntry> {
                   child: Padding(
                     padding: EdgeInsets.only(right: 8.0),
                     child: Text(
-                      'Item +',
+                      'Item Add',
                       style: TextStyle(
                           color: blue,
                           fontSize: 25,
@@ -1490,7 +1498,8 @@ class _DamageEntryState extends State<DamageEntry> {
                   Expanded(
                     child: TextField(
                       decoration: const InputDecoration(
-                        hintText: 'Narration...',
+                        border: OutlineInputBorder(),
+                        label: Text('Narration...'),
                       ),
                       onChanged: (value) {
                         setState(() {
@@ -1585,8 +1594,10 @@ class _DamageEntryState extends State<DamageEntry> {
                 });
               },
               controller: _controller,
-              decoration: const InputDecoration(hintText: "value"),
-              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                  border: OutlineInputBorder(), label: Text("value")),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')

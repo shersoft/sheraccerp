@@ -71,13 +71,7 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
   @override
   Widget build(BuildContext context) {
     _deviceSize = MediaQuery.of(context).size;
-    isTax = salesTypeData.type == 'SALES-ES'
-        ? false
-        : salesTypeData.type == 'SALES-Q'
-            ? false
-            : salesTypeData.type == 'SALES-O'
-                ? false
-                : true;
+    isTax = salesTypeData.tax;
     return ScopedModelDescendant<MainModel>(
         builder: (BuildContext context, Widget child, MainModel model) {
       // order.customerModel.addAll(model.customer);
@@ -566,7 +560,8 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
                                     Expanded(
                                       child: TextField(
                                         decoration: const InputDecoration(
-                                          hintText: 'Narration...',
+                                          border: OutlineInputBorder(),
+                                          label: Text('Narration'),
                                         ),
                                         onChanged: (value) {
                                           setState(() {
@@ -655,7 +650,7 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
 
                                                             var netTotal = cartTotal +
                                                                 otherAmountList.fold(
-                                                                    0,
+                                                                    0.0,
                                                                     (t, e) =>
                                                                         t +
                                                                         double.parse(e['symbol'] ==
@@ -720,7 +715,9 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
                               Expanded(
                                 child: TextField(
                                   controller: _controllerCashReceived,
-                                  keyboardType: TextInputType.number,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
                                   inputFormatters: [
                                     FilteringTextInputFormatter(
                                         RegExp(r'[0-9]'),
@@ -728,7 +725,8 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
                                         replacementString: '.')
                                   ],
                                   decoration: const InputDecoration(
-                                    hintText: 'Cash Received: ',
+                                    border: OutlineInputBorder(),
+                                    label: Text('Cash Received'),
                                   ),
                                   onChanged: (value) {
                                     setState(() {
@@ -786,8 +784,10 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
                   });
                 },
                 controller: _controller,
-                decoration: const InputDecoration(hintText: "value"),
-                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                    border: OutlineInputBorder(), label: Text("value")),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter(RegExp(r'[0-9]'),
                       allow: true, replacementString: '.')

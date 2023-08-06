@@ -427,7 +427,8 @@ class _SalesState extends State<Sales> {
           Flexible(
             child: TextField(
               decoration: const InputDecoration(
-                hintText: 'Search...',
+                border: OutlineInputBorder(),
+                labelText: 'Search...',
               ),
               onChanged: (text) {
                 text = text.toLowerCase();
@@ -477,66 +478,4 @@ showEditDialog(context, dataDynamic) {
 
 fetchSale(context, data) {
   rateType = salesTypeData.id.toString();
-  DioService api = DioService();
-  api.findSale(data['Id'], salesTypeData.id, 'SalesFind').then((value) {
-    if (value != null) {
-      MainModel model = MainModel();
-      var responds = value['recordsets'];
-      List<dynamic> information = responds[0];
-      List<dynamic> particulars = responds[1];
-      // List<dynamic> deliveryNoteDetails = responds[3];
-
-      model.addCustomer({
-        'Ledcode': information[0]['Customer'],
-        'LedName': information[0]['Toname'],
-        'add1': information[0]['Add1'],
-        'add2': information[0]['Add2'],
-        'add3': information[0]['Add3'],
-        'add4': information[0]['Add4']
-      });
-      for (var product in particulars) {
-        model.addProduct(CartItem(
-            id: model.cart.length + 1,
-            itemId: product['ItemID'],
-            itemName: product['name'],
-            quantity: double.tryParse(product['Qty'].toString()),
-            rate: double.tryParse(product['Rate'].toString()),
-            rRate: double.tryParse(product['RealRate'].toString()),
-            uniqueCode: product['UniqueCode'],
-            gross: double.tryParse(product['GrossValue'].toString()),
-            discount: double.tryParse(product['Disc'].toString()),
-            discountPercent: double.tryParse(product['DiscPersent'].toString()),
-            rDiscount: double.tryParse(product['RDisc'].toString()),
-            fCess: double.tryParse(product['Fcess'].toString()),
-            serialNo: product['serialno'],
-            tax: double.tryParse(product['CGST'].toString()) +
-                double.tryParse(product['SGST'].toString()) +
-                double.tryParse(product['IGST'].toString()),
-            taxP: 0,
-            unitId: product['Unit'],
-            unitValue: double.tryParse(product['UnitValue'].toString()),
-            pRate: double.tryParse(product['Prate'].toString()),
-            rPRate: double.tryParse(product['Rprate'].toString()),
-            barcode: product['UniqueCode'],
-            expDate: '2020-01-01',
-            free: double.tryParse(product['freeQty'].toString()),
-            fUnitId: int.tryParse(product['Funit'].toString()),
-            cdPer: 0, //product['']cdPer,
-            cDisc: 0, //product['']cDisc,
-            net: double.tryParse(product['GrossValue'].toString()), //subTotal,
-            cess: double.tryParse(product['cess'].toString()), //cess,
-            total: double.tryParse(product['Total'].toString()), //total,
-            profitPer: 0, //product['']profitPer,
-            fUnitValue:
-                double.tryParse(product['FValue'].toString()), //fUnitValue,
-            adCess: double.tryParse(product['adcess'].toString()), //adCess,
-            iGST: double.tryParse(product['IGST'].toString()),
-            cGST: double.tryParse(product['CGST'].toString()),
-            sGST: double.tryParse(product['SGST'].toString())));
-      }
-    }
-
-    // Navigator.pushReplacementNamed(context, '/preview_show',
-    // arguments: {'title': 'Sale'});
-  });
 }

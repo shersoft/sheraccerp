@@ -251,8 +251,9 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
           DropdownSearch<LedgerModel>(
             maxHeight: 300,
             onFind: (String filter) => api.getLedgerData(filter),
-            dropdownSearchDecoration:
-                const InputDecoration(hintText: 'Select Ledger Name'),
+            dropdownSearchDecoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                label: Text('Select Ledger Name')),
             onChanged: (LedgerModel data) {
               ledData = data;
               setState(() {
@@ -442,13 +443,15 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
                 children: [
                   TextField(
                     controller: _controllerAmount,
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     decoration: const InputDecoration(
-                      hintText: 'Amount',
+                      border: OutlineInputBorder(),
+                      label: Text('Amount'),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -468,13 +471,15 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
             Expanded(
               child: TextField(
                 controller: _controllerDiscount,
-                keyboardType: TextInputType.number,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter(RegExp(r'[0-9]'),
                       allow: true, replacementString: '.')
                 ],
                 decoration: const InputDecoration(
-                  hintText: 'Discount',
+                  border: OutlineInputBorder(),
+                  label: Text('Discount'),
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -504,7 +509,8 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
               child: TextField(
                 controller: _controllerNarration,
                 decoration: const InputDecoration(
-                  hintText: 'Narration...',
+                  border: OutlineInputBorder(),
+                  label: Text('Narration...'),
                 ),
                 onChanged: (value) {
                   setState(() {

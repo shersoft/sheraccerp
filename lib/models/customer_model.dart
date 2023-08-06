@@ -10,7 +10,7 @@ class CustomerModel {
   String phone;
   String email;
   String balance;
-  String city, route, state, stateCode, remarks;
+  String city, route, state, stateCode, remarks, pinNo;
 
   CustomerModel(
       {this.id,
@@ -27,7 +27,8 @@ class CustomerModel {
       this.route,
       this.state,
       this.stateCode,
-      this.remarks});
+      this.remarks,
+      this.pinNo});
 
   factory CustomerModel.fromJson(Map<String, dynamic> json) {
     return CustomerModel(
@@ -45,7 +46,8 @@ class CustomerModel {
         route: json['route'].toString(),
         state: json['state'],
         stateCode: json['stateCode'],
-        remarks: json['remarks']);
+        remarks: json['remarks'],
+        pinNo: json['PinNo']);
   }
 
   Map toCustomerMap() {
@@ -65,6 +67,7 @@ class CustomerModel {
     map["state"] = state;
     map["stateCode"] = stateCode;
     map["remarks"] = remarks;
+    map["pinNo"] = pinNo;
 
     return map;
   }
@@ -85,7 +88,8 @@ class CustomerModel {
       'route': route,
       'state': state,
       'stateCode': stateCode,
-      'remarks': remarks
+      'remarks': remarks,
+      'pinNo': pinNo
     };
   }
 

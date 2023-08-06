@@ -12,12 +12,13 @@ import 'package:sheraccerp/screens/quick_search.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
 import 'package:sheraccerp/shared/constants.dart';
+import 'package:sheraccerp/util/dbhelper.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/accounts_menu.dart';
 import 'package:sheraccerp/widget/accounts_report_menu.dart';
 import 'package:sheraccerp/widget/inventory_menu.dart';
 import 'package:sheraccerp/widget/inventory_report_menu.dart';
-import 'package:sheraccerp/widget/other_report_menu.dart';
+import 'package:sheraccerp/widget/record_list_menu.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
 class StaffHome extends StatefulWidget {
@@ -78,6 +79,35 @@ class _StaffHomeState extends State<StaffHome> with TickerProviderStateMixin {
     //             message: notificationAlert,
     //           ));
     // }
+
+    /***Test Data***/
+    // final dbHelper = DatabaseHelper.instance;
+    // final allRows = await dbHelper.queryAllRows();
+    // List<Carts> carts = [];
+    // for (var row in allRows) {
+    //   carts.add(Carts.fromMap(row));
+    // }
+    // if (carts.isNotEmpty) {
+    //   api.addEvent([
+    //     {'data': Carts.encodeCartToJson(carts).toString()}
+    //   ]).then((value) {
+    //     if (value) {
+    //       for (Carts carts in carts) {
+    //         _delete(carts.id, dbHelper);
+    //       }
+    //     }
+    //   });
+    // }
+  }
+
+  void _delete(id, DatabaseHelper dbHelper) async {
+    final rowsDeleted = await dbHelper.delete(id);
+  }
+
+  void _update(id, name, status, DatabaseHelper dbHelper) async {
+    // row to update
+    Carts carts = Carts(id, name, status);
+    final rowsAffected = await dbHelper.update(carts);
   }
 
   void setDialVisible(bool value) {
@@ -94,6 +124,7 @@ class _StaffHomeState extends State<StaffHome> with TickerProviderStateMixin {
       firm = (pref.getString('CompanyName') ?? "");
       firmCode = (pref.getString('CustomerCode') ?? "");
       fId = (pref.getString('fId') ?? "");
+      setApiV = (pref.getString('apiV') ?? "v13");
     });
   }
 
@@ -153,9 +184,7 @@ class _StaffHomeState extends State<StaffHome> with TickerProviderStateMixin {
                 Tab(
                     icon: Icon(Icons.assignment_outlined),
                     text: "Inventory Report"),
-                Tab(
-                    icon: Icon(Icons.assignment_outlined),
-                    text: "Other Report"),
+                Tab(icon: Icon(Icons.assignment_outlined), text: "Record List"),
                 Tab(
                     icon: Icon(Icons.settings_applications_outlined),
                     text: "Settings"),
@@ -193,9 +222,9 @@ class _StaffHomeState extends State<StaffHome> with TickerProviderStateMixin {
                   : const InventoryReportMenu(),
               args.active == "false"
                   ? _commonService.getTrialPeriod(args.atDate)
-                      ? const OtherReportMenu()
+                      ? const RecordListMenu()
                       : _expire(args, context)
-                  : const OtherReportMenu(),
+                  : const RecordListMenu(),
               const AppSettings(),
             ],
           ),

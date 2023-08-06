@@ -56,7 +56,7 @@ class _StatementState extends State<Statement> {
     formattedDate = DateFormat('yyyy-MM-dd').format(now);
     if (locationList.isNotEmpty) {
       var branchID = locationList
-          .where((element) => element.value == 'SHOP')
+          .where((element) => element.value == defaultLocation)
           .map((e) => e.key)
           .first;
       dropDownBranchId = branchID;

@@ -191,13 +191,7 @@ mixin CartScopeModel on Model {
     var ledger = json.encode(jsonLedger);
     var otherAmount = json.encode(order.otherAmountData);
     var saleFormId = salesTypeData.id;
-    var taxType = salesTypeData.type == 'SALES-ES'
-        ? 'NT'
-        : salesTypeData.type == 'SALES-Q'
-            ? 'NT'
-            : salesTypeData.type == 'SALES-O'
-                ? 'NT'
-                : 'T';
+    var taxType = salesTypeData.tax ? 'T' : 'NT';
     var salesRateTypeId = rateType.isNotEmpty ? rateType : '1';
     var saleAccountId = saleAccount.isNotEmpty ? saleAccount : '1';
     var checkKFC = isKFC ? '1' : '0';

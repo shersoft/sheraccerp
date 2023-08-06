@@ -49,8 +49,9 @@ class _RegisterState extends State<Register> {
                           children: <Widget>[
                             TextFormField(
                               key: const Key("_username"),
-                              decoration:
-                                  const InputDecoration(labelText: "Username"),
+                              decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  labelText: "Username"),
                               keyboardType: TextInputType.text,
                               onSaved: (String value) {
                                 _username = value.trim();
@@ -63,8 +64,9 @@ class _RegisterState extends State<Register> {
                               },
                             ),
                             TextFormField(
-                              decoration:
-                                  const InputDecoration(labelText: "Password"),
+                              decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  labelText: "Password"),
                               obscureText: true,
                               onSaved: (String value) {
                                 _password = value.trim();

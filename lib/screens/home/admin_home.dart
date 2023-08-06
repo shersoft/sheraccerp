@@ -6,18 +6,19 @@ import 'package:scoped_model/scoped_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sheraccerp/app_settings_page.dart';
 import 'package:sheraccerp/models/company_user.dart';
-import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/dash_report/dash_page.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
 import 'package:sheraccerp/shared/constants.dart';
+import 'package:sheraccerp/util/dbhelper.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/accounts_menu.dart';
 import 'package:sheraccerp/widget/accounts_report_menu.dart';
+import 'package:sheraccerp/widget/dash_board.dart';
 import 'package:sheraccerp/widget/inventory_menu.dart';
 import 'package:sheraccerp/widget/inventory_report_menu.dart';
-import 'package:sheraccerp/widget/other_report_menu.dart';
+import 'package:sheraccerp/widget/record_list_menu.dart';
 import 'package:sheraccerp/widget/report.dart';
 import 'package:sheraccerp/widget/cash_and_bank.dart';
 import 'package:sheraccerp/widget/expense.dart';
@@ -84,6 +85,35 @@ class _AdminHomeState extends State<AdminHome> with TickerProviderStateMixin {
     //             message: notificationAlert,
     //           ));
     // }
+
+    /***Test Data***/
+    // final dbHelper = DatabaseHelper.instance;
+    // final allRows = await dbHelper.queryAllRows();
+    // List<Carts> carts = [];
+    // for (var row in allRows) {
+    //   carts.add(Carts.fromMap(row));
+    // }
+    // if (carts.isNotEmpty) {
+    //   api.addEvent([
+    //     {'data': Carts.encodeCartToJson(carts).toString()}
+    //   ]).then((value) {
+    //     if (value) {
+    //       for (Carts carts in carts) {
+    //         _delete(carts.id, dbHelper);
+    //       }
+    //     }
+    //   });
+    // }
+  }
+
+  void _delete(id, DatabaseHelper dbHelper) async {
+    final rowsDeleted = await dbHelper.delete(id);
+  }
+
+  void _update(id, name, status, DatabaseHelper dbHelper) async {
+    // row to update
+    Carts carts = Carts(id, name, status);
+    final rowsAffected = await dbHelper.update(carts);
   }
 
   void setDialVisible(bool value) {
@@ -122,12 +152,13 @@ class _AdminHomeState extends State<AdminHome> with TickerProviderStateMixin {
 
   String _regId = "", firm = "", firmCode = "", fId = "";
   load() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    SharedPreferences pref = await SharedPreferences.getInstance();
     setState(() {
-      _regId = (prefs.getString('regId') ?? "");
-      firm = (prefs.getString('CompanyName') ?? "");
-      firmCode = (prefs.getString('CustomerCode') ?? "");
-      fId = (prefs.getString('fId') ?? "");
+      _regId = (pref.getString('regId') ?? "");
+      firm = (pref.getString('CompanyName') ?? "");
+      firmCode = (pref.getString('CustomerCode') ?? "");
+      fId = (pref.getString('fId') ?? "");
+      setApiV = (pref.getString('apiV') ?? "v18");
     });
   }
 
@@ -135,7 +166,7 @@ class _AdminHomeState extends State<AdminHome> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final CompanyUser args = ModalRoute.of(context).settings.arguments;
     return DefaultTabController(
-        length: 13,
+        length: 10,
         child: Scaffold(
           appBar: AppBar(
             // title: Text("SherAcc"),
@@ -152,12 +183,13 @@ class _AdminHomeState extends State<AdminHome> with TickerProviderStateMixin {
             title: const TabBar(
               tabs: [
                 Tab(icon: Icon(Icons.dashboard), text: "Today"),
-                Tab(icon: Icon(Icons.assessment), text: "Statement"),
-                Tab(icon: Icon(Icons.assignment), text: "Expense"),
-                Tab(icon: Icon(Icons.assignment_outlined), text: "Cash & Bank"),
-                Tab(
-                    icon: Icon(Icons.assignment_outlined),
-                    text: "Receivable & Payable"),
+                Tab(icon: Icon(Icons.assessment), text: "DashBoard"),
+                // Tab(icon: Icon(Icons.assessment), text: "Statement"),
+                // Tab(icon: Icon(Icons.assignment), text: "Expense"),
+                // Tab(icon: Icon(Icons.assignment_outlined), text: "Cash & Bank"),
+                // Tab(
+                //     icon: Icon(Icons.assignment_outlined),
+                //     text: "Receivable & Payable"),
                 Tab(icon: Icon(Icons.inventory), text: "Inventory"),
                 Tab(icon: Icon(Icons.account_balance), text: "Accounts"),
                 Tab(
@@ -167,13 +199,11 @@ class _AdminHomeState extends State<AdminHome> with TickerProviderStateMixin {
                     icon: Icon(Icons.assignment_outlined),
                     text: "Inventory Report"),
                 Tab(icon: Icon(Icons.assignment_outlined), text: "Report"),
-                Tab(
-                    icon: Icon(Icons.assignment_outlined),
-                    text: "Other Report"),
+                Tab(icon: Icon(Icons.assignment_outlined), text: "Record List"),
                 Tab(
                     icon: Icon(Icons.settings_applications_outlined),
                     text: "Settings"),
-                Tab(icon: Icon(Icons.more), text: "More"),
+                Tab(icon: Icon(Icons.more), text: "Tools"),
               ],
               isScrollable: true,
               labelStyle: TextStyle(fontWeight: FontWeight.bold),
@@ -188,24 +218,29 @@ class _AdminHomeState extends State<AdminHome> with TickerProviderStateMixin {
                   : const DashPage()),
               args.active == "false"
                   ? _commonService.getTrialPeriod(args.atDate)
-                      ? const Statement()
+                      ? const DashList()
                       : _expire(args, context)
-                  : const Statement(),
-              args.active == "false"
-                  ? _commonService.getTrialPeriod(args.atDate)
-                      ? const Expense()
-                      : _expire(args, context)
-                  : const Expense(),
-              args.active == "false"
-                  ? _commonService.getTrialPeriod(args.atDate)
-                      ? CashAndBank()
-                      : _expire(args, context)
-                  : CashAndBank(),
-              args.active == "false"
-                  ? _commonService.getTrialPeriod(args.atDate)
-                      ? ReceivablesAndPayables()
-                      : _expire(args, context)
-                  : ReceivablesAndPayables(),
+                  : const DashList(),
+              // args.active == "false"
+              //     ? _commonService.getTrialPeriod(args.atDate)
+              //         ? const Statement()
+              //         : _expire(args, context)
+              //     : const Statement(),
+              // args.active == "false"
+              //     ? _commonService.getTrialPeriod(args.atDate)
+              //         ? const Expense()
+              //         : _expire(args, context)
+              //     : const Expense(),
+              // args.active == "false"
+              //     ? _commonService.getTrialPeriod(args.atDate)
+              //         ? CashAndBank()
+              //         : _expire(args, context)
+              //     : CashAndBank(),
+              // args.active == "false"
+              //     ? _commonService.getTrialPeriod(args.atDate)
+              //         ? ReceivablesAndPayables()
+              //         : _expire(args, context)
+              //     : ReceivablesAndPayables(),
               args.active == "false"
                   ? _commonService.getTrialPeriod(args.atDate)
                       ? const InventoryMenu()
@@ -233,9 +268,9 @@ class _AdminHomeState extends State<AdminHome> with TickerProviderStateMixin {
                   : Report(),
               args.active == "false"
                   ? _commonService.getTrialPeriod(args.atDate)
-                      ? const OtherReportMenu()
+                      ? const RecordListMenu()
                       : _expire(args, context)
-                  : const OtherReportMenu(),
+                  : const RecordListMenu(),
               const AppSettings(),
               args.userType.toUpperCase() == 'ADMIN'
                   ? const MoreWidget()

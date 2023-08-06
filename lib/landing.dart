@@ -17,6 +17,7 @@ import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/company_user.dart';
 import 'package:sheraccerp/provider/app_provider.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
+import 'package:sheraccerp/screens/company_alert.dart';
 import 'package:sheraccerp/service/api.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
@@ -411,6 +412,8 @@ class _LandingState extends State<Landing> {
   loadingFirmList() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     _regId = (pref.getString('regId') ?? "");
+    setApiV = (pref.getString('apiV') ?? "v18");
+    debugPrint(apiV);
     if (_regId.trim().isNotEmpty) {
       isBioAuthSwitched = pref.getBool('bioModeLogin') ?? false;
       isUserSwitched = pref.getBool("userModeLogin") ?? false;
@@ -716,7 +719,8 @@ class _LandingState extends State<Landing> {
                       ),
                       TextField(
                         obscureText: showPassword,
-                        keyboardType: TextInputType.number,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
                         maxLength: 4,
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.symmetric(
@@ -899,6 +903,8 @@ class _LandingState extends State<Landing> {
           ? pref.getString('DBName')
           : pref.getString('DBNameT');
       ScopedModel.of<MainModel>(context).getCompanySettingsAll(dataBase);
+      ScopedModel.of<MainModel>(context)
+          .getReportDesignByName(dataBase, 'Ledger_Report_Qty');
     }
   }
 
@@ -925,38 +931,79 @@ class _LandingState extends State<Landing> {
             // Future.delayed(const Duration(milliseconds: 3000), () {
             CompanyUser _user = _apiResponse.Data;
             companyUserData = _user;
+            // if (companyUserData.active.isNotEmpty &&
+            //     companyUserData.active.toUpperCase() == 'TRUE') {
+            //   userRole = _user.userType.toUpperCase();
+
             if (_userId != null) {
-              _loadControlData(_userId);
-            }
-            userRole = _user.userType.toUpperCase();
-            if (_user.userType.toUpperCase() == 'ADMIN') {
-              Navigator.pushNamedAndRemoveUntil(
-                  context, '/admin_home', ModalRoute.withName('/admin_home'),
-                  arguments: (_user));
-            } else if (_user.userType.toUpperCase() == 'OWNER') {
-              Navigator.pushNamedAndRemoveUntil(
-                  context, '/owner_home', ModalRoute.withName('/owner_home'),
-                  arguments: (_user));
-            } else if (_user.userType.toUpperCase() == 'STAFF') {
-              Navigator.pushNamedAndRemoveUntil(
-                  context, '/staff_home', ModalRoute.withName('/staff_home'),
-                  arguments: (_user));
-            } else if (_user.userType.toUpperCase() == 'SALESMAN') {
-              Navigator.pushNamedAndRemoveUntil(context, '/salesMan_home',
-                  ModalRoute.withName('/salesMan_home'),
-                  arguments: (_user));
-            } else if (_user.userType.toUpperCase() == 'DELIVERY') {
-              Navigator.pushNamedAndRemoveUntil(context, '/delivery_home',
-                  ModalRoute.withName('/delivery_home'),
-                  arguments: (_user));
-            } else if (_user.userType.toUpperCase() == 'MANAGER') {
-              Navigator.pushNamedAndRemoveUntil(context, '/manager_home',
-                  ModalRoute.withName('/manager_home'),
-                  arguments: (_user));
+              getCompanyUserControlList(_userId).then((value) {
+                userControlData.addAll(value);
+                if (_user.userType.toUpperCase() == 'ADMIN') {
+                  Navigator.pushNamedAndRemoveUntil(context, '/admin_home',
+                      ModalRoute.withName('/admin_home'),
+                      arguments: (_user));
+                } else if (_user.userType.toUpperCase() == 'OWNER') {
+                  Navigator.pushNamedAndRemoveUntil(context, '/owner_home',
+                      ModalRoute.withName('/owner_home'),
+                      arguments: (_user));
+                } else if (_user.userType.toUpperCase() == 'STAFF') {
+                  Navigator.pushNamedAndRemoveUntil(context, '/staff_home',
+                      ModalRoute.withName('/staff_home'),
+                      arguments: (_user));
+                } else if (_user.userType.toUpperCase() == 'SALESMAN') {
+                  Navigator.pushNamedAndRemoveUntil(context, '/salesMan_home',
+                      ModalRoute.withName('/salesMan_home'),
+                      arguments: (_user));
+                } else if (_user.userType.toUpperCase() == 'DELIVERY') {
+                  Navigator.pushNamedAndRemoveUntil(context, '/delivery_home',
+                      ModalRoute.withName('/delivery_home'),
+                      arguments: (_user));
+                } else if (_user.userType.toUpperCase() == 'MANAGER') {
+                  Navigator.pushNamedAndRemoveUntil(context, '/manager_home',
+                      ModalRoute.withName('/manager_home'),
+                      arguments: (_user));
+                } else {
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, '/home', ModalRoute.withName('/home'));
+                }
+              });
             } else {
-              Navigator.pushNamedAndRemoveUntil(
-                  context, '/home', ModalRoute.withName('/home'));
+              if (_user.userType.toUpperCase() == 'ADMIN') {
+                Navigator.pushNamedAndRemoveUntil(
+                    context, '/admin_home', ModalRoute.withName('/admin_home'),
+                    arguments: (_user));
+              } else if (_user.userType.toUpperCase() == 'OWNER') {
+                Navigator.pushNamedAndRemoveUntil(
+                    context, '/owner_home', ModalRoute.withName('/owner_home'),
+                    arguments: (_user));
+              } else if (_user.userType.toUpperCase() == 'STAFF') {
+                Navigator.pushNamedAndRemoveUntil(
+                    context, '/staff_home', ModalRoute.withName('/staff_home'),
+                    arguments: (_user));
+              } else if (_user.userType.toUpperCase() == 'SALESMAN') {
+                Navigator.pushNamedAndRemoveUntil(context, '/salesMan_home',
+                    ModalRoute.withName('/salesMan_home'),
+                    arguments: (_user));
+              } else if (_user.userType.toUpperCase() == 'DELIVERY') {
+                Navigator.pushNamedAndRemoveUntil(context, '/delivery_home',
+                    ModalRoute.withName('/delivery_home'),
+                    arguments: (_user));
+              } else if (_user.userType.toUpperCase() == 'MANAGER') {
+                Navigator.pushNamedAndRemoveUntil(context, '/manager_home',
+                    ModalRoute.withName('/manager_home'),
+                    arguments: (_user));
+              } else {
+                Navigator.pushNamedAndRemoveUntil(
+                    context, '/home', ModalRoute.withName('/home'));
+              }
             }
+            // } else {
+            //   debugPrint('Sorry! No longer Available');
+            //   Navigator.push(
+            //     context,
+            //     MaterialPageRoute(builder: (context) => CompanyAlert()),
+            //   );
+            // }
             // });
           } else {
             ApiError error = _apiResponse.ApiError;
@@ -980,8 +1027,9 @@ class _LandingState extends State<Landing> {
   }
 
   _loadControlData(id) async {
-    getCompanyUserControlList(id)
-        .then((value) => userControlData.addAll(value));
+    getCompanyUserControlList(id).then((value) {
+      userControlData.addAll(value);
+    });
   }
 
   void _showErrorDialog(String message) {
@@ -1018,15 +1066,19 @@ class _LandingState extends State<Landing> {
   void startTimer() {
     Timer.periodic(
       const Duration(seconds: 1),
-      (Timer timer) => setState(
-        () {
-          if (_progress == 1) {
-            timer.cancel();
-          } else {
-            _progress += 0.2;
-          }
-        },
-      ),
+      (Timer timer) async {
+        if (mounted) {
+          setState(
+            () {
+              if (_progress == 1) {
+                timer.cancel();
+              } else {
+                _progress += 0.2;
+              }
+            },
+          );
+        }
+      },
     );
   }
 }

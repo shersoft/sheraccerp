@@ -90,7 +90,7 @@ class SalesProvider with ChangeNotifier {
   }
 
   SalesProvider() {
-    taxable = salesTypeData.type == 'SALES-ES' ? false : true;
+    taxable = salesTypeData.tax;
     _isCustomForm =
         ComSettings.appSettings('bool', 'key-switch-sales-form-set', false)
             ? true
@@ -644,7 +644,7 @@ class SalesProvider with ChangeNotifier {
     }
     _grandTotal = totalCartValue +
         _otherAmountList.fold(
-            0,
+            0.0,
             (t, e) =>
                 double.parse(t.toString()) +
                 double.parse(e.symbol == '-'

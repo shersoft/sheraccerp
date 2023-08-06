@@ -6,13 +6,14 @@ import 'package:scoped_model/scoped_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sheraccerp/app_settings_page.dart';
 import 'package:sheraccerp/models/company_user.dart';
-import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/dash_report/dash_page.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
+import 'package:sheraccerp/widget/accounts_report_menu.dart';
+import 'package:sheraccerp/widget/inventory_report_menu.dart';
 import 'package:sheraccerp/widget/report.dart';
 import 'package:sheraccerp/widget/cash_and_bank.dart';
 import 'package:sheraccerp/widget/expense.dart';
@@ -118,12 +119,13 @@ class _ManagerHomeState extends State<ManagerHome>
 
   String _regId = "", firm = "", firmCode = "", fId = "";
   load() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    SharedPreferences pref = await SharedPreferences.getInstance();
     setState(() {
-      _regId = (prefs.getString('regId') ?? "");
-      firm = (prefs.getString('CompanyName') ?? "");
-      firmCode = (prefs.getString('CustomerCode') ?? "");
-      fId = (prefs.getString('fId') ?? "");
+      _regId = (pref.getString('regId') ?? "");
+      firm = (pref.getString('CompanyName') ?? "");
+      firmCode = (pref.getString('CustomerCode') ?? "");
+      fId = (pref.getString('fId') ?? "");
+      setApiV = (pref.getString('apiV') ?? "v13");
     });
   }
 
@@ -131,7 +133,7 @@ class _ManagerHomeState extends State<ManagerHome>
   Widget build(BuildContext context) {
     final CompanyUser args = ModalRoute.of(context).settings.arguments;
     return DefaultTabController(
-        length: 8,
+        length: 10,
         child: Scaffold(
           appBar: AppBar(
             // title: Text("SherAcc"),
@@ -154,11 +156,17 @@ class _ManagerHomeState extends State<ManagerHome>
                 Tab(
                     icon: Icon(Icons.assignment_outlined),
                     text: "Receivable & Payable"),
+                Tab(
+                    icon: Icon(Icons.assignment_outlined),
+                    text: "Account Report"),
+                Tab(
+                    icon: Icon(Icons.assignment_outlined),
+                    text: "Inventory Report"),
                 Tab(icon: Icon(Icons.assignment_outlined), text: "Report"),
                 Tab(
                     icon: Icon(Icons.settings_applications_outlined),
                     text: "Settings"),
-                Tab(icon: Icon(Icons.more), text: "More"),
+                Tab(icon: Icon(Icons.more), text: "Tools"),
               ],
               isScrollable: true,
               labelStyle: TextStyle(fontWeight: FontWeight.bold),
@@ -191,6 +199,16 @@ class _ManagerHomeState extends State<ManagerHome>
                       ? ReceivablesAndPayables()
                       : _expire(args, context)
                   : ReceivablesAndPayables(),
+              args.active == "false"
+                  ? _commonService.getTrialPeriod(args.atDate)
+                      ? const AccountsReportMenu()
+                      : _expire(args, context)
+                  : const AccountsReportMenu(),
+              args.active == "false"
+                  ? _commonService.getTrialPeriod(args.atDate)
+                      ? const InventoryReportMenu()
+                      : _expire(args, context)
+                  : const InventoryReportMenu(),
               args.active == "false"
                   ? _commonService.getTrialPeriod(args.atDate)
                       ? Report()

@@ -14,7 +14,6 @@ import 'package:sheraccerp/models/customer_model.dart';
 import 'package:sheraccerp/models/ledger_name_model.dart';
 import 'package:sheraccerp/screens/html_previews/rpv_preview.dart';
 import 'package:sheraccerp/service/api_dio.dart';
-import 'package:sheraccerp/service/bt_print.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/util/res_color.dart';
@@ -31,7 +30,6 @@ class RPVoucher extends StatefulWidget {
 }
 
 class _RPVoucherState extends State<RPVoucher> {
-  DioService dio = DioService();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   List<LedgerModel> cashBankACList = [];
   Size deviceSize;
@@ -39,7 +37,7 @@ class _RPVoucherState extends State<RPVoucher> {
   List<dynamic> itemDisplay = [];
   DioService api = DioService();
   DateTime now = DateTime.now();
-  String formattedDate, narration = '';
+  String formattedDate, narration = '', projectId = '-1';
   double balance = 0, total = 0, amount = 0, discount = 0;
   var accountId = '', accountName = '';
   LedgerModel ledData;
@@ -159,8 +157,8 @@ class _RPVoucherState extends State<RPVoucher> {
                       accountId = acId > 0 ? acId.toString() : '';
                       if (companyUserData.deleteData) {
                         title == 'Payment'
-                            ? submitData('Payment', 'DELETE')
-                            : submitData('Receipt', 'DELETE');
+                            ? deleteVoucher('Payment', 'DELETE')
+                            : deleteVoucher('Receipt', 'DELETE');
                       } else {
                         Fluttertoast.showToast(
                             msg: 'Permission denied\ncan`t delete');
@@ -223,7 +221,7 @@ class _RPVoucherState extends State<RPVoucher> {
         ));
   }
 
-  var nameLike = 'ca';
+  var nameLike = 'a';
   _body(mode) {
     return Container(
       padding: const EdgeInsets.all(6.0),
@@ -286,14 +284,15 @@ class _RPVoucherState extends State<RPVoucher> {
             DropdownSearch<LedgerModel>(
               maxHeight: 300,
               onFind: (String filter) async {
-                nameLike = filter.isNotEmpty ? filter : 'ca';
+                nameLike = filter.isNotEmpty ? filter : 'a';
                 var models = api.getCustomerNameListLike(
                     groupId, areaId, routeId, salesManId, nameLike);
                 return models;
               },
               isFilteredOnline: true,
-              dropdownSearchDecoration:
-                  const InputDecoration(labelText: "Select Ledger Name"),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: "Select Ledger Name"),
               onChanged: (LedgerModel data) {
                 // print(data);
                 ledData = data;
@@ -324,13 +323,15 @@ class _RPVoucherState extends State<RPVoucher> {
                 Expanded(
                   child: TextField(
                     controller: _controllerAmount,
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     decoration: const InputDecoration(
-                      hintText: 'Amount',
+                      border: OutlineInputBorder(),
+                      label: Text('Amount'),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -353,13 +354,15 @@ class _RPVoucherState extends State<RPVoucher> {
                 Expanded(
                   child: TextField(
                     controller: _controllerDiscount,
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     decoration: const InputDecoration(
-                      hintText: 'Discount',
+                      border: OutlineInputBorder(),
+                      label: Text('Discount'),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -394,7 +397,8 @@ class _RPVoucherState extends State<RPVoucher> {
                   child: TextField(
                     controller: _controllerNarration,
                     decoration: const InputDecoration(
-                      hintText: 'Narration...',
+                      border: OutlineInputBorder(),
+                      label: Text('Narration'),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -458,9 +462,10 @@ class _RPVoucherState extends State<RPVoucher> {
         var statement = mode == 'Payment' ? 'PVList' : 'RVList';
         salesManId = salesManId > 0 ? salesManId : -1;
         locationId = locationId > 0 ? locationId : -1;
-        dio
+        String salesMan = salesManId > 0 ? salesManId.toString() : '';
+        api
             .getPaginationList(statement, page, locationId.toString(), '0',
-                DateUtil.dateYMD(formattedDate), salesManId.toString())
+                DateUtil.dateYMD(formattedDate), salesMan)
             .then((value) {
           if (value.isEmpty) {
             return;
@@ -585,23 +590,20 @@ class _RPVoucherState extends State<RPVoucher> {
             'amount': amount,
             'discount': discount,
             'total': total,
-            'location': 1,
+            'location': locationId,
             'user': 1,
-            'project': '-1',
-            'salesman': '-1',
+            'project': projectId,
+            'salesman': salesManId,
             'month': '',
             'particular': particular,
-            'statementType': operation == 'DELETE'
+            'fyId': currentFinancialYear.id,
+            'statementType': operation == 'UPDATE'
                 ? mode == 'Payment'
-                    ? 'Delete_Pv'
-                    : 'Delete_Rv'
-                : operation == 'UPDATE'
-                    ? mode == 'Payment'
-                        ? 'Update_Pv'
-                        : 'Update_Rv'
-                    : mode == 'Payment'
-                        ? 'InsertPv'
-                        : 'Insert_Rv'
+                    ? 'Update_Pv'
+                    : 'Update_Rv'
+                : mode == 'Payment'
+                    ? 'InsertPv'
+                    : 'Insert_Rv'
             // 'Update_Rv'  Update_Pv Delete_Pv Delete_Rv  FindPv FindRv
           }
         ];
@@ -636,7 +638,7 @@ class _RPVoucherState extends State<RPVoucher> {
               ];
               actionShow(mode, context, dataAll);
               if (ComSettings.appSettings('bool', 'key-sms-customer', false)) {
-                var bal = data[0]['oldBalance'].toString().split(' ');
+                var bal = ledgerData.balance.toString().split(' ');
                 if (bal[1] == 'Dr') {
                   var oldBalance = double.tryParse(bal[0].toString()) ?? 0;
                   if (mode == 'Payment') {
@@ -650,10 +652,10 @@ class _RPVoucherState extends State<RPVoucher> {
                   var oldBalance = (double.tryParse(bal[0].toString()) * (-1));
                   balance = oldBalance - data[0]['total'];
                 }
-                var amt = balance;
+                var amt = balance.toStringAsFixed(2);
                 var form = mode == 'Payment' ? 'PAYMENT' : 'RECEIPT';
                 String smsBody =
-                    "Dear ${data[0]['name'].toString()},\nYour $form ${data[0]['entryNo'].toString()}, Dated : $formattedDate for the Amount of ${data[0]['total'].toString()}/- \nBalance:$amt /- has been confirmed  \n${companySettings.name}";
+                    "Dear ${ledgerData.name.toString()},\nYour $form ${data[0]['entryno'].toString()}, Dated : $formattedDate for the Amount of ${data[0]['total'].toString()}/- \nBalance:$amt /- has been confirmed  \n${companySettings.name}";
                 if (ledgerData.phone.toString().isNotEmpty) {
                   sendSms(ledgerData.phone, smsBody);
                 }
@@ -667,6 +669,39 @@ class _RPVoucherState extends State<RPVoucher> {
               : operation == 'UPDATE'
                   ? 'error : Cannot update this ' + mode
                   : 'error : Cannot save this ' + mode;
+          showInSnackBar(opr);
+        }
+      }
+    }
+  }
+
+  void deleteVoucher(mode, operation) async {
+    if (accountId.isEmpty) {
+      Fluttertoast.showToast(msg: 'Select Cash Account');
+    } else {
+      if (amount <= 0 || ledData.id <= 0) {
+        Fluttertoast.showToast(msg: 'Select Account and amount');
+        setState(() {
+          buttonEvent = false;
+        });
+      } else {
+        setState(() {
+          _isLoading = true;
+          buttonEvent = true;
+        });
+        var entryNo = oldVoucher ? dataDynamic[0]['EntryNo'].toString() : '0';
+        var fyId = currentFinancialYear.id;
+        var statementType = mode == 'Payment' ? 'Delete_Pv' : 'Delete_Rv';
+        refNo = await api.deleteVoucher(entryNo, fyId, statementType);
+        if (refNo > 0) {
+          setState(() {
+            _isLoading = false;
+            buttonEvent = false;
+            showInSnackBar('Deleted');
+            clearData();
+          });
+        } else {
+          var opr = 'error : Cannot delete this ' + mode;
           showInSnackBar(opr);
         }
       }
@@ -925,7 +960,6 @@ class _RPVoucherState extends State<RPVoucher> {
 
   var footerMessage = '';
   fetchVoucher(context, data, mode) {
-    DioService api = DioService();
     double voucherTotal = 0;
     int row = 0;
     api

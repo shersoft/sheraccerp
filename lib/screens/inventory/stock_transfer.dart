@@ -195,7 +195,8 @@ class _StockTransferState extends State<StockTransfer> {
                             'narration': _narration,
                             'Salesman': salesManId,
                             'location': '0',
-                            'statementtype': stType
+                            'statementtype': stType,
+                            'fyId': currentFinancialYear.id
                           }) +
                           ']';
 
@@ -247,7 +248,8 @@ class _StockTransferState extends State<StockTransfer> {
                             'narration': _narration,
                             'Salesman': salesManId,
                             'location': '0',
-                            'statementtype': stType
+                            'statementtype': stType,
+                            'fyId': currentFinancialYear.id
                           }) +
                           ']';
 
@@ -548,7 +550,7 @@ class _StockTransferState extends State<StockTransfer> {
                   child: Padding(
                     padding: EdgeInsets.only(right: 8.0),
                     child: Text(
-                      'Item +',
+                      'Add Item',
                       style: TextStyle(
                           color: blue,
                           fontSize: 25,
@@ -595,7 +597,8 @@ class _StockTransferState extends State<StockTransfer> {
                               Flexible(
                                 child: TextField(
                                   decoration: const InputDecoration(
-                                    hintText: 'Search...',
+                                    border: OutlineInputBorder(),
+                                    label: Text('Search...'),
                                   ),
                                   onChanged: (text) {
                                     text = text.toLowerCase();
@@ -1126,9 +1129,11 @@ class _StockTransferState extends State<StockTransfer> {
               controller: controllerQuantity,
               textAlign: TextAlign.right,
               decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  hintText: 'Available Quantity is ${product.quantity}'),
-              keyboardType: TextInputType.number,
+                border: const OutlineInputBorder(),
+                label: Text('Available Quantity is ${product.quantity}'),
+              ),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')
@@ -1146,8 +1151,9 @@ class _StockTransferState extends State<StockTransfer> {
               controller: controllerRate,
               textAlign: TextAlign.right,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'P Rate'),
-              keyboardType: TextInputType.number,
+                  border: OutlineInputBorder(), label: Text('P Rate')),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')
@@ -1179,8 +1185,9 @@ class _StockTransferState extends State<StockTransfer> {
                     controller: controllerMrp,
                     textAlign: TextAlign.right,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'MRP'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('MRP')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1201,8 +1208,9 @@ class _StockTransferState extends State<StockTransfer> {
                     controller: controllerRetail,
                     textAlign: TextAlign.right,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Retail'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('Retail')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1231,8 +1239,9 @@ class _StockTransferState extends State<StockTransfer> {
                     controller: controllerWholeSale,
                     textAlign: TextAlign.right,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'WholeSale'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('WholeSale')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1253,8 +1262,9 @@ class _StockTransferState extends State<StockTransfer> {
                     controller: controllerBranch,
                     textAlign: TextAlign.right,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Branch'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('Branch')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')

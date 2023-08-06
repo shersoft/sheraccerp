@@ -85,7 +85,9 @@ class _QuickSearchState extends State<QuickSearch> {
                     children: [
                       Expanded(
                         child: TextField(
-                          decoration: const InputDecoration(hintText: 'Search'),
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              label: Text('Search')),
                           onChanged: (value) {
                             name = value;
                           },
@@ -140,9 +142,12 @@ class _QuickSearchState extends State<QuickSearch> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade200),
+                        border:
+                            TableBorder.all(width: 1.0, color: Colors.black),
                         columnSpacing: 12,
                         dataRowHeight: 20,
-                        dividerThickness: 1,
                         headingRowHeight: 30,
                         columns: [
                           for (int i = 0; i < col.length; i++)

@@ -1,11 +1,13 @@
 // @dart = 2.7
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:csv/csv.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'dart:html' as html;
 import 'package:intl/intl.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
@@ -14,7 +16,6 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:share/share.dart';
-import 'package:sheraccerp/widget/pdf_screen.dart';
 
 class PurchaseList extends StatefulWidget {
   const PurchaseList({Key key}) : super(key: key);
@@ -102,39 +103,12 @@ class _PurchaseListState extends State<PurchaseList> {
                   if (menuId == 1) {
                     Future.delayed(const Duration(milliseconds: 1000), () {
                       _createPDF(title + ' Date :' + fromDate + ' - ' + toDate)
-                          .then((value) =>
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (_) => PDFScreen(
-                                        pathPDF: value,
-                                        subject: title +
-                                            ' Date :' +
-                                            fromDate +
-                                            ' - ' +
-                                            toDate,
-                                        text: 'this is ' +
-                                            title +
-                                            ' Date :' +
-                                            fromDate +
-                                            ' - ' +
-                                            toDate,
-                                      ))));
+                          .then((value) => null);
                     });
                   } else if (menuId == 2) {
                     Future.delayed(const Duration(milliseconds: 1000), () {
                       _createCSV(title + ' Date :' + fromDate + ' - ' + toDate)
-                          .then((value) {
-                        var text = 'this is ' +
-                            title +
-                            ' Date :' +
-                            fromDate +
-                            ' - ' +
-                            toDate;
-                        var subject =
-                            title + ' Date :' + fromDate + ' - ' + toDate;
-                        List<String> paths = [];
-                        paths.add(value);
-                        urlFileShare(context, text, subject, paths);
-                      });
+                          .then((value) => null);
                     });
                   }
                 });
@@ -223,9 +197,12 @@ class _PurchaseListState extends State<PurchaseList> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade200),
+                        border:
+                            TableBorder.all(width: 1.0, color: Colors.black),
                         columnSpacing: 12,
                         dataRowHeight: 20,
-                        dividerThickness: 1,
                         headingRowHeight: 30,
                         columns: [
                           for (int i = 0; i < col.length; i++)
@@ -394,8 +371,8 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/location'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Branch'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), label: Text('Select Branch')),
                 onChanged: (dynamic data) {
                   locationId = data;
                 },
@@ -442,8 +419,9 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/ItemCode'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Item Code'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select Item Code')),
                 onChanged: (dynamic data) {
                   itemId = data;
                 },
@@ -454,8 +432,9 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/itemName'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Item Name'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select Item Name')),
                 onChanged: (dynamic data) {
                   itemName = data;
                 },
@@ -466,8 +445,9 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/supplier'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Supplier'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select Supplier')),
                 onChanged: (dynamic data) {
                   supplier = data;
                 },
@@ -478,8 +458,9 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/manufacture'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Item MFR'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select Item MFR')),
                 onChanged: (dynamic data) {
                   mfr = data;
                 },
@@ -490,8 +471,9 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/category'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Category'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select Category')),
                 onChanged: (dynamic data) {
                   category = data;
                 },
@@ -502,8 +484,9 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/subCategory'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select SubCategory'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select SubCategory')),
                 onChanged: (dynamic data) {
                   subCategory = data;
                 },
@@ -514,8 +497,9 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/salesMan'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select SalesMan'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select SalesMan')),
                 onChanged: (dynamic data) {
                   salesMan = data;
                 },
@@ -526,8 +510,9 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/project'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Project'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select Project')),
                 onChanged: (dynamic data) {
                   project = data;
                 },
@@ -538,8 +523,9 @@ class _PurchaseListState extends State<PurchaseList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/taxGroup'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select TaxGroup'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select TaxGroup')),
                 onChanged: (dynamic data) {
                   taxGroup = data;
                 },
@@ -628,7 +614,7 @@ class _PurchaseListState extends State<PurchaseList> {
               pw.Text(title,
                   style: pw.TextStyle(
                       color: const PdfColor.fromInt(0),
-                      fontSize: 25,
+                      // fontSize: 25,
                       fontWeight: pw.FontWeight.bold)),
             ]),
         build: (context) => [
@@ -819,10 +805,31 @@ class _PurchaseListState extends State<PurchaseList> {
   }
 
   Future<String> savePreviewPDF(pw.Document pdf, var title) async {
-    var output = await getTemporaryDirectory();
-    final file = File('${output.path}/' + title + '.pdf');
-    await file.writeAsBytes(await pdf.save());
-    return file.path.toString();
+    title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
+    if (kIsWeb) {
+      try {
+        final bytes = await pdf.save();
+        final blob = html.Blob([bytes], 'application/pdf');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement()
+          ..href = url
+          ..style.display = 'none'
+          ..download = '$title.pdf';
+        html.document.body.children.add(anchor);
+        anchor.click();
+        html.document.body.children.remove(anchor);
+        html.Url.revokeObjectUrl(url);
+        return '';
+      } catch (ex) {
+        ex.toString();
+      }
+      return '';
+    } else {
+      var output = await getTemporaryDirectory();
+      final file = File('${output.path}/' + title + '.pdf');
+      await file.writeAsBytes(await pdf.save());
+      return file.path.toString();
+    }
   }
 
   Future<String> _createCSV(String title) async {
@@ -843,7 +850,9 @@ class _PurchaseListState extends State<PurchaseList> {
     for (var i = 0; i < dataList.length; i++) {
       List<dynamic> row1 = [];
       for (var columnName in col) {
-        row1.add(dataList[i][columnName].toString());
+        row1.add(dataList[i][columnName] != null
+            ? dataList[i][columnName].toString()
+            : '');
       }
       rows.add(row1);
     }
@@ -851,20 +860,30 @@ class _PurchaseListState extends State<PurchaseList> {
   }
 
   Future<String> savePreviewCSV(var csv, var title) async {
-    var output = await getTemporaryDirectory();
-    final file = File('${output.path}/' + title + '.csv');
-    await file.writeAsString(csv);
-    return file.path.toString();
-  }
-
-  Future<void> urlFileShare(
-      BuildContext context, String text, String subject, var paths) async {
-    final RenderBox box = context.findRenderObject() as RenderBox;
-    if (paths.isNotEmpty) {
-      await Share.shareFiles(paths,
-          text: text,
-          subject: subject,
-          sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
+    title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
+    if (kIsWeb) {
+      try {
+        final bytes = utf8.encode(csv);
+        final blob = html.Blob([bytes], 'application/csv');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement()
+          ..href = url
+          ..style.display = 'none'
+          ..download = '$title.csv';
+        html.document.body.children.add(anchor);
+        anchor.click();
+        html.document.body.children.remove(anchor);
+        html.Url.revokeObjectUrl(url);
+        return '';
+      } catch (ex) {
+        ex.toString();
+      }
+      return '';
+    } else {
+      var output = await getTemporaryDirectory();
+      final file = File('${output.path}/' + title + '.csv');
+      await file.writeAsString(csv);
+      return file.path.toString();
     }
   }
 }

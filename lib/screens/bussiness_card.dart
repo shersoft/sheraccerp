@@ -16,14 +16,14 @@ import 'package:sheraccerp/util/res_color.dart';
 import 'dart:ui' as ui;
 import 'package:path_provider/path_provider.dart';
 
-class BussinessCard extends StatefulWidget {
-  const BussinessCard({Key key}) : super(key: key);
+class BusinessCard extends StatefulWidget {
+  const BusinessCard({Key key}) : super(key: key);
 
   @override
-  _BussinessCardState createState() => _BussinessCardState();
+  _BusinessCardState createState() => _BusinessCardState();
 }
 
-class _BussinessCardState extends State<BussinessCard> {
+class _BusinessCardState extends State<BusinessCard> {
   CompanyInformation companySettings;
   List<CompanySettings> settings;
 
@@ -290,7 +290,7 @@ class _BussinessCardState extends State<BussinessCard> {
         List<String> paths = [file.path.toString()];
         await Share.shareFiles(paths,
             text: 'Card',
-            subject: 'Bussiness Card',
+            subject: 'Business Card',
             sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
       } catch (e) {
         // print('Share error: $e');
@@ -301,6 +301,7 @@ class _BussinessCardState extends State<BussinessCard> {
 
 Future<String> saveTemp(Uint8List img, var title) async {
   var output = await getTemporaryDirectory();
+  title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
   final file = File('${output.path}/' + title + '.pdf');
   file.writeAsBytes(img);
   return file.path.toString();

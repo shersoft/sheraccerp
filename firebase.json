@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "site": "sheracc-erp",
+    "public": "build\\web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

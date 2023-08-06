@@ -56,7 +56,7 @@ packages:
       name: blue_print_pos
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.0.13"
+    version: "0.0.14"
   blue_thermal_printer:
     dependency: "direct main"
     description:
@@ -162,13 +162,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.2.0"
-  convert:
-    dependency: transitive
-    description:
-      name: convert
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.1.1"
   crypto:
     dependency: transitive
     description:
@@ -316,20 +309,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.7.3"
-  firebase_crashlytics:
-    dependency: "direct main"
-    description:
-      name: firebase_crashlytics
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.9.0"
-  firebase_crashlytics_platform_interface:
-    dependency: transitive
-    description:
-      name: firebase_crashlytics_platform_interface
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.3.0"
   firebase_in_app_messaging:
     dependency: "direct main"
     description:
@@ -337,27 +316,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.5.0+9"
-  firebase_messaging:
-    dependency: "direct main"
-    description:
-      name: firebase_messaging
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "10.0.7"
-  firebase_messaging_platform_interface:
-    dependency: transitive
-    description:
-      name: firebase_messaging_platform_interface
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.5.4"
-  firebase_messaging_web:
-    dependency: transitive
-    description:
-      name: firebase_messaging_web
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.4.4"
   fixnum:
     dependency: transitive
     description:
@@ -377,13 +335,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.1"
-  flutter_blue:
+  flutter_blue_plus:
     dependency: transitive
     description:
-      name: flutter_blue
+      name: flutter_blue_plus
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.8.0"
+    version: "1.7.3"
   flutter_bluetooth_basic:
     dependency: transitive
     description:
@@ -468,13 +426,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.6.2"
-  flutter_sunmi_printer:
-    dependency: "direct main"
-    description:
-      name: flutter_sunmi_printer
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.2.1"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -828,13 +779,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "4.2.4"
-  protobuf:
-    dependency: transitive
-    description:
-      name: protobuf
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.1.0"
   provider:
     dependency: "direct main"
     description:
@@ -987,13 +931,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.1.1"
-  sunmi_printer_service:
-    dependency: "direct main"
-    description:
-      name: sunmi_printer_service
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.1.3"
   synchronized:
     dependency: transitive
     description:
@@ -1092,34 +1029,20 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.2"
-  webview_flutter:
-    dependency: "direct main"
-    description:
-      name: webview_flutter
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.0.4"
-  webview_flutter_android:
-    dependency: transitive
-    description:
-      name: webview_flutter_android
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.10.4"
   webview_flutter_platform_interface:
     dependency: transitive
     description:
       name: webview_flutter_platform_interface
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.9.5"
-  webview_flutter_wkwebview:
-    dependency: transitive
+    version: "2.3.1"
+  webview_flutter_web:
+    dependency: "direct main"
     description:
-      name: webview_flutter_wkwebview
+      name: webview_flutter_web
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.9.5"
+    version: "0.2.2+1"
   win32:
     dependency: transitive
     description:

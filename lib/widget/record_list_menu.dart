@@ -4,8 +4,8 @@ import 'package:sheraccerp/screens/about_shersoft.dart';
 import 'package:sheraccerp/screens/report_view.dart';
 import 'package:sheraccerp/shared/constants.dart';
 
-class OtherReportMenu extends StatelessWidget {
-  const OtherReportMenu({Key key}) : super(key: key);
+class RecordListMenu extends StatelessWidget {
+  const RecordListMenu({Key key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +14,9 @@ class OtherReportMenu extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
-      crossAxisCount: 2,
+      crossAxisCount: MediaQuery.of(context).size.width > 500
+          ? (MediaQuery.of(context).size.width ~/ 250).toInt()
+          : (MediaQuery.of(context).size.width ~/ 150).toInt(),
       children: <Widget>[
         GestureDetector(
           child: Card(
@@ -51,7 +53,9 @@ class OtherReportMenu extends StatelessWidget {
                         '',
                         'Ledger_List',
                         '0',
-                        1)));
+                        [1],
+                        '0',
+                        '0')));
           },
         ),
         GestureDetector(
@@ -89,7 +93,9 @@ class OtherReportMenu extends StatelessWidget {
                         '',
                         'Employee List',
                         '0',
-                        1)));
+                        [1],
+                        '0',
+                        '0')));
           },
         ),
         GestureDetector(
@@ -127,7 +133,9 @@ class OtherReportMenu extends StatelessWidget {
                         '',
                         'CustomerCardList',
                         '0',
-                        1)));
+                        [1],
+                        '0',
+                        '0')));
           },
         ),
         GestureDetector(

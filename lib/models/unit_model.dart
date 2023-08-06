@@ -7,6 +7,7 @@ class UnitModel {
   int itemId;
   double conversion;
   String name;
+  String rate;
   UnitModel(
       {this.id,
       this.pUnit,
@@ -14,7 +15,8 @@ class UnitModel {
       this.unit,
       this.itemId,
       this.conversion,
-      this.name});
+      this.name,
+      this.rate});
 
   factory UnitModel.fromJson(Map<String, dynamic> json) {
     return UnitModel(
@@ -24,6 +26,7 @@ class UnitModel {
         unit: json['Unit'],
         itemId: json['ItemId'],
         conversion: double.tryParse(json['Conversion'].toString()),
+        rate: json['Rate'] ?? 'WHOLESALE',
         name: json['name']);
   }
 }
@@ -38,6 +41,7 @@ class UnitDetailModel {
   String rateType;
   double conversion;
   String barcode;
+  int gatePass;
   UnitDetailModel(
       {this.id,
       this.rateType,
@@ -47,7 +51,8 @@ class UnitDetailModel {
       this.itemId,
       this.unitId,
       this.pUnitId,
-      this.sUnitId});
+      this.sUnitId,
+      this.gatePass});
 
   factory UnitDetailModel.fromJson(Map<String, dynamic> json) {
     return UnitDetailModel(
@@ -60,7 +65,8 @@ class UnitDetailModel {
         itemId: json['item_id'],
         unitId: json['unit_id'],
         pUnitId: json['Punit_id'],
-        sUnitId: json['Sunit_id']);
+        sUnitId: json['Sunit_id'],
+        gatePass: json['GatePass']);
   }
 
   Map<String, dynamic> toCartJson() {
@@ -73,7 +79,8 @@ class UnitDetailModel {
       'name': name,
       'rateType': rateType,
       'conversion': conversion,
-      'barcode': barcode
+      'barcode': barcode,
+      'gatePass': gatePass,
     };
   }
 
@@ -94,6 +101,7 @@ class UnitDetailModel {
     map["rateType"] = rateType;
     map["conversion"] = conversion;
     map["barcode"] = barcode;
+    map["gatePass"] = gatePass;
     return map;
   }
 }

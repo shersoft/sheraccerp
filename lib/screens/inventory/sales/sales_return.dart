@@ -17,7 +17,6 @@ import 'package:sheraccerp/models/stock_product.dart';
 import 'package:sheraccerp/models/unit_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
-import 'package:sheraccerp/service/bt_print.dart';
 import 'package:sheraccerp/service/com_service.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
@@ -525,7 +524,8 @@ class _SalesReturnState extends State<SalesReturn> {
             'roundOff': roundOff,
             'billType': order.billType,
             'returnNo': 0,
-            'returnAmount': 0
+            'returnAmount': 0,
+            'fyId': currentFinancialYear.id
           }) +
           ']';
 
@@ -533,31 +533,53 @@ class _SalesReturnState extends State<SalesReturn> {
         'information': ledger,
         'data': data,
         'particular': items,
-        'otherAmount': otherAmount
+        'otherAmount': otherAmount,
+        'fyId': currentFinancialYear.id
       };
 
-      dio.spSale(body).then((value) {
+      dio.spSale(body).then((value0) {
         setState(() {
           _isLoading = false;
         });
-        if (value > 0) {
-          if (widget.fromSale) {
-            setReturnBillNo = value;
-            setReturnBillAmount =
-                ComSettings.appSettings('bool', 'key-round-off-amount', false)
-                    ? grandTotal
-                    : grandTotal.roundToDouble();
-          }
-          dataDynamic = [
-            {
-              'RealEntryNo': value,
-              'EntryNo': value,
-              'InvoiceNo': value.toString(),
-              'Type': 1
+        if (value0 > 0) {
+          var data = '[' +
+              json.encode({
+                'statement': 'SREntryNo',
+                'entryNo': 0,
+                'invoiceNo': 0,
+                'saleFormId': saleFormId,
+                'billType': order.billType,
+                'returnNo': 0,
+                'returnAmount': 0,
+                'fyId': currentFinancialYear.id
+              }) +
+              ']';
+
+          final body1 = {
+            'information': ledger,
+            'data': data,
+            'particular': items,
+            'otherAmount': otherAmount
+          };
+          dio.spSale(body1).then((value1) {
+            if (widget.fromSale) {
+              setReturnBillNo = value1;
+              setReturnBillAmount =
+                  ComSettings.appSettings('bool', 'key-round-off-amount', false)
+                      ? grandTotal
+                      : grandTotal.roundToDouble();
             }
-          ];
-          // clearCart();
-          showMore(context);
+            dataDynamic = [
+              {
+                'RealEntryNo': value1,
+                'EntryNo': value1,
+                'InvoiceNo': value1.toString(),
+                'Type': 1
+              }
+            ];
+            // clearCart();
+            showMore(context);
+          });
         }
       });
     }
@@ -682,7 +704,8 @@ class _SalesReturnState extends State<SalesReturn> {
             'roundOff': roundOff,
             'billType': order.billType,
             'returnNo': 0,
-            'returnAmount': 0
+            'returnAmount': 0,
+            'fyId': currentFinancialYear.id
           }) +
           ']';
 
@@ -690,7 +713,8 @@ class _SalesReturnState extends State<SalesReturn> {
         'information': ledger,
         'data': data,
         'particular': items,
-        'otherAmount': otherAmount
+        'otherAmount': otherAmount,
+        'fyId': currentFinancialYear.id
       };
 
       dio.spSale(body).then((value) {
@@ -719,6 +743,7 @@ class _SalesReturnState extends State<SalesReturn> {
           'entryNo': dataDynamic[0]['EntryNo'],
           'invoiceNo': dataDynamic[0]['InvoiceNo'],
           'saleFormId': saleFormId,
+          'fyId': currentFinancialYear.id
         }) +
         ']';
     final body = {
@@ -816,7 +841,8 @@ class _SalesReturnState extends State<SalesReturn> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
-                                  hintText: 'Search...',
+                                  border: OutlineInputBorder(),
+                                  labelText: 'Search...',
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
@@ -1110,8 +1136,9 @@ class _SalesReturnState extends State<SalesReturn> {
                     ? Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: TextField(
-                          decoration:
-                              const InputDecoration(hintText: 'Search...'),
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              labelText: 'Search...'),
                           onChanged: (text) {
                             text = text.toLowerCase();
                             setState(() {
@@ -1505,13 +1532,16 @@ class _SalesReturnState extends State<SalesReturn> {
                         padding: const EdgeInsets.all(2.0),
                         child: TextFormField(
                           controller: _quantityController,
-                          keyboardType: TextInputType.number,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           inputFormatters: [
                             FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                 allow: true, replacementString: '.')
                           ],
                           decoration: const InputDecoration(
-                              labelText: 'quantity', hintText: '0.0'),
+                              border: OutlineInputBorder(),
+                              labelText: 'quantity',
+                              hintText: '0.0'),
                           onChanged: (value) {
                             setState(() {
                               calculate();
@@ -1612,13 +1642,16 @@ class _SalesReturnState extends State<SalesReturn> {
                           child: TextField(
                             controller: _rateController,
                             // autofocus: true,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             inputFormatters: [
                               FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                   allow: true, replacementString: '.')
                             ],
                             decoration: const InputDecoration(
-                                labelText: 'price', hintText: '0.0'),
+                                border: OutlineInputBorder(),
+                                labelText: 'price',
+                                hintText: '0.0'),
                             onChanged: (value) {
                               setState(() {
                                 rateEdited = _rateController.text.isNotEmpty
@@ -1645,13 +1678,16 @@ class _SalesReturnState extends State<SalesReturn> {
                         child: TextField(
                           controller: _discountController,
                           // autofocus: true,
-                          keyboardType: TextInputType.number,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           inputFormatters: [
                             FilteringTextInputFormatter(RegExp(r'[0-9]'),
                                 allow: true, replacementString: '.')
                           ],
                           decoration: const InputDecoration(
-                              labelText: 'discount', hintText: '0.0'),
+                              border: OutlineInputBorder(),
+                              labelText: 'discount',
+                              hintText: '0.0'),
                           onChanged: (value) {
                             setState(() {
                               calculate();
@@ -2125,7 +2161,7 @@ class _SalesReturnState extends State<SalesReturn> {
                   child: Padding(
                     padding: EdgeInsets.only(right: 8.0),
                     child: Text(
-                      'Item +',
+                      'Add Item',
                       style: TextStyle(
                           color: blue,
                           fontSize: 25,
@@ -2219,7 +2255,8 @@ class _SalesReturnState extends State<SalesReturn> {
                     Expanded(
                       child: TextField(
                         decoration: const InputDecoration(
-                          hintText: 'Narration...',
+                          border: OutlineInputBorder(),
+                          labelText: 'Narration...',
                         ),
                         onChanged: (value) {
                           setState(() {
@@ -2266,7 +2303,8 @@ class _SalesReturnState extends State<SalesReturn> {
                                                                 index]['Amount']
                                                             .toString()
                                                             .length))),
-                                        keyboardType: TextInputType.number,
+                                        keyboardType: const TextInputType
+                                            .numberWithOptions(decimal: true),
                                         inputFormatters: [
                                           FilteringTextInputFormatter(
                                               RegExp(r'[0-9]'),
@@ -2287,7 +2325,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                                         cartTotal));
                                             var netTotal = cartTotal +
                                                 otherAmountList.fold(
-                                                    0,
+                                                    0.0,
                                                     (t, e) =>
                                                         t +
                                                         double.parse(e[
@@ -2413,7 +2451,7 @@ class _SalesReturnState extends State<SalesReturn> {
 
     grandTotal = totalCartValue +
         otherAmountList.fold(
-            0,
+            0.0,
             (t, e) =>
                 t +
                 double.parse(e['Symbol'] == '-'
@@ -2441,8 +2479,10 @@ class _SalesReturnState extends State<SalesReturn> {
                 });
               },
               controller: _controller,
-              decoration: const InputDecoration(hintText: "value"),
-              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                  border: OutlineInputBorder(), hintText: "value"),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')
@@ -2502,7 +2542,8 @@ class _SalesReturnState extends State<SalesReturn> {
               json.encode({
                 'statement': 'SalesReturnFind',
                 'entryNo': dataDynamic[0]['EntryNo'].toString(),
-                'saleFormId': saleFormId
+                'saleFormId': saleFormId,
+                'fyId': currentFinancialYear.id
               }) +
               ']';
           final body = {
@@ -2573,7 +2614,8 @@ class _SalesReturnState extends State<SalesReturn> {
         json.encode({
           'statement': 'SalesReturnFind',
           'entryNo': dataS['Id'].toString(),
-          'saleFormId': saleFormId
+          'saleFormId': saleFormId,
+          'fyId': currentFinancialYear.id
         }) +
         ']';
     final body = {
@@ -2697,8 +2739,6 @@ class _SalesReturnState extends State<SalesReturn> {
       size,
       form) async {
     var dataAll = [companySettings, settings, data, size, form];
-    Navigator.push(context,
-        MaterialPageRoute(builder: (_) => BtPrint(dataAll, byteImage)));
   }
 }
 

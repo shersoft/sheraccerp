@@ -2,7 +2,6 @@
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:provider/provider.dart';
@@ -16,11 +15,17 @@ import 'package:sheraccerp/provider/purchase_provider.dart';
 import 'package:sheraccerp/provider/sales_provider.dart';
 import 'package:sheraccerp/provider/stock_provider.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
+import 'package:sheraccerp/screens/accounts/journal.dart';
 import 'package:sheraccerp/screens/html_previews/invoice_models.dart';
+import 'package:sheraccerp/screens/inventory/alignment_entry.dart';
+import 'package:sheraccerp/screens/inventory/bill_list.dart';
 import 'package:sheraccerp/screens/inventory/inv_r_p_voucher.dart';
 import 'package:sheraccerp/screens/home/delivery_home.dart';
 import 'package:sheraccerp/screens/home/manager_home.dart';
+import 'package:sheraccerp/screens/inventory/order_item_qty_list.dart';
 import 'package:sheraccerp/screens/inventory/order_list.dart';
+import 'package:sheraccerp/screens/inventory/price_list.dart';
+import 'package:sheraccerp/screens/inventory/product_management.dart';
 import 'package:sheraccerp/screens/inventory/purchase/opening_stock.dart';
 import 'package:sheraccerp/screens/inventory/purchase/purchase_new.dart';
 import 'package:sheraccerp/screens/inventory/purchase/purchase_order.dart';
@@ -36,6 +41,8 @@ import 'package:sheraccerp/screens/dash_report/expense_list.dart';
 import 'package:sheraccerp/screens/home/home.dart';
 import 'package:sheraccerp/screens/accounts/ledger.dart';
 import 'package:sheraccerp/screens/accounts/ledger_select.dart';
+import 'package:sheraccerp/screens/inventory/service_entry.dart';
+import 'package:sheraccerp/screens/inventory/stock_management.dart';
 import 'package:sheraccerp/screens/login_screen.dart';
 import 'package:sheraccerp/screens/home/owner_home.dart';
 import 'package:sheraccerp/screens/passcode_authentication.dart';
@@ -46,7 +53,7 @@ import 'package:sheraccerp/screens/inventory/purchase/purchase.dart';
 import 'package:sheraccerp/screens/inventory/purchase/purchase_list.dart';
 import 'package:sheraccerp/screens/report_view.dart';
 import 'package:sheraccerp/screens/inventory/sales/sale.dart';
-import 'package:sheraccerp/screens/inventory/sales/sales.dart';
+import 'package:sheraccerp/screens/inventory/sales/salesNot.dart';
 import 'package:sheraccerp/screens/inventory/sales/sales_list.dart';
 import 'package:sheraccerp/screens/inventory/sales/sales_return.dart';
 import 'package:sheraccerp/screens/inventory/sales/sales_return_list.dart';
@@ -65,25 +72,29 @@ ValueNotifier<Color> accentColor = ValueNotifier(kPrimaryColor);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+      options: const FirebaseOptions(
+          apiKey: "AIzaSyAh8GaZ7u9u9nsMcXgkYjlhMV3MQoLrLCs",
+          authDomain: "sheraccerp-8495a.firebaseapp.com",
+          projectId: "sheraccerp-8495a",
+          storageBucket: "sheraccerp-8495a.appspot.com",
+          messagingSenderId: "990122522024",
+          appId: "1:990122522024:web:15a4c8932a5680e359199d",
+          measurementId: "G-ZTVFDPN3DL"));
 
-  runZonedGuarded(() {
-    initSettings().then((_) {
-      runApp(MultiProvider(
-          providers: [
-            ChangeNotifierProvider(create: (context) => AppProvider()),
-            ChangeNotifierProvider(create: (context) => LedgerProvider()),
-            ChangeNotifierProvider(create: (context) => ProductProvider()),
-            ChangeNotifierProvider(create: (context) => StockProvider()),
-            ChangeNotifierProvider(create: (context) => SalesProvider()),
-            ChangeNotifierProvider(create: (context) => PurchaseProvider()),
-          ],
-          child: MyApp(
-            model: MainModel(),
-          )));
-    });
-  }, (error, stackTrace) {
-    FirebaseCrashlytics.instance.recordError(error, stackTrace);
+  initSettings().then((_) {
+    runApp(MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => AppProvider()),
+          ChangeNotifierProvider(create: (context) => LedgerProvider()),
+          ChangeNotifierProvider(create: (context) => ProductProvider()),
+          ChangeNotifierProvider(create: (context) => StockProvider()),
+          ChangeNotifierProvider(create: (context) => SalesProvider()),
+          ChangeNotifierProvider(create: (context) => PurchaseProvider()),
+        ],
+        child: MyApp(
+          model: MainModel(),
+        )));
   });
 }
 
@@ -95,15 +106,6 @@ Future<void> initSettings() async {
   isDarkTheme = ComSettings.appSettings('int', 'key-dropdown-them-view', 2) == 2
       ? false
       : true;
-  _initializeFirebase();
-}
-
-Future<void> _initializeFirebase() async {
-  if (kDebugMode) {
-    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
-  } else {
-    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
-  }
 }
 
 class MyApp extends StatelessWidget {
@@ -130,6 +132,8 @@ class MyApp extends StatelessWidget {
               '/staff_home': (context) => const StaffHome(title: 'SherAcc'),
               '/expense_list': (context) => ExpenseList(null, 0),
               '/sales': (context) => const Sale(),
+              '/AlignmentEntry': (context) => AlignmentEntry(),
+              '/ServiceEntry': (context) => ServiceEntry(),
               '/purchase': (context) => const Purchase(),
               '/add_product': (context) => const ProductsListPage(),
               '/cart': (context) => const CartPage(),
@@ -137,8 +141,18 @@ class MyApp extends StatelessWidget {
               '/ledger': (context) => const Ledger(),
               '/preview_show': (context) => const SalesPreviewShow(),
               '/select_ledger': (context) => const LedgerSelect(),
-              '/report_view': (context) => const ReportView('0', '0',
-                  '2020-01-01', '2020-01-01', 'ledger', '', '', '0', 0),
+              '/report_view': (context) => const ReportView(
+                  '0',
+                  '0',
+                  '2020-01-01',
+                  '2020-01-01',
+                  'ledger',
+                  '',
+                  '',
+                  '0',
+                  [0],
+                  '0',
+                  '0'),
               '/RPVoucher': (context) => const RPVoucher(),
               '/SalesList': (context) => const SalesList(),
               '/PurchaseList': (context) => const PurchaseList(),
@@ -151,18 +165,23 @@ class MyApp extends StatelessWidget {
               '/damageEntry': (context) => const DamageEntry(),
               '/openingStock': (context) => const OpeningStock(),
               '/damageReport': (context) => const DamageReport(),
+              '/priceList': (context) => const PriceList(),
               '/SalesReturnList': (context) => const SalesReturnList(),
               '/ProductReport': (context) => const ProductReport(),
               '/owner_home': (context) => const OwnerHome(),
               '/passCode_Auth': (context) => const PassCodeAuth(),
               '/SimpleSale': (context) => const SimpleSale(),
               '/OrderList': (context) => const OrderList(),
+              '/OrderItemList': (context) => const OrderItemList(),
+              '/BillList': (context) => const BillList(),
               '/purchaseReturn': (context) => const PurchaseReturn(),
               '/purchaseOrder': (context) => const PurchaseOrder(),
               '/stockTransfer': (context) => const StockTransfer(),
-              '/sale': (context) => const Sales(),
+              '/StockManagement': (context) => const StockManagement(),
               '/InvRPVoucher': (context) => const InvRPVoucher(),
               '/InvoiceModels': (context) => const InvoiceModels(),
+              '/ProductManagement': (context) => ProductManagement(),
+              '/journal': (context) => const Journal(),
             },
             theme: isDarkTheme
                 ? ThemeData(

@@ -46,6 +46,8 @@ class _PurchaseState extends State<Purchase> {
       widgetID = true,
       oldBill = false,
       lastRecord = false,
+      isItemSerialNo = false,
+      isFreeQty = false,
       realPRATEBASEDPROFITPERCENTAGE = false;
   List<CartItemP> cartItem = [];
   int page = 1, pageTotal = 0, totalRecords = 0;
@@ -59,6 +61,7 @@ class _PurchaseState extends State<Purchase> {
       useOLDBARCODE = false,
       buttonEvent = false;
   int locationId = 1, salesManId = 0, decimal = 2;
+  String labelSerialNo = 'SerialNo';
 
   @override
   void initState() {
@@ -92,6 +95,9 @@ class _PurchaseState extends State<Purchase> {
     realPRATEBASEDPROFITPERCENTAGE =
         ComSettings.getStatus('REAL PRATE BASED PROFIT PERCENTAGE', settings);
 
+    isItemSerialNo = ComSettings.getStatus('KEY ITEM SERIAL NO', settings);
+    labelSerialNo =
+        ComSettings.getValue('KEY ITEM SERIAL NO', settings).toString();
     salesManId = ComSettings.appSettings(
             'int', 'key-dropdown-default-salesman-view', 1) -
         1;
@@ -101,6 +107,8 @@ class _PurchaseState extends State<Purchase> {
     decimal = ComSettings.getValue('DECIMAL', settings).toString().isNotEmpty
         ? int.tryParse(ComSettings.getValue('DECIMAL', settings).toString())
         : 2;
+
+    isFreeQty = ComSettings.getStatus('KEY FREE QTY IN PURCHASE', settings);
   }
 
   @override
@@ -231,7 +239,8 @@ class _PurchaseState extends State<Purchase> {
                             'adCess': totalAdCess,
                             'Salesman': salesManId,
                             'location': locationId,
-                            'statementtype': stType
+                            'statementtype': stType,
+                            'fyId': currentFinancialYear.id,
                           }) +
                           ']';
 
@@ -305,7 +314,8 @@ class _PurchaseState extends State<Purchase> {
                             'adCess': totalAdCess,
                             'Salesman': salesManId,
                             'location': locationId,
-                            'statementtype': stType
+                            'statementtype': stType,
+                            'fyId': currentFinancialYear.id,
                           }) +
                           ']';
 
@@ -497,7 +507,7 @@ class _PurchaseState extends State<Purchase> {
           ));
   }
 
-  var nameLike = "ca";
+  var nameLike = "a";
   selectLedgerWidget() {
     return FutureBuilder<List<dynamic>>(
       future: dio.getSupplierListData(nameLike),
@@ -516,12 +526,13 @@ class _PurchaseState extends State<Purchase> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
-                                  hintText: 'Search...',
+                                  border: OutlineInputBorder(),
+                                  label: Text('Search...'),
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
                                   setState(() {
-                                    nameLike = text.isNotEmpty ? text : 'ca';
+                                    nameLike = text.isNotEmpty ? text : 'a';
                                   });
                                 },
                               ),
@@ -570,7 +581,7 @@ class _PurchaseState extends State<Purchase> {
                       onPressed: () {
                         setState(() {
                           nextWidget = 0;
-                          nameLike = 'ca';
+                          nameLike = 'a';
                         });
                       },
                       child: const Text('Select again'))
@@ -642,7 +653,7 @@ class _PurchaseState extends State<Purchase> {
     //                           Flexible(
     //                             child: TextField(
     //                               decoration: const InputDecoration(
-    //                                 hintText: 'Search...',
+    //                                 border: OutlineInputBorder(),label: Text( 'Search...'),
     //                               ),
     //                               onChanged: (text) {
     //                                 text = text.toLowerCase();
@@ -842,7 +853,7 @@ class _PurchaseState extends State<Purchase> {
                   child: Padding(
                     padding: EdgeInsets.only(right: 8.0),
                     child: Text(
-                      'Item +',
+                      'Add Item',
                       style: TextStyle(
                           color: blue,
                           fontSize: 25,
@@ -889,7 +900,8 @@ class _PurchaseState extends State<Purchase> {
                             Flexible(
                               child: TextField(
                                 decoration: const InputDecoration(
-                                  hintText: 'Search...',
+                                  border: OutlineInputBorder(),
+                                  label: Text('Search...'),
                                 ),
                                 onChanged: (text) {
                                   text = text.toLowerCase();
@@ -1008,7 +1020,7 @@ class _PurchaseState extends State<Purchase> {
   //                             Flexible(
   //                               child: TextField(
   //                                 decoration: const InputDecoration(
-  //                                   hintText: 'Search...',
+  //                                   border: OutlineInputBorder(),label: Text()'Search...'),
   //                                 ),
   //                                 onChanged: (text) {
   //                                   text = text.toLowerCase();
@@ -1183,6 +1195,7 @@ class _PurchaseState extends State<Purchase> {
   }
 
   TextEditingController controllerQuantity = TextEditingController();
+  TextEditingController controllerFreeQuantity = TextEditingController();
   TextEditingController controllerRate = TextEditingController();
   TextEditingController controllerDiscountPer = TextEditingController();
   TextEditingController controllerDiscount = TextEditingController();
@@ -1190,8 +1203,10 @@ class _PurchaseState extends State<Purchase> {
   TextEditingController controllerRetail = TextEditingController();
   TextEditingController controllerWholeSale = TextEditingController();
   TextEditingController controllerBranch = TextEditingController();
+  TextEditingController controllerSerialNo = TextEditingController();
 
   double quantity = 0,
+      freeQuantity = 0,
       rate = 0,
       subTotal = 0,
       discount = 0,
@@ -1211,7 +1226,6 @@ class _PurchaseState extends State<Purchase> {
       fCess = 0,
       unitValue = 1,
       conversion = 0,
-      free = 0,
       fUnitValue = 0,
       cdPer = 0,
       cDisc = 0,
@@ -1238,6 +1252,7 @@ class _PurchaseState extends State<Purchase> {
       editableBranch = false,
       editableRate = false,
       editableQuantity = false,
+      editableFreeQuantity = false,
       editableDiscount = false,
       editableDiscountP = false;
   dynamic productModelPrize = [
@@ -1256,11 +1271,15 @@ class _PurchaseState extends State<Purchase> {
     if (editItem) {
       // adCessPer = double.tryParse(productModel['adcessper'].toString());
       // cessPer = double.tryParse(productModel['cessper'].toString());
-      taxP = cartItem.elementAt(position).taxP;
+      taxP = isTax ? cartItem.elementAt(position).taxP : 0;
       // kfcP = double.tryParse(productModel['KFC'].toString());
       quantity = cartItem[position].quantity;
       if (quantity > 0 && !editableQuantity) {
         controllerQuantity.text = quantity.toString();
+      }
+      freeQuantity = cartItem[position].free;
+      if (freeQuantity > 0 && !editableFreeQuantity) {
+        controllerFreeQuantity.text = freeQuantity.toString();
       }
       rate = cartItem.elementAt(position).rate;
       if (rate > 0 && !editableRate) {
@@ -1307,10 +1326,11 @@ class _PurchaseState extends State<Purchase> {
       }
       total = cartItem.elementAt(position).total;
     } else {
-      adCessPer = double.tryParse(productModel['adcessper'].toString());
-      cessPer = double.tryParse(productModel['cessper'].toString());
-      taxP = double.tryParse(productModel['tax'].toString());
-      kfcP = double.tryParse(productModel['KFC'].toString());
+      adCessPer =
+          isTax ? double.tryParse(productModel['adcessper'].toString()) : 0;
+      cessPer = isTax ? double.tryParse(productModel['cessper'].toString()) : 0;
+      taxP = isTax ? double.tryParse(productModel['tax'].toString()) : 0;
+      kfcP = isTax ? double.tryParse(productModel['KFC'].toString()) : 0;
       rate = double.tryParse(productModelPrize['prate'].toString());
       if (rate > 0 && !editableRate) {
         controllerRate.text = rate.toString();
@@ -1340,6 +1360,9 @@ class _PurchaseState extends State<Purchase> {
     calculate() {
       quantity = controllerQuantity.text.isNotEmpty
           ? double.tryParse(controllerQuantity.text)
+          : 0;
+      freeQuantity = controllerFreeQuantity.text.isNotEmpty
+          ? double.tryParse(controllerFreeQuantity.text)
           : 0;
       rate = controllerRate.text.isNotEmpty
           ? double.tryParse(controllerRate.text)
@@ -1410,6 +1433,8 @@ class _PurchaseState extends State<Purchase> {
                 decimal, (((branch - rRate) * 100) / rRate))
             : CommonService.getRound(decimal, (((branch - rate) * 100) / rate));
       }
+      serialNo =
+          controllerSerialNo.text.isNotEmpty ? controllerSerialNo.text : '';
 
       // unitValue = _conversion > 0 ? _conversion : 1;
     }
@@ -1498,6 +1523,9 @@ class _PurchaseState extends State<Purchase> {
                         quantity = controllerQuantity.text.isNotEmpty
                             ? double.tryParse(controllerQuantity.text)
                             : quantity;
+                        freeQuantity = controllerFreeQuantity.text.isNotEmpty
+                            ? double.tryParse(controllerFreeQuantity.text)
+                            : freeQuantity;
 
                         if (editItem) {
                           cartItem[position].adCess = adCess;
@@ -1515,7 +1543,7 @@ class _PurchaseState extends State<Purchase> {
                           cartItem[position].fCess = fCess;
                           cartItem[position].fUnitId = fUnitId;
                           cartItem[position].fUnitValue = fUnitValue;
-                          cartItem[position].free = free;
+                          cartItem[position].free = freeQuantity;
                           cartItem[position].gross = subTotal;
                           cartItem[position].iGST = iGST;
                           // cartItem[position].id = cartItem.length + 1;
@@ -1561,7 +1589,7 @@ class _PurchaseState extends State<Purchase> {
                               fCess: fCess,
                               fUnitId: fUnitId,
                               fUnitValue: fUnitValue,
-                              free: free,
+                              free: freeQuantity,
                               gross: subTotal,
                               iGST: iGST,
                               id: cartItem.length + 1,
@@ -1616,31 +1644,86 @@ class _PurchaseState extends State<Purchase> {
               ],
             ),
             const Divider(),
-            TextField(
-              controller: controllerQuantity,
-              decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'Quantity'),
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter(RegExp(r'[0-9]'),
-                    allow: true, replacementString: '.')
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: controllerQuantity,
+                    decoration: const InputDecoration(
+                        border: OutlineInputBorder(), label: Text('Quantity')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                          allow: true, replacementString: '.')
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        editableQuantity = true;
+                        quantity = double.tryParse(value);
+                        calculate();
+                      });
+                    },
+                  ),
+                ),
+                Visibility(
+                  visible: isFreeQty,
+                  child: Expanded(
+                    child: TextField(
+                      controller: controllerFreeQuantity,
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          label: Text('Free Qty')),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                            allow: true, replacementString: '.')
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          editableFreeQuantity = true;
+                          freeQuantity = double.tryParse(value);
+                          calculate();
+                        });
+                      },
+                    ),
+                  ),
+                ),
               ],
-              textAlign: TextAlign.end,
-              onChanged: (value) {
-                setState(() {
-                  editableQuantity = true;
-                  quantity = double.tryParse(value);
-                  calculate();
-                });
-              },
+            ),
+            const Divider(),
+            Visibility(
+              visible: isItemSerialNo,
+              child: Row(
+                children: [
+                  Expanded(
+                      child: Padding(
+                    padding: const EdgeInsets.all(2.0),
+                    child: TextField(
+                      controller: controllerSerialNo,
+                      decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText:
+                              isItemSerialNo ? labelSerialNo : 'SerialNo'),
+                      onChanged: (value) {
+                        setState(() {
+                          calculate();
+                        });
+                      },
+                    ),
+                  )),
+                ],
+              ),
             ),
             const Divider(),
             DropdownSearch<dynamic>(
               maxHeight: 300,
               onFind: (String filter) =>
                   dio.getSalesListData(filter, 'sales_list/unit'),
-              dropdownSearchDecoration:
-                  const InputDecoration(hintText: 'Select Unit'),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(), label: Text('Select Unit')),
               onChanged: (dynamic data) {
                 unit = data;
                 calculate();
@@ -1651,13 +1734,13 @@ class _PurchaseState extends State<Purchase> {
             TextField(
               controller: controllerRate,
               decoration: const InputDecoration(
-                  border: OutlineInputBorder(), hintText: 'P Rate'),
-              keyboardType: TextInputType.number,
+                  border: OutlineInputBorder(), label: Text('P Rate')),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter(RegExp(r'[0-9]'),
                     allow: true, replacementString: '.')
               ],
-              textAlign: TextAlign.end,
               onChanged: (value) {
                 setState(() {
                   editableRate = true;
@@ -1687,8 +1770,9 @@ class _PurchaseState extends State<Purchase> {
                   child: TextField(
                     controller: controllerDiscountPer,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: ' % '),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text(' % ')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
@@ -1708,13 +1792,13 @@ class _PurchaseState extends State<Purchase> {
                   child: TextField(
                     controller: controllerDiscount,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Discount'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('Discount')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
-                    textAlign: TextAlign.end,
                     onChanged: (value) {
                       setState(() {
                         editableDiscount = true;
@@ -1736,13 +1820,13 @@ class _PurchaseState extends State<Purchase> {
                   child: TextField(
                     controller: controllerMrp,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'MRP'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('MRP')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
-                    textAlign: TextAlign.end,
                     onChanged: (value) {
                       setState(() {
                         editableMrp = true;
@@ -1758,13 +1842,13 @@ class _PurchaseState extends State<Purchase> {
                   child: TextField(
                     controller: controllerRetail,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Retail'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('Retail')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
-                    textAlign: TextAlign.end,
                     onChanged: (value) {
                       setState(() {
                         editableRetail = true;
@@ -1788,13 +1872,13 @@ class _PurchaseState extends State<Purchase> {
                   child: TextField(
                     controller: controllerWholeSale,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'WholeSale'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('WholeSale')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
-                    textAlign: TextAlign.end,
                     onChanged: (value) {
                       setState(() {
                         editableWSale = true;
@@ -1810,13 +1894,13 @@ class _PurchaseState extends State<Purchase> {
                   child: TextField(
                     controller: controllerBranch,
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'Branch'),
-                    keyboardType: TextInputType.number,
+                        border: OutlineInputBorder(), label: Text('Branch')),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
-                    textAlign: TextAlign.end,
                     onChanged: (value) {
                       setState(() {
                         editableBranch = true;
@@ -2018,13 +2102,14 @@ class _PurchaseState extends State<Purchase> {
                   // width: 30,
                   height: 40,
                   child: TextField(
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter(RegExp(r'[0-9]'),
                           allow: true, replacementString: '.')
                     ],
                     decoration: const InputDecoration(
-                      hintText: 'Cash Paid: ',
+                      label: Text('Cash Paid: '),
                       border: OutlineInputBorder(),
                     ),
                     controller: cashPaidController,
@@ -2110,6 +2195,7 @@ class _PurchaseState extends State<Purchase> {
 
   clearValue() {
     controllerQuantity.text = '';
+    controllerSerialNo.text = '';
     controllerRate.text = '';
     controllerDiscountPer.text = '';
     controllerDiscount.text = '';

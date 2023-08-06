@@ -4,37 +4,58 @@ import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'package:pdf/widgets.dart';
+
 import 'package:sheraccerp/app_settings_page.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/company_user.dart';
 import 'package:sheraccerp/models/form_model.dart';
+import 'package:sheraccerp/models/option_rate_type.dart';
 import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/models/unit_model.dart';
 import 'package:sheraccerp/service/api_dio.dart';
+
+const gstBaseApi = "https://api.mastergst.com";
+const gstApi = "https://api.mastergst.com/einvoice/authenticate"; //get
+const gstAuthApi = "/einvoice/authenticate"; //get
+const gstDetailsApi = "/einvoice/type/GSTNDETAILS/version/V1_03"; //get
+const gstSyncCpApi = "/einvoice/type/SYNC_GSTIN_FROMCP/version/V1_03"; //get
+const gstIrnApi = "/einvoice/type/GENERATE/version/V1_03"; //post
+const gstEInvDetailsApi = "/einvoice/type/GETIRN/version/V1_03"; //get
+const gstIrnByDocApi = "/einvoice/type/GETIRNBYDOCDETAILS/version/V1_03"; //get
+const gstCancelIrnApi = "/einvoice/type/CANCEL/version/V1_03"; //post
+const gstEWayBillApi = "/einvoice/type/GENERATE_EWAYBILL/version/V1_03"; //post
+const gstEWayDetailsByIrnApi =
+    "/einvoice/type/GETEWAYBILLIRN/version/V1_03"; //get
+const gstB2BQRDetailsApi = "/einvoice/qrcode";
 
 bool isDarkTheme = false;
 bool isUsingHive = true;
 String deviceId = '0';
 const String isApp = '1';
 
-const String apiV = 'v10/';
+String _apiV = 'v18/';
 const currencySymbol = '₹';
 // const bool isVariant = false;
 const bool isKFC = false;
 const double kfcPer = 0;
 int defaultUnitID =
     Settings.getValue<int>('key-dropdown-item-default-sku-view', 0);
+String defaultLocation = 'SHOP';
 const bool isArea = false;
 const bool isRoute = false;
 bool isEstimateDataBase = false;
 String userNameC = 'ADMIN';
 CompanyUser companyUserData;
+FinancialYear currentFinancialYear;
 List<FormModel> userControlData = [];
 int userIdC = 1;
 String _toDay;
 String get getToDay => _toDay;
 set setToDay(String day) => _toDay = day;
+String get apiV => _apiV;
+set setApiV(String value) => _apiV = value + '/';
 
 List<UnitModel> unitData = [];
 List unitList = [];
@@ -53,9 +74,12 @@ List otherRegistrationList = [];
 List<OtherRegistrations> otherRegUnitList = [];
 List<OtherRegistrations> otherRegLocationList = [];
 List<OtherRegistrations> otherRegAreaList = [];
+List<OtherRegistrations> otherRegRouteList = [];
+List<OptionRateType> optionRateTypeList = [];
 List otherRegSalesManList = [];
 List mainAccount = [];
 List cashAccount = [];
+List<String> taxCalculationList = ['MINUS', 'PLUS'];
 DioService dioApi = DioService();
 
 String rateType = '';
@@ -67,6 +91,13 @@ String companyTaxMode = '';
 List<dynamic> dataDynamic = [];
 var argumentsPass;
 Uint8List byteImageQr;
+const List<String> stockValuationData = [
+  'AVERAGE VALUE',
+  'LAST PRATE',
+  'REAL',
+  'MRP CHANGE'
+];
+const List<String> typeOfSupplyData = ['GOODS', 'SERVICE'];
 
 class ComSettings {
   fetchOtherData() {
@@ -114,6 +145,7 @@ class ComSettings {
       }
       for (var json in map['area']) {
         otherRegAreaList.add(OtherRegistrations.fromJson(json));
+        otherRegAreaList.sort((a, b) => a.name.compareTo(b.name));
         areaList.add(AppSettingsMap(key: json['auto'], value: json['Name']));
       }
       if (map['salesMan'].length > 0) {
@@ -136,6 +168,8 @@ class ComSettings {
         }
       }
       for (var json in map['route']) {
+        otherRegRouteList.add(OtherRegistrations.fromJson(json));
+        otherRegRouteList.sort((a, b) => a.name.compareTo(b.name));
         routeList.add(AppSettingsMap(key: json['auto'], value: json['Name']));
       }
       if (map['brand'].length > 0) {
@@ -238,6 +272,34 @@ class ComSettings {
       //s_Value,Status,Name
       if (option.name == name) {
         status = option.value;
+        break;
+      } else {
+        status = '';
+      }
+    }
+    return status;
+  }
+
+  static getReportDesignStatus(String name, List<ReportDesign> data) {
+    bool status = false;
+    for (var option in data) {
+      //s_Value,Status,Name
+      if (option.visibility == name) {
+        status = option.visibility;
+        break;
+      } else {
+        status = false;
+      }
+    }
+    return status;
+  }
+
+  static getReportDesignValue(String name, List<ReportDesign> data) {
+    String status = '';
+    for (var option in data) {
+      //s_Value,Status,Name
+      if (option.caption == name) {
+        status = option.caption;
         break;
       } else {
         status = '';
@@ -356,12 +418,40 @@ class ComSettings {
       result = -1;
     }
     return result < 0
-        ? true
+        ? name == 'RECEIPT' || name == 'PAYMENT'
+            ? true
+            : false
         : result == 1
             ? true
             : false;
   }
+
+  static billLineValue(int d) {
+    int result = 0;
+    result = d - 1;
+    printLines = result;
+    return result;
+  }
+
+  static String removeZero(double money) {
+    var response = money.toString();
+
+    if (money.toString().split(".").isNotEmpty) {
+      var decimalPoint = money.toString().split(".")[1];
+      if (decimalPoint == "0") {
+        response = response.split(".0").join("");
+      }
+      if (decimalPoint == "00") {
+        response = response.split(".00").join("");
+      }
+    }
+
+    return response;
+  }
 }
+
+Document documentPDF;
+int printLines;
 
 class UnitSettings {
   static getUnitName(int id) {
@@ -484,4 +574,77 @@ class SaudiConversion {
     bytesBuilder.addByte(valueByte.length);
     bytesBuilder.add(valueByte);
   }
+}
+
+List<GSTStateModel> gstStateModels = [
+  GSTStateModel(state: "", code: ""),
+  GSTStateModel(state: "JAMMU AND KASHMIR", code: "01"),
+  GSTStateModel(state: "HIMACHAL PRADESH", code: "02"),
+  GSTStateModel(state: "PUNJAB", code: "03"),
+  GSTStateModel(state: "CHANDIGARH", code: "04"),
+  GSTStateModel(state: "UTTARAKHAND", code: "05"),
+  GSTStateModel(state: "HARYANA", code: "06"),
+  GSTStateModel(state: "DELHI", code: "07"),
+  GSTStateModel(state: "RAJASTHAN", code: "08"),
+  GSTStateModel(state: "UTTAR PRADESH", code: "09"),
+  GSTStateModel(state: "BIHAR", code: "10"),
+  GSTStateModel(state: "SIKKIM", code: "11"),
+  GSTStateModel(state: "ARUNACHAL PRADESH", code: "12"),
+  GSTStateModel(state: "NAGALAND", code: "13"),
+  GSTStateModel(state: "MANIPUR", code: "14"),
+  GSTStateModel(state: "MIZORAM", code: "15"),
+  GSTStateModel(state: "TRIPURA", code: "16"),
+  GSTStateModel(state: "MEGHALAYA", code: "17"),
+  GSTStateModel(state: "ASSAM", code: "18"),
+  GSTStateModel(state: "WEST BENGAL", code: "19"),
+  GSTStateModel(state: "JHARKHAND", code: "20"),
+  GSTStateModel(state: "ODISHA", code: "21"),
+  GSTStateModel(state: "CHATTISGARH", code: "22"),
+  GSTStateModel(state: "MADHYA PRADESH", code: "23"),
+  GSTStateModel(state: "GUJARAT", code: "24"),
+  GSTStateModel(
+      state: "DADRA AND NAGAR HAVELI AND DAMAN AND DIU (NEWLY MERGED UT)",
+      code: "26"),
+  GSTStateModel(state: "MAHARASHTRA", code: "27"),
+  GSTStateModel(state: "ANDHRA PRADESH (BEFORE DIVISION)", code: "28"),
+  GSTStateModel(state: "KARNATAKA", code: "29"),
+  GSTStateModel(state: "GOA", code: "30"),
+  GSTStateModel(state: "LAKSHADWEEP", code: "31"),
+  GSTStateModel(state: "KERALA", code: "32"),
+  GSTStateModel(state: "TAMIL NADU", code: "33"),
+  GSTStateModel(state: "PUDUCHERRY", code: "34"),
+  GSTStateModel(state: "ANDAMAN AND NICOBAR ISLANDS", code: "35"),
+  GSTStateModel(state: "TELANGANA", code: "36"),
+  GSTStateModel(state: "ANDHRA PRADESH (NEWLY ADDED)", code: "37"),
+  GSTStateModel(state: "LADAKH(NEWLY ADDED)", code: "38"),
+  GSTStateModel(state: "OTHER TERRITORY", code: "97"),
+  GSTStateModel(state: "CENTRE JURISDICTION", code: "99")
+];
+
+class GSTStateModel {
+  String state;
+  String code;
+  GSTStateModel({
+    this.state,
+    this.code,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'state': state,
+      'code': code,
+    };
+  }
+
+  factory GSTStateModel.fromMap(Map<String, dynamic> map) {
+    return GSTStateModel(
+      state: map['state'] ?? '',
+      code: map['code'] ?? '',
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory GSTStateModel.fromJson(String source) =>
+      GSTStateModel.fromMap(json.decode(source));
 }

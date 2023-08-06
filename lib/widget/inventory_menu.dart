@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sheraccerp/screens/about_shersoft.dart';
+import 'package:sheraccerp/screens/html_previews/invoice_make.dart';
 import 'package:sheraccerp/util/res_color.dart';
 
 class InventoryMenu extends StatelessWidget {
@@ -11,8 +12,10 @@ class InventoryMenu extends StatelessWidget {
       primary: false,
       padding: const EdgeInsets.all(20),
       crossAxisSpacing: 10,
+      crossAxisCount: MediaQuery.of(context).size.width > 500
+          ? (MediaQuery.of(context).size.width ~/ 250).toInt()
+          : (MediaQuery.of(context).size.width ~/ 150).toInt(),
       mainAxisSpacing: 10,
-      crossAxisCount: 2,
       children: [
         GestureDetector(
           child: Card(
@@ -257,13 +260,13 @@ class InventoryMenu extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: const [
-                  // Icon(
-                  //   Icons.shopping_bag_sharp,
-                  //   color: green[500],
-                  //   size: 90.0,
-                  // ),
+                  Icon(
+                    Icons.add_shopping_cart,
+                    color: blue,
+                    size: 90.0,
+                  ),
                   Text(
-                    '',
+                    'Product Management',
                     style: TextStyle(
                         color: Colors.black, fontWeight: FontWeight.bold),
                   ),
@@ -272,10 +275,85 @@ class InventoryMenu extends StatelessWidget {
             ),
           ),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => AboutSherSoft()),
-            );
+            Navigator.pushNamed(context, '/ProductManagement');
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: const [
+                  Icon(
+                    Icons.car_repair_rounded,
+                    color: blueAccent,
+                    size: 90.0,
+                  ),
+                  Text(
+                    'Alignment Entry',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            Navigator.pushNamed(context, '/AlignmentEntry');
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: const [
+                  Icon(
+                    Icons.miscellaneous_services_rounded,
+                    color: green,
+                    size: 90.0,
+                  ),
+                  Text(
+                    'Service Entry',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            Navigator.pushNamed(context, '/ServiceEntry');
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: const [
+                  Icon(
+                    Icons.add_task,
+                    color: red,
+                    size: 90.0,
+                  ),
+                  Text(
+                    'Stock Management',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            Navigator.pushNamed(context, '/StockManagement');
           },
         ),
         GestureDetector(
@@ -287,8 +365,8 @@ class InventoryMenu extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: const [
                   // Icon(
-                  //   Icons.shopping_bag_sharp,
-                  //   color: green[500],
+                  //   Icons.miscellaneous_services_rounded,
+                  //   color: green,
                   //   size: 90.0,
                   // ),
                   Text(
@@ -301,39 +379,7 @@ class InventoryMenu extends StatelessWidget {
             ),
           ),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => AboutSherSoft()),
-            );
-          },
-        ),
-        GestureDetector(
-          child: Card(
-            elevation: 5.0,
-            child: Container(
-              padding: const EdgeInsets.all(0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: const [
-                  // Icon(
-                  //   Icons.shopping_bag_sharp,
-                  //   color: green[500],
-                  //   size: 90.0,
-                  // ),
-                  Text(
-                    '',
-                    style: TextStyle(
-                        color: Colors.black, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => AboutSherSoft()),
-            );
+            //
           },
         ),
       ],

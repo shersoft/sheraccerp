@@ -208,8 +208,10 @@ class _CartPageState extends State<CartPage> {
                   });
                 },
                 controller: _controller,
-                decoration: const InputDecoration(hintText: "value"),
-                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                    border: OutlineInputBorder(), label: Text("value")),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter(RegExp(r'[0-9]'),
                       allow: true, replacementString: '.')

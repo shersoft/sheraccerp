@@ -1,6 +1,5 @@
 // @dart = 2.11
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -56,10 +55,11 @@ Future<ApiResponse> getFirmList(String customerCode) async {
 
   SharedPreferences pref = await SharedPreferences.getInstance();
   try {
-    final response = await dio.get(pref
-            .getString('api' ?? '127.0.0.1:80/api/') +
-        apiV +
-        'company/getFirmList/${Uri.encodeComponent(customerCode).toString()}');
+    final response = await dio.get(
+        pref.getString('api' ?? '127.0.0.1:80/api/') +
+            apiV +
+            'companyGetFirmList',
+        queryParameters: {'customerCode': customerCode});
 
     switch (response.statusCode) {
       case 200:
@@ -96,10 +96,9 @@ Future<ApiResponse> authenticateCompany(
 
   SharedPreferences pref = await SharedPreferences.getInstance();
   try {
-    final response = await dio.get(pref
-            .getString('api' ?? '127.0.0.1:80/api/') +
-        apiV +
-        'company/Login/${Uri.encodeComponent(username).toString()}/${Uri.encodeComponent(password).toString()}');
+    final response = await dio.get(
+        pref.getString('api' ?? '127.0.0.1:80/api/') + apiV + 'companyLogin',
+        queryParameters: {'username': username, 'password': password});
 
     switch (response.statusCode) {
       case 200:
@@ -136,14 +135,13 @@ Future<ApiResponse> authenticateUser(
     final response = await dio.get(
         pref.getString('api' ?? '127.0.0.1:80/api/') +
             apiV +
-            'companyUser/Login/' +
-            Uri.encodeComponent(username).toString() +
-            '/' +
-            Uri.encodeComponent(password).toString() +
-            '/' +
-            regId +
-            '/' +
-            Uri.encodeComponent(deviceId).toString());
+            'companyUserLogin',
+        queryParameters: {
+          'username': username,
+          'password': password,
+          'regId': regId,
+          'deviceId': deviceId
+        });
 
     switch (response.statusCode) {
       case 200:
@@ -182,7 +180,7 @@ Future<ApiResponse> createUser(
 
   try {
     final response = await dio.post(
-        pref.getString('api' ?? '127.0.0.1:80/api/') + '' + 'companyUser/add',
+        pref.getString('api' ?? '127.0.0.1:80/api/') + apiV + 'companyUser/add',
         data: json.encode({
           'registrationId': regId,
           'username': username,
@@ -198,27 +196,23 @@ Future<ApiResponse> createUser(
         _apiResponse.Data = null;
         break;
       case 201:
-        List<dynamic> output = response.data;
-        var output1 = output[0];
-        if (output1[0]['error'].toString() == 'Saved') {
+        var output = response.data;
+        if (output['error'].toString() == 'Saved') {
           _apiResponse.Data = null;
         } else {
-          List<dynamic> output = response.data;
-          var output1 = output[0];
-          Map<dynamic, dynamic> responseBody = output1[0];
+          var output = response.data;
+          Map<dynamic, dynamic> responseBody = output;
           _apiResponse.ApiError = ApiError.fromJson(responseBody);
         }
         break;
       case 401:
-        List<dynamic> output = response.data;
-        var output1 = output[0];
-        Map<dynamic, dynamic> responseBody = output1[0];
+        var output = response.data;
+        Map<dynamic, dynamic> responseBody = output;
         _apiResponse.ApiError = ApiError.fromJson(responseBody);
         break;
       default:
-        List<dynamic> output = response.data;
-        var output1 = output[0];
-        Map<dynamic, dynamic> responseBody = output1[0];
+        var output = response.data;
+        Map<dynamic, dynamic> responseBody = output;
         _apiResponse.ApiError = ApiError.fromJson(responseBody);
         break;
     }

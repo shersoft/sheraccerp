@@ -33,6 +33,15 @@ class LedgerModel {
   String toString() => name;
 }
 
+List<LedgerModel> ledgerUserFilterCreation(
+    List<LedgerModel> data, String filter) {
+  List<LedgerModel> result = [];
+  var ledgerModel = data.where(
+      (element) => element.name.toLowerCase().contains(filter.toLowerCase()));
+  result.addAll(ledgerModel);
+  return result;
+}
+
 List<LedgersModel> ledgersModelFromJson(String str) => List<LedgersModel>.from(
     json.decode(str).map((x) => LedgersModel.fromJson(x)));
 

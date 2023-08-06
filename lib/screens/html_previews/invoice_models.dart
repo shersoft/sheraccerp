@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:sheraccerp/screens/html_previews/web_view.dart';
 import 'package:sheraccerp/util/res_color.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 class InvoiceModels extends StatefulWidget {
   const InvoiceModels({Key? key}) : super(key: key);
@@ -71,7 +71,7 @@ class _InvoiceModelsState extends State<InvoiceModels> {
         key: _globalKey,
         child: WebView(
             initialUrl: '',
-            javascriptMode: JavascriptMode.unrestricted,
+            // javascriptMode: JavascriptMode.unrestricted,
             onWebViewCreated: (contr) {
               contr.loadUrl(Uri.dataFromString(dataHtml,
                       mimeType: 'text/html', encoding: utf8)
@@ -580,7 +580,7 @@ pdf2htmlEX.defaultViewer = new pdf2htmlEX.Viewer({});
         key: _globalKey,
         child: WebView(
             initialUrl: '',
-            javascriptMode: JavascriptMode.unrestricted,
+            // javascriptMode: JavascriptMode.unrestricted,
             onWebViewCreated: (contr) {
               contr.loadUrl(Uri.dataFromString(dataHtml,
                       mimeType: 'text/html', encoding: utf8)

@@ -3,9 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:csv/csv.dart';
+import 'dart:html' as html;
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
@@ -15,7 +18,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:share/share.dart';
-import 'package:sheraccerp/widget/pdf_screen.dart';
+// import 'dart:html' as html;
 
 import 'package:sheraccerp/widget/loading.dart';
 
@@ -31,12 +34,17 @@ class _SalesListState extends State<SalesList> {
   var _data;
   int menuId = 0;
   String toDate;
-  bool loadReport = false, isType = false, classic = true, newMode = false;
+  bool loadReport = false,
+      stockValuation = false,
+      isType = false,
+      classic = true,
+      newMode = false;
   DateTime now = DateTime.now();
   DioService api = DioService();
   var itemId,
       itemName,
       customer,
+      supplier,
       mfr,
       category,
       subCategory,
@@ -66,9 +74,26 @@ class _SalesListState extends State<SalesList> {
     TypeItem(15, 'Replace P&L ItemWise'),
     TypeItem(16, 'Simple P&l Report'),
     TypeItem(17, 'Scheme Report'),
-    TypeItem(18, 'ItemWise Monthly')
+    TypeItem(18, 'ItemWise Monthly'),
+    TypeItem(19, 'P&L ItemWise New'),
+    TypeItem(20, 'Customer Address'),
+    TypeItem(21, 'Insurance Report'),
+    TypeItem(22, 'Sales Qty Total'),
+    TypeItem(23, 'Group Summery Custom'),
+    TypeItem(24, 'P&L Monthly'),
+    TypeItem(25, 'ItemWise Rate Analysis'),
+    TypeItem(26, 'ItemWise Profit Analysis'),
+    TypeItem(27, 'Sales E-Invoice Report'),
+    TypeItem(28, 'Month Wise Item Summery'),
+    TypeItem(29, 'Supplier Wise Sales Total'),
+    TypeItem(30, 'Sales ItemWise Customer Grouping'),
+    TypeItem(31, 'Sales Summery DC'),
+    TypeItem(32, 'Sales Monthly'),
+    TypeItem(33, 'DeliveryNote Summery')
   ];
   int valueType = 1;
+  String area = '0', route = '0';
+  dynamic areaModel, routeModel;
 
   @override
   void initState() {
@@ -78,7 +103,7 @@ class _SalesListState extends State<SalesList> {
 
     // if (locationList.isNotEmpty) {
     //   dropDownBranchId = locationList
-    //       .where((element) => element.value == 'SHOP')
+    //       .where((element) => element.value == defaultLocation)
     //       .map((e) => e.key)
     //       .first;
     // }
@@ -144,39 +169,12 @@ class _SalesListState extends State<SalesList> {
                   if (menuId == 1) {
                     Future.delayed(const Duration(milliseconds: 1000), () {
                       _createPDF(title + ' Date :' + fromDate + ' - ' + toDate)
-                          .then((value) =>
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (_) => PDFScreen(
-                                        pathPDF: value,
-                                        subject: title +
-                                            ' Date :' +
-                                            fromDate +
-                                            ' - ' +
-                                            toDate,
-                                        text: 'this is ' +
-                                            title +
-                                            ' Date :' +
-                                            fromDate +
-                                            ' - ' +
-                                            toDate,
-                                      ))));
+                          .then((value) => null);
                     });
                   } else if (menuId == 2) {
                     Future.delayed(const Duration(milliseconds: 1000), () {
                       _createCSV(title + ' Date :' + fromDate + ' - ' + toDate)
-                          .then((value) {
-                        var text = 'this is ' +
-                            title +
-                            ' Date :' +
-                            fromDate +
-                            ' - ' +
-                            toDate;
-                        var subject =
-                            title + ' Date :' + fromDate + ' - ' + toDate;
-                        List<String> paths = [];
-                        paths.add(value);
-                        urlFileShare(context, text, subject, paths);
-                      });
+                          .then((value) {});
                     });
                   }
                 });
@@ -260,6 +258,9 @@ class _SalesListState extends State<SalesList> {
           locationData.add({'id': data.key});
         }
       }
+      String areaId = area.isNotEmpty ? area : '0';
+      String routeId = route.isNotEmpty ? route : '0';
+
       var dataJson = '[' +
           json.encode({
             'statementType': statementType.isEmpty ? '' : statementType,
@@ -271,13 +272,39 @@ class _SalesListState extends State<SalesList> {
             'category': category != null ? category.id : '0',
             'subcategory': subCategory != null ? subCategory.id : '0',
             'location': locationId != null
-                ? jsonEncode({'id': locationId.id})
+                ? jsonEncode([
+                    {'id': locationId.id}
+                  ])
                 : jsonEncode(locationData),
             'project': project != null ? project.id : '0',
             'salesman': salesMan != null ? salesMan.id : '0',
             'salesType': dataSType != null
                 ? jsonEncode(dataSType)
-                : jsonEncode({'id': 0})
+                : jsonEncode([
+                    {'id': 0}
+                  ]),
+            'toName': '',
+            'taxGroup': taxGroup != null ? taxGroup.id : '0',
+            'groupId': '0',
+            'areaId': areaId,
+            'type': '0',
+            'hsnCode': '',
+            'cashSale': '0',
+            'creditSales': '0',
+            'rateType': stockValuation ? 'RPRate' : 'PRate',
+            'serialNo': '',
+            'supplierId': supplier != null ? supplier.id : '0',
+            'srCheck': '0',
+            'serviceCheck': '0',
+            'expenseCheck': '0',
+            'counterNo': '',
+            'cardNo': '',
+            'salesman2': '0',
+            'typeOfSupply': 'ALL',
+            'barcode': '0',
+            'userId': '0',
+            'hsn': '',
+            'supLed': '0',
           }) +
           ']';
 
@@ -287,8 +314,62 @@ class _SalesListState extends State<SalesList> {
           if (snapshot.hasData) {
             if (snapshot.data.isNotEmpty) {
               var data = snapshot.data;
-              _data = data;
               var col = data[0].keys.toList();
+              if (classic && statementType != 'P_l_ItemWise_New') {
+                Map<String, dynamic> totalData = {};
+                for (int i = 0; i < col.length; i++) {
+                  var cell = '';
+                  if (col[i].toLowerCase() == ('discount') ||
+                      col[i].toLowerCase() == ('grossvalue') ||
+                      col[i].toLowerCase() == ('cgst') ||
+                      col[i].toLowerCase() == ('sgst') ||
+                      col[i].toLowerCase() == ('igst') ||
+                      col[i].toLowerCase() == ('netamount') ||
+                      col[i].toLowerCase() == ('cess') ||
+                      col[i].toLowerCase() == ('tcs') ||
+                      col[i].toLowerCase() == ('othercharges') ||
+                      col[i].toLowerCase() == ('otherdiscount') ||
+                      col[i].toLowerCase() == ('loadingcharge') ||
+                      col[i].toLowerCase() == ('roundoff') ||
+                      col[i].toLowerCase() == ('grandtotal') ||
+                      col[i].toLowerCase() == ('creditsales') ||
+                      col[i].toLowerCase() == ('cashsales') ||
+                      col[i].toLowerCase() == ('bankamount') ||
+                      col[i].toLowerCase() == ('qty') ||
+                      col[i].toLowerCase() == ('free') ||
+                      col[i].toLowerCase() == ('freeqty') ||
+                      col[i].toLowerCase() == ('rate') ||
+                      col[i].toLowerCase() == ('prate') ||
+                      col[i].toLowerCase() == ('srate') ||
+                      col[i].toLowerCase() == ('profit') ||
+                      col[i].toLowerCase() == ('total') ||
+                      col[i].toLowerCase() == ('labourcharge') ||
+                      col[i].toLowerCase() == ('returnamount') ||
+                      col[i].toLowerCase() == ('balance')) {
+                    cell = data
+                        .fold(
+                            0.0,
+                            (a, b) =>
+                                a +
+                                (b[col[i]] != null
+                                    ? b[col[i]] == ''
+                                        ? 0
+                                        : double.parse(b[col[i]].toString())
+                                    : 0))
+                        .toStringAsFixed(2);
+                  }
+                  if (i == 0) {
+                    cell = 'Total';
+                  }
+                  totalData[col[i]] = cell;
+                }
+                if (totalData.isNotEmpty) {
+                  data.add(totalData);
+                }
+                _data = data;
+              } else {
+                _data = data;
+              }
               return classic
                   ? Padding(
                       padding: const EdgeInsets.all(5.0),
@@ -310,9 +391,12 @@ class _SalesListState extends State<SalesList> {
                             SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
                               child: DataTable(
+                                headingRowColor: MaterialStateColor.resolveWith(
+                                    (states) => Colors.grey.shade200),
+                                border: TableBorder.all(
+                                    width: 1.0, color: Colors.black),
                                 columnSpacing: 12,
                                 dataRowHeight: 20,
-                                dividerThickness: 1,
                                 headingRowHeight: 30,
                                 columns: [
                                   for (int i = 0; i < col.length; i++)
@@ -929,21 +1013,23 @@ class _SalesListState extends State<SalesList> {
                   ),
                   onTap: () {
                     int _id =
-                        int.tryParse(dataDisplay[index]['SType'].toString());
-                    var _type = salesTypeDataList
+                        int.tryParse(dataDisplay[index]['Type'].toString());
+                    SalesType sData = salesTypeDataList
                         .where((element) => element.id == _id)
-                        .map((e) => e.type)
                         .first;
-
                     salesTypeData = SalesType(
-                        id: _id,
-                        accounts: true,
-                        location: locationId != null ? locationId.id : 0,
-                        name: '',
-                        rateType: '',
-                        stock: true,
-                        type: _type);
-                    showDetials(context, dataDisplay[index], _id);
+                        id: sData.id,
+                        accounts: sData.accounts,
+                        location:
+                            locationId != null ? locationId.id : sData.location,
+                        name: sData.name,
+                        rateType: sData.rateType,
+                        stock: sData.stock,
+                        type: sData.type,
+                        eInvoice: sData.eInvoice,
+                        sColor: sData.sColor,
+                        tax: sData.tax);
+                    showDetails(context, dataDisplay[index], _id);
                   },
                 );
               }
@@ -955,7 +1041,7 @@ class _SalesListState extends State<SalesList> {
     );
   }
 
-  showDetials(context, data, sType) {
+  showDetails(context, data, sType) {
     dataDynamic = [
       {
         'RealEntryNo': int.tryParse(data['Invoice']),
@@ -1030,8 +1116,8 @@ class _SalesListState extends State<SalesList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/location'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Branch'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), labelText: 'Select Branch'),
                 onChanged: (dynamic data) {
                   locationId = data;
                 },
@@ -1075,12 +1161,29 @@ class _SalesListState extends State<SalesList> {
                 ),
               ),
               const Divider(),
+              Container(
+                decoration:
+                    BoxDecoration(border: Border.all(width: 0.3, color: black)),
+                child: Row(children: [
+                  const Text('Stock Valuation Last P-Rate'),
+                  Checkbox(
+                    value: stockValuation,
+                    onChanged: (value) {
+                      setState(() {
+                        stockValuation = value;
+                      });
+                    },
+                  )
+                ]),
+              ),
+              const Divider(),
               DropdownSearch<dynamic>(
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/ItemCode'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: 'Select Item Code'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Select Item Code'),
                 onChanged: (dynamic data) {
                   itemId = data;
                 },
@@ -1091,8 +1194,9 @@ class _SalesListState extends State<SalesList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/itemName'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Item Name"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: "Select Item Name"),
                 onChanged: (dynamic data) {
                   itemName = data;
                 },
@@ -1103,8 +1207,8 @@ class _SalesListState extends State<SalesList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/customer'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Customer"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), labelText: "Select Customer"),
                 onChanged: (dynamic data) {
                   customer = data;
                 },
@@ -1115,8 +1219,8 @@ class _SalesListState extends State<SalesList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/manufacture'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Item MFR"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), labelText: "Select Item MFR"),
                 onChanged: (dynamic data) {
                   mfr = data;
                 },
@@ -1127,8 +1231,8 @@ class _SalesListState extends State<SalesList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/category'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Category"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), labelText: "Select Category"),
                 onChanged: (dynamic data) {
                   category = data;
                 },
@@ -1139,8 +1243,9 @@ class _SalesListState extends State<SalesList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/subCategory'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select SubCategory"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: "Select SubCategory"),
                 onChanged: (dynamic data) {
                   subCategory = data;
                 },
@@ -1151,8 +1256,8 @@ class _SalesListState extends State<SalesList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/salesMan'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select SalesMan"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), labelText: "Select SalesMan"),
                 onChanged: (dynamic data) {
                   salesMan = data;
                 },
@@ -1163,8 +1268,8 @@ class _SalesListState extends State<SalesList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/project'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select Project"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), labelText: "Select Project"),
                 onChanged: (dynamic data) {
                   project = data;
                 },
@@ -1175,12 +1280,74 @@ class _SalesListState extends State<SalesList> {
                 maxHeight: 300,
                 onFind: (String filter) =>
                     api.getSalesListData(filter, 'sales_list/taxGroup'),
-                dropdownSearchDecoration:
-                    const InputDecoration(hintText: "Select TaxGroup"),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), labelText: "Select TaxGroup"),
                 onChanged: (dynamic data) {
                   taxGroup = data;
                 },
                 showSearchBox: true,
+              ),
+              const Divider(),
+              DropdownSearch<dynamic>(
+                maxHeight: 300,
+                onFind: (String filter) =>
+                    api.getSalesListData(filter, 'sales_list/supplier'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), labelText: "Select Supplier"),
+                onChanged: (dynamic data) {
+                  supplier = data;
+                },
+                showSearchBox: true,
+              ),
+              const Divider(),
+              Card(
+                elevation: 5,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    const Text('Select Area'),
+                    DropdownButton<OtherRegistrations>(
+                      icon: const Icon(Icons.keyboard_arrow_down),
+                      items: otherRegAreaList.map((OtherRegistrations items) {
+                        return DropdownMenuItem<OtherRegistrations>(
+                          value: items,
+                          child: Text(items.name),
+                        );
+                      }).toList(),
+                      value: areaModel,
+                      onChanged: (value) {
+                        setState(() {
+                          areaModel = value;
+                          area = value.id.toString();
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              Card(
+                elevation: 5,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    const Text('Select Route'),
+                    DropdownButton<OtherRegistrations>(
+                      icon: const Icon(Icons.keyboard_arrow_down),
+                      items: otherRegRouteList.map((OtherRegistrations items) {
+                        return DropdownMenuItem<OtherRegistrations>(
+                          value: items,
+                          child: Text(items.name),
+                        );
+                      }).toList(),
+                      value: routeModel,
+                      onChanged: (value) {
+                        routeModel = value;
+                        route = value.id.toString();
+                      },
+                    ),
+                  ],
+                ),
               ),
               const Divider(),
               salesTypeDataList.isNotEmpty
@@ -1248,7 +1415,7 @@ class _SalesListState extends State<SalesList> {
               pw.Text(title,
                   style: pw.TextStyle(
                       color: const PdfColor.fromInt(0),
-                      fontSize: 25,
+                      // fontSize: 25,
                       fontWeight: pw.FontWeight.bold)),
             ]),
         build: (context) => [
@@ -1439,10 +1606,31 @@ class _SalesListState extends State<SalesList> {
   }
 
   Future<String> savePreviewPDF(pw.Document pdf, var title) async {
-    var output = await getTemporaryDirectory();
-    final file = File('${output.path}/' + title + '.pdf');
-    await file.writeAsBytes(await pdf.save());
-    return file.path.toString();
+    title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
+    if (kIsWeb) {
+      try {
+        final bytes = await pdf.save();
+        final blob = html.Blob([bytes], 'application/pdf');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement()
+          ..href = url
+          ..style.display = 'none'
+          ..download = '$title.pdf';
+        html.document.body.children.add(anchor);
+        anchor.click();
+        html.document.body.children.remove(anchor);
+        html.Url.revokeObjectUrl(url);
+        return '';
+      } catch (ex) {
+        ex.toString();
+      }
+      return '';
+    } else {
+      var output = await getTemporaryDirectory();
+      final file = File('${output.path}/' + title + '.pdf');
+      await file.writeAsBytes(await pdf.save());
+      return file.path.toString();
+    }
   }
 
   Future<String> _createCSV(String title) async {
@@ -1463,7 +1651,9 @@ class _SalesListState extends State<SalesList> {
     for (var i = 0; i < dataList.length; i++) {
       List<dynamic> row1 = [];
       for (var columnName in col) {
-        row1.add(dataList[i][columnName].toString());
+        row1.add(dataList[i][columnName] != null
+            ? dataList[i][columnName].toString()
+            : '');
       }
       rows.add(row1);
     }
@@ -1471,20 +1661,25 @@ class _SalesListState extends State<SalesList> {
   }
 
   Future<String> savePreviewCSV(var csv, var title) async {
-    var output = await getTemporaryDirectory();
-    final file = File('${output.path}/' + title + '.csv');
-    await file.writeAsString(csv);
-    return file.path.toString();
-  }
-
-  Future<void> urlFileShare(
-      BuildContext context, String text, String subject, var paths) async {
-    final RenderBox box = context.findRenderObject() as RenderBox;
-    if (paths.isNotEmpty) {
-      await Share.shareFiles(paths,
-          text: text,
-          subject: subject,
-          sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
+    title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
+    if (kIsWeb) {
+      try {
+        html.AnchorElement()
+          ..href =
+              '${Uri.dataFromString(csv, mimeType: 'text/csv', encoding: utf8)}'
+          ..download = title
+          ..style.display = 'none'
+          ..click();
+        return '';
+      } catch (ex) {
+        ex.toString();
+      }
+      return '';
+    } else {
+      var output = await getTemporaryDirectory();
+      final file = File('${output.path}/' + title + '.csv');
+      await file.writeAsString(csv);
+      return file.path.toString();
     }
   }
 }
