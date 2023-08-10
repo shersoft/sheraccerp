@@ -248,6 +248,39 @@ class DioService {
     return ret;
   }
 
+  Future<bool> renameLedger(var body) async {
+    bool ret = false;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Ledger/rename/$dataBase',
+          queryParameters: body,
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        if (response.data.toString() == "1") {
+          ret = true;
+        } else {
+          ret = false;
+        }
+      } else {
+        ret = false;
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
   Future<bool> spLedgerAdd(data) async {
     bool ret = false;
     SharedPreferences pref = await SharedPreferences.getInstance();

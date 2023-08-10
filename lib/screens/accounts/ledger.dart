@@ -258,7 +258,6 @@ class _LedgerState extends State<Ledger> {
     api.findLedger(id).then((value) {
       var data = value[0][0];
       List dataTransaction = value[1];
-      debugPrint('${data}');
       setState(() {
         _nameCtr.text = data['LedName'] ?? '';
         _add1Ctr.text = data['add1'] ?? '';
@@ -425,6 +424,26 @@ class _LedgerState extends State<Ledger> {
                     }
                   : null,
               child: const Text('Delete'),
+            ),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.settings, color: blue),
+              onSelected: (value) {
+                // Handle menu item selection
+                setState(() {
+                  // Perform actions based on the selected value
+                  if (value == 'ReName Ledger') {
+                    if (lName.isNotEmpty) {
+                      _reNameLedgerDialog(context);
+                    }
+                  }
+                });
+              },
+              itemBuilder: (BuildContext context) => [
+                const PopupMenuItem<String>(
+                  value: 'ReName Ledger',
+                  child: Text('ReName Ledger'),
+                ),
+              ],
             ),
           ]),
         ),
@@ -797,7 +816,7 @@ class _LedgerState extends State<Ledger> {
                                 ),
                               );
                             }).toList(),
-                            value: salesManId.toString(),
+                            // value: salesManId.toString(),
                             onChanged: (value) {
                               setState(() {
                                 salesManId = int.parse(value);
@@ -963,4 +982,83 @@ class _LedgerState extends State<Ledger> {
   }
 
   clear() {}
+
+  final TextEditingController _textFieldController = TextEditingController();
+
+  _reNameLedgerDialog(BuildContext context) async {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            'ReName $lName',
+            style: const TextStyle(fontSize: 12),
+          ),
+          content: TextField(
+            controller: _textFieldController,
+            decoration: const InputDecoration(
+                border: OutlineInputBorder(), label: Text("Enter New Name")),
+          ),
+          actions: [
+            TextButton(
+              child: const Text('CANCEL'),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () async {
+                Navigator.pop(context);
+                setState(() {
+                  _isLoading = true;
+                });
+                var body = {
+                  'newName': _textFieldController.text.toUpperCase(),
+                  'oldName': lName.toUpperCase()
+                };
+                bool _state = await api.renameLedger(body);
+                _state
+                    ? showInSnackBar('Ledger Name Renamed')
+                    : showInSnackBar('Error');
+                if (_state) {
+                  _nameCtr.text = _textFieldController.text.toUpperCase();
+                  lName = _textFieldController.text.toUpperCase();
+                  _textFieldController.text = '';
+                }
+                setState(() {
+                  _isLoading = false;
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    // _textFieldController.dispose();
+    // _panCtr.dispose();
+    // _pinCtr.dispose();
+    // _add1Ctr.dispose();
+    // _add2Ctr.dispose();
+    // _add3Ctr.dispose();
+    // _add4Ctr.dispose();
+    // _cityCtr.dispose();
+    // _nameCtr.dispose();
+    // _emailCtr.dispose();
+    // _routeCtr.dispose();
+    // _taxNoCtr.dispose();
+    // _personCtr.dispose();
+    // _creditAmtCtr.dispose();
+    // _creditDaysCtr.dispose();
+    // _debitAmountCtr.dispose();
+    // _phoneNumberCtr.dispose();
+    // _secondNameCtr.dispose();
+    // _taxNoCtr.dispose();
+
+    super.dispose();
+  }
 }
