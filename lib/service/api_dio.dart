@@ -268,7 +268,7 @@ class DioService {
         if (response.data.toString() == "1") {
           ret = true;
         } else {
-          ret = false;
+          ret = false; //
         }
       } else {
         ret = false;

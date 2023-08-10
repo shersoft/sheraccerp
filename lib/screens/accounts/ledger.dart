@@ -1011,7 +1011,7 @@ class _LedgerState extends State<Ledger> {
               onPressed: () async {
                 Navigator.pop(context);
                 setState(() {
-                  _isLoading = true;
+                  _isLoading = true; //
                 });
                 var body = {
                   'newName': _textFieldController.text.toUpperCase(),

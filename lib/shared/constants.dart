@@ -35,7 +35,7 @@ bool isUsingHive = true;
 String deviceId = '0';
 const String isApp = '1';
 
-const String apiV = 'v19/';
+const String apiV = 'v18/';
 const currencySymbol = '₹';
 // const bool isVariant = false;
 const bool isKFC = false;
