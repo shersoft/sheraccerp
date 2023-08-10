@@ -39,6 +39,7 @@ class _SalesListState extends State<SalesList> {
       isType = false,
       classic = true,
       newMode = false;
+  List<String> tableColumn = [];
   DateTime now = DateTime.now();
   DioService api = DioService();
   var itemId,
@@ -397,6 +398,7 @@ class _SalesListState extends State<SalesList> {
               } else {
                 _data = data;
               }
+              tableColumn = data[0].keys.toList();
               return classic
                   ? Padding(
                       padding: const EdgeInsets.all(5.0),
@@ -1422,18 +1424,19 @@ class _SalesListState extends State<SalesList> {
   }
 
   Future<pw.Document> makePDF(String title) async {
-    var tableHeaders = [
-      "Date",
-      "Particulars",
-      "Voucher",
-      "EntryNo",
-      "Debit",
-      "Credit",
-      "Balance",
-      "Narration"
-    ];
+    // var tableHeaders = [
+    //   "Date",
+    //   "Particulars",
+    //   "Voucher",
+    //   "EntryNo",
+    //   "Debit",
+    //   "Credit",
+    //   "Balance",
+    //   "Narration"
+    // ];
 
     var data = _data;
+
     final pw.Document pdf = pw.Document();
     pdf.addPage(pw.MultiPage(
         // pageFormat: PdfPageFormat.a4,
@@ -1450,161 +1453,31 @@ class _SalesListState extends State<SalesList> {
                 border: pw.TableBorder.all(width: 0.2),
                 children: [
                   pw.TableRow(children: [
-                    pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.center,
-                        mainAxisAlignment: pw.MainAxisAlignment.center,
-                        children: [
-                          pw.Text(tableHeaders[0],
-                              style: const pw.TextStyle(fontSize: 6)),
-                          // pw.Divider(thickness: 1)
-                        ]),
-                    pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.center,
-                        mainAxisAlignment: pw.MainAxisAlignment.center,
-                        children: [
-                          pw.Text(tableHeaders[1],
-                              style: const pw.TextStyle(fontSize: 6)),
-                          // pw.Divider(thickness: 1)
-                        ]),
-                    pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.center,
-                        mainAxisAlignment: pw.MainAxisAlignment.center,
-                        children: [
-                          pw.Text(tableHeaders[2],
-                              style: const pw.TextStyle(fontSize: 6)),
-                          // pw.Divider(thickness: 1)
-                        ]),
-                    pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.center,
-                        mainAxisAlignment: pw.MainAxisAlignment.center,
-                        children: [
-                          pw.Text(tableHeaders[3],
-                              style: const pw.TextStyle(fontSize: 6)),
-                          // pw.Divider(thickness: 1)
-                        ]),
-                    pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.center,
-                        mainAxisAlignment: pw.MainAxisAlignment.center,
-                        children: [
-                          pw.Text(tableHeaders[4],
-                              style: const pw.TextStyle(fontSize: 6)),
-                          // pw.Divider(thickness: 1)
-                        ]),
-                    pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.center,
-                        mainAxisAlignment: pw.MainAxisAlignment.center,
-                        children: [
-                          pw.Text(tableHeaders[5],
-                              style: const pw.TextStyle(fontSize: 6)),
-                          // pw.Divider(thickness: 1)
-                        ]),
-                    pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.center,
-                        mainAxisAlignment: pw.MainAxisAlignment.center,
-                        children: [
-                          pw.Text(tableHeaders[6],
-                              style: const pw.TextStyle(fontSize: 6)),
-                          // pw.Divider(thickness: 1)
-                        ]),
-                    pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.center,
-                        mainAxisAlignment: pw.MainAxisAlignment.center,
-                        children: [
-                          pw.Text(tableHeaders[7],
-                              style: const pw.TextStyle(fontSize: 6)),
-                          // pw.Divider(thickness: 1)
-                        ]),
+                    for (int k = 0; k < tableColumn.length; k++)
+                      pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.center,
+                          mainAxisAlignment: pw.MainAxisAlignment.center,
+                          children: [
+                            pw.Text(tableColumn[k],
+                                style: const pw.TextStyle(fontSize: 6)),
+                            // pw.Divider(thickness: 1)
+                          ]),
                   ]),
                   for (var i = 0; i < data.length; i++)
                     pw.TableRow(children: [
-                      pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          mainAxisAlignment: pw.MainAxisAlignment.center,
-                          children: [
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(2.0),
-                              child: pw.Text(data[i]['Date'],
-                                  style: const pw.TextStyle(fontSize: 6)),
-                              // pw.Divider(thickness: 1)
-                            ),
-                          ]),
-                      pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          mainAxisAlignment: pw.MainAxisAlignment.center,
-                          children: [
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(2.0),
-                              child: pw.Text(data[i]['Particulars'],
-                                  style: const pw.TextStyle(fontSize: 6)),
-                              // pw.Divider(thickness: 1)
-                            ),
-                          ]),
-                      pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          mainAxisAlignment: pw.MainAxisAlignment.center,
-                          children: [
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(2.0),
-                              child: pw.Text('${data[i]['Voucher']}',
-                                  style: const pw.TextStyle(fontSize: 6)),
-                              // pw.Divider(thickness: 1)
-                            )
-                          ]),
-                      pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.end,
-                          mainAxisAlignment: pw.MainAxisAlignment.center,
-                          children: [
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(2.0),
-                              child: pw.Text('${data[i]['EntryNo']}',
-                                  style: const pw.TextStyle(fontSize: 6)),
-                              // pw.Divider(thickness: 1)
-                            )
-                          ]),
-                      pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.end,
-                          mainAxisAlignment: pw.MainAxisAlignment.center,
-                          children: [
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(2.0),
-                              child: pw.Text('${data[i]['Debit']}',
-                                  style: const pw.TextStyle(fontSize: 6)),
-                              // pw.Divider(thickness: 1)
-                            )
-                          ]),
-                      pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.end,
-                          mainAxisAlignment: pw.MainAxisAlignment.center,
-                          children: [
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(2.0),
-                              child: pw.Text('${data[i]['Credit']}',
-                                  style: const pw.TextStyle(fontSize: 6)),
-                              // pw.Divider(thickness: 1)
-                            )
-                          ]),
-                      pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.end,
-                          mainAxisAlignment: pw.MainAxisAlignment.center,
-                          children: [
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(2.0),
-                              child: pw.Text('${data[i]['Balance']}',
-                                  style: const pw.TextStyle(fontSize: 6)),
-                              // pw.Divider(thickness: 1)
-                            )
-                          ]),
-                      pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          mainAxisAlignment: pw.MainAxisAlignment.center,
-                          children: [
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(2.0),
-                              child: pw.Text('${data[i]['Narration']}',
-                                  style: const pw.TextStyle(fontSize: 6)),
-                              // pw.Divider(thickness: 1)
-                            )
-                          ]),
+                      for (int l = 0; l < tableColumn.length; l++)
+                        pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            mainAxisAlignment: pw.MainAxisAlignment.center,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                    data[i][tableColumn[l]].toString() ?? '',
+                                    style: const pw.TextStyle(fontSize: 6)),
+                                // pw.Divider(thickness: 1)
+                              ),
+                            ]),
                     ])
                 ],
               ),
@@ -1615,7 +1488,6 @@ class _SalesListState extends State<SalesList> {
   }
 
   pw.Widget _buildFooter(pw.Context context) {
-    debugPrint('Page ${context.pageNumber}/${context.pagesCount}');
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       crossAxisAlignment: pw.CrossAxisAlignment.end,
