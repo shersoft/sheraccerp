@@ -48,7 +48,8 @@ class _RPVoucherState extends State<RPVoucher> {
       valueMore = false,
       widgetID = true,
       lastRecord = false,
-      buttonEvent = false;
+      buttonEvent = false,
+      isMultiRvPv = false;
   int refNo = 0, acId = 0;
   int page = 1, pageTotal = 0, totalRecords = 0;
   int locationId = 1,
@@ -98,6 +99,7 @@ class _RPVoucherState extends State<RPVoucher> {
     decimal = ComSettings.getValue('DECIMAL', settings).toString().isNotEmpty
         ? int.tryParse(ComSettings.getValue('DECIMAL', settings).toString())
         : 2;
+    isMultiRvPv = ComSettings.getStatus('KEY MULTI RV-PV', settings);
     groupId =
         ComSettings.appSettings('int', 'key-dropdown-default-group-view', 0) -
             1;
@@ -227,193 +229,9 @@ class _RPVoucherState extends State<RPVoucher> {
     return Container(
       padding: const EdgeInsets.all(6.0),
       child: SingleChildScrollView(
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                const Text(
-                  'Date : ',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                InkWell(
-                  child: Text(
-                    formattedDate,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 18),
-                  ),
-                  onTap: () => _selectDate(),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                const Text('Cash Account',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                widgetAccount(),
-              ],
-            ),
-            Card(
-              elevation: 5,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      var under = mode == 'Payment' ? 'SUPPLIERS' : 'CUSTOMERS';
-                      Navigator.pushNamed(context, '/ledger',
-                          arguments: {'parent': under});
-                    },
-                    child: const Text('Add new ledger'),
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.add_circle,
-                      color: kPrimaryColor,
-                    ),
-                    onPressed: () {
-                      var under = mode == 'Payment' ? 'SUPPLIERS' : 'CUSTOMERS';
-                      Navigator.pushNamed(context, '/ledger',
-                          arguments: {'parent': under});
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const Divider(),
-            DropdownSearch<LedgerModel>(
-              maxHeight: 300,
-              onFind: (String filter) async {
-                nameLike = filter.isNotEmpty ? filter : 'a';
-                var models = api.getCustomerNameListLike(
-                    groupId, areaId, routeId, salesManId, nameLike);
-                return models;
-              },
-              isFilteredOnline: true,
-              dropdownSearchDecoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: "Select Ledger Name"),
-              onChanged: (LedgerModel data) {
-                // print(data);
-                ledData = data;
-                setState(() {
-                  isSelected = true;
-                });
-              },
-              showSearchBox: true,
-              selectedItem: ledData,
-            ),
-            const Divider(),
-            isSelected
-                ? ledgerDetailWidget(ledData.id)
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      Expanded(
-                          child: Text(
-                        'Balance : 0',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      )),
-                    ],
-                  ),
-            const Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controllerAmount,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter(RegExp(r'[0-9]'),
-                          allow: true, replacementString: '.')
-                    ],
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      label: Text('Amount'),
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        amount = value != null
-                            ? value.trim().isNotEmpty
-                                ? double.tryParse(value)
-                                : 0
-                            : 0;
-                        calculate(mode);
-                      });
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controllerDiscount,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter(RegExp(r'[0-9]'),
-                          allow: true, replacementString: '.')
-                    ],
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      label: Text('Discount'),
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        discount = value != null
-                            ? value.trim().isNotEmpty
-                                ? double.tryParse(value)
-                                : 0
-                            : 0;
-                        calculate(mode);
-                      });
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                    child: Text(
-                  'Total : ${total.toStringAsFixed(0)}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                )),
-              ],
-            ),
-            const Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controllerNarration,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      label: Text('Narration'),
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        narration = value;
-                      });
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const Divider(),
-            // mode == 'Payment' ? paymentVoucher() : receiptVoucher(),
-          ],
-        ),
+        child:
+            isMultiRvPv ? voucherParticularWidget(mode) : voucherWidget(mode),
+        // mode == 'Payment' ? paymentVoucher() : receiptVoucher(),
       ),
     );
   }
@@ -1025,4 +843,194 @@ class _RPVoucherState extends State<RPVoucher> {
       debugPrint(e.toString());
     }
   }
+
+  voucherWidget(var mode) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            const Text(
+              'Date : ',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            InkWell(
+              child: Text(
+                formattedDate,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              onTap: () => _selectDate(),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            const Text('Cash Account',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            widgetAccount(),
+          ],
+        ),
+        Card(
+          elevation: 5,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(
+                onPressed: () {
+                  var under = mode == 'Payment' ? 'SUPPLIERS' : 'CUSTOMERS';
+                  Navigator.pushNamed(context, '/ledger',
+                      arguments: {'parent': under});
+                },
+                child: const Text('Add new ledger'),
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.add_circle,
+                  color: kPrimaryColor,
+                ),
+                onPressed: () {
+                  var under = mode == 'Payment' ? 'SUPPLIERS' : 'CUSTOMERS';
+                  Navigator.pushNamed(context, '/ledger',
+                      arguments: {'parent': under});
+                },
+              ),
+            ],
+          ),
+        ),
+        const Divider(),
+        DropdownSearch<LedgerModel>(
+          maxHeight: 300,
+          onFind: (String filter) async {
+            nameLike = filter.isNotEmpty ? filter : 'a';
+            var models = api.getCustomerNameListLike(
+                groupId, areaId, routeId, salesManId, nameLike);
+            return models;
+          },
+          isFilteredOnline: true,
+          dropdownSearchDecoration: const InputDecoration(
+              border: OutlineInputBorder(), labelText: "Select Ledger Name"),
+          onChanged: (LedgerModel data) {
+            // print(data);
+            ledData = data;
+            setState(() {
+              isSelected = true;
+            });
+          },
+          showSearchBox: true,
+          selectedItem: ledData,
+        ),
+        const Divider(),
+        isSelected
+            ? ledgerDetailWidget(ledData.id)
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: const [
+                  Expanded(
+                      child: Text(
+                    'Balance : 0',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  )),
+                ],
+              ),
+        const Divider(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _controllerAmount,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                      allow: true, replacementString: '.')
+                ],
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  label: Text('Amount'),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    amount = value != null
+                        ? value.trim().isNotEmpty
+                            ? double.tryParse(value)
+                            : 0
+                        : 0;
+                    calculate(mode);
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
+        const Divider(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _controllerDiscount,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                      allow: true, replacementString: '.')
+                ],
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  label: Text('Discount'),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    discount = value != null
+                        ? value.trim().isNotEmpty
+                            ? double.tryParse(value)
+                            : 0
+                        : 0;
+                    calculate(mode);
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
+        const Divider(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+                child: Text(
+              'Total : ${total.toStringAsFixed(0)}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            )),
+          ],
+        ),
+        const Divider(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _controllerNarration,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  label: Text('Narration'),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    narration = value;
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
+        const Divider(),
+      ],
+    );
+  }
+
+  voucherParticularWidget(mode) {}
 }

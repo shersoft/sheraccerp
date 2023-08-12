@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sheraccerp/models/company.dart';
 
 import 'package:sheraccerp/models/customer_model.dart';
 import 'package:sheraccerp/models/gst_auth_model.dart';
@@ -4281,6 +4282,31 @@ class DioService {
       debugPrint(errorMessage.toString());
       return null;
     }
+  }
+
+  Future<List<CompanySettings>> getSoftwareSettings() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    List<CompanySettings> _settings = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'SoftwareSettings/$dataBase');
+      if (response.statusCode == 200) {
+        for (var data in response.data[0]) {
+          _settings.add(CompanySettings.fromJson1(data));
+        }
+      } else {
+        //
+      }
+    } on DioError {
+      // print(e.message);
+    }
+    return _settings;
   }
 
   Future<bool> companyUpdate(data) async {

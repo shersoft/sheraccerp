@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:sheraccerp/cache_provider.dart';
 import 'package:sheraccerp/landing.dart';
+import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/provider/app_provider.dart';
 import 'package:sheraccerp/provider/ledger_provider.dart';
 import 'package:sheraccerp/provider/product_provider.dart';
@@ -17,6 +18,7 @@ import 'package:sheraccerp/provider/sales_provider.dart';
 import 'package:sheraccerp/provider/stock_provider.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/accounts/journal.dart';
+import 'package:sheraccerp/screens/settings/software_settings.dart';
 import 'package:sheraccerp/screens/html_previews/invoice_models.dart';
 import 'package:sheraccerp/screens/inventory/alignment_entry.dart';
 import 'package:sheraccerp/screens/inventory/bill_list.dart';
@@ -188,6 +190,7 @@ class MyApp extends StatelessWidget {
               '/InvoiceModels': (context) => const InvoiceModels(),
               '/ProductManagement': (context) => ProductManagement(),
               '/journal': (context) => const Journal(),
+              '/settings': (context) => const SoftwareSettings(),
             },
             theme: isDarkTheme
                 ? ThemeData(

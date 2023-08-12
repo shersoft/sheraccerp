@@ -211,10 +211,12 @@ class CompanyInformation {
 }
 
 class CompanySettings {
+  int id;
   String name;
   String value;
   int status;
   CompanySettings({
+    this.id,
     this.name,
     this.value,
     this.status,
@@ -222,6 +224,7 @@ class CompanySettings {
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'name': name,
       'value': value,
       'status': status,
@@ -232,9 +235,19 @@ class CompanySettings {
 
   factory CompanySettings.fromJson(Map<String, dynamic> map) {
     return CompanySettings(
+      id: 0,
       name: map['Name'] ?? '',
       value: map['s_Value'] ?? '',
       status: map['Status']?.toInt() ?? 0,
+    );
+  }
+
+  factory CompanySettings.fromJson1(Map<String, dynamic> map) {
+    return CompanySettings(
+      id: map['auto']?.toInt() ?? 0,
+      name: map['name'] ?? '',
+      value: map['s_Value'] ?? '',
+      status: map['ss_status']?.toInt() ?? 0,
     );
   }
 

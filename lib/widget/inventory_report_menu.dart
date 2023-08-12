@@ -29,7 +29,7 @@ class InventoryReportMenu extends StatelessWidget {
                     size: 90.0,
                   ),
                   const Text(
-                    'Purchase Report',
+                    'Purchase List',
                     style: TextStyle(
                         color: Colors.black, fontWeight: FontWeight.bold),
                   ),
@@ -57,7 +57,7 @@ class InventoryReportMenu extends StatelessWidget {
                     size: 90.0,
                   ),
                   const Text(
-                    'Sales Report',
+                    'Sales List',
                     style: TextStyle(
                         color: Colors.black, fontWeight: FontWeight.bold),
                   ),

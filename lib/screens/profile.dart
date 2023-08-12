@@ -1,7 +1,5 @@
 // @dart = 2.11
-import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -275,46 +273,55 @@ class _ProfileState extends State<Profile> {
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), labelText: 'Name'),
             ),
+            const Divider(),
             TextField(
               controller: _add1C,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), labelText: 'Address 1'),
             ),
+            const Divider(),
             TextField(
               controller: _add2C,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Address 2')),
             ),
+            const Divider(),
             TextField(
               controller: _add3C,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Address 3')),
             ),
+            const Divider(),
             TextField(
               controller: _add4C,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Address 4')),
             ),
+            const Divider(),
             TextField(
               controller: _add5C,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Address 5')),
             ),
+            const Divider(),
             TextField(
               controller: _taxNoC,
               decoration: InputDecoration(
                   border: OutlineInputBorder(), label: Text(_taxNoHint)),
             ),
+            const Divider(),
             TextField(
               controller: _emailC,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Mail Id')),
             ),
+            const Divider(),
             TextField(
               controller: _mobileC,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Mobile No')),
             ),
+            const Divider(),
             Row(
               // mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -342,21 +349,25 @@ class _ProfileState extends State<Profile> {
                 Text(_stateCode),
               ],
             ),
+            const Divider(),
             TextField(
               controller: _pinC,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('PinCode')),
             ),
+            const Divider(),
             TextField(
               controller: _sCurrencyC,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Currency')),
             ),
+            const Divider(),
             TextField(
               controller: _sNameC,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Second Name')),
             ),
+            const Divider(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -378,11 +389,13 @@ class _ProfileState extends State<Profile> {
                 ),
               ],
             ),
+            const Divider(),
             TextField(
               controller: _telephoneC,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Telephone')),
             ),
+            const Divider(),
             TextField(
               controller: _tinC,
               decoration: const InputDecoration(
