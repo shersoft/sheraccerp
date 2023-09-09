@@ -12,6 +12,7 @@ import 'package:sheraccerp/models/company_user.dart';
 import 'package:sheraccerp/models/form_model.dart';
 import 'package:sheraccerp/models/option_rate_type.dart';
 import 'package:sheraccerp/models/other_registrations.dart';
+import 'package:sheraccerp/models/print_settings_model.dart';
 import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/models/unit_model.dart';
 import 'package:sheraccerp/service/api_dio.dart';
@@ -34,6 +35,9 @@ bool isDarkTheme = false;
 bool isUsingHive = true;
 String deviceId = '0';
 const String isApp = '1';
+String _sherSoftPassword = '';
+get sherSoftPassword => _sherSoftPassword;
+set sherSoftPassword(String value) => _sherSoftPassword = value;
 
 const String apiV = 'v19/';
 const currencySymbol = '₹';
@@ -74,6 +78,7 @@ List<OtherRegistrations> otherRegLocationList = [];
 List<OtherRegistrations> otherRegAreaList = [];
 List<OtherRegistrations> otherRegRouteList = [];
 List<OptionRateType> optionRateTypeList = [];
+List<PrintSettingsModel> printSettingsList = [];
 List otherRegSalesManList = [];
 List mainAccount = [];
 List cashAccount = [];
@@ -246,6 +251,13 @@ class ComSettings {
       for (var element in value) {
         groupList.add(
             AppSettingsMap(key: element['ledCode'], value: element['LedName']));
+      }
+    });
+
+    api.getPrintSettings().then((value) {
+      if (value.isNotEmpty) {
+        printSettingsList = [];
+        printSettingsList.addAll(value);
       }
     });
   }
@@ -447,6 +459,18 @@ class ComSettings {
     }
 
     return response;
+  }
+
+  static String removeInvDesignFilePath(String filePath) {
+    List<String> splits = filePath.split('.');
+    return splits[0]
+            .replaceAll('D:', '')
+            .replaceAll(RegExp('[^A-Za-z0-9]'), '.')
+            .replaceAll(".SherAcc.INVOICE.", '')
+            .replaceAll(".", '_')
+            .replaceAll('_SherAcc_Invoice_', '') +
+        '.' +
+        splits[1];
   }
 }
 

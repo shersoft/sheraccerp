@@ -203,7 +203,7 @@ class _LedgerState extends State<Ledger> {
         'obDate': DateUtil.dateDMY2YMD(obDate),
         'credit': crAmount,
         'debit': drAmount,
-        'location': locationId,
+        'location': locationId > 0 ? locationId.toString() : '1',
         'id': ledgerId.isNotEmpty ? ledgerId : 0,
         'pan': _panCtr.text,
         'cDays':
@@ -220,6 +220,7 @@ class _LedgerState extends State<Ledger> {
         'bpr': 0,
       }
     ];
+
     bool result = action == 'edit'
         ? await api.spLedgerEdit(data)
         : await api.spLedgerAdd(data);

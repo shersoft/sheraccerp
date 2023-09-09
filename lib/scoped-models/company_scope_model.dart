@@ -57,6 +57,9 @@ mixin CompanyScopeModel on Model {
         var defL =
             ComSettings.getValue('DEFAULT LOCATION', _settings).toString();
         defaultLocation = defL.isNotEmpty ? defL : defaultLocation;
+        var lockSettings =
+            ComSettings.getValue('KEY LOCK SETTINGS', _settings).toString();
+        sherSoftPassword = lockSettings.isNotEmpty ? lockSettings : '';
         notifyListeners();
       } else {
         _company = null;

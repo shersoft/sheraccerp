@@ -718,8 +718,8 @@ class _ServiceEntryState extends State<ServiceEntry> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(children: [
-                          const SizedBox(
+                        Row(children: const [
+                          SizedBox(
                             width: 40,
                           ),
                         ]),

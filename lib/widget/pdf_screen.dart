@@ -1,6 +1,7 @@
 // @dart = 2.9
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:pdf_viewer_plugin/pdf_viewer_plugin.dart';
 import 'package:share_plus/share_plus.dart';
 // import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
@@ -33,11 +34,15 @@ class PDFScreen extends StatelessWidget {
         );
   }
 
-  Future<void> urlFileShare(
-      BuildContext context, String text, String subject, var paths) async {
+  Future<void> urlFileShare(BuildContext context, String text, String subject,
+      List<String> paths) async {
     final RenderBox box = context.findRenderObject() as RenderBox;
     if (paths.isNotEmpty) {
-      await Share.shareFiles(paths,
+      List<XFile> files = [];
+      for (String value in paths) {
+        files.add(XFile(value));
+      }
+      await Share.shareXFiles(files,
           text: text,
           subject: subject,
           sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);

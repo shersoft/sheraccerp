@@ -75,14 +75,7 @@ class _RPVoucherState extends State<RPVoucher> {
         cashBankACList.addAll(value);
       });
     });
-    acId = mainAccount
-        .firstWhere((element) => element['LedName'] == 'CASH')['LedCode'];
-    acId = ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) -
-                1 >
-            acId
-        ? ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', acId) -
-            1
-        : acId;
+
     loadSettings();
     loadAsset();
   }
@@ -90,6 +83,17 @@ class _RPVoucherState extends State<RPVoucher> {
   loadSettings() {
     companySettings = ScopedModel.of<MainModel>(context).getCompanySettings();
     settings = ScopedModel.of<MainModel>(context).getSettings();
+
+    String cashAc =
+        ComSettings.getValue('CASH A/C', settings).toString().trim() ?? 'CASH';
+    acId = mainAccount
+        .firstWhere((element) => element['LedName'] == cashAc)['LedCode'];
+    acId = ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) -
+                1 >
+            acId
+        ? ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', acId) -
+            1
+        : acId;
     salesManId = ComSettings.appSettings(
             'int', 'key-dropdown-default-salesman-view', 1) -
         1;

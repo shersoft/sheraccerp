@@ -1,8 +1,10 @@
 // @dart = 2.11
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sheraccerp/models/company.dart';
 
@@ -11,6 +13,7 @@ import 'package:sheraccerp/models/gst_auth_model.dart';
 import 'package:sheraccerp/models/ledger_name_model.dart';
 import 'package:sheraccerp/models/ledger_parent.dart';
 import 'package:sheraccerp/models/option_rate_type.dart';
+import 'package:sheraccerp/models/print_settings_model.dart';
 import 'package:sheraccerp/models/product_manage_model.dart';
 import 'package:sheraccerp/models/product_register_model.dart';
 import 'package:sheraccerp/models/sales_type.dart';
@@ -22,7 +25,7 @@ import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/widget/simple_piediagram_pay_rec.dart';
 
 class DioService {
-  var dio = Dio(BaseOptions(maxRedirects: 5));
+  var dio = Dio();
   DioService();
 
   Future<Map<dynamic, dynamic>> fetchDashTotalData(
@@ -2983,6 +2986,57 @@ class DioService {
     return _items;
   }
 
+  Future<List<StockItem>> fetchStockProductLike(
+      String date, String like) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp', location = '0', id = '1';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    if (locationList.isNotEmpty) {
+      location = locationList
+          .where((element) => element.value == defaultLocation)
+          .map((e) => e.key)
+          .first
+          .toString();
+    }
+    int lId = ComSettings.appSettings(
+            'int', 'key-dropdown-default-location-view', 0) -
+        1;
+    location = lId.toString().trim().isNotEmpty
+        ? lId < 1
+            ? location
+            : lId.toString().trim()
+        : location;
+    List<StockItem> _items = [];
+
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'stock/getStockSaleListLike/$dataBase',
+          queryParameters: {
+            'id': id,
+            'location': location,
+            'date': date,
+            'like': like
+          });
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+        for (var product in jsonResponse) {
+          //.map((data) => new StockProduct.fromJson(data))
+          _items.add(StockItem.fromJson(product));
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
   Future<List<StockItem>> fetchNoStockProduct(String date) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp', location = '0', id = '1';
@@ -3012,6 +3066,52 @@ class DioService {
               apiV +
               'Product/getProductList/$dataBase',
           queryParameters: {'date': date});
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+        for (var product in jsonResponse) {
+          //.map((data) => new StockProduct.fromJson(data))
+          _items.add(StockItem.fromJson(product));
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<List<StockItem>> fetchNoStockProductLike(
+      String date, String like) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp', location = '0', id = '1';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    if (locationList.isNotEmpty) {
+      location = locationList
+          .where((element) => element.value == defaultLocation)
+          .map((e) => e.key)
+          .first
+          .toString();
+    }
+    int lId = ComSettings.appSettings(
+            'int', 'key-dropdown-default-location-view', 0) -
+        1;
+    location = lId.toString().trim().isNotEmpty
+        ? lId < 1
+            ? location
+            : lId.toString().trim()
+        : location;
+    List<StockItem> _items = [];
+
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/getProductList/$dataBase',
+          queryParameters: {'date': date, 'like': like});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {
@@ -3916,7 +4016,11 @@ class DioService {
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
               '/InvoiceVoucher/find/$dataBase',
-          queryParameters: {'id': id, 'type': type});
+          queryParameters: {
+            'id': id,
+            'type': type,
+            'fyId': currentFinancialYear.id
+          });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         _items = jsonResponse;
@@ -4290,15 +4394,15 @@ class DioService {
     dataBase = isEstimateDataBase
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
-    List<CompanySettings> _settings = [];
+    List<CompanySettings> _data = [];
     try {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
               'SoftwareSettings/$dataBase');
       if (response.statusCode == 200) {
-        for (var data in response.data[0]) {
-          _settings.add(CompanySettings.fromJson1(data));
+        for (var data in response.data) {
+          _data.add(CompanySettings.fromJson1(data));
         }
       } else {
         //
@@ -4306,7 +4410,35 @@ class DioService {
     } on DioError {
       // print(e.message);
     }
-    return _settings;
+    return _data;
+  }
+
+  Future<List<PrintSettingsModel>> getPrintSettings() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    List<PrintSettingsModel> _data = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'PrintSettings/$dataBase',
+          queryParameters: {
+            'fyId': currentFinancialYear != null ? currentFinancialYear.id : 0
+          });
+      if (response.statusCode == 200) {
+        for (var data in response.data) {
+          _data.add(PrintSettingsModel.fromMap(data));
+        }
+      } else {
+        //
+      }
+    } on DioError {
+      // print(e.message);
+    }
+    return _data;
   }
 
   Future<bool> companyUpdate(data) async {
@@ -4316,6 +4448,29 @@ class DioService {
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
               'company/company/update',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        return response.data > 0 ? true : false;
+      } else {
+        debugPrint('Failed to load data');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
+  }
+
+  Future<bool> updateGeneralSetting(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'updateGeneralSetting',
           data: json.encode(data),
           options: Options(headers: {'Content-Type': 'application/json'}));
 
@@ -4562,6 +4717,43 @@ class DioService {
       debugPrint(errorMessage.toString());
       return data;
     }
+  }
+
+  Future<File> getInvoiceDesignerPdf(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    data.update('code', (value) => pref.getString('Code') ?? 'COM');
+
+    try {
+      final response = await dio.post(
+          'http://148.72.210.101:888/Home/DownloadPdf',
+          data: json.encode(data),
+          options: Options(
+              headers: {'Content-Type': 'application/json'},
+              responseType: ResponseType.bytes));
+      if (response != null) {
+        final Directory appDir = await getTemporaryDirectory();
+        String tempPath = appDir.path;
+        final String fileName =
+            DateTime.now().microsecondsSinceEpoch.toString() + '-' + 's.pdf';
+        File file = File('$tempPath/$fileName');
+        if (!await file.exists()) {
+          await file.create();
+        }
+        await file.writeAsBytes(response.data);
+        return file;
+      }
+      debugPrint('The download failed.');
+    } catch (value) {
+      if (value is DioError) {
+        debugPrint(value.response.toString());
+      }
+      debugPrint(value.toString());
+    }
+    return null;
   }
 }
 

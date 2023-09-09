@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sheraccerp/models/company.dart';
@@ -287,8 +288,8 @@ class _BusinessCardState extends State<BusinessCard> {
         var output = await getTemporaryDirectory();
         final file = File('${output.path}/image.jpg');
         file.writeAsBytes(byteImage);
-        List<String> paths = [file.path.toString()];
-        await Share.shareFiles(paths,
+        String paths = file.path.toString();
+        await Share.shareXFiles([XFile(paths)],
             text: 'Card',
             subject: 'Business Card',
             sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);

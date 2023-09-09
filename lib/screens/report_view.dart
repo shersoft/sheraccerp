@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:scoped_model/scoped_model.dart';
@@ -271,7 +272,8 @@ class _ReportViewState extends State<ReportView> {
           'Check_openingbalance': widget.ob ?? 0,
           'location': jsonEncode(location),
           'project': jsonEncode(project),
-          'salesMan': 0
+          'salesMan': 0,
+          'fyId': currentFinancialYear.id,
         }) +
         ']';
     return FutureBuilder<List<dynamic>>(
@@ -3537,11 +3539,15 @@ class _ReportViewState extends State<ReportView> {
     return file.path.toString();
   }
 
-  Future<void> urlFileShare(
-      BuildContext context, String text, String subject, var paths) async {
+  Future<void> urlFileShare(BuildContext context, String text, String subject,
+      List<String> paths) async {
     final RenderBox box = context.findRenderObject() as RenderBox;
     if (paths.isNotEmpty) {
-      await Share.shareFiles(paths,
+      List<XFile> files = [];
+      for (String value in paths) {
+        files.add(XFile(value));
+      }
+      await Share.shareXFiles(files,
           text: text,
           subject: subject,
           sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);

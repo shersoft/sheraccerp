@@ -32,7 +32,6 @@ import 'package:sheraccerp/util/dbhelper.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/loading.dart';
 import 'package:sheraccerp/widget/progress_hud.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class Sale extends StatefulWidget {
   const Sale({Key key}) : super(key: key);
@@ -65,6 +64,7 @@ class _SaleState extends State<Sale> {
       previewData = false,
       oldBill = false,
       itemCodeVise = false,
+      itemStockAll = false,
       isItemRateEditLocked = false,
       isMinimumRate = false,
       isItemDiscountEditLocked = false,
@@ -75,6 +75,7 @@ class _SaleState extends State<Sale> {
       productTracking = false,
       isFreeItem = false,
       isStockProductOnlyInSalesQO = false,
+      isLockQtyOnlyInSales = false,
       isSalesManWiseLedger = false,
       isFreeQty = false,
       gstVerified = false,
@@ -95,6 +96,7 @@ class _SaleState extends State<Sale> {
   int lId = 0, groupId = 0, areaId = 0, routeId = 0;
   var salesManId = 0;
   String labelSerialNo = 'SerialNo';
+  String labelSpRate = 'SpRetail';
   bool ledgerScanner = false, productScanner = false, loadScanner = false;
 
   Barcode result;
@@ -145,6 +147,7 @@ class _SaleState extends State<Sale> {
 
     ledgerScanner = ComSettings.appSettings('bool', 'key-customer-scan', false);
     itemCodeVise = ComSettings.appSettings('bool', 'key-item-by-code', false);
+    itemStockAll = ComSettings.appSettings('bool', 'key-item-stock-all', false);
     keyItemsVariantStock =
         ComSettings.appSettings('bool', 'key-items-variant-stock', false);
 
@@ -172,8 +175,8 @@ class _SaleState extends State<Sale> {
               : 'MRP'
           : 'MRP';
 
-      rateTypeItem =
-          rateTypeList.firstWhere((element) => element.name == rateTypeS);
+      rateTypeItem = rateTypeList.firstWhere((element) =>
+          element.name.toString().toUpperCase() == rateTypeS.toUpperCase());
     }
   }
 
@@ -219,6 +222,10 @@ class _SaleState extends State<Sale> {
     isItemSerialNo = ComSettings.getStatus('KEY ITEM SERIAL NO', settings);
     labelSerialNo =
         ComSettings.getValue('KEY ITEM SERIAL NO', settings).toString();
+    labelSpRate =
+        ComSettings.getValue('KEY ITEM SP RATE TITLE', settings).toString();
+    labelSerialNo = labelSerialNo.isEmpty ? 'Remark' : labelSerialNo;
+    labelSpRate = labelSpRate.isEmpty ? 'SpRetail' : labelSpRate;
     isItemDiscountEditLocked =
         ComSettings.getStatus('KEY LOCK SALES DISCOUNT', settings);
     isItemRateEditLocked =
@@ -232,6 +239,8 @@ class _SaleState extends State<Sale> {
     isFreeQty = ComSettings.getStatus('KEY FREE QTY IN SALE', settings);
     isStockProductOnlyInSalesQO =
         ComSettings.getStatus('KEY STOCK PRODUCT ONLY IN SALES QO', settings);
+    isLockQtyOnlyInSales =
+        ComSettings.getStatus('KEY LOCK QTY ONLY IN SALES', settings);
     isSalesManWiseLedger =
         ComSettings.getStatus('KEY SALESMAN WISE LEDGER', settings);
   }
@@ -1309,7 +1318,7 @@ class _SaleState extends State<Sale> {
                     onPressed: () {
                       Navigator.of(context).pop();
                       Navigator.pushReplacementNamed(context, '/sales',
-                          arguments: {'default': false});
+                          arguments: {'default': thisSale});
                     },
                     child: const Text('CANCEL'),
                   )
@@ -1464,8 +1473,8 @@ class _SaleState extends State<Sale> {
                   ElevatedButton(
                       onPressed: () {
                         setState(() {
-                          nameLike = 'a';
-                          nextWidget = nextWidget;
+                          nameLike = nameLike.substring(0, nameLike.length - 1);
+                          // nextWidget = nextWidget;
                         });
                       },
                       child: const Text('Select Again'))
@@ -2171,171 +2180,350 @@ class _SaleState extends State<Sale> {
       isMinimumRatedLock = false;
 
   bool isItemData = false;
+  String itemLike = 'a';
   selectProductWidget() {
-    setState(() {
-      if (items.isNotEmpty) isItemData = true;
-    });
-
-    return FutureBuilder<List<StockItem>>(
-      future:
-          (salesTypeData.type == 'SALES-O' || salesTypeData.type == 'SALES-Q')
-              ? isStockProductOnlyInSalesQO
-                  ? dio.fetchStockProduct(DateUtil.dateDMY2YMD(formattedDate))
-                  : dio.fetchNoStockProduct(DateUtil.dateDMY2YMD(formattedDate))
-              : dio.fetchStockProduct(DateUtil.dateDMY2YMD(formattedDate)),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          if (snapshot.data.isNotEmpty) {
-            var data = snapshot.data;
-            if (!isItemData) {
+    if (itemStockAll) {
+      return FutureBuilder<List<StockItem>>(
+        future:
+            (salesTypeData.type == 'SALES-O' || salesTypeData.type == 'SALES-Q')
+                ? isStockProductOnlyInSalesQO
+                    ? dio.fetchStockProductLike(
+                        DateUtil.dateDMY2YMD(formattedDate), itemLike)
+                    : dio.fetchNoStockProductLike(
+                        DateUtil.dateDMY2YMD(formattedDate), itemLike)
+                : dio.fetchStockProductLike(
+                    DateUtil.dateDMY2YMD(formattedDate), itemLike),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            if (snapshot.data.isNotEmpty) {
+              var data = snapshot.data;
+              // if (!isItemData) {
               itemDisplay = data;
               items = data;
-            }
-            return ListView.builder(
-              // shrinkWrap: true,
-              itemBuilder: (context, index) {
-                return index == 0
-                    ? Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: TextField(
-                          decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              label: Text('Search...')),
-                          onChanged: (text) {
-                            text = text.toLowerCase();
-                            setState(() {
-                              itemDisplay = items.where((item) {
-                                var itemName = itemCodeVise
-                                    ? item.code.toString().toLowerCase() +
-                                        ' ' +
-                                        item.name.toLowerCase()
-                                    : item.name.toLowerCase();
-                                return itemName.contains(text);
-                              }).toList();
-                            });
-                          },
-                        ),
-                      )
-                    : InkWell(
-                        child: Card(
-                          child: ListTile(
-                            title: Text(
-                                'Name : ${itemCodeVise ? itemDisplay[index - 1].code.toString() + ' ' + itemDisplay[index - 1].name : itemDisplay[index - 1].name}'),
-                            subtitle: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Qty :${itemDisplay[index - 1].quantity}'),
-                                // TextButton(
-                                //     onPressed: () {
-                                // if (singleProduct) {
-                                //   addProduct(CartItem(
-                                // id: totalAdd Item 1,
-                                // itemId: product.itemId,
-                                // itemName: product.name,
-                                // quantity: 1,
-                                // rate: rate,
-                                // rRate: rRate,
-                                // uniqueCode: uniqueCode,
-                                // gross: gross,
-                                // discount: discount,
-                                // discountPercent: discountPercent,
-                                // rDiscount: rDisc,
-                                // fCess: kfc,
-                                // serialNo: '',
-                                // tax: tax,
-                                // taxP: taxP,
-                                // unitId: _dropDownUnit,
-                                // unitValue: unitValue,
-                                // pRate: pRate,
-                                // rPRate: rPRate,
-                                // barcode: barcode,
-                                // expDate: expDate,
-                                // free: free,
-                                // fUnitId: fUnitId,
-                                // cdPer: cdPer,
-                                // cDisc: cDisc,
-                                // net: subTotal,
-                                // cess: cess,
-                                // total: total,
-                                // profitPer: profitPer,
-                                // fUnitValue: fUnitValue,
-                                // adCess: adCess,
-                                // iGST: iGST,
-                                // cGST: csGST,
-                                // sGST: csGST));
-                                // } else {
-                                // Fluttertoast.showToast(
-                                // msg: 'this is not Completed');
-                                // }
-                                // },
-                                // child: const Card(
-                                //     child: Text(' + ',
-                                //         style: TextStyle(
-                                //             fontSize: 25, color: blue))))
-                              ],
+              // }
+              return ListView.builder(
+                // shrinkWrap: true,
+                itemBuilder: (context, index) {
+                  return index == 0
+                      ? Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TextField(
+                            decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                label: Text('Search...')),
+                            onChanged: (text) {
+                              text = text.toLowerCase();
+                              setState(() {
+                                itemLike = text.toLowerCase();
+
+                                //   itemDisplay = items.where((item) {
+                                //     // var itemName = itemCodeVise
+                                //     //     ? item.code.toString().toLowerCase() +
+                                //     //         ' ' +
+                                //     //         item.name.toLowerCase()
+                                //     //     : item.name.toLowerCase();
+                                //     // return itemName.contains(text);
+                                //   }).toList();
+                              });
+                            },
+                          ),
+                        )
+                      : InkWell(
+                          child: Card(
+                            child: ListTile(
+                              title: Text(
+                                  'Name : ${itemCodeVise ? itemDisplay[index - 1].code.toString() + ' ' + itemDisplay[index - 1].name : itemDisplay[index - 1].name}'),
+                              subtitle: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                      'Qty :${itemDisplay[index - 1].quantity}'),
+                                  // TextButton(
+                                  //     onPressed: () {
+                                  // if (singleProduct) {
+                                  //   addProduct(CartItem(
+                                  // id: totalAdd Item 1,
+                                  // itemId: product.itemId,
+                                  // itemName: product.name,
+                                  // quantity: 1,
+                                  // rate: rate,
+                                  // rRate: rRate,
+                                  // uniqueCode: uniqueCode,
+                                  // gross: gross,
+                                  // discount: discount,
+                                  // discountPercent: discountPercent,
+                                  // rDiscount: rDisc,
+                                  // fCess: kfc,
+                                  // serialNo: '',
+                                  // tax: tax,
+                                  // taxP: taxP,
+                                  // unitId: _dropDownUnit,
+                                  // unitValue: unitValue,
+                                  // pRate: pRate,
+                                  // rPRate: rPRate,
+                                  // barcode: barcode,
+                                  // expDate: expDate,
+                                  // free: free,
+                                  // fUnitId: fUnitId,
+                                  // cdPer: cdPer,
+                                  // cDisc: cDisc,
+                                  // net: subTotal,
+                                  // cess: cess,
+                                  // total: total,
+                                  // profitPer: profitPer,
+                                  // fUnitValue: fUnitValue,
+                                  // adCess: adCess,
+                                  // iGST: iGST,
+                                  // cGST: csGST,
+                                  // sGST: csGST));
+                                  // } else {
+                                  // Fluttertoast.showToast(
+                                  // msg: 'this is not Completed');
+                                  // }
+                                  // },
+                                  // child: const Card(
+                                  //     child: Text(' + ',
+                                  //         style: TextStyle(
+                                  //             fontSize: 25, color: blue))))
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                        onTap: () {
-                          setState(() {
-                            productModel = itemDisplay[index - 1];
-                            nextWidget = 3;
-                          });
-                        },
-                      );
-              },
-              itemCount: itemDisplay.length + 1,
-            );
-          } else {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [SizedBox(height: 20), Text('No Data Found..')],
+                          onTap: () {
+                            setState(() {
+                              productModel = itemDisplay[index - 1];
+                              nextWidget = 3;
+                            });
+                          },
+                        );
+                },
+                itemCount: itemDisplay.length + 1,
+              );
+            } else {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    SizedBox(height: 20),
+                    Text('No Data Found..')
+                  ],
+                ),
+              );
+            }
+          } else if (snapshot.hasError) {
+            return AlertDialog(
+              title: const Text(
+                'An Error Occurred!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.redAccent,
+                ),
               ),
+              content: Text(
+                "${snapshot.error}",
+                style: const TextStyle(
+                  color: Colors.blueAccent,
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text(
+                    'Go Back',
+                    style: TextStyle(
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                )
+              ],
             );
           }
-        } else if (snapshot.hasError) {
-          return AlertDialog(
-            title: const Text(
-              'An Error Occurred!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.redAccent,
-              ),
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const <Widget>[
+                CircularProgressIndicator(),
+                SizedBox(height: 20),
+                Text('This may take some time..')
+              ],
             ),
-            content: Text(
-              "${snapshot.error}",
-              style: const TextStyle(
-                color: Colors.blueAccent,
-              ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                child: const Text(
-                  'Go Back',
-                  style: TextStyle(
-                    color: Colors.redAccent,
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              )
-            ],
           );
-        }
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const <Widget>[
-              CircularProgressIndicator(),
-              SizedBox(height: 20),
-              Text('This may take some time..')
-            ],
-          ),
-        );
-      },
-    );
+        },
+      );
+    } else {
+      setState(() {
+        if (items.isNotEmpty) isItemData = true;
+      });
+
+      return FutureBuilder<List<StockItem>>(
+        future: (salesTypeData.type == 'SALES-O' ||
+                salesTypeData.type == 'SALES-Q')
+            ? isStockProductOnlyInSalesQO
+                ? dio.fetchStockProduct(DateUtil.dateDMY2YMD(formattedDate))
+                : dio.fetchNoStockProduct(DateUtil.dateDMY2YMD(formattedDate))
+            : dio.fetchStockProduct(DateUtil.dateDMY2YMD(formattedDate)),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            if (snapshot.data.isNotEmpty) {
+              var data = snapshot.data;
+              if (!isItemData) {
+                itemDisplay = data;
+                items = data;
+              }
+              return ListView.builder(
+                // shrinkWrap: true,
+                itemBuilder: (context, index) {
+                  return index == 0
+                      ? Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TextField(
+                            decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                label: Text('Search...')),
+                            onChanged: (text) {
+                              text = text.toLowerCase();
+                              setState(() {
+                                itemDisplay = items.where((item) {
+                                  var itemName = itemCodeVise
+                                      ? item.code.toString().toLowerCase() +
+                                          ' ' +
+                                          item.name.toLowerCase()
+                                      : item.name.toLowerCase();
+                                  return itemName.contains(text);
+                                }).toList();
+                              });
+                            },
+                          ),
+                        )
+                      : InkWell(
+                          child: Card(
+                            child: ListTile(
+                              title: Text(
+                                  'Name : ${itemCodeVise ? itemDisplay[index - 1].code.toString() + ' ' + itemDisplay[index - 1].name : itemDisplay[index - 1].name}'),
+                              subtitle: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                      'Qty :${itemDisplay[index - 1].quantity}'),
+                                  // TextButton(
+                                  //     onPressed: () {
+                                  // if (singleProduct) {
+                                  //   addProduct(CartItem(
+                                  // id: totalAdd Item 1,
+                                  // itemId: product.itemId,
+                                  // itemName: product.name,
+                                  // quantity: 1,
+                                  // rate: rate,
+                                  // rRate: rRate,
+                                  // uniqueCode: uniqueCode,
+                                  // gross: gross,
+                                  // discount: discount,
+                                  // discountPercent: discountPercent,
+                                  // rDiscount: rDisc,
+                                  // fCess: kfc,
+                                  // serialNo: '',
+                                  // tax: tax,
+                                  // taxP: taxP,
+                                  // unitId: _dropDownUnit,
+                                  // unitValue: unitValue,
+                                  // pRate: pRate,
+                                  // rPRate: rPRate,
+                                  // barcode: barcode,
+                                  // expDate: expDate,
+                                  // free: free,
+                                  // fUnitId: fUnitId,
+                                  // cdPer: cdPer,
+                                  // cDisc: cDisc,
+                                  // net: subTotal,
+                                  // cess: cess,
+                                  // total: total,
+                                  // profitPer: profitPer,
+                                  // fUnitValue: fUnitValue,
+                                  // adCess: adCess,
+                                  // iGST: iGST,
+                                  // cGST: csGST,
+                                  // sGST: csGST));
+                                  // } else {
+                                  // Fluttertoast.showToast(
+                                  // msg: 'this is not Completed');
+                                  // }
+                                  // },
+                                  // child: const Card(
+                                  //     child: Text(' + ',
+                                  //         style: TextStyle(
+                                  //             fontSize: 25, color: blue))))
+                                ],
+                              ),
+                            ),
+                          ),
+                          onTap: () {
+                            setState(() {
+                              productModel = itemDisplay[index - 1];
+                              nextWidget = 3;
+                            });
+                          },
+                        );
+                },
+                itemCount: itemDisplay.length + 1,
+              );
+            } else {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    SizedBox(height: 20),
+                    Text('No Data Found..')
+                  ],
+                ),
+              );
+            }
+          } else if (snapshot.hasError) {
+            return AlertDialog(
+              title: const Text(
+                'An Error Occurred!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.redAccent,
+                ),
+              ),
+              content: Text(
+                "${snapshot.error}",
+                style: const TextStyle(
+                  color: Colors.blueAccent,
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text(
+                    'Go Back',
+                    style: TextStyle(
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                )
+              ],
+            );
+          }
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const <Widget>[
+                CircularProgressIndicator(),
+                SizedBox(height: 20),
+                Text('This may take some time..')
+              ],
+            ),
+          );
+        },
+      );
+    }
   }
 
   bool isBarcodePicker = false;
@@ -2505,7 +2693,10 @@ class _SaleState extends State<Sale> {
                   minimumRate: d['minimumRate'].toDouble(),
                   name: d['itemname'],
                   productId: d['uniquecode'],
-                  quantity: d['Qty'].toDouble(),
+                  quantity: (salesTypeData.type == 'SALES-O' ||
+                          salesTypeData.type == 'SALES-Q')
+                      ? productModel.quantity
+                      : d['Qty'].toDouble(),
                   retailPrice: d['retail'].toDouble(),
                   sellingPrice: d['mrp'].toDouble(),
                   spRetailPrice: d['Spretail'].toDouble(),
@@ -2769,6 +2960,147 @@ class _SaleState extends State<Sale> {
       pRate = 0,
       rPRate = 0;
 
+  calculate(StockProduct product) {
+    if (enableMULTIUNIT) {
+      if (saleRate > 0) {
+        if (_conversion > 0) {
+          //var r = 0.0;
+          if (_focusNodeRate.hasFocus) {
+            rate = double.tryParse(_rateController.text);
+            // rate = double.tryParse(_rateController.text) * _conversion;
+          } else {
+            //r = (saleRate * _conversion);
+            rate = saleRate * _conversion;
+            _rateController.text = rate.toStringAsFixed(decimal);
+          }
+          //rate = r;
+          // _rateController.text = r.toStringAsFixed(decimal);
+          pRate = product.buyingPrice * _conversion;
+          rPRate = product.buyingPriceReal * _conversion;
+        } else {
+          rate = _rateController.text.isNotEmpty
+              ? (double.tryParse(_rateController.text))
+              : 0;
+        }
+      } else {
+        rate = _rateController.text.isNotEmpty
+            ? (double.tryParse(_rateController.text))
+            : 0;
+      }
+    } else {
+      if (_focusNodeRate.hasFocus) {
+        rate = double.tryParse(_rateController.text);
+      } else if (saleRate > 0) {
+        _rateController.text = saleRate.toStringAsFixed(decimal);
+        rate = saleRate;
+      } else {
+        rate = _rateController.text.isNotEmpty
+            ? double.tryParse(_rateController.text)
+            : 0;
+      }
+    }
+    quantity = _quantityController.text.isNotEmpty
+        ? double.tryParse(_quantityController.text)
+        : 0;
+    freeQty = _freeQuantityController.text.isNotEmpty
+        ? double.tryParse(_freeQuantityController.text)
+        : 0;
+    rRate = taxMethod == 'MINUS'
+        ? cessOnNetAmount
+            ? CommonService.getRound(
+                4, (100 * rate) / (100 + taxP + kfcP + cessPer))
+            : CommonService.getRound(4, (100 * rate) / (100 + taxP + kfcP))
+        : rate;
+    discount = _discountController.text.isNotEmpty
+        ? double.tryParse(_discountController.text)
+        : 0;
+    double discP = _discountPercentController.text.isNotEmpty
+        ? double.tryParse(_discountPercentController.text)
+        : 0;
+    double disc = _discountController.text.isNotEmpty
+        ? double.tryParse(_discountController.text)
+        : 0;
+    double qt = _quantityController.text.isNotEmpty
+        ? double.tryParse(_quantityController.text)
+        : 0;
+    double sRate = _rateController.text.isNotEmpty
+        ? double.tryParse(_rateController.text)
+        : 0;
+    if (_focusNodeDiscountPer.hasFocus) {
+      _discountController.text = _discountPercentController.text.isNotEmpty
+          ? (((qt * sRate) * discP) / 100).toStringAsFixed(2)
+          : '';
+      discount = _discountController.text.isNotEmpty
+          ? double.tryParse(_discountController.text)
+          : 0;
+      discountPercent = double.tryParse(_discountPercentController.text);
+    }
+
+    if (_focusNodeDiscount.hasFocus) {
+      _discountPercentController.text = _discountController.text.isNotEmpty
+          ? ((disc * 100) / (qt * sRate)).toStringAsFixed(2)
+          : '';
+      discountPercent = _discountController.text.isNotEmpty
+          ? double.tryParse(_discountPercentController.text)
+          : 0;
+      // discount = discountPercent > 0
+      // ?
+      double.tryParse(_discountController.text);
+      // : discount;
+    }
+    rDisc = taxMethod == 'MINUS'
+        ? CommonService.getRound(4, ((discount * 100) / (taxP + 100)))
+        : discount;
+    gross = CommonService.getRound(decimal, ((rRate * quantity)));
+    subTotal = CommonService.getRound(decimal, (gross - rDisc));
+    if (taxP > 0) {
+      tax = CommonService.getRound(4, ((subTotal * taxP) / 100));
+    }
+    if (companyTaxMode == 'INDIA') {
+      kfc = isKFC ? CommonService.getRound(4, ((subTotal * kfcP) / 100)) : 0;
+      double csPer = taxP / 2;
+      iGST = 0;
+      csGST = CommonService.getRound(4, ((subTotal * csPer) / 100));
+    } else if (companyTaxMode == 'GULF') {
+      iGST = CommonService.getRound(4, ((subTotal * taxP) / 100));
+      csGST = 0;
+      kfc = 0;
+    } else {
+      iGST = 0;
+      csGST = 0;
+      kfc = 0;
+      tax = 0;
+    }
+    if (cessOnNetAmount) {
+      if (cessPer > 0) {
+        cess = CommonService.getRound(4, ((subTotal * cessPer) / 100));
+        adCess = CommonService.getRound(4, (quantity * adCessPer));
+      } else {
+        cess = 0;
+        adCess = 0;
+      }
+    } else {
+      cess = 0;
+      adCess = 0;
+    }
+    total = CommonService.getRound(
+        2, (subTotal + csGST + csGST + iGST + cess + kfc + adCess));
+    if (enableMULTIUNIT && _conversion > 0) {
+      profitPer = pRateBasedProfitInSales
+          ? CommonService.getRound(
+              2, (total - (product.buyingPrice * _conversion * quantity)))
+          : CommonService.getRound(decimal,
+              (total - (product.buyingPriceReal * _conversion * quantity)));
+    } else {
+      profitPer = pRateBasedProfitInSales
+          ? CommonService.getRound(
+              2, (total - (product.buyingPrice * quantity)))
+          : CommonService.getRound(
+              2, (total - (product.buyingPriceReal * quantity)));
+    }
+    unitValue = _conversion > 0 ? _conversion : 1;
+  }
+
   showAddMore(BuildContext context, StockProduct product) {
     pRate = product.buyingPrice;
     rPRate = product.buyingPriceReal;
@@ -2813,147 +3145,6 @@ class _SaleState extends State<Sale> {
     }
     uniqueCode = product.productId;
     List<UnitModel> unitListData = [];
-
-    calculate() {
-      if (enableMULTIUNIT) {
-        if (saleRate > 0) {
-          if (_conversion > 0) {
-            //var r = 0.0;
-            if (_focusNodeRate.hasFocus) {
-              rate = double.tryParse(_rateController.text);
-              // rate = double.tryParse(_rateController.text) * _conversion;
-            } else {
-              //r = (saleRate * _conversion);
-              rate = saleRate * _conversion;
-              _rateController.text = rate.toStringAsFixed(decimal);
-            }
-            //rate = r;
-            // _rateController.text = r.toStringAsFixed(decimal);
-            pRate = product.buyingPrice * _conversion;
-            rPRate = product.buyingPriceReal * _conversion;
-          } else {
-            rate = _rateController.text.isNotEmpty
-                ? (double.tryParse(_rateController.text))
-                : 0;
-          }
-        } else {
-          rate = _rateController.text.isNotEmpty
-              ? (double.tryParse(_rateController.text))
-              : 0;
-        }
-      } else {
-        if (_focusNodeRate.hasFocus) {
-          rate = double.tryParse(_rateController.text);
-        } else if (saleRate > 0) {
-          _rateController.text = saleRate.toStringAsFixed(decimal);
-          rate = saleRate;
-        } else {
-          rate = _rateController.text.isNotEmpty
-              ? double.tryParse(_rateController.text)
-              : 0;
-        }
-      }
-      quantity = _quantityController.text.isNotEmpty
-          ? double.tryParse(_quantityController.text)
-          : 0;
-      freeQty = _freeQuantityController.text.isNotEmpty
-          ? double.tryParse(_freeQuantityController.text)
-          : 0;
-      rRate = taxMethod == 'MINUS'
-          ? cessOnNetAmount
-              ? CommonService.getRound(
-                  4, (100 * rate) / (100 + taxP + kfcP + cessPer))
-              : CommonService.getRound(4, (100 * rate) / (100 + taxP + kfcP))
-          : rate;
-      discount = _discountController.text.isNotEmpty
-          ? double.tryParse(_discountController.text)
-          : 0;
-      double discP = _discountPercentController.text.isNotEmpty
-          ? double.tryParse(_discountPercentController.text)
-          : 0;
-      double disc = _discountController.text.isNotEmpty
-          ? double.tryParse(_discountController.text)
-          : 0;
-      double qt = _quantityController.text.isNotEmpty
-          ? double.tryParse(_quantityController.text)
-          : 0;
-      double sRate = _rateController.text.isNotEmpty
-          ? double.tryParse(_rateController.text)
-          : 0;
-      if (_focusNodeDiscountPer.hasFocus) {
-        _discountController.text = _discountPercentController.text.isNotEmpty
-            ? (((qt * sRate) * discP) / 100).toStringAsFixed(2)
-            : '';
-        discount = _discountController.text.isNotEmpty
-            ? double.tryParse(_discountController.text)
-            : 0;
-        discountPercent = double.tryParse(_discountPercentController.text);
-      }
-
-      if (_focusNodeDiscount.hasFocus) {
-        _discountPercentController.text = _discountController.text.isNotEmpty
-            ? ((disc * 100) / (qt * sRate)).toStringAsFixed(2)
-            : '';
-        discountPercent = _discountController.text.isNotEmpty
-            ? double.tryParse(_discountPercentController.text)
-            : 0;
-        // discount = discountPercent > 0
-        // ?
-        double.tryParse(_discountController.text);
-        // : discount;
-      }
-      rDisc = taxMethod == 'MINUS'
-          ? CommonService.getRound(4, ((discount * 100) / (taxP + 100)))
-          : discount;
-      gross = CommonService.getRound(decimal, ((rRate * quantity)));
-      subTotal = CommonService.getRound(decimal, (gross - rDisc));
-      if (taxP > 0) {
-        tax = CommonService.getRound(4, ((subTotal * taxP) / 100));
-      }
-      if (companyTaxMode == 'INDIA') {
-        kfc = isKFC ? CommonService.getRound(4, ((subTotal * kfcP) / 100)) : 0;
-        double csPer = taxP / 2;
-        iGST = 0;
-        csGST = CommonService.getRound(4, ((subTotal * csPer) / 100));
-      } else if (companyTaxMode == 'GULF') {
-        iGST = CommonService.getRound(4, ((subTotal * taxP) / 100));
-        csGST = 0;
-        kfc = 0;
-      } else {
-        iGST = 0;
-        csGST = 0;
-        kfc = 0;
-        tax = 0;
-      }
-      if (cessOnNetAmount) {
-        if (cessPer > 0) {
-          cess = CommonService.getRound(4, ((subTotal * cessPer) / 100));
-          adCess = CommonService.getRound(4, (quantity * adCessPer));
-        } else {
-          cess = 0;
-          adCess = 0;
-        }
-      } else {
-        cess = 0;
-        adCess = 0;
-      }
-      total = CommonService.getRound(
-          2, (subTotal + csGST + csGST + iGST + cess + kfc + adCess));
-      if (enableMULTIUNIT && _conversion > 0) {
-        profitPer = pRateBasedProfitInSales
-            ? CommonService.getRound(
-                2, (total - (product.buyingPrice * _conversion * quantity)))
-            : CommonService.getRound(decimal,
-                (total - (product.buyingPriceReal * _conversion * quantity)));
-      } else {
-        profitPer = pRateBasedProfitInSales
-            ? CommonService.getRound(
-                2, (total - (product.buyingPrice * quantity)))
-            : CommonService.getRound(
-                2, (total - (product.buyingPriceReal * quantity)));
-      }
-      unitValue = _conversion > 0 ? _conversion : 1;
-    }
 
     return Container(
       padding: const EdgeInsets.all(8.0),
@@ -3002,7 +3193,7 @@ class _SaleState extends State<Sale> {
                           child: const Text("ADD"),
                           color: blue,
                           onPressed: () {
-                            calculate();
+                            calculate(product);
                             setState(() {
                               isVariantSelected = false;
                               if (quantity > 0 || isFreeItem) {
@@ -3183,25 +3374,37 @@ class _SaleState extends State<Sale> {
                                   }
                                 }
 
-                                outOfStock = negativeStock
-                                    ? false
-                                    : salesTypeData.type == 'SALES-O' ||
-                                            salesTypeData.type == 'SALES-Q'
-                                        ? isStockProductOnlyInSalesQO
-                                            ? double.tryParse(value) >
+                                outOfStock = isLockQtyOnlyInSales
+                                    ? (double.tryParse(value) * (unitValue) +
+                                                freeQty) >
+                                            product.quantity
+                                        ? true
+                                        : cartQ
+                                            ? true
+                                            : false
+                                    : negativeStock
+                                        ? false
+                                        : salesTypeData.type == 'SALES-O' ||
+                                                salesTypeData.type == 'SALES-Q'
+                                            ? isStockProductOnlyInSalesQO
+                                                ? (double.tryParse(value) *
+                                                                (unitValue) +
+                                                            freeQty) >
+                                                        product.quantity
+                                                    ? true
+                                                    : cartQ
+                                                        ? true
+                                                        : false
+                                                : false
+                                            : (double.tryParse(value) *
+                                                            (unitValue) +
+                                                        freeQty) >
                                                     product.quantity
                                                 ? true
                                                 : cartQ
                                                     ? true
-                                                    : false
-                                            : false
-                                        : double.tryParse(value) >
-                                                product.quantity
-                                            ? true
-                                            : cartQ
-                                                ? true
-                                                : false;
-                                calculate();
+                                                    : false;
+                                calculate(product);
                               });
                             }
                           },
@@ -3254,25 +3457,38 @@ class _SaleState extends State<Sale> {
                                     }
                                   }
 
-                                  outOfStock = negativeStock
-                                      ? false
-                                      : salesTypeData.type == 'SALES-O' ||
-                                              salesTypeData.type == 'SALES-Q'
-                                          ? isStockProductOnlyInSalesQO
-                                              ? double.tryParse(value) >
+                                  outOfStock = isLockQtyOnlyInSales
+                                      ? ((quantity * unitValue) +
+                                                  double.tryParse(value)) >
+                                              product.quantity
+                                          ? true
+                                          : cartQ
+                                              ? true
+                                              : false
+                                      : negativeStock
+                                          ? false
+                                          : salesTypeData.type == 'SALES-O' ||
+                                                  salesTypeData.type ==
+                                                      'SALES-Q'
+                                              ? isStockProductOnlyInSalesQO
+                                                  ? ((quantity * unitValue) +
+                                                              double.tryParse(
+                                                                  value)) >
+                                                          product.quantity
+                                                      ? true
+                                                      : cartQ
+                                                          ? true
+                                                          : false
+                                                  : false
+                                              : ((quantity * unitValue) +
+                                                          double.tryParse(
+                                                              value)) >
                                                       product.quantity
                                                   ? true
                                                   : cartQ
                                                       ? true
-                                                      : false
-                                              : false
-                                          : double.tryParse(value) >
-                                                  product.quantity
-                                              ? true
-                                              : cartQ
-                                                  ? true
-                                                  : false;
-                                  calculate();
+                                                      : false;
+                                  calculate(product);
                                 });
                               }
                             },
@@ -3329,6 +3545,7 @@ class _SaleState extends State<Sale> {
                                         }).toList(),
                                         onChanged: (value) {
                                           setState(() {
+                                            bool cartQ = false;
                                             _dropDownUnit = int.tryParse(value);
                                             for (var i = 0;
                                                 i < unitListData.length;
@@ -3360,15 +3577,85 @@ class _SaleState extends State<Sale> {
                                                                                 '3'
                                                                             ? product.wholeSalePrice
                                                                             : 0;
+                                                if (_unit.rate.isNotEmpty) {
+                                                  rateTypeItem = rateTypeList
+                                                      .firstWhere((element) =>
+                                                          element.name ==
+                                                          _unit.rate);
+                                                }
                                                 rate = _rate;
                                                 saleRate = _rate;
                                                 _rateController.text =
-                                                    saleRate.toStringAsFixed(2);
+                                                    saleRate > 0
+                                                        ? saleRate
+                                                            .toStringAsFixed(2)
+                                                        : '';
                                                 _conversion = _unit.conversion;
+                                                if (quantity > 0 ||
+                                                    freeQty > 0) {
+                                                  if (totalItem > 0) {
+                                                    double cartS = 0,
+                                                        cartQt = 0;
+                                                    for (var element
+                                                        in cartItem) {
+                                                      if (element.uniqueCode ==
+                                                          product.productId) {
+                                                        cartQt +=
+                                                            element.quantity +
+                                                                element.free;
+                                                        cartS = element.stock;
+                                                      }
+                                                    }
+                                                    if (cartS > 0) {
+                                                      if (cartS <
+                                                          cartQt +
+                                                              quantity +
+                                                              freeQty) {
+                                                        cartQ = true;
+                                                      }
+                                                    }
+                                                  } else {
+                                                    cartQ = false;
+                                                  }
+                                                  outOfStock =
+                                                      isLockQtyOnlyInSales
+                                                          ? ((quantity * _conversion) +
+                                                                      freeQty) >
+                                                                  product
+                                                                      .quantity
+                                                              ? true
+                                                              : cartQ
+                                                                  ? true
+                                                                  : false
+                                                          : negativeStock
+                                                              ? false
+                                                              : salesTypeData.type ==
+                                                                          'SALES-O' ||
+                                                                      salesTypeData
+                                                                              .type ==
+                                                                          'SALES-Q'
+                                                                  ? isStockProductOnlyInSalesQO
+                                                                      ? ((quantity * _conversion) + freeQty) >
+                                                                              product
+                                                                                  .quantity
+                                                                          ? true
+                                                                          : cartQ
+                                                                              ? true
+                                                                              : false
+                                                                      : false
+                                                                  : ((quantity * _conversion) +
+                                                                              freeQty) >
+                                                                          product
+                                                                              .quantity
+                                                                      ? true
+                                                                      : cartQ
+                                                                          ? true
+                                                                          : false;
+                                                }
                                                 break;
                                               }
                                             }
-                                            calculate();
+                                            calculate(product);
                                           });
                                         },
                                       )
@@ -3432,7 +3719,6 @@ class _SaleState extends State<Sale> {
                             controller: _rateController,
                             focusNode: _focusNodeRate,
                             readOnly: isItemRateEditLocked,
-                            // autofocus: true,
                             keyboardType: const TextInputType.numberWithOptions(
                                 decimal: true),
                             inputFormatters: [
@@ -3451,7 +3737,7 @@ class _SaleState extends State<Sale> {
                                       minRate) {
                                     setState(() {
                                       isMinimumRatedLock = false;
-                                      calculate();
+                                      calculate(product);
                                     });
                                   } else {
                                     setState(() {
@@ -3460,7 +3746,7 @@ class _SaleState extends State<Sale> {
                                   }
                                 } else {
                                   setState(() {
-                                    calculate();
+                                    calculate(product);
                                   });
                                 }
                               }
@@ -3490,6 +3776,10 @@ class _SaleState extends State<Sale> {
                                     id: 2,
                                     name: 'WsRate',
                                     rate: product.wholeSalePrice),
+                                ProductRating(
+                                    id: 2,
+                                    name: labelSpRate,
+                                    rate: product.spRetailPrice),
                                 ProductRating(
                                     id: 3, name: 'Branch', rate: product.branch)
                               ];
@@ -3546,7 +3836,7 @@ class _SaleState extends State<Sale> {
                                                           saleRate
                                                               .toStringAsFixed(
                                                                   2);
-                                                      calculate();
+                                                      calculate(product);
                                                     });
                                                   }),
                                             );
@@ -3572,7 +3862,7 @@ class _SaleState extends State<Sale> {
                                 ),
                               ),
                               onTap: () {
-                                productTrackingList(product.itemId);
+                                productTrackingList(product);
                               },
                             )),
                         Visibility(
@@ -3606,7 +3896,7 @@ class _SaleState extends State<Sale> {
                                 hintText: '0.0'),
                             onChanged: (value) {
                               setState(() {
-                                calculate();
+                                calculate(product);
                               });
                             },
                           ),
@@ -3629,7 +3919,7 @@ class _SaleState extends State<Sale> {
                                 hintText: '0.0'),
                             onChanged: (value) {
                               setState(() {
-                                calculate();
+                                calculate(product);
                               });
                             },
                           ),
@@ -3654,7 +3944,7 @@ class _SaleState extends State<Sale> {
                                     : 'SerialNo'),
                             onChanged: (value) {
                               setState(() {
-                                calculate();
+                                calculate(product);
                               });
                             },
                           ),
@@ -3786,14 +4076,34 @@ class _SaleState extends State<Sale> {
                                                   }
                                                 }
                                               }
-                                              outOfStock = negativeStock
-                                                  ? false
-                                                  : salesTypeData.type ==
-                                                              'SALES-O' ||
-                                                          salesTypeData.type ==
-                                                              'SALES-Q'
-                                                      ? isStockProductOnlyInSalesQO
-                                                          ? cartItem[index]
+                                              outOfStock = isLockQtyOnlyInSales
+                                                  ? cartItem[index].quantity +
+                                                              1 >
+                                                          cartItem[index].stock
+                                                      ? true
+                                                      : cartQ
+                                                          ? true
+                                                          : false
+                                                  : negativeStock
+                                                      ? false
+                                                      : salesTypeData.type ==
+                                                                  'SALES-O' ||
+                                                              salesTypeData
+                                                                      .type ==
+                                                                  'SALES-Q'
+                                                          ? isStockProductOnlyInSalesQO
+                                                              ? cartItem[index]
+                                                                              .quantity +
+                                                                          1 >
+                                                                      cartItem[
+                                                                              index]
+                                                                          .stock
+                                                                  ? true
+                                                                  : cartQ
+                                                                      ? true
+                                                                      : false
+                                                              : false
+                                                          : cartItem[index]
                                                                           .quantity +
                                                                       1 >
                                                                   cartItem[
@@ -3802,17 +4112,7 @@ class _SaleState extends State<Sale> {
                                                               ? true
                                                               : cartQ
                                                                   ? true
-                                                                  : false
-                                                          : false
-                                                      : cartItem[index]
-                                                                      .quantity +
-                                                                  1 >
-                                                              cartItem[index]
-                                                                  .stock
-                                                          ? true
-                                                          : cartQ
-                                                              ? true
-                                                              : false;
+                                                                  : false;
                                               if (outOfStock) {
                                                 ScaffoldMessenger.of(context)
                                                     .showSnackBar(SnackBar(
@@ -3858,14 +4158,39 @@ class _SaleState extends State<Sale> {
                                                 }
                                               }
                                             }
-                                            outOfStock = negativeStock
-                                                ? false
-                                                : salesTypeData.type ==
-                                                            'SALES-O' ||
-                                                        salesTypeData.type ==
-                                                            'SALES-Q'
-                                                    ? isStockProductOnlyInSalesQO
-                                                        ? cartItem[index]
+                                            outOfStock = isLockQtyOnlyInSales
+                                                ? ((cartItem[index].quantity *
+                                                                    cartItem[index]
+                                                                        .unitValue) +
+                                                                cartItem[index]
+                                                                    .free) +
+                                                            1 >
+                                                        cartItem[index].stock
+                                                    ? true
+                                                    : cartQ
+                                                        ? true
+                                                        : false
+                                                : negativeStock
+                                                    ? false
+                                                    : salesTypeData.type ==
+                                                                'SALES-O' ||
+                                                            salesTypeData
+                                                                    .type ==
+                                                                'SALES-Q'
+                                                        ? isStockProductOnlyInSalesQO
+                                                            ? ((cartItem[index].quantity * cartItem[index].unitValue) +
+                                                                            cartItem[index]
+                                                                                .free) +
+                                                                        1 >
+                                                                    cartItem[
+                                                                            index]
+                                                                        .stock
+                                                                ? true
+                                                                : cartQ
+                                                                    ? true
+                                                                    : false
+                                                            : false
+                                                        : cartItem[index]
                                                                         .quantity +
                                                                     1 >
                                                                 cartItem[index]
@@ -3873,16 +4198,7 @@ class _SaleState extends State<Sale> {
                                                             ? true
                                                             : cartQ
                                                                 ? true
-                                                                : false
-                                                        : false
-                                                    : cartItem[index].quantity +
-                                                                1 >
-                                                            cartItem[index]
-                                                                .stock
-                                                        ? true
-                                                        : cartQ
-                                                            ? true
-                                                            : false;
+                                                                : false;
                                             if (outOfStock) {
                                               ScaffoldMessenger.of(context)
                                                   .showSnackBar(SnackBar(
@@ -4086,7 +4402,7 @@ class _SaleState extends State<Sale> {
           );
   }
 
-  productTrackingList(id) {
+  productTrackingList(StockProduct product) {
     var ledId =
         ledgerModel.id.toString().isNotEmpty ? ledgerModel.id.toString() : '0';
     return showDialog(
@@ -4097,7 +4413,7 @@ class _SaleState extends State<Sale> {
             content: SizedBox(
                 width: deviceSize.width - 10,
                 height: deviceSize.height - 20,
-                child: productTrackingListData(id, ledId)),
+                child: productTrackingListData(ledId, product)),
             actions: [
               InkWell(
                 child: const Padding(
@@ -4116,9 +4432,9 @@ class _SaleState extends State<Sale> {
         });
   }
 
-  productTrackingListData(id, ledger) {
+  productTrackingListData(ledger, StockProduct product) {
     return FutureBuilder(
-        future: dio.getProductTracking(id, ledger),
+        future: dio.getProductTracking(product.itemId, ledger),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data.length > 0) {
@@ -4126,12 +4442,23 @@ class _SaleState extends State<Sale> {
               return ListView.builder(
                   itemCount: data.length,
                   itemBuilder: (context, index) {
-                    return ListTile(
-                      title: Text(data[index]['Supplier'].toString(),
-                          style: const TextStyle(fontSize: 12)),
-                      trailing: Text(data[index]['Date'].toString()),
-                      subtitle: Text(
-                          'Qty : ${data[index]['Qty']} Rate : ${data[index]['Rate']}\n Disc : ${data[index]['Disc']}   ${data[index]['DiscPersent']}%'),
+                    return InkWell(
+                      child: ListTile(
+                        title: Text(data[index]['Supplier'].toString(),
+                            style: const TextStyle(fontSize: 12)),
+                        trailing: Text(data[index]['Date'].toString()),
+                        subtitle: Text(
+                            'Qty : ${data[index]['Qty']} Rate : ${data[index]['Rate']}\n Disc : ${data[index]['Disc']}   ${data[index]['DiscPersent']}%'),
+                        onLongPress: () {
+                          Navigator.of(context).pop();
+                          setState(() {
+                            rate = data[index]['Rate'].toDouble();
+                            saleRate = data[index]['Rate'].toDouble();
+                            _rateController.text = saleRate.toStringAsFixed(2);
+                            calculate(product);
+                          });
+                        },
+                      ),
                     );
                   });
             } else {
@@ -4336,6 +4663,7 @@ class _SaleState extends State<Sale> {
           if (element.itemId == cartItem[index].itemId) {
             cartQt += element.quantity;
             cartS = element.stock;
+            unitValue = element.unitValue;
           }
         }
         if (cartS > 0) {
@@ -4344,21 +4672,31 @@ class _SaleState extends State<Sale> {
           }
         }
       }
-      outOfStock = negativeStock
-          ? false
-          : salesTypeData.type == 'SALES-O' || salesTypeData.type == 'SALES-Q'
-              ? isStockProductOnlyInSalesQO
-                  ? double.tryParse(value) > cartItem[index].stock
+      outOfStock = isLockQtyOnlyInSales
+          ? (double.tryParse(value) * (unitValue) + freeQty) >
+                  cartItem[index].stock
+              ? true
+              : cartQ
+                  ? true
+                  : false
+          : negativeStock
+              ? false
+              : salesTypeData.type == 'SALES-O' ||
+                      salesTypeData.type == 'SALES-Q'
+                  ? isStockProductOnlyInSalesQO
+                      ? (double.tryParse(value) * (unitValue) + freeQty) >
+                              cartItem[index].stock
+                          ? true
+                          : cartQ
+                              ? true
+                              : false
+                      : false
+                  : (double.tryParse(value) * (unitValue) + freeQty) >
+                          cartItem[index].stock
                       ? true
                       : cartQ
                           ? true
-                          : false
-                  : false
-              : double.tryParse(value) > cartItem[index].stock
-                  ? true
-                  : cartQ
-                      ? true
-                      : false;
+                          : false;
       if (outOfStock) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: const Text('Sorry stock not available.'),
@@ -5103,7 +5441,7 @@ class _SaleState extends State<Sale> {
         onPressedNo: () {
           Navigator.of(context).pop();
           Navigator.pushReplacementNamed(context, '/sales',
-              arguments: {'default': false});
+              arguments: {'default': thisSale});
         },
         onPressedYes: () {
           Navigator.of(context).pop();

@@ -364,13 +364,13 @@ class InventoryMenu extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: const [
-                  // Icon(
-                  //   Icons.miscellaneous_services_rounded,
-                  //   color: green,
-                  //   size: 90.0,
-                  // ),
+                  Icon(
+                    Icons.miscellaneous_services_rounded,
+                    color: green,
+                    size: 90.0,
+                  ),
                   Text(
-                    '',
+                    'Generate INV',
                     style: TextStyle(
                         color: Colors.black, fontWeight: FontWeight.bold),
                   ),
@@ -379,7 +379,7 @@ class InventoryMenu extends StatelessWidget {
             ),
           ),
           onTap: () {
-            //
+            Navigator.pushNamed(context, '/InvoiceDesign');
           },
         ),
       ],

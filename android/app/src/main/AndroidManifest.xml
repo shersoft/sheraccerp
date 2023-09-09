@@ -45,6 +45,8 @@
         android:label="SherAccERP"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupOnly="false"
         android:networkSecurityConfig="@xml/network_security_config" >
         <activity
             android:name=".MainActivity"

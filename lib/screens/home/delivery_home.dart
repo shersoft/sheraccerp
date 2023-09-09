@@ -1,6 +1,7 @@
 // @dart = 2.9
 import 'package:firebase_in_app_messaging/firebase_in_app_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sheraccerp/sales_man_settings.dart';
 import 'package:sheraccerp/app_settings_page.dart';
@@ -135,9 +136,91 @@ class _DeliveryHomeState extends State<DeliveryHome> {
             ),
             IconButton(
                 onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (BuildContext context) =>
-                          const SalesManSettings()));
+                  var _pass = '';
+                  if (companyUserData.userType.toUpperCase() == 'ADMIN' ||
+                      sherSoftPassword.toString().isEmpty) {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (BuildContext context) =>
+                            const SalesManSettings()));
+                  } else {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(
+                                  20.0,
+                                ),
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.only(
+                              top: 10.0,
+                            ),
+                            title: const Text(
+                              "Enter Code",
+                              style: TextStyle(fontSize: 24.0),
+                            ),
+                            content: SizedBox(
+                              height: 400,
+                              child: SingleChildScrollView(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: <Widget>[
+                                    const Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: Text(
+                                        "Enter Your Code",
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: TextField(
+                                        decoration: const InputDecoration(
+                                            border: OutlineInputBorder(),
+                                            hintText: 'Enter Code here',
+                                            labelText: 'Code'),
+                                        obscureText: true,
+                                        onChanged: (value) => _pass = value,
+                                      ),
+                                    ),
+                                    Container(
+                                      width: double.infinity,
+                                      height: 60,
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          if (_pass == sherSoftPassword) {
+                                            Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                    builder: (BuildContext
+                                                            context) =>
+                                                        const SalesManSettings()));
+                                          } else {
+                                            Fluttertoast.showToast(
+                                                msg: 'incorrect code');
+                                            Navigator.of(context).pop();
+                                          }
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.black,
+                                          // fixedSize: Size(250, 50),
+                                        ),
+                                        child: const Text(
+                                          "Submit",
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        });
+                  }
                 },
                 icon: const Icon(Icons.settings))
           ],

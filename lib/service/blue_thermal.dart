@@ -1,9 +1,12 @@
 // @dart = 2.11
+import 'dart:io';
+
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/shared/constants.dart';
@@ -289,6 +292,7 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
       int printerModel =
           Settings.getValue<int>('key-dropdown-printer-model-view', 0);
       int printerLines = Settings.getValue<int>('key-dropdown-print-line', 0);
+      bool isLogo = ComSettings.appSettings('bool', 'key-print-logo', false);
       //image max 300px X 300px
       printerLines = printerLines * 10;
       String printerLine = "-";
@@ -296,39 +300,26 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
         printerLine = printerLine + "-";
       }
 
-      ///image from File path
-      // String filename = 'yourlogo.png';
-      // ByteData bytesData = await rootBundle.load("assets/images/yourlogo.png");
-      // String dir = (await getApplicationDocumentsDirectory()).path;
-      // File file = await File('$dir/$filename').writeAsBytes(bytesData.buffer
-      //     .asUint8List(bytesData.offsetInBytes, bytesData.lengthInBytes));
-
-      ///image from Asset
-      ByteData bytesAsset =
-          await rootBundle.load("assets/images/logo/green.png");
-      Uint8List imageBytesFromAsset = bytesAsset.buffer
-          .asUint8List(bytesAsset.offsetInBytes, bytesAsset.lengthInBytes);
-
-      ///image from Network
-      // var response = await http.get(Uri.parse(
-      //     "https://raw.githubusercontent.com/kakzaki/blue_thermal_printer/master/example/assets/images/yourlogo.png"));
-      // Uint8List bytesNetwork = response.bodyBytes;
-      // Uint8List imageBytesFromNetwork = bytesNetwork.buffer
-      //     .asUint8List(bytesNetwork.offsetInBytes, bytesNetwork.lengthInBytes);
+      //image from File path
+      File file;
+      if (isLogo) {
+        String dir = (await getApplicationDocumentsDirectory()).path;
+        file = File('$dir/logo.png');
+      }
 
       bluetooth.isConnected.then((isConnected) {
         if (isConnected == true) {
           String line = "0";
           try {
             if (printerModel == 5) {
+              if (isLogo) {
+                bluetooth.printNewLine();
+                if (file != null) {
+                  bluetooth.printImage(file.path); //path of your image/logo
+                }
+                bluetooth.printNewLine();
+              }
               bluetooth.printNewLine();
-              // bluetooth.printImage(file.path); //path of your image/logo
-              // bluetooth.printNewLine();
-              // bluetooth.printImageBytes(imageBytesFromAsset); //image from Asset
-              // bluetooth.printNewLine();
-              // bluetooth.printImageBytes(imageBytesFromNetwork); //image from Network
-              // bluetooth.printNewLine();
-              // if (taxSale) {
               bluetooth.printCustom(companySettings.name,
                   Enu.Size.boldLarge.val, Enu.Align.center.val);
               bluetooth.printNewLine();
@@ -474,9 +465,13 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
               //bluetooth.drawerPin2(); // or you can use bluetooth.drawerPin5();
               // }else{}
             } else if (printerModel == 7) {
-              bluetooth.printNewLine();
-              bluetooth.printImageBytes(imageBytesFromAsset); //image from Asset
-              bluetooth.printNewLine();
+              if (isLogo) {
+                bluetooth.printNewLine();
+                if (file != null) {
+                  bluetooth.printImage(file.path); //path of your image/logo
+                }
+                bluetooth.printNewLine();
+              }
               bluetooth.printNewLine();
               bluetooth.printCustom(companySettings.name,
                   Enu.Size.extraLarge.val, Enu.Align.center.val);

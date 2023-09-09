@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:sheraccerp/screens/settings/add_logo.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
 
@@ -585,6 +586,16 @@ class AppSettings extends StatelessWidget {
                     debugPrint('key-item-serial-no: $value');
                   },
                 ),
+                SwitchSettingsTile(
+                  settingKey: 'key-item-stock-all',
+                  title: 'Limited Item On Stock',
+                  subtitle: 'Show Limited Stock Items',
+                  enabledLabel: 'Enabled',
+                  disabledLabel: 'Disabled',
+                  onChange: (value) {
+                    debugPrint('key-item-stock-all: $value');
+                  },
+                ),
                 DropDownSettingsTile<int>(
                   title: 'Item Default Unit',
                   settingKey: 'key-dropdown-item-default-sku-view',
@@ -727,6 +738,17 @@ class AppSettings extends StatelessWidget {
             child: SettingsScreen(
               title: 'Pinter Settings',
               children: [
+                SwitchSettingsTile(
+                  settingKey: 'key-print-logo',
+                  title: 'Show Logo On Print',
+                  subtitle: 'Set Logo First On Settings',
+                  enabledLabel: 'Enabled',
+                  disabledLabel: 'Disabled',
+                  // leading: Icon(Icons.receipt_long),
+                  onChange: (value) {
+                    debugPrint('key-print-logo: $value');
+                  },
+                ),
                 DropDownSettingsTile<int>(
                   title: 'Printer Type',
                   settingKey: 'key-dropdown-printer-type-view',
@@ -738,6 +760,7 @@ class AppSettings extends StatelessWidget {
                     6: 'TCP',
                     7: 'WiFi',
                     8: 'USB',
+                    9: 'Invoice Designer',
                   },
                   selected: 2,
                   onChange: (value) {
@@ -1348,15 +1371,30 @@ class AppSettings extends StatelessWidget {
         //   ],
         // ),
         Center(
-          child: TextButton(
-              onPressed: () {
-                Settings.clearCache();
-                Fluttertoast.showToast(msg: 'Reset Ok');
-              },
-              child: Text(
-                'Reset',
-                style: Theme.of(context).textTheme.headline6,
-              )),
+          child: Card(
+            child: TextButton(
+                onPressed: () {
+                  Settings.clearCache();
+                  Fluttertoast.showToast(msg: 'Reset Ok');
+                },
+                child: Text(
+                  'Reset',
+                  style: Theme.of(context).textTheme.headline6,
+                )),
+          ),
+        ),
+        Center(
+          child: Card(
+            child: TextButton(
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (BuildContext context) => const AddLogo()));
+                },
+                child: Text(
+                  'Add Logo',
+                  style: Theme.of(context).textTheme.headline6,
+                )),
+          ),
         )
       ],
     );

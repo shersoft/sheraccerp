@@ -204,7 +204,8 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                           'adCess': totalAdCess,
                           'Salesman': salesManId,
                           'location': locationId,
-                          'statementtype': stType
+                          'statementtype': stType,
+                          'fyId': currentFinancialYear.id,
                         }) +
                         ']';
 
@@ -268,7 +269,8 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                           'adCess': totalAdCess,
                           'Salesman': salesManId,
                           'location': locationId,
-                          'statementtype': stType
+                          'statementtype': stType,
+                          'fyId': currentFinancialYear.id,
                         }) +
                         ']';
 

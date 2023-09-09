@@ -13,6 +13,7 @@ class SoftwareSettings extends StatefulWidget {
 
 class _SoftwareSettingsState extends State<SoftwareSettings> {
   List<CompanySettings> _settingsList = [];
+  List<CompanySettings> settingsData = [];
   List<CompanySettings> settingsDisplayList = [];
   DioService dio = DioService();
 
@@ -28,6 +29,7 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
     dio.getSoftwareSettings().then((value) {
       setState(() {
         _settingsList.addAll(value);
+        settingsData = _settingsList;
         settingsDisplayList = _settingsList;
       });
     });
@@ -47,7 +49,7 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
           IconButton(
               onPressed: () {
                 setState(() {
-                  //
+                  saveData();
                 });
               },
               icon: const Icon(Icons.save)),
@@ -102,5 +104,31 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
               )
               .toList()),
     );
+  }
+
+  updateItem(CompanySettings item) {
+    int index = settingsData.indexWhere((element) => element.name == item.name);
+    settingsData[index] = item;
+  }
+
+  saveData() {
+    final body = {
+      'toolBarSale': '',
+      'cashAC': '',
+      'stockValue': '',
+      'defaultLocation': '',
+      'decimalPoint': '',
+      'boxColor': '',
+      'toolBarColor': '',
+      'backhand': '',
+      'data': settingsData
+    };
+    dio.updateGeneralSetting(body).then((value) {
+      if (value) {
+        //
+      } else {
+        //
+      }
+    });
   }
 }

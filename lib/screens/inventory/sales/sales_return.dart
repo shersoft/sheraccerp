@@ -53,7 +53,8 @@ class _SalesReturnState extends State<SalesReturn> {
       previewData = false,
       oldBill = false,
       keyItemsVariantStock = false,
-      buttonEvent = false;
+      buttonEvent = false,
+      productTracking = false;
   final List<TextEditingController> _controllers = [];
   DateTime now = DateTime.now();
   String formattedDate, _narration = '';
@@ -105,14 +106,6 @@ class _SalesReturnState extends State<SalesReturn> {
 
     saleAccount = mainAccount.firstWhere(
         (element) => element['LedName'] == 'GENERAL SALES A/C')['LedCode'];
-    acId = mainAccount
-        .firstWhere((element) => element['LedName'] == 'CASH')['LedCode'];
-    acId = ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) -
-                1 >
-            acId
-        ? ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', acId) -
-            1
-        : acId;
 
     if (widget.fromSale) {
       setState(() {
@@ -135,6 +128,17 @@ class _SalesReturnState extends State<SalesReturn> {
     companySettings = ScopedModel.of<MainModel>(context).getCompanySettings();
     settings = ScopedModel.of<MainModel>(context).getSettings();
 
+    String cashAc =
+        ComSettings.getValue('CASH A/C', settings).toString().trim() ?? 'CASH';
+    acId = mainAccount
+        .firstWhere((element) => element['LedName'] == cashAc)['LedCode'];
+    acId = ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) -
+                1 >
+            acId
+        ? ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', acId) -
+            1
+        : acId;
+
     taxMethod = companySettings.taxCalculation;
     enableMULTIUNIT = ComSettings.getStatus('ENABLE MULTI-UNIT', settings);
     pRateBasedProfitInSales =
@@ -142,6 +146,9 @@ class _SalesReturnState extends State<SalesReturn> {
     negativeStock = ComSettings.getStatus('ALLOW NEGETIVE STOCK', settings);
     companyTaxMode = ComSettings.getValue('PACKAGE', settings);
     cessOnNetAmount = ComSettings.getStatus('CESS ON NET AMOUNT', settings);
+    productTracking =
+        ComSettings.getStatus('ENABLE PRODUCT TRACKING IN SALES', settings);
+
     enableKeralaFloodCess = false;
     useUNIQUECODEASBARCODE =
         ComSettings.getStatus('USE UNIQUECODE AS BARCODE', settings);
@@ -1416,7 +1423,6 @@ class _SalesReturnState extends State<SalesReturn> {
     }
     uniqueCode = productModelPrize['uniquecode'];
     List<UnitModel> unitList = [];
-
     calculate() {
       if (enableMULTIUNIT) {
         if (saleRate > 0) {
@@ -1676,7 +1682,24 @@ class _SalesReturnState extends State<SalesReturn> {
                             '$rRate',
                             style: const TextStyle(color: Colors.red),
                           ),
-                        )
+                        ),
+                        Visibility(
+                            visible: productTracking,
+                            child: InkWell(
+                              child: Container(
+                                color: blue,
+                                child: const Text(
+                                  'Sold',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: white),
+                                ),
+                              ),
+                              onTap: () {
+                                productTrackingList(
+                                    productModel['slno'].toString());
+                              },
+                            )),
                       ]),
                   Row(
                     children: [
@@ -2777,6 +2800,135 @@ class _SalesReturnState extends State<SalesReturn> {
     var dataAll = [companySettings, settings, data, size, form];
     Navigator.push(context,
         MaterialPageRoute(builder: (_) => BtPrint(dataAll, byteImage)));
+  }
+
+  productTrackingList(String id) {
+    var ledId =
+        ledgerModel.id.toString().isNotEmpty ? ledgerModel.id.toString() : '0';
+    return showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Previous  Sold Price'),
+            content: SizedBox(
+                width: deviceSize.width - 10,
+                height: deviceSize.height - 20,
+                child: productTrackingListData(ledId, id)),
+            actions: [
+              InkWell(
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    "Close",
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+                onTap: () {
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          );
+        });
+  }
+
+  productTrackingListData(ledger, String itemId) {
+    return FutureBuilder(
+        future: dio.getProductTracking(itemId, ledger),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            if (snapshot.data.length > 0) {
+              List<dynamic> data = snapshot.data;
+              return ListView.builder(
+                  itemCount: data.length,
+                  itemBuilder: (context, index) {
+                    return InkWell(
+                      child: ListTile(
+                        title: Text(data[index]['Supplier'].toString(),
+                            style: const TextStyle(fontSize: 12)),
+                        trailing: Text(data[index]['Date'].toString()),
+                        subtitle: Text(
+                            'Qty : ${data[index]['Qty']} Rate : ${data[index]['Rate']}\n Disc : ${data[index]['Disc']}   ${data[index]['DiscPersent']}%'),
+                        onLongPress: () {
+                          Navigator.of(context).pop();
+                          setState(() {
+                            // rate = data[index]['Rate'].toDouble();
+                            // saleRate = data[index]['Rate'].toDouble();
+                            // _rateController.text = saleRate.toStringAsFixed(2);
+                            // calculate();
+                          });
+                        },
+                      ),
+                    );
+                  });
+            } else {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    SizedBox(height: 20),
+                    Text('Product not sold'),
+                    // TextButton(
+                    //     onPressed: () {
+                    //       setState(() {
+                    //         nextWidget = 2;
+                    //       });
+                    //     },
+                    //     child: const Text('Select Product Again'))
+                  ],
+                ),
+              );
+            }
+          } else if (snapshot.hasError) {
+            return AlertDialog(
+              title: const Text(
+                'An Error Occurred!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.redAccent,
+                ),
+              ),
+              content: Text(
+                "${snapshot.error}",
+                style: const TextStyle(
+                  color: Colors.blueAccent,
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text(
+                    'Go Back',
+                    style: TextStyle(
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                )
+              ],
+            );
+          }
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const <Widget>[
+                CircularProgressIndicator(),
+                SizedBox(height: 20),
+                Text('This may take some time..')
+              ],
+            ),
+          );
+        });
+
+    // return ListView.builder(
+    //   itemCount: 150,
+    //   itemBuilder: (BuildContext context, int index) {
+    //     return ListTile(
+    //       title: Text(index.toString()),
+    //     );
+    //   },
+    // );
   }
 }
 

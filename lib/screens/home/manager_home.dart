@@ -17,7 +17,7 @@ import 'package:sheraccerp/widget/inventory_report_menu.dart';
 import 'package:sheraccerp/widget/report.dart';
 import 'package:sheraccerp/widget/cash_and_bank.dart';
 import 'package:sheraccerp/widget/expense.dart';
-import 'package:sheraccerp/widget/more_widget.dart';
+import 'package:sheraccerp/screens/settings/more_widget.dart';
 import 'package:sheraccerp/widget/receivables_payables.dart';
 import 'package:sheraccerp/widget/statement.dart';
 

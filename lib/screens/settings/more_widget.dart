@@ -6,7 +6,7 @@ import 'package:sheraccerp/screens/settings/software_settings.dart';
 import 'package:sheraccerp/screens/ui/add_screen.dart';
 import 'package:sheraccerp/screens/user_list.dart';
 
-import '../util/res_color.dart';
+import '../../util/res_color.dart';
 
 class MoreWidget extends StatelessWidget {
   const MoreWidget({Key? key}) : super(key: key);

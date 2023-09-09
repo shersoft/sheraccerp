@@ -12,6 +12,11 @@ class DateUtil {
     return DateFormat("yyyy-MM-dd").format(dateTime);
   }
 
+  static String dateYMD1(value) {
+    var dateTime = DateFormat("dd/MM/yyyy").parse(value.toString());
+    return DateFormat("yyyy-MM-dd").format(dateTime);
+  }
+
   static String dateDMY2YMD(value) {
     var dateTime = DateFormat("dd-MM-yyyy").parse(value.toString());
     return DateFormat("yyyy-MM-dd").format(dateTime);

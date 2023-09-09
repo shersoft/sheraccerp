@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/bussiness_card.dart';
+import 'package:sheraccerp/screens/settings/add_logo.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
@@ -219,6 +220,18 @@ class _ProfileState extends State<Profile> {
             ),
           ),
         ),
+        Center(
+          child: Card(
+            child: TextButton(
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (BuildContext context) => const AddLogo()));
+                },
+                child: const Text(
+                  'Add Logo',
+                )),
+          ),
+        )
       ],
     );
   }

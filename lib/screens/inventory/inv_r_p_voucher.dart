@@ -74,14 +74,7 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
         cashBankACList.addAll(value);
       });
     });
-    acId = mainAccount
-        .firstWhere((element) => element['LedName'] == 'CASH')['LedCode'];
-    acId = ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) -
-                1 >
-            acId
-        ? ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', acId) -
-            1
-        : acId;
+
     loadSettings();
   }
 
@@ -89,6 +82,18 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
     // var companySettings =
     //     ScopedModel.of<MainModel>(context).getCompanySettings()[0];
     var settings = ScopedModel.of<MainModel>(context).getSettings();
+
+    String cashAc =
+        ComSettings.getValue('CASH A/C', settings).toString().trim() ?? 'CASH';
+    acId = mainAccount
+        .firstWhere((element) => element['LedName'] == cashAc)['LedCode'];
+    acId = ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) -
+                1 >
+            acId
+        ? ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', acId) -
+            1
+        : acId;
+
     salesManId = ComSettings.appSettings(
             'int', 'key-dropdown-default-salesman-view', 1) -
         1;
@@ -624,7 +629,7 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
                                               Text(
                                                 'EntryNo : ' +
                                                     dataDisplayBill[index]
-                                                            ['grandtotal']
+                                                            ['entryno']
                                                         .toString(),
                                                 style: const TextStyle(
                                                   color: Colors.black,
@@ -779,7 +784,9 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
               'entryType': _invoiceData['Stype'].toString(),
               'pEntryNo': _invoiceData['entryno'].toString(),
               'invoiceNo': _invoiceData['invoiceNo'].toString(),
-              'date': DateUtil.dateYMD(_invoiceData['Ddate'].toString()),
+              'date': operation == 'UPDATE'
+                  ? _invoiceData['Ddate']
+                  : DateUtil.dateYMD1(_invoiceData['Ddate'].toString()),
               'amount': amount,
               'discount': discount,
               'total': total,
@@ -800,7 +807,8 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
             'salesman': '-1',
             'month': '2022-01-01',
             'particular': particular,
-            'vType': mode == 'Payment Invoice' ? 'PV' : 'RV'
+            'vType': mode == 'Payment Invoice' ? 'PV' : 'RV',
+            'fyId': currentFinancialYear.id
           }
         ];
         if (operation == 'DELETE') {
@@ -1014,9 +1022,8 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
         iD = information['DEBITACCOUNT'].toString();
         acId = information['DEBITACCOUNT'];
         var part1 = particulars[0];
-        ledData =
-            LedgerModel(id: part1['Name'], name: part1['Name'].toString());
-        amount = double.tryParse(part1['AMOUNT'].toString());
+        ledData = LedgerModel(id: part1['Name'], name: '');
+        amount = double.tryParse(part1['Amount'].toString());
         discount = double.tryParse(part1['Discount'].toString());
         total = double.tryParse(part1['Total'].toString());
         narration = part1['Narration'].toString();
@@ -1028,15 +1035,22 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
           'Stype': part1['VoucherType'],
           'entryno': part1['EntryNo'],
           'invoiceNo': part1['InvoiceNo'],
-          'Ddate': part1['Pdate']
+          'Ddate': part1['Pdate'],
+          'Balance': part1['Amount'],
         };
       }
 
+      api.getCustomerDetail(ledData.id).then((data) {
+        setState(() {
+          ledData.name = data.name;
+        });
+      });
       setState(() {
         if (row <= 1) {
           widgetID = false;
           oldVoucher = true;
           isSelected = true;
+          isBillSelected = true;
           _controllerAmount.text = amount.toString();
           _controllerDiscount.text = discount > 0 ? discount.toString() : '';
           _controllerNarration.text = narration.toString();

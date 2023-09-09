@@ -4489,18 +4489,20 @@ class _BtPrintState extends State<BtPrint> {
     var printerSize = widget.data[3];
     CompanyInformation companySettings = widget.data[0];
     List<CompanySettings> settings = widget.data[1];
-    var dataInformation = bill['Information'][0];
+    var dataInformation = bill['Information'];
     var dataParticulars = bill['Particulars'];
     // var dataSerialNO = bill['SerialNO'];,
     // var dataDeliveryNote = bill['DeliveryNote'];
     // var otherAmount = bill['otherAmount'];
-    var BalanceAmount = bill['balance'].toString().split(' ')[0].toString();
+    var BalanceAmount = bill['balance'] == 'null'
+        ? '0'
+        : bill['balance'].toString().split(' ')[0].toString();
     var ledgerName = mainAccount
         .firstWhere(
           (element) =>
               element['LedCode'].toString() ==
               dataInformation['Customer'].toString(),
-          orElse: () => {'LedName': dataInformation['Toname']},
+          orElse: () => {'LedName': dataInformation['ToName']},
         )['LedName']
         .toString();
     // header
@@ -4764,7 +4766,7 @@ class _BtPrintState extends State<BtPrint> {
           bytes += ticket.text('Bill To :',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
-          bytes += ticket.text('${dataInformation['Toname']}',
+          bytes += ticket.text('${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
           // if (isEsQrCodeKSA) {
@@ -4795,7 +4797,7 @@ class _BtPrintState extends State<BtPrint> {
           bytes += ticket.hr();
           double totalQty = 0, totalRate = 0;
           for (var i = 0; i < dataParticulars.length; i++) {
-            var itemName = dataParticulars[i]['ProductName'].toString();
+            var itemName = dataParticulars[i]['itemname'].toString();
             bytes += ticket.text(itemName,
                 styles: const PosStyles(align: PosAlign.left, bold: true));
 
