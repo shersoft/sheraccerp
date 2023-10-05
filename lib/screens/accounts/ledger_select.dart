@@ -1245,14 +1245,14 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                 children: [
                                                   const Text('Select Area'),
                                                   DropdownButton<
-                                                      OtherRegistrations>(
+                                                      OtherRegistrationModel>(
                                                     icon: const Icon(Icons
                                                         .keyboard_arrow_down),
                                                     items: otherRegAreaList.map(
-                                                        (OtherRegistrations
+                                                        (OtherRegistrationModel
                                                             items) {
                                                       return DropdownMenuItem<
-                                                          OtherRegistrations>(
+                                                          OtherRegistrationModel>(
                                                         value: items,
                                                         child: Text(items.name),
                                                       );
@@ -1279,14 +1279,14 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                 children: [
                                                   const Text('Select Route'),
                                                   DropdownButton<
-                                                      OtherRegistrations>(
+                                                      OtherRegistrationModel>(
                                                     icon: const Icon(Icons
                                                         .keyboard_arrow_down),
-                                                    items: otherRegRouteList
-                                                        .map((OtherRegistrations
+                                                    items: otherRegRouteList.map(
+                                                        (OtherRegistrationModel
                                                             items) {
                                                       return DropdownMenuItem<
-                                                          OtherRegistrations>(
+                                                          OtherRegistrationModel>(
                                                         value: items,
                                                         child: Text(items.name),
                                                       );
@@ -2040,12 +2040,12 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                           const Text(
                                                                               'Select Area'),
                                                                           DropdownButton<
-                                                                              OtherRegistrations>(
+                                                                              OtherRegistrationModel>(
                                                                             icon:
                                                                                 const Icon(Icons.keyboard_arrow_down),
                                                                             items:
-                                                                                otherRegAreaList.map((OtherRegistrations items) {
-                                                                              return DropdownMenuItem<OtherRegistrations>(
+                                                                                otherRegAreaList.map((OtherRegistrationModel items) {
+                                                                              return DropdownMenuItem<OtherRegistrationModel>(
                                                                                 value: items,
                                                                                 child: Text(items.name),
                                                                               );

@@ -1,6 +1,9 @@
 // @dart = 2.7
 import 'dart:convert';
+// ignore: avoid_web_libraries_in_flutter
+// import 'dart:html' as html;
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:csv/csv.dart';
 import 'package:dropdown_search/dropdown_search.dart';
@@ -8,18 +11,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:share_plus/share_plus.dart';
+
 import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
-import 'dart:ui' as ui;
-import 'package:pdf/widgets.dart' as pw;
-import 'package:path_provider/path_provider.dart';
-import 'package:pdf/pdf.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:sheraccerp/widget/pdf_screen.dart';
-// import 'dart:html' as html;
 
 import 'package:sheraccerp/widget/loading.dart';
 
@@ -1336,10 +1338,11 @@ class _SalesListState extends State<SalesList> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     const Text('Select Area'),
-                    DropdownButton<OtherRegistrations>(
+                    DropdownButton<OtherRegistrationModel>(
                       icon: const Icon(Icons.keyboard_arrow_down),
-                      items: otherRegAreaList.map((OtherRegistrations items) {
-                        return DropdownMenuItem<OtherRegistrations>(
+                      items:
+                          otherRegAreaList.map((OtherRegistrationModel items) {
+                        return DropdownMenuItem<OtherRegistrationModel>(
                           value: items,
                           child: Text(items.name),
                         );
@@ -1362,10 +1365,11 @@ class _SalesListState extends State<SalesList> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     const Text('Select Route'),
-                    DropdownButton<OtherRegistrations>(
+                    DropdownButton<OtherRegistrationModel>(
                       icon: const Icon(Icons.keyboard_arrow_down),
-                      items: otherRegRouteList.map((OtherRegistrations items) {
-                        return DropdownMenuItem<OtherRegistrations>(
+                      items:
+                          otherRegRouteList.map((OtherRegistrationModel items) {
+                        return DropdownMenuItem<OtherRegistrationModel>(
                           value: items,
                           child: Text(items.name),
                         );
@@ -1506,31 +1510,31 @@ class _SalesListState extends State<SalesList> {
   }
 
   Future<String> savePreviewPDF(pw.Document pdf, var title) async {
-    title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
-    // if (kIsWeb) {
-    //   try {
-    //     final bytes = await pdf.save();
-    //     final blob = html.Blob([bytes], 'application/pdf');
-    //     final url = html.Url.createObjectUrlFromBlob(blob);
-    //     final anchor = html.AnchorElement()
-    //       ..href = url
-    //       ..style.display = 'none'
-    //       ..download = '$title.pdf';
-    //     html.document.body.children.add(anchor);
-    //     anchor.click();
-    //     html.document.body.children.remove(anchor);
-    //     html.Url.revokeObjectUrl(url);
-    //     return '';
-    //   } catch (ex) {
-    //     ex.toString();
-    //   }
-    //   return '';
-    // } else {
-    var output = await getTemporaryDirectory();
-    final file = File('${output.path}/' + title + '.pdf');
-    await file.writeAsBytes(await pdf.save());
-    return file.path.toString();
-    // }
+    title = title.replaceAll(RegExp(r'[^\w\s]+'), '');
+    if (kIsWeb) {
+      try {
+        // final bytes = await pdf.save();
+        // final blob = html.Blob([bytes], 'application/pdf');
+        // final url = html.Url.createObjectUrlFromBlob(blob);
+        // final anchor = html.AnchorElement()
+        //   ..href = url
+        //   ..style.display = 'none'
+        //   ..download = '$title.pdf';
+        // html.document.body.children.add(anchor);
+        // anchor.click();
+        // html.document.body.children.remove(anchor);
+        // html.Url.revokeObjectUrl(url);
+        return '';
+      } catch (ex) {
+        ex.toString();
+      }
+      return '';
+    } else {
+      var output = await getTemporaryDirectory();
+      final file = File('${output.path}/' + title + '.pdf');
+      await file.writeAsBytes(await pdf.save());
+      return file.path.toString();
+    }
   }
 
   Future<String> _createCSV(String title) async {
@@ -1559,26 +1563,26 @@ class _SalesListState extends State<SalesList> {
   }
 
   Future<String> savePreviewCSV(var csv, var title) async {
-    title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
-    // if (kIsWeb) {
-    //   try {
-    //     html.AnchorElement()
-    //       ..href =
-    //           '${Uri.dataFromString(csv, mimeType: 'text/csv', encoding: utf8)}'
-    //       ..download = title
-    //       ..style.display = 'none'
-    //       ..click();
-    //     return '';
-    //   } catch (ex) {
-    //     ex.toString();
-    //   }
-    //   return '';
-    // } else {
-    var output = await getTemporaryDirectory();
-    final file = File('${output.path}/' + title + '.csv');
-    await file.writeAsString(csv);
-    return file.path.toString();
-    // }
+    title = title.replaceAll(RegExp(r'[^\w\s]+'), '');
+    if (kIsWeb) {
+      try {
+        // html.AnchorElement()
+        //   ..href =
+        //       '${Uri.dataFromString(csv, mimeType: 'text/csv', encoding: utf8)}'
+        //   ..download = title
+        //   ..style.display = 'none'
+        //   ..click();
+        return '';
+      } catch (ex) {
+        ex.toString();
+      }
+      return '';
+    } else {
+      var output = await getTemporaryDirectory();
+      final file = File('${output.path}/' + title + '.csv');
+      await file.writeAsString(csv);
+      return file.path.toString();
+    }
   }
 
   Future<void> urlFileShare(BuildContext context, String text, String subject,

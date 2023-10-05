@@ -15,17 +15,16 @@ import 'package:sheraccerp/models/customer_model.dart';
 import 'package:sheraccerp/models/ledger_name_model.dart';
 import 'package:sheraccerp/models/option_rate_type.dart';
 import 'package:sheraccerp/models/order.dart';
-import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/models/stock_item.dart';
 import 'package:sheraccerp/models/stock_product.dart';
 import 'package:sheraccerp/models/unit_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
+import 'package:sheraccerp/screens/inventory/purchase/purchase_new.dart';
 import 'package:sheraccerp/screens/inventory/sales/previous_bill.dart';
 import 'package:sheraccerp/screens/inventory/sales/sales_return.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
 import 'package:sheraccerp/service/generate_e_invoice.dart';
-import 'package:sheraccerp/service/generate_e_way_bill.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/color_palette.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
@@ -34,23 +33,16 @@ import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/loading.dart';
 import 'package:sheraccerp/widget/progress_hud.dart';
 
-class Sale extends StatefulWidget {
-  const Sale({Key key}) : super(key: key);
+class DeliveryNote extends StatefulWidget {
+  const DeliveryNote({Key key}) : super(key: key);
 
   @override
-  _SaleState createState() => _SaleState();
+  State<DeliveryNote> createState() => _DeliveryNoteState();
 }
 
-class _SaleState extends State<Sale> {
+class _DeliveryNoteState extends State<DeliveryNote> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  List<SalesType> salesTypeDisplay = [];
-  dynamic salesData;
-  bool _defaultSale = false,
-      thisSale = false,
-      _isLoading = false,
-      isCustomForm = false,
-      buttonEvent = false;
-  // final bool _autoVariantSelect = true;
+  bool _isLoading = false, buttonEvent = false;
   DioService api = DioService();
   Size deviceSize;
   var ledgerModel;
@@ -78,16 +70,15 @@ class _SaleState extends State<Sale> {
       isStockProductOnlyInSalesQO = false,
       isLockQtyOnlyInSales = false,
       isSalesManWiseLedger = false,
-      isEnableProfitlessSalesWarning = false,
       isFreeQty = false,
       gstVerified = false,
-      gstValidation = false;
+      gstValidation = false,
+      taxable = true;
   final List<TextEditingController> _controllers = [];
   DateTime now = DateTime.now();
   String formattedDate, _narration = '';
   double _balance = 0, grandTotal = 0;
   final TextEditingController _controllerCashReceived = TextEditingController();
-  final FocusNode _focusNodeCashReceived = FocusNode();
 
   int page = 1, pageTotal = 0, totalRecords = 0;
   int saleAccount = 0, acId = 0, decimal = 2;
@@ -99,6 +90,7 @@ class _SaleState extends State<Sale> {
   var salesManId = 0;
   String labelSerialNo = 'SerialNo';
   String labelSpRate = 'SpRetail';
+  dynamic deliveryNoteData;
   bool ledgerScanner = false, productScanner = false, loadScanner = false;
 
   Barcode result;
@@ -111,15 +103,6 @@ class _SaleState extends State<Sale> {
     super.initState();
     formattedDate =
         getToDay.isNotEmpty ? getToDay : DateFormat('dd-MM-yyyy').format(now);
-
-    isCustomForm =
-        ComSettings.appSettings('bool', 'key-switch-sales-form-set', false)
-            ? true
-            : false;
-    if (isCustomForm) {
-      salesTypeDisplay =
-          ComSettings.salesFormList('key-item-sale-form-', false);
-    }
 
     loadSettings();
     api.fetchDetailAmount().then((value) {
@@ -158,11 +141,7 @@ class _SaleState extends State<Sale> {
         setState(() {
           rateTypeList = value;
 
-          String rateTypeS = salesTypeData != null
-              ? salesTypeData.rateType.isNotEmpty
-                  ? salesTypeData.rateType
-                  : 'MRP'
-              : 'MRP';
+          String rateTypeS = 'MRP';
 
           rateTypeItem =
               rateTypeList.firstWhere((element) => element.name == rateTypeS);
@@ -171,11 +150,7 @@ class _SaleState extends State<Sale> {
     } else {
       rateTypeList = optionRateTypeList;
 
-      String rateTypeS = salesTypeData != null
-          ? salesTypeData.rateType.isNotEmpty
-              ? salesTypeData.rateType
-              : 'MRP'
-          : 'MRP';
+      String rateTypeS = 'MRP';
 
       rateTypeItem = rateTypeList.firstWhere((element) =>
           element.name.toString().toUpperCase() == rateTypeS.toUpperCase());
@@ -215,8 +190,6 @@ class _SaleState extends State<Sale> {
     cessOnNetAmount = ComSettings.getStatus('CESS ON NET AMOUNT', settings);
     enableKeralaFloodCess = false;
     enableBarcode = ComSettings.getStatus('ENABLE BARCODE OPTION', settings);
-    isEnableProfitlessSalesWarning =
-        ComSettings.getStatus('ENABLE PROFITLESS SALES WARNING', settings);
     useUNIQUECODEASBARCODE =
         ComSettings.getStatus('USE UNIQUECODE AS BARCODE', settings);
     useOLDBARCODE = ComSettings.getStatus('USE OLD BARCODE', settings);
@@ -265,14 +238,11 @@ class _SaleState extends State<Sale> {
         TextPosition(offset: _freeQuantityController.text.length));
 
     deviceSize = MediaQuery.of(context).size;
-    final routes =
-        ModalRoute.of(context).settings.arguments as Map<String, bool>;
-    thisSale = routes['default'];
-    taxable = salesTypeData != null ? salesTypeData.tax : taxable;
+    taxable = true;
 
     return WillPopScope(
         onWillPop: _onWillPop,
-        child: widgetID ? widgetPrefix(thisSale) : widgetSuffix(thisSale));
+        child: widgetID ? widgetPrefix() : widgetSuffix());
   }
 
   Future<bool> _onWillPop() async {
@@ -329,7 +299,7 @@ class _SaleState extends State<Sale> {
             context: context,
             builder: (context) => AlertDialog(
               title: const Text('Are you sure?'),
-              content: const Text('Do you want to exit Sale'),
+              content: const Text('Do you want to exit DeliveryNote'),
               actions: <Widget>[
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
@@ -346,11 +316,11 @@ class _SaleState extends State<Sale> {
     }
   }
 
-  widgetSuffix(thisSale) {
+  widgetSuffix() {
     return Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: const Text("Sales"),
+          title: const Text("DeliveryNote"),
           actions: [
             Visibility(
               visible: enableBarcode,
@@ -385,10 +355,10 @@ class _SaleState extends State<Sale> {
                                   CartItem.encodeCartToJson(cartItem)
                                       .toString(),
                               0);
-                          deleteSale(context);
+                          deleteDeliveryNote(context);
                         } else {
                           Fluttertoast.showToast(
-                              msg: 'Please select atleast one bill');
+                              msg: 'Please select at least one bill');
                           setState(() {
                             buttonEvent = false;
                           });
@@ -428,10 +398,10 @@ class _SaleState extends State<Sale> {
                                     CartItem.encodeCartToJson(cartItem)
                                         .toString(),
                                 0);
-                            updateSale();
+                            updateDeliveryNote();
                           } else {
                             Fluttertoast.showToast(
-                                msg: 'Please select atleast one bill');
+                                msg: 'Please select at least one bill');
                             setState(() {
                               buttonEvent = false;
                             });
@@ -459,17 +429,8 @@ class _SaleState extends State<Sale> {
                               _isLoading = true;
                               buttonEvent = true;
                             });
-                            _insert(
-                                'SAVE DateTime:' +
-                                    formattedDate +
-                                    timeIs +
-                                    ' location:' +
-                                    lId.toString() +
-                                    ' ' +
-                                    CartItem.encodeCartToJson(cartItem)
-                                        .toString(),
-                                0);
-                            saveSale();
+
+                            saveDeliveryNote();
                           } else {
                             Fluttertoast.showToast(
                                 msg: 'Please add at least one item');
@@ -493,23 +454,18 @@ class _SaleState extends State<Sale> {
             inAsyncCall: _isLoading, opacity: 0.0, child: selectWidget()));
   }
 
-  widgetPrefix(thisSale) {
-    setState(() {
-      if (thisSale) {
-        previewData = true;
-      }
-    });
+  widgetPrefix() {
     return Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: const Text("Sales"),
+          title: const Text("Delivery Note"),
           actions: [
             Visibility(
               visible: previewData,
               child: TextButton(
-                  child: Text(
-                    previewData ? "New " + salesTypeData.name : 'Sales',
-                    style: const TextStyle(
+                  child: const Text(
+                    'New Delivery Note',
+                    style: TextStyle(
                         color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                   style: TextButton.styleFrom(
@@ -524,19 +480,9 @@ class _SaleState extends State<Sale> {
             ),
           ],
         ),
-        body: thisSale
-            ? Container(
-                child: previousBill(),
-              )
-            : _defaultSale
-                ? Container(
-                    child: previousBill(),
-                  )
-                : previewData
-                    ? Container(
-                        child: previousBill(),
-                      )
-                    : Container(child: selectSalesType()));
+        body: Container(
+          child: previousBill(),
+        ));
   }
 
   final ScrollController _scrollController = ScrollController();
@@ -553,16 +499,15 @@ class _SaleState extends State<Sale> {
         });
 
         List tempList = [];
-        var statement = 'SalesList';
-        var locationId =
-            lId.toString().trim().isNotEmpty ? lId : salesTypeData.location;
+        var statement = 'DeliveryNoteList';
+        var locationId = lId.toString().trim().isNotEmpty ? lId : 1;
 
         api
             .getPaginationList(
                 statement,
                 page,
                 locationId.toString(),
-                salesTypeData.id.toString(),
+                '0',
                 DateUtil.dateYMD(formattedDate),
                 salesManId > 0 ? salesManId.toString() : '')
             .then((value) {
@@ -761,7 +706,7 @@ class _SaleState extends State<Sale> {
             child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("No items in " + salesTypeData.name),
+              const Text("No items in DeliveryNote"),
               TextButton.icon(
                   style: ButtonStyle(
                     backgroundColor:
@@ -775,7 +720,7 @@ class _SaleState extends State<Sale> {
                     });
                   },
                   icon: const Icon(Icons.shopping_bag),
-                  label: Text('Take New ' + salesTypeData.name))
+                  label: const Text('Take New DeliveryNote'))
             ],
           ));
   }
@@ -791,7 +736,7 @@ class _SaleState extends State<Sale> {
     final id = await dbHelper.insert(car);
   }
 
-  saveSale() async {
+  saveDeliveryNote() async {
     List<CustomerModel> ledger = [];
     // ledger.add(ledgerModel);
     ledger.add(CustomerModel(
@@ -811,8 +756,7 @@ class _SaleState extends State<Sale> {
         stateCode: ledgerModel.stateCode,
         taxNumber: ledgerModel.taxNumber));
 
-    var locationId =
-        lId.toString().trim().isNotEmpty ? lId : salesTypeData.location;
+    var locationId = lId.toString().trim().isNotEmpty ? lId : 1;
 
     Order order = Order(
         customerModel: ledger,
@@ -877,7 +821,7 @@ class _SaleState extends State<Sale> {
         billType: companyTaxMode == 'GULF' ? '2' : '0',
         roundOff: '0',
         salesMan: salesManId.toString(),
-        sType: salesTypeData.rateType,
+        sType: rateType,
         dated: DateUtil.dateYMD(formattedDate),
         cashAC: acId.toString(),
         otherAmountData: otherAmountList);
@@ -887,9 +831,9 @@ class _SaleState extends State<Sale> {
       var items = json.encode(jsonItem);
       var ledger = json.encode(jsonLedger);
       var otherAmount = json.encode(order.otherAmountData);
-      var saleFormId = salesTypeData.id;
-      var saleFormType = salesTypeData.type;
-      var taxType = salesTypeData.tax ? 'T' : 'NT';
+      var saleFormId = 0;
+      var saleFormType = rateType;
+      var taxType = taxable ? 'T' : 'NT';
       var salesRateTypeId =
           rateTypeItem != null ? rateTypeItem.id.toString() : '1';
       var saleAccountId = saleAccount > 0 ? saleAccount.toString() : '0';
@@ -918,7 +862,7 @@ class _SaleState extends State<Sale> {
       }
       var data = '[' +
           json.encode({
-            'statement': 'SalesInsert',
+            'statement': 'DelInsert',
             'entryNo': 0,
             'invoiceNo': 0,
             'saleFormId': saleFormId,
@@ -978,65 +922,58 @@ class _SaleState extends State<Sale> {
 
       api.addSale(body).then((result) {
         if (CommonService().isNumeric(result) && int.tryParse(result) > 0) {
-          final bodyJsonAmount = {
-            'statement': 'SalesInsert',
-            'entryNo': int.tryParse(result.toString()),
-            'data': otherAmount,
-            'date': order.dated.toString(),
-            'saleFormType': saleFormType,
-            'narration': order.narration,
-            'location': order.location.toString(),
-            'id': order.customerModel[0].id.toString(),
-            'fyId': currentFinancialYear.id
-          };
-          api.addOtherAmount(bodyJsonAmount).then((ret) {
-            if (ret) {
-              final bodyJson = {
-                'statement': 'CheckPrint',
-                'entryNo': int.tryParse(result.toString()),
-                'sType': saleFormId.toString(),
-                'grandTotal': ComSettings.appSettings(
-                        'bool', 'key-round-off-amount', false)
-                    ? grandTotal.toStringAsFixed(decimal)
-                    : grandTotal.roundToDouble().toString()
-              };
-              api.checkBill(bodyJson).then((data) {
-                if (data) {
-                  dataDynamic = [
-                    {
-                      'RealEntryNo': int.tryParse(result.toString()),
-                      'EntryNo': int.tryParse(result.toString()),
-                      'InvoiceNo': int.tryParse(result.toString()),
-                      'Type': saleFormId
-                    }
-                  ];
-                  if (ComSettings.appSettings(
-                      'bool', 'key-sms-customer', false)) {
-                    var billName = salesTypeData.name == "Sales Order Entry"
-                        ? "Order"
-                        : "Bill";
-                    var ob = ledgerModel.balance.toString().split(' ');
-                    var ob1 = ob[0];
-                    var ob2 = ob[1];
-                    var amt = salesTypeData.name == "Sales Order Entry"
-                        ? ledgerModel.balance
-                        : ob2 == 'Dr'
-                            ? double.tryParse(ob1) +
-                                double.tryParse(order.balanceAmount)
-                            : double.tryParse(order.balanceAmount) -
-                                double.tryParse(ob1);
-                    String smsBody =
-                        "Dear ${ledgerModel.name},\nYour Sales $billName ${result.toString()}, Dated : $formattedDate for the Amount of ${order.grandTotal}/- \nBalance:$amt /- has been confirmed  \n${companySettings.name}";
-                    if (ledgerModel.phone.toString().isNotEmpty) {
-                      sendSms(ledgerModel.phone, smsBody);
-                    }
-                  }
-                  clearCart();
-                  showMore(context);
-                }
-              });
+          // final bodyJsonAmount = {
+          //   'statement': 'DelInsert',
+          //   'entryNo': int.tryParse(result.toString()),
+          //   'data': otherAmount,
+          //   'date': order.dated.toString(),
+          //   'saleFormType': saleFormType,
+          //   'narration': order.narration,
+          //   'location': order.location.toString(),
+          //   'id': order.customerModel[0].id.toString(),
+          //   'fyId': currentFinancialYear.id
+          // };
+          // api.addOtherAmount(bodyJsonAmount).then((ret) {
+          //   if (ret) {
+          //     final bodyJson = {
+          //       'statement': 'CheckPrint',
+          //       'entryNo': int.tryParse(result.toString()),
+          //       'sType': saleFormId.toString(),
+          //       'grandTotal': ComSettings.appSettings(
+          //               'bool', 'key-round-off-amount', false)
+          //           ? grandTotal.toStringAsFixed(decimal)
+          //           : grandTotal.roundToDouble().toString()
+          //     };
+          //     api.checkBill(bodyJson).then((data) {
+          //       if (data) {
+          dataDynamic = [
+            {
+              'RealEntryNo': int.tryParse(result.toString()),
+              'EntryNo': int.tryParse(result.toString()),
+              'InvoiceNo': int.tryParse(result.toString()),
+              'Type': saleFormId
             }
-          });
+          ];
+          if (ComSettings.appSettings('bool', 'key-sms-customer', false)) {
+            var billName = "DeliveryNote";
+            var ob = ledgerModel.balance.toString().split(' ');
+            var ob1 = ob[0];
+            var ob2 = ob[1];
+            var amt = ob2 == 'Dr'
+                ? double.tryParse(ob1) + double.tryParse(order.balanceAmount)
+                : double.tryParse(order.balanceAmount) - double.tryParse(ob1);
+            String smsBody =
+                "Dear ${ledgerModel.name},\nYour DeliveryNote $billName ${result.toString()}, Dated : $formattedDate for the Amount of ${order.grandTotal}/- \nBalance:$amt /- has been confirmed  \n${companySettings.name}";
+            if (ledgerModel.phone.toString().isNotEmpty) {
+              sendSms(ledgerModel.phone, smsBody);
+            }
+          }
+          clearCart();
+          showMore(context);
+          // }
+          //     });
+          //   }
+          // });
           setState(() {
             _isLoading = false;
           });
@@ -1049,7 +986,7 @@ class _SaleState extends State<Sale> {
     }
   }
 
-  updateSale() {
+  updateDeliveryNote() {
     List<CustomerModel> ledger = [];
     ledger.add(CustomerModel(
         address1: ledgerModel.address1,
@@ -1068,8 +1005,7 @@ class _SaleState extends State<Sale> {
         stateCode: ledgerModel.stateCode,
         taxNumber: ledgerModel.taxNumber));
 
-    var locationId =
-        lId.toString().trim().isNotEmpty ? lId : salesTypeData.location;
+    var locationId = lId.toString().trim().isNotEmpty ? lId : 1;
 
     Order order = Order(
         customerModel: ledger,
@@ -1134,7 +1070,7 @@ class _SaleState extends State<Sale> {
         billType: companyTaxMode == 'GULF' ? '2' : '0',
         roundOff: '0',
         salesMan: salesManId.toString(),
-        sType: salesTypeData.rateType,
+        sType: rateType,
         dated: DateUtil.dateYMD(formattedDate),
         cashAC: acId.toString(),
         otherAmountData: otherAmountList);
@@ -1144,9 +1080,9 @@ class _SaleState extends State<Sale> {
       var items = json.encode(jsonItem);
       var ledger = json.encode(jsonLedger);
       var otherAmount = json.encode(order.otherAmountData);
-      var saleFormId = salesTypeData.id;
-      var saleFormType = salesTypeData.type;
-      var taxType = salesTypeData.tax ? 'T' : 'NT';
+      var saleFormId = 0;
+      var saleFormType = '';
+      var taxType = taxable ? 'T' : 'NT';
       var salesRateTypeId =
           rateTypeItem != null ? rateTypeItem.id.toString() : '1';
       var saleAccountId = saleAccount > 0 ? saleAccount.toString() : '0';
@@ -1175,7 +1111,7 @@ class _SaleState extends State<Sale> {
       }
       var data = '[' +
           json.encode({
-            'statement': 'SalesUpdate',
+            'statement': 'DelUpdate',
             'entryNo': dataDynamic[0]['EntryNo'],
             'invoiceNo': dataDynamic[0]['InvoiceNo'],
             'saleFormId': saleFormId,
@@ -1234,35 +1170,35 @@ class _SaleState extends State<Sale> {
       final body = {'information': ledger, 'data': data, 'particular': items};
       api.editSale(body).then((result) {
         if (CommonService().isNumeric(result) && int.tryParse(result) > 0) {
-          final bodyJsonAmount = {
-            'statement': 'SalesUpdate',
-            'entryNo': dataDynamic[0]['EntryNo'].toString(),
-            'data': otherAmount,
-            'date': order.dated.toString(),
-            'saleFormType': saleFormType,
-            'narration': order.narration,
-            'location': order.location.toString(),
-            'id': order.customerModel[0].id.toString()
-          };
-          api.addOtherAmount(bodyJsonAmount).then((ret) {
-            if (ret) {
-              final bodyJson = {
-                'statement': 'CheckPrint',
-                'entryNo': dataDynamic[0]['EntryNo'].toString(),
-                'sType': dataDynamic[0]['Type'].toString(),
-                'grandTotal': ComSettings.appSettings(
-                        'bool', 'key-round-off-amount', false)
-                    ? grandTotal.toStringAsFixed(decimal)
-                    : grandTotal.roundToDouble().toString()
-              };
-              api.checkBill(bodyJson).then((data) {
-                if (data) {
-                  clearCart();
-                  showMore(context);
-                }
-              });
-            }
-          });
+          // final bodyJsonAmount = {
+          //   'statement': 'Update',
+          //   'entryNo': dataDynamic[0]['EntryNo'].toString(),
+          //   'data': otherAmount,
+          //   'date': order.dated.toString(),
+          //   'saleFormType': saleFormType,
+          //   'narration': order.narration,
+          //   'location': order.location.toString(),
+          //   'id': order.customerModel[0].id.toString()
+          // };
+          // api.addOtherAmount(bodyJsonAmount).then((ret) {
+          //   if (ret) {
+          //     final bodyJson = {
+          //       'statement': 'CheckPrint',
+          //       'entryNo': dataDynamic[0]['EntryNo'].toString(),
+          //       'sType': dataDynamic[0]['Type'].toString(),
+          //       'grandTotal': ComSettings.appSettings(
+          //               'bool', 'key-round-off-amount', false)
+          //           ? grandTotal.toStringAsFixed(decimal)
+          //           : grandTotal.roundToDouble().toString()
+          //     };
+          //     api.checkBill(bodyJson).then((data) {
+          //       if (data) {
+          clearCart();
+          showMore(context);
+          //       }
+          //     });
+          //   }
+          // });
           setState(() {
             _isLoading = false;
           });
@@ -1275,7 +1211,7 @@ class _SaleState extends State<Sale> {
     }
   }
 
-  deleteSale(context) {
+  deleteDeliveryNote(context) {
     ConfirmAlertBox(
         buttonColorForNo: Colors.red,
         buttonColorForYes: Colors.green,
@@ -1288,20 +1224,17 @@ class _SaleState extends State<Sale> {
         },
         onPressedYes: () {
           Navigator.of(context).pop();
-          deleteSaleData();
+          deleteDeliveryNoteData();
         },
         buttonTextForNo: 'No',
         buttonTextForYes: 'YES',
         infoMessage: 'Do you want to Delete',
-        title: 'Delete Bill',
+        title: 'Delete DeliveryNote',
         context: context);
   }
 
-  deleteSaleData() {
-    api
-        .deleteSale(
-            dataDynamic[0]['EntryNo'], salesTypeData.id, salesTypeData.type)
-        .then((value) {
+  deleteDeliveryNoteData() {
+    api.deleteDeliveryNote(dataDynamic[0]['EntryNo'], '0', '0').then((value) {
       setState(() {
         _isLoading = false;
       });
@@ -1316,13 +1249,12 @@ class _SaleState extends State<Sale> {
           builder: (BuildContext context) {
             return Expanded(
               child: AlertDialog(
-                title: const Text('Sale Deleted'),
+                title: const Text('DeliveryNote Deleted'),
                 actions: [
                   TextButton(
                     onPressed: () {
                       Navigator.of(context).pop();
-                      Navigator.pushReplacementNamed(context, '/sales',
-                          arguments: {'default': thisSale});
+                      Navigator.pushReplacementNamed(context, '/DeliveryNote');
                     },
                     child: const Text('CANCEL'),
                   )
@@ -1354,39 +1286,6 @@ class _SaleState extends State<Sale> {
                             : nextWidget == 6
                                 ? const Text('No Data 6')
                                 : const Text('No Widget');
-  }
-
-  selectSalesType() {
-    return ListView.builder(
-      shrinkWrap: true,
-      itemCount: isCustomForm ? salesTypeDisplay.length : salesTypeList.length,
-      itemBuilder: (context, index) {
-        return _listSalesTypItem(index);
-      },
-    );
-  }
-
-  _listSalesTypItem(index) {
-    return InkWell(
-      child: Card(
-        child: ListTile(
-            title: Text(isCustomForm
-                ? salesTypeDisplay[index].name
-                : salesTypeList[index].name)),
-      ),
-      onTap: () {
-        setState(() {
-          salesTypeData =
-              isCustomForm ? salesTypeDisplay[index] : salesTypeList[index];
-          previewData = true;
-          taxable = salesTypeData != null ? salesTypeData.tax : taxable;
-          rateTypeItem = rateTypeList.isEmpty
-              ? null
-              : rateTypeList.firstWhere((element) =>
-                  element.name == salesTypeData.rateType.toUpperCase());
-        });
-      },
-    );
   }
 
   var nameLike = "a";
@@ -1836,9 +1735,6 @@ class _SaleState extends State<Sale> {
                         ElevatedButton(
                           onPressed: () {
                             setState(() {
-                              if (salesTypeData.rateType.isNotEmpty) {
-                                rateType = salesTypeData.id.toString();
-                              }
                               ledgerModel = CustomerModel(
                                   id: snapshot.data.id,
                                   name: customerName,
@@ -1858,10 +1754,11 @@ class _SaleState extends State<Sale> {
                             });
                           },
                           style: ElevatedButton.styleFrom(
+                              foregroundColor: white,
+                              backgroundColor: kPrimaryColor,
                               elevation: 0,
-                              primary: kPrimaryColor,
-                              onPrimary: white,
-                              onSurface: grey),
+                              disabledForegroundColor: grey.withOpacity(0.38),
+                              disabledBackgroundColor: grey.withOpacity(0.12)),
                           child: Center(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -2004,26 +1901,8 @@ class _SaleState extends State<Sale> {
                         ElevatedButton(
                           onPressed: () {
                             setState(() {
-                              if (salesTypeData.type == 'SALES-BB') {
-                                if (snapshot.data.taxNumber.isNotEmpty) {
-                                  if (salesTypeData.rateType.isNotEmpty) {
-                                    rateType = salesTypeData.id.toString();
-                                  }
-                                  ledgerModel = snapshot.data;
-                                  nextWidget = 2;
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text(
-                                              'B2B Invoice not allow without a TAX number')));
-                                }
-                              } else {
-                                if (salesTypeData.rateType.isNotEmpty) {
-                                  rateType = salesTypeData.id.toString();
-                                }
-                                ledgerModel = snapshot.data;
-                                nextWidget = 2;
-                              }
+                              ledgerModel = snapshot.data;
+                              nextWidget = 2;
                             });
                           },
                           style: ElevatedButton.styleFrom(
@@ -2052,13 +1931,13 @@ class _SaleState extends State<Sale> {
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => PreviousBill(
-                                        ledger: ledgerModel.id.toString(),
-                                      )),
-                            );
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //       builder: (context) => PreviousBill(
+                            //             ledger: ledgerModel.id.toString(),
+                            //           )),
+                            // );
                           },
                           style: ElevatedButton.styleFrom(
                               elevation: 0,
@@ -2188,15 +2067,8 @@ class _SaleState extends State<Sale> {
   selectProductWidget() {
     if (itemStockAll) {
       return FutureBuilder<List<StockItem>>(
-        future:
-            (salesTypeData.type == 'SALES-O' || salesTypeData.type == 'SALES-Q')
-                ? isStockProductOnlyInSalesQO
-                    ? api.fetchStockProductLike(
-                        DateUtil.dateDMY2YMD(formattedDate), itemLike)
-                    : api.fetchNoStockProductLike(
-                        DateUtil.dateDMY2YMD(formattedDate), itemLike)
-                : api.fetchStockProductLike(
-                    DateUtil.dateDMY2YMD(formattedDate), itemLike),
+        future: api.fetchStockProductLike(
+            DateUtil.dateDMY2YMD(formattedDate), itemLike),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data.isNotEmpty) {
@@ -2363,12 +2235,7 @@ class _SaleState extends State<Sale> {
       });
 
       return FutureBuilder<List<StockItem>>(
-        future: (salesTypeData.type == 'SALES-O' ||
-                salesTypeData.type == 'SALES-Q')
-            ? isStockProductOnlyInSalesQO
-                ? api.fetchStockProduct(DateUtil.dateDMY2YMD(formattedDate))
-                : api.fetchNoStockProduct(DateUtil.dateDMY2YMD(formattedDate))
-            : api.fetchStockProduct(DateUtil.dateDMY2YMD(formattedDate)),
+        future: api.fetchStockProduct(DateUtil.dateDMY2YMD(formattedDate)),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data.isNotEmpty) {
@@ -2534,12 +2401,10 @@ class _SaleState extends State<Sale> {
   itemDetailWidget() {
     return isBarcodePicker
         ? showBarcodeProduct()
-        : (salesTypeData.type == 'SALES-O' || salesTypeData.type == 'SALES-Q')
-            ? selectNoStockLedger()
-            : productModel.hasVariant
-                ? showVariantDialog(productModel.id, productModel.name,
-                    productModel.quantity.toString())
-                : selectStockLedger();
+        : productModel.hasVariant
+            ? showVariantDialog(productModel.id, productModel.name,
+                productModel.quantity.toString())
+            : selectStockLedger();
   }
 
   showBarcodeProduct() {
@@ -2697,10 +2562,7 @@ class _SaleState extends State<Sale> {
                   minimumRate: d['minimumRate'].toDouble(),
                   name: d['itemname'],
                   productId: d['uniquecode'],
-                  quantity: (salesTypeData.type == 'SALES-O' ||
-                          salesTypeData.type == 'SALES-Q')
-                      ? productModel.quantity
-                      : d['Qty'].toDouble(),
+                  quantity: d['Qty'].toDouble(),
                   retailPrice: d['retail'].toDouble(),
                   sellingPrice: d['mrp'].toDouble(),
                   spRetailPrice: d['Spretail'].toDouble(),
@@ -3119,12 +2981,16 @@ class _SaleState extends State<Sale> {
             : 0
         : 0;
     if (rateTypeItem == null) {
-      if (salesTypeData.rateType.toUpperCase() == 'RETAIL') {
-        saleRate = product.retailPrice;
-      } else if (salesTypeData.rateType.toUpperCase() == 'WHOLESALE') {
-        saleRate = product.wholeSalePrice;
-      } else if (salesTypeData.rateType.toUpperCase() == 'BRANCH') {
-        saleRate = product.branch;
+      if (rateType.isNotEmpty) {
+        if (rateType.toUpperCase() == 'RETAIL') {
+          saleRate = product.retailPrice;
+        } else if (rateType.toUpperCase() == 'WHOLESALE') {
+          saleRate = product.wholeSalePrice;
+        } else if (rateType.toUpperCase() == 'BRANCH') {
+          saleRate = product.branch;
+        } else {
+          saleRate = product.sellingPrice;
+        }
       } else {
         saleRate = product.sellingPrice;
       }
@@ -3235,7 +3101,6 @@ class _SaleState extends State<Sale> {
                                       backgroundColor: Colors.red,
                                     ));
                                   } else {
-                                    bool profitable = true;
                                     // if (_autoVariantSelect) {
                                     //   double qty = 0;
                                     //   for (StockProduct product
@@ -3282,68 +3147,43 @@ class _SaleState extends State<Sale> {
                                     //         stock: product.quantity));
                                     //   }
                                     // } else {
-                                    if (isEnableProfitlessSalesWarning) {
-                                      if (profitPer > 0) {
-                                        profitable = true;
-                                      } else {
-                                        profitable = false;
-                                      }
-                                    }
-                                    if (profitable) {
-                                      addProduct(CartItem(
-                                          id: totalItem + 1,
-                                          itemId: product.itemId,
-                                          itemName: product.name,
-                                          quantity: quantity,
-                                          rate: rate,
-                                          rRate: rRate,
-                                          uniqueCode: uniqueCode,
-                                          gross: gross,
-                                          discount: discount,
-                                          discountPercent: discountPercent,
-                                          rDiscount: rDisc,
-                                          fCess: kfc,
-                                          serialNo: _serialNoController.text,
-                                          tax: tax,
-                                          taxP: taxP,
-                                          unitId: _dropDownUnit,
-                                          unitValue: unitValue,
-                                          pRate: pRate,
-                                          rPRate: rPRate,
-                                          barcode: barcode,
-                                          expDate: expDate,
-                                          free: freeQty,
-                                          fUnitId: fUnitId,
-                                          cdPer: cdPer,
-                                          cDisc: cDisc,
-                                          net: subTotal,
-                                          cess: cess,
-                                          total: total,
-                                          profitPer: profitPer,
-                                          fUnitValue: fUnitValue,
-                                          adCess: adCess,
-                                          iGST: iGST,
-                                          cGST: csGST,
-                                          sGST: csGST,
-                                          stock: product.quantity,
-                                          minimumRate: product.minimumRate));
-                                    } else {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(SnackBar(
-                                        content: const Text(
-                                            'Sorry Non Profitable Rate.'),
-                                        duration: const Duration(seconds: 1),
-                                        action: SnackBarAction(
-                                          label: 'Click',
-                                          onPressed: () {
-                                            // print('Action is clicked');
-                                          },
-                                          textColor: Colors.white,
-                                          disabledTextColor: Colors.grey,
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ));
-                                    }
+                                    addProduct(CartItem(
+                                        id: totalItem + 1,
+                                        itemId: product.itemId,
+                                        itemName: product.name,
+                                        quantity: quantity,
+                                        rate: rate,
+                                        rRate: rRate,
+                                        uniqueCode: uniqueCode,
+                                        gross: gross,
+                                        discount: discount,
+                                        discountPercent: discountPercent,
+                                        rDiscount: rDisc,
+                                        fCess: kfc,
+                                        serialNo: _serialNoController.text,
+                                        tax: tax,
+                                        taxP: taxP,
+                                        unitId: _dropDownUnit,
+                                        unitValue: unitValue,
+                                        pRate: pRate,
+                                        rPRate: rPRate,
+                                        barcode: barcode,
+                                        expDate: expDate,
+                                        free: freeQty,
+                                        fUnitId: fUnitId,
+                                        cdPer: cdPer,
+                                        cDisc: cDisc,
+                                        net: subTotal,
+                                        cess: cess,
+                                        total: total,
+                                        profitPer: profitPer,
+                                        fUnitValue: fUnitValue,
+                                        adCess: adCess,
+                                        iGST: iGST,
+                                        cGST: csGST,
+                                        sGST: csGST,
+                                        stock: product.quantity,
+                                        minimumRate: product.minimumRate));
                                     // }
                                   }
                                 }
@@ -3414,26 +3254,14 @@ class _SaleState extends State<Sale> {
                                             : false
                                     : negativeStock
                                         ? false
-                                        : salesTypeData.type == 'SALES-O' ||
-                                                salesTypeData.type == 'SALES-Q'
-                                            ? isStockProductOnlyInSalesQO
-                                                ? (double.tryParse(value) *
-                                                                (unitValue) +
-                                                            freeQty) >
-                                                        product.quantity
-                                                    ? true
-                                                    : cartQ
-                                                        ? true
-                                                        : false
-                                                : false
-                                            : (double.tryParse(value) *
-                                                            (unitValue) +
-                                                        freeQty) >
-                                                    product.quantity
+                                        : (double.tryParse(value) *
+                                                        (unitValue) +
+                                                    freeQty) >
+                                                product.quantity
+                                            ? true
+                                            : cartQ
                                                 ? true
-                                                : cartQ
-                                                    ? true
-                                                    : false;
+                                                : false;
                                 calculate(product);
                               });
                             }
@@ -3497,27 +3325,13 @@ class _SaleState extends State<Sale> {
                                               : false
                                       : negativeStock
                                           ? false
-                                          : salesTypeData.type == 'SALES-O' ||
-                                                  salesTypeData.type ==
-                                                      'SALES-Q'
-                                              ? isStockProductOnlyInSalesQO
-                                                  ? ((quantity * unitValue) +
-                                                              double.tryParse(
-                                                                  value)) >
-                                                          product.quantity
-                                                      ? true
-                                                      : cartQ
-                                                          ? true
-                                                          : false
-                                                  : false
-                                              : ((quantity * unitValue) +
-                                                          double.tryParse(
-                                                              value)) >
-                                                      product.quantity
+                                          : ((quantity * unitValue) +
+                                                      double.tryParse(value)) >
+                                                  product.quantity
+                                              ? true
+                                              : cartQ
                                                   ? true
-                                                  : cartQ
-                                                      ? true
-                                                      : false;
+                                                  : false;
                                   calculate(product);
                                 });
                               }
@@ -3659,28 +3473,14 @@ class _SaleState extends State<Sale> {
                                                                   : false
                                                           : negativeStock
                                                               ? false
-                                                              : salesTypeData.type ==
-                                                                          'SALES-O' ||
-                                                                      salesTypeData
-                                                                              .type ==
-                                                                          'SALES-Q'
-                                                                  ? isStockProductOnlyInSalesQO
-                                                                      ? ((quantity * _conversion) + freeQty) >
-                                                                              product
-                                                                                  .quantity
-                                                                          ? true
-                                                                          : cartQ
-                                                                              ? true
-                                                                              : false
-                                                                      : false
-                                                                  : ((quantity * _conversion) +
-                                                                              freeQty) >
-                                                                          product
-                                                                              .quantity
+                                                              : ((quantity * _conversion) +
+                                                                          freeQty) >
+                                                                      product
+                                                                          .quantity
+                                                                  ? true
+                                                                  : cartQ
                                                                       ? true
-                                                                      : cartQ
-                                                                          ? true
-                                                                          : false;
+                                                                      : false;
                                                 }
                                                 break;
                                               }
@@ -4116,33 +3916,15 @@ class _SaleState extends State<Sale> {
                                                           : false
                                                   : negativeStock
                                                       ? false
-                                                      : salesTypeData.type ==
-                                                                  'SALES-O' ||
-                                                              salesTypeData
-                                                                      .type ==
-                                                                  'SALES-Q'
-                                                          ? isStockProductOnlyInSalesQO
-                                                              ? cartItem[index]
-                                                                              .quantity +
-                                                                          1 >
-                                                                      cartItem[
-                                                                              index]
-                                                                          .stock
-                                                                  ? true
-                                                                  : cartQ
-                                                                      ? true
-                                                                      : false
-                                                              : false
-                                                          : cartItem[index]
-                                                                          .quantity +
-                                                                      1 >
-                                                                  cartItem[
-                                                                          index]
-                                                                      .stock
+                                                      : cartItem[index]
+                                                                      .quantity +
+                                                                  1 >
+                                                              cartItem[index]
+                                                                  .stock
+                                                          ? true
+                                                          : cartQ
                                                               ? true
-                                                              : cartQ
-                                                                  ? true
-                                                                  : false;
+                                                              : false;
                                               if (outOfStock) {
                                                 ScaffoldMessenger.of(context)
                                                     .showSnackBar(SnackBar(
@@ -4190,7 +3972,8 @@ class _SaleState extends State<Sale> {
                                             }
                                             outOfStock = isLockQtyOnlyInSales
                                                 ? ((cartItem[index].quantity *
-                                                                    cartItem[index]
+                                                                    cartItem[
+                                                                            index]
                                                                         .unitValue) +
                                                                 cartItem[index]
                                                                     .free) +
@@ -4202,33 +3985,14 @@ class _SaleState extends State<Sale> {
                                                         : false
                                                 : negativeStock
                                                     ? false
-                                                    : salesTypeData.type ==
-                                                                'SALES-O' ||
-                                                            salesTypeData
-                                                                    .type ==
-                                                                'SALES-Q'
-                                                        ? isStockProductOnlyInSalesQO
-                                                            ? ((cartItem[index].quantity * cartItem[index].unitValue) +
-                                                                            cartItem[index]
-                                                                                .free) +
-                                                                        1 >
-                                                                    cartItem[
-                                                                            index]
-                                                                        .stock
-                                                                ? true
-                                                                : cartQ
-                                                                    ? true
-                                                                    : false
-                                                            : false
-                                                        : cartItem[index]
-                                                                        .quantity +
-                                                                    1 >
-                                                                cartItem[index]
-                                                                    .stock
+                                                    : cartItem[index].quantity +
+                                                                1 >
+                                                            cartItem[index]
+                                                                .stock
+                                                        ? true
+                                                        : cartQ
                                                             ? true
-                                                            : cartQ
-                                                                ? true
-                                                                : false;
+                                                            : false;
                                             if (outOfStock) {
                                               ScaffoldMessenger.of(context)
                                                   .showSnackBar(SnackBar(
@@ -4658,29 +4422,6 @@ class _SaleState extends State<Sale> {
             ? false
             : true;
       }
-      bool profitable = true;
-      if (isEnableProfitlessSalesWarning) {
-        double _total = CommonService.getRound(
-            2, (double.tryParse(value) * cartItem[index].quantity));
-        profitPer = pRateBasedProfitInSales
-            ? CommonService.getRound(
-                2,
-                (_total -
-                    (cartItem[index].pRate *
-                        cartItem[index].unitValue *
-                        cartItem[index].quantity)))
-            : CommonService.getRound(
-                decimal,
-                (_total -
-                    (cartItem[index].rPRate *
-                        cartItem[index].unitValue *
-                        cartItem[index].quantity)));
-        if (profitPer > 0) {
-          profitable = true;
-        } else {
-          profitable = false;
-        }
-      }
       if (lockRate) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: const Text('Sorry rate is limited.'),
@@ -4696,34 +4437,16 @@ class _SaleState extends State<Sale> {
           backgroundColor: Colors.red,
         ));
       } else {
-        if (profitable) {
-          cartItem[index].rate = double.tryParse(value);
-          cartItem[index].rRate = taxMethod == 'MINUS'
-              ? isKFC
-                  ? CommonService.getRound(
-                      4,
-                      (100 * cartItem[index].rate) /
-                          (100 + cartItem[index].taxP + kfcPer))
-                  : CommonService.getRound(
-                      4,
-                      (100 * cartItem[index].rate) /
-                          (100 + cartItem[index].taxP))
-              : cartItem[index].rate;
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: const Text('Sorry Non Profitable Rate.'),
-            duration: const Duration(seconds: 1),
-            action: SnackBarAction(
-              label: 'Click',
-              onPressed: () {
-                // print('Action is clicked');
-              },
-              textColor: Colors.white,
-              disabledTextColor: Colors.grey,
-            ),
-            backgroundColor: Colors.red,
-          ));
-        }
+        cartItem[index].rate = double.tryParse(value);
+        cartItem[index].rRate = taxMethod == 'MINUS'
+            ? isKFC
+                ? CommonService.getRound(
+                    4,
+                    (100 * cartItem[index].rate) /
+                        (100 + cartItem[index].taxP + kfcPer))
+                : CommonService.getRound(4,
+                    (100 * cartItem[index].rate) / (100 + cartItem[index].taxP))
+            : cartItem[index].rate;
       }
     } else if (title == 'Edit Quantity') {
       bool cartQ = false;
@@ -4752,22 +4475,12 @@ class _SaleState extends State<Sale> {
                   : false
           : negativeStock
               ? false
-              : salesTypeData.type == 'SALES-O' ||
-                      salesTypeData.type == 'SALES-Q'
-                  ? isStockProductOnlyInSalesQO
-                      ? (double.tryParse(value) * (unitValue) + freeQty) >
-                              cartItem[index].stock
-                          ? true
-                          : cartQ
-                              ? true
-                              : false
-                      : false
-                  : (double.tryParse(value) * (unitValue) + freeQty) >
-                          cartItem[index].stock
+              : (double.tryParse(value) * (unitValue) + freeQty) >
+                      cartItem[index].stock
+                  ? true
+                  : cartQ
                       ? true
-                      : cartQ
-                          ? true
-                          : false;
+                      : false;
       if (outOfStock) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: const Text('Sorry stock not available.'),
@@ -4857,41 +4570,25 @@ class _SaleState extends State<Sale> {
             PopupMenuButton<String>(
               icon: const Icon(Icons.settings, color: blue),
               onSelected: (value) {
-                if (companyTaxMode == 'INDIA') {
-                  setState(() {
-                    if (salesData != null) {
-                      if (value == 'Generate E-Way Bill') {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => GenerateEWaybill(
-                                      data: salesData,
-                                      type: 'SALES',
-                                    )));
-                      } else if (value == 'Generate e-Invoice') {
-                        if (salesTypeData.eInvoice) {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => GenerateE_Invoice(
-                                        data: salesData,
-                                        type: 'SALES',
-                                      )));
-                        }
-                      } else if (value == 'Edit  e-Invoice') {
-                        if (salesTypeData.eInvoice) {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => GenerateE_Invoice(
-                                        data: salesData,
-                                        type: 'SALES',
-                                      )));
-                        }
-                      }
-                    }
-                  });
-                }
+                setState(() {
+                  if (value == 'Generate E-Way Bill') {
+                    //
+                  } else if (value == 'Generate e-Invoice') {
+                    // Navigator.push(
+                    //     context,
+                    //     MaterialPageRoute(
+                    //         builder: (_) => GenerateE_Invoice(
+                    //               data: deliveryNoteData,
+                    //             )));
+                  } else if (value == 'Edit  e-Invoice') {
+                    // Navigator.push(
+                    //     context,
+                    //     MaterialPageRoute(
+                    //         builder: (_) => GenerateE_Invoice(
+                    //               data: deliveryNoteData,
+                    //             )));
+                  }
+                });
               },
               itemBuilder: (BuildContext context) => [
                 const PopupMenuItem<String>(
@@ -5035,7 +4732,6 @@ class _SaleState extends State<Sale> {
                 Expanded(
                   child: TextField(
                     controller: _controllerCashReceived,
-                    focusNode: _focusNodeCashReceived,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
@@ -5528,13 +5224,12 @@ class _SaleState extends State<Sale> {
         icon: Icons.check,
         onPressedNo: () {
           Navigator.of(context).pop();
-          Navigator.pushReplacementNamed(context, '/sales',
-              arguments: {'default': thisSale});
+          Navigator.pushReplacementNamed(context, '/DeliveryNote');
         },
         onPressedYes: () {
           Navigator.of(context).pop();
-          Navigator.pushReplacementNamed(context, '/preview_show',
-              arguments: {'title': 'Sale'});
+          // Navigator.pushReplacementNamed(context, '/preview_show',
+          //     arguments: {'title': 'DeliveryNote'});
         },
         buttonTextForNo: 'No',
         buttonTextForYes: 'YES',
@@ -5545,7 +5240,7 @@ class _SaleState extends State<Sale> {
   }
 
   showErrorDialog(context, String msg) {
-    debugPrint('error save sales :$msg');
+    debugPrint('error save DeliveryNote :$msg');
     setState(() {
       _isLoading = false;
       buttonEvent = false;
@@ -5579,7 +5274,7 @@ class _SaleState extends State<Sale> {
         },
         onPressedYes: () {
           Navigator.of(context).pop();
-          fetchSale(context, dataDynamic);
+          fetchDeliveryNote(context, dataDynamic);
         },
         buttonTextForNo: 'No',
         buttonTextForYes: 'YES',
@@ -5595,21 +5290,19 @@ class _SaleState extends State<Sale> {
         'RealEntryNo': data['Id'],
         'EntryNo': data['Id'],
         'InvoiceNo': data['Id'],
-        'Type': salesTypeData.id
+        'Type': 0
       }
     ];
-    Navigator.pushReplacementNamed(context, '/preview_show',
-        arguments: {'title': 'Sale'});
+    Navigator.pushReplacementNamed(context, '/preview_show');
   }
 
-  fetchSale(context, data) {
-    rateType = salesTypeData.id.toString();
+  fetchDeliveryNote(context, data) {
     double billTotal = 0, billCash = 0;
     String narration = ' ';
 
-    api.fetchSalesInvoice(data['Id'], salesTypeData.id).then((value) {
+    api.fetchDeliveryNoteInvoice(data['Id'], 0).then((value) {
       if (value != null) {
-        salesData = value;
+        deliveryNoteData = value;
         var information = value['Information'][0];
         var particulars = value['Particulars'];
         // var serialNO = value['SerialNO'];
@@ -5623,7 +5316,7 @@ class _SaleState extends State<Sale> {
             'RealEntryNo': information['RealEntryNo'],
             'EntryNo': information['EntryNo'],
             'InvoiceNo': information['InvoiceNo'],
-            'Type': salesTypeData.id
+            'Type': 0
           }
         ];
         billCash = double.tryParse(information['CashReceived'].toString());
@@ -5715,8 +5408,6 @@ class _SaleState extends State<Sale> {
         nextWidget = 4;
         oldBill = true;
       });
-      // Navigator.pushReplacementNamed(context, '/preview_show',
-      // arguments: {'title': 'Sale'});
     });
   }
 

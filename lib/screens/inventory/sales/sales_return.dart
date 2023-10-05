@@ -15,6 +15,7 @@ import 'package:sheraccerp/models/stock_item.dart';
 import 'package:sheraccerp/models/stock_product.dart';
 import 'package:sheraccerp/models/unit_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
+import 'package:sheraccerp/screens/inventory/sales/sale.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/blue_thermal.dart';
 import 'package:sheraccerp/service/bt_print.dart';
@@ -52,6 +53,7 @@ class _SalesReturnState extends State<SalesReturn> {
       lastRecord = false,
       previewData = false,
       oldBill = false,
+      isItemSerialNo = false,
       keyItemsVariantStock = false,
       buttonEvent = false,
       productTracking = false;
@@ -70,6 +72,8 @@ class _SalesReturnState extends State<SalesReturn> {
   var salesManId = 0;
   int saleFormId = 1;
   int printerType = 0, printerDevice = 0, printModel = 2;
+  String labelSerialNo = 'SerialNo';
+  String labelSpRate = 'SpRetail';
 
   @override
   void initState() {
@@ -159,6 +163,13 @@ class _SalesReturnState extends State<SalesReturn> {
     keyItemsVariantStock =
         ComSettings.getStatus('KEY LOCK SALES DISCOUNT', settings);
 
+    isItemSerialNo = ComSettings.getStatus('KEY ITEM SERIAL NO', settings);
+    labelSerialNo =
+        ComSettings.getValue('KEY ITEM SERIAL NO', settings).toString();
+    labelSpRate =
+        ComSettings.getValue('KEY ITEM SP RATE TITLE', settings).toString();
+    labelSerialNo = labelSerialNo.isEmpty ? 'Remark' : labelSerialNo;
+    labelSpRate = labelSpRate.isEmpty ? 'SpRetail' : labelSpRate;
     loadAsset();
   }
 
@@ -1360,10 +1371,13 @@ class _SalesReturnState extends State<SalesReturn> {
   final TextEditingController _rateController = TextEditingController();
   final TextEditingController _discountController = TextEditingController();
   // TextEditingController _discountPercentController = TextEditingController();
+  FocusNode _focusNodeQuantity = FocusNode();
+  FocusNode _focusNodeRate = FocusNode();
+  FocusNode _focusNodeDiscount = FocusNode();
+
   final _resetKey = GlobalKey<FormState>();
   String expDate = '2000-01-01';
   int _dropDownUnit = 0, fUnitId = 0, uniqueCode = 0, barcode = 0;
-  bool rateEdited = false;
 
   double taxP = 0,
       tax = 0,
@@ -1417,7 +1431,9 @@ class _SalesReturnState extends State<SalesReturn> {
     } else {
       saleRate = double.tryParse(productModelPrize['mrp'].toString());
     }
-    if (saleRate > 0 && !rateEdited) {
+    if (saleRate > 0 &&
+        !_focusNodeRate.hasFocus &&
+        _rateController.text.isEmpty) {
       _rateController.text = saleRate.toStringAsFixed(decimal);
       rate = saleRate;
     }
@@ -1427,10 +1443,10 @@ class _SalesReturnState extends State<SalesReturn> {
       if (enableMULTIUNIT) {
         if (saleRate > 0) {
           if (_conversion > 0) {
-            if (rateEdited) {
+            if (_focusNodeRate.hasFocus) {
               rate = double.tryParse(_rateController.text);
             } else {
-              rate = saleRate;
+              rate = saleRate * _conversion;
               _rateController.text = rate.toStringAsFixed(decimal);
             }
             pRate = productModelPrize['prate'] * _conversion;
@@ -1446,7 +1462,7 @@ class _SalesReturnState extends State<SalesReturn> {
               : 0;
         }
       } else {
-        if (rateEdited) {
+        if (_focusNodeRate.hasFocus) {
           rate = double.tryParse(_rateController.text);
         } else if (saleRate > 0) {
           _rateController.text = saleRate.toStringAsFixed(decimal);
@@ -1546,6 +1562,7 @@ class _SalesReturnState extends State<SalesReturn> {
                         padding: const EdgeInsets.all(2.0),
                         child: TextFormField(
                           controller: _quantityController,
+                          focusNode: _focusNodeQuantity,
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true),
                           inputFormatters: [
@@ -1655,7 +1672,7 @@ class _SalesReturnState extends State<SalesReturn> {
                           padding: const EdgeInsets.all(2.0),
                           child: TextField(
                             controller: _rateController,
-                            // autofocus: true,
+                            focusNode: _focusNodeRate,
                             keyboardType: const TextInputType.numberWithOptions(
                                 decimal: true),
                             inputFormatters: [
@@ -1668,14 +1685,117 @@ class _SalesReturnState extends State<SalesReturn> {
                                 hintText: '0.0'),
                             onChanged: (value) {
                               setState(() {
-                                rateEdited = _rateController.text.isNotEmpty
-                                    ? true
-                                    : false;
                                 calculate();
                               });
                             },
                           ),
                         )),
+                        TextButton.icon(
+                            style: ButtonStyle(
+                              //   backgroundColor: MaterialStateProperty.all<Color>(
+                              //       kPrimaryColor),
+                              foregroundColor: MaterialStateProperty.all<Color>(
+                                  kPrimaryDarkColor),
+                              overlayColor: MaterialStateProperty.all<Color>(
+                                  kPrimaryDarkColor),
+                            ),
+                            onPressed: () {
+                              List<ProductRating> rateData = [
+                                ProductRating(
+                                    id: 0,
+                                    name: 'MRP',
+                                    rate: double.tryParse(
+                                        productModelPrize['mrp'].toString())),
+                                ProductRating(
+                                    id: 1,
+                                    name: 'Retail',
+                                    rate: double.tryParse(
+                                        productModelPrize['retail']
+                                            .toString())),
+                                ProductRating(
+                                    id: 2,
+                                    name: 'WsRate',
+                                    rate: double.tryParse(
+                                        productModelPrize['wsrate']
+                                            .toString())),
+                                ProductRating(
+                                    id: 2,
+                                    name: labelSpRate,
+                                    rate: double.tryParse(
+                                        productModelPrize['spretail']
+                                            .toString())),
+                                ProductRating(
+                                    id: 3,
+                                    name: 'Branch',
+                                    rate: double.tryParse(
+                                        productModelPrize['branch'].toString()))
+                              ];
+                              showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      scrollable: true,
+                                      title: ComSettings.appSettings('bool',
+                                              'key-items-prate-sale', false)
+                                          ? Column(
+                                              children: [
+                                                const Text('Select Rate'),
+                                                Text(
+                                                  'PRate : ${double.tryParse(productModelPrize['prate'].toString())} / RPRate : ${double.tryParse(productModelPrize['realprate'].toString())}',
+                                                  style: const TextStyle(
+                                                      fontSize: 10),
+                                                ),
+                                              ],
+                                            )
+                                          : const Text('Select Rate'),
+                                      content: SizedBox(
+                                        height: 250.0,
+                                        width: 400.0,
+                                        child: ListView.builder(
+                                          shrinkWrap: true,
+                                          itemCount: rateData.length,
+                                          itemBuilder: (BuildContext context,
+                                              int index) {
+                                            return Card(
+                                              elevation: 5,
+                                              child: ListTile(
+                                                  title: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                          rateData[index].name),
+                                                      Text(
+                                                          ' : ${rateData[index].rate}'),
+                                                    ],
+                                                  ),
+                                                  // subtitle: Text(
+                                                  //     'Quantity : ${rateData[index].quantity} Rate ${rateData[index].sellingPrice}'),
+                                                  onTap: () {
+                                                    Navigator.of(context).pop();
+                                                    setState(() {
+                                                      rate =
+                                                          rateData[index].rate;
+                                                      saleRate =
+                                                          rateData[index].rate;
+                                                      _rateController.text =
+                                                          saleRate
+                                                              .toStringAsFixed(
+                                                                  2);
+                                                      calculate();
+                                                    });
+                                                  }),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  });
+                            },
+                            icon: const Icon(
+                                Icons.arrow_drop_down_circle_outlined),
+                            label: const Text('')),
                         Visibility(
                           visible: false, //taxMethod == 'MINUS',
                           child: Text(
@@ -1708,7 +1828,7 @@ class _SalesReturnState extends State<SalesReturn> {
                         padding: const EdgeInsets.all(2.0),
                         child: TextField(
                           controller: _discountController,
-                          // autofocus: true,
+                          focusNode: _focusNodeDiscount,
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true),
                           inputFormatters: [
@@ -2834,7 +2954,7 @@ class _SalesReturnState extends State<SalesReturn> {
 
   productTrackingListData(ledger, String itemId) {
     return FutureBuilder(
-        future: dio.getProductTracking(itemId, ledger),
+        future: dio.getSoldProductTracking(itemId, ledger),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data.length > 0) {

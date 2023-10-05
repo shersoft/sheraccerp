@@ -42,8 +42,8 @@ class SalesBillData {
   List<CompanyInfo> companyInfo;
   List<BillInformation> information;
   List<Particular> particulars;
-  List<SerialNO> serialNo;
-  List<DeliveryNote> deliveryNote;
+  List<SerialNOModel> serialNo;
+  List<DeliveryNoteModel> deliveryNote;
   List<BillOtherAmount> otherAmount;
   bool printHeaderInEs;
   String balance;
@@ -65,9 +65,9 @@ class SalesBillData {
             json["information"].map((x) => BillInformation.fromMap(x))),
         particulars: List<Particular>.from(
             json["particulars"].map((x) => Particular.fromMap(x))),
-        serialNo: List<SerialNO>.from(json["serialNo"].map((x) => x)),
+        serialNo: List<SerialNOModel>.from(json["serialNo"].map((x) => x)),
         deliveryNote:
-            List<DeliveryNote>.from(json["deliveryNote"].map((x) => x)),
+            List<DeliveryNoteModel>.from(json["deliveryNote"].map((x) => x)),
         otherAmount: List<BillOtherAmount>.from(
             json["otherAmount"].map((x) => BillOtherAmount.fromMap(x))),
         printHeaderInEs: json["printHeaderInEs"],

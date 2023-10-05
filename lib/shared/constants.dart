@@ -30,6 +30,9 @@ const gstEWayBillApi = "/einvoice/type/GENERATE_EWAYBILL/version/V1_03"; //post
 const gstEWayDetailsByIrnApi =
     "/einvoice/type/GETEWAYBILLIRN/version/V1_03"; //get
 const gstB2BQRDetailsApi = "/einvoice/qrcode";
+const invoiceUrl = 'http://148.72.210.101:888/Home/DownloadPdf';
+const geoApiFy =
+    'https://api.geoapify.com/v1/geocode/search?text=pin&lang=en&limit=1&type=postcode&format=json&apiKey=d1f13eb6d5b04bcdbe6cfdad0d01cbaa';
 
 bool isDarkTheme = false;
 bool isUsingHive = true;
@@ -39,7 +42,7 @@ String _sherSoftPassword = '';
 get sherSoftPassword => _sherSoftPassword;
 set sherSoftPassword(String value) => _sherSoftPassword = value;
 
-const String apiV = 'v19/';
+const String apiV = 'v20/';
 const currencySymbol = '₹';
 // const bool isVariant = false;
 const bool isKFC = false;
@@ -73,10 +76,10 @@ List modelList = [];
 List subCategoryList = [];
 List<SalesType> salesTypeList = [];
 List otherRegistrationList = [];
-List<OtherRegistrations> otherRegUnitList = [];
-List<OtherRegistrations> otherRegLocationList = [];
-List<OtherRegistrations> otherRegAreaList = [];
-List<OtherRegistrations> otherRegRouteList = [];
+List<OtherRegistrationModel> otherRegUnitList = [];
+List<OtherRegistrationModel> otherRegLocationList = [];
+List<OtherRegistrationModel> otherRegAreaList = [];
+List<OtherRegistrationModel> otherRegRouteList = [];
 List<OptionRateType> optionRateTypeList = [];
 List<PrintSettingsModel> printSettingsList = [];
 List otherRegSalesManList = [];
@@ -132,12 +135,12 @@ class ComSettings {
         }
       }
       for (var json in map['location']) {
-        otherRegLocationList.add(OtherRegistrations.fromJson(json));
+        otherRegLocationList.add(OtherRegistrationModel.fromJson(json));
         locationList
             .add(AppSettingsMap(key: json['auto'], value: json['Name']));
       }
       for (var json in map['unit']) {
-        otherRegUnitList.add(OtherRegistrations.fromJson(json));
+        otherRegUnitList.add(OtherRegistrationModel.fromJson(json));
       }
       if (map['area'].length > 0) {
         if (map['area'][0]['Auto'] == 1) {
@@ -147,7 +150,7 @@ class ComSettings {
         }
       }
       for (var json in map['area']) {
-        otherRegAreaList.add(OtherRegistrations.fromJson(json));
+        otherRegAreaList.add(OtherRegistrationModel.fromJson(json));
         otherRegAreaList.sort((a, b) => a.name.compareTo(b.name));
         areaList.add(AppSettingsMap(key: json['auto'], value: json['Name']));
       }
@@ -171,7 +174,7 @@ class ComSettings {
         }
       }
       for (var json in map['route']) {
-        otherRegRouteList.add(OtherRegistrations.fromJson(json));
+        otherRegRouteList.add(OtherRegistrationModel.fromJson(json));
         otherRegRouteList.sort((a, b) => a.name.compareTo(b.name));
         routeList.add(AppSettingsMap(key: json['auto'], value: json['Name']));
       }

@@ -4,9 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sheraccerp/sales_man_settings.dart';
-import 'package:sheraccerp/app_settings_page.dart';
 import 'package:sheraccerp/models/company_user.dart';
-import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/screens/about_shersoft.dart';
 import 'package:sheraccerp/service/api_dio.dart';
@@ -392,7 +390,8 @@ class _SalesManHomeState extends State<SalesManHome> {
                                   fontSize: 20,
                                   fontFamily: 'Poppins')),
                           onPressed: () {
-                            bool sType = true;
+                            bool sType = isEstimateDataBase;
+
                             salesTypeData = ComSettings.appSettings(
                                     'bool', 'key-switch-sales-form-set', false)
                                 ? salesTypeList.firstWhere((element) =>

@@ -1,10 +1,10 @@
 // @dart = 2.11
 class SalesModel {
   bool success;
-  List<Particulars> particulars;
-  List<Information> information;
-  List<SerialNO> serialNo;
-  List<DeliveryNote> deliveryNote;
+  List<ParticularsModel> particulars;
+  List<InformationModel> information;
+  List<SerialNOModel> serialNo;
+  List<DeliveryNoteModel> deliveryNote;
   String footerMessage;
 
   SalesModel(
@@ -18,28 +18,28 @@ class SalesModel {
   SalesModel.fromJson(Map<String, dynamic> json) {
     success = json['success'];
     if (success) {
-      information = <Information>[];
+      information = <InformationModel>[];
       json['Information'].forEach((v) {
-        information.add(Information.fromJson(v));
+        information.add(InformationModel.fromJson(v));
       });
-      particulars = <Particulars>[];
+      particulars = <ParticularsModel>[];
       json['Particulars'].forEach((v) {
-        particulars.add(Particulars.fromJson(v));
+        particulars.add(ParticularsModel.fromJson(v));
       });
-      serialNo = <SerialNO>[];
+      serialNo = <SerialNOModel>[];
       json['SerialNO'].forEach((v) {
-        serialNo.add(SerialNO.fromJson(v));
+        serialNo.add(SerialNOModel.fromJson(v));
       });
-      deliveryNote = <DeliveryNote>[];
+      deliveryNote = <DeliveryNoteModel>[];
       json['DeliveryNote'].forEach((v) {
-        deliveryNote.add(DeliveryNote.fromJson(v));
+        deliveryNote.add(DeliveryNoteModel.fromJson(v));
       });
     }
     footerMessage = json['message'];
   }
 }
 
-class Information {
+class InformationModel {
   int RealEntryNo;
   var EntryNo;
   var InvoiceNo;
@@ -129,7 +129,7 @@ class Information {
   var receiptDate;
   var JobCardno;
 
-  Information(
+  InformationModel(
       {this.RealEntryNo,
       this.EntryNo,
       this.InvoiceNo,
@@ -218,11 +218,11 @@ class Information {
       this.receiptAmount,
       this.receiptDate,
       this.JobCardno});
-  Information.fromJson(Map<String, dynamic> json);
+  InformationModel.fromJson(Map<String, dynamic> json);
 }
 
-class Particulars {
-  // Particulars(
+class ParticularsModel {
+  // ParticularsModel(
   // {var dDate,
   // var entryNo,
   // var uniqueCode,
@@ -329,7 +329,7 @@ class Particulars {
   double unitValue;
   double pRate;
   double rPrate;
-  Particulars({
+  ParticularsModel({
     this.slno,
     this.itemname,
     this.itemId,
@@ -361,43 +361,44 @@ class Particulars {
     this.rPrate,
   });
 
-  factory Particulars.fromJson(Map<String, dynamic> json) => Particulars(
-      slno: int.tryParse(json['slno'].toString()) ?? 0,
-      itemname: json['itemname'] ?? '',
-      itemId: json['itemId'] ?? 0,
-      uniqueCode: json['UniqueCode'] ?? 0,
-      realRate: double.tryParse(json['RealRate'].toString()) ?? 0,
-      qty: double.tryParse(json['Qty'].toString()) ?? 0,
-      rate: double.tryParse(json['Rate'].toString()) ?? 0,
-      net: double.tryParse(json['Net'].toString()) ?? 0,
-      taxP: double.tryParse(json['igst'].toString()) ?? 0,
-      cGST: double.tryParse(json['CGST'].toString()) ?? 0,
-      sGST: double.tryParse(json['SGST'].toString()) ?? 0,
-      iGST: double.tryParse(json['IGST'].toString()) ?? 0,
-      total: double.tryParse(json['Total'].toString()) ?? 0,
-      unit: json['Unit'] ?? 0,
-      unitName: json['unitName'] ?? '',
-      freeQty: double.tryParse(json['freeQty'].toString()) ?? 0,
-      funit: json['Funit'] ?? 0,
-      grossValue: double.tryParse(json['GrossValue'].toString()) ?? 0,
-      cess: double.tryParse(json['cess'].toString()) ?? 0,
-      fValue: double.tryParse(json['FValue'].toString()) ?? 0,
-      adcess: double.tryParse(json['adcess'].toString()) ?? 0,
-      disc: double.tryParse(json['Disc'].toString()) ?? 0,
-      rDisc: double.tryParse(json['RDisc'].toString()) ?? 0,
-      fcess: double.tryParse(json['Fcess'].toString()) ?? 0,
-      serialno: json['serialno'] ?? '',
-      discPersent: double.tryParse(json['DiscPersent'].toString()) ?? 0,
-      unitValue: double.tryParse(json['UnitValue'].toString()) ?? 0,
-      pRate: double.tryParse(json['Prate'].toString()) ?? 0,
-      rPrate: double.tryParse(json['Rprate'].toString()) ?? 0);
+  factory ParticularsModel.fromJson(Map<String, dynamic> json) =>
+      ParticularsModel(
+          slno: int.tryParse(json['slno'].toString()) ?? 0,
+          itemname: json['itemname'] ?? '',
+          itemId: json['itemId'] ?? 0,
+          uniqueCode: json['UniqueCode'] ?? 0,
+          realRate: double.tryParse(json['RealRate'].toString()) ?? 0,
+          qty: double.tryParse(json['Qty'].toString()) ?? 0,
+          rate: double.tryParse(json['Rate'].toString()) ?? 0,
+          net: double.tryParse(json['Net'].toString()) ?? 0,
+          taxP: double.tryParse(json['igst'].toString()) ?? 0,
+          cGST: double.tryParse(json['CGST'].toString()) ?? 0,
+          sGST: double.tryParse(json['SGST'].toString()) ?? 0,
+          iGST: double.tryParse(json['IGST'].toString()) ?? 0,
+          total: double.tryParse(json['Total'].toString()) ?? 0,
+          unit: json['Unit'] ?? 0,
+          unitName: json['unitName'] ?? '',
+          freeQty: double.tryParse(json['freeQty'].toString()) ?? 0,
+          funit: json['Funit'] ?? 0,
+          grossValue: double.tryParse(json['GrossValue'].toString()) ?? 0,
+          cess: double.tryParse(json['cess'].toString()) ?? 0,
+          fValue: double.tryParse(json['FValue'].toString()) ?? 0,
+          adcess: double.tryParse(json['adcess'].toString()) ?? 0,
+          disc: double.tryParse(json['Disc'].toString()) ?? 0,
+          rDisc: double.tryParse(json['RDisc'].toString()) ?? 0,
+          fcess: double.tryParse(json['Fcess'].toString()) ?? 0,
+          serialno: json['serialno'] ?? '',
+          discPersent: double.tryParse(json['DiscPersent'].toString()) ?? 0,
+          unitValue: double.tryParse(json['UnitValue'].toString()) ?? 0,
+          pRate: double.tryParse(json['Prate'].toString()) ?? 0,
+          rPrate: double.tryParse(json['Rprate'].toString()) ?? 0);
 
-  static List<Particulars> fromJsonList(List list) {
-    return list.map((item) => Particulars.fromJson(item)).toList();
+  static List<ParticularsModel> fromJsonList(List list) {
+    return list.map((item) => ParticularsModel.fromJson(item)).toList();
   }
 }
 
-class SerialNO {
+class SerialNOModel {
   int slno;
   var EntryNo;
   var itemname;
@@ -405,7 +406,7 @@ class SerialNO {
   var Gid;
   var Type;
 
-  SerialNO(
+  SerialNOModel(
       {this.slno,
       this.EntryNo,
       this.itemname,
@@ -413,7 +414,7 @@ class SerialNO {
       this.Gid,
       this.Type});
 
-  SerialNO.fromJson(Map<String, dynamic> json) {
+  SerialNOModel.fromJson(Map<String, dynamic> json) {
     slno = json['slno'];
     EntryNo = json['EntryNo'];
     itemname = json['itemname'];
@@ -422,7 +423,7 @@ class SerialNO {
     Type = json['Type'];
   }
 
-  factory SerialNO.fromMap(Map<String, dynamic> json) => SerialNO(
+  factory SerialNOModel.fromMap(Map<String, dynamic> json) => SerialNOModel(
         slno: json['slno'],
         EntryNo: json['EntryNo'],
         itemname: json['itemname'],
@@ -440,19 +441,19 @@ class SerialNO {
         "Type": Type,
       };
 
-  static List<SerialNO> fromJsonList(List list) {
-    return list.map((item) => SerialNO.fromJson(item)).toList();
+  static List<SerialNOModel> fromJsonList(List list) {
+    return list.map((item) => SerialNOModel.fromJson(item)).toList();
   }
 
-  static List<SerialNO> fromJsonListDynamic(List<dynamic> list) {
-    return list.map((item) => SerialNO.fromJsonMap(item)).toList();
+  static List<SerialNOModel> fromJsonListDynamic(List<dynamic> list) {
+    return list.map((item) => SerialNOModel.fromJsonMap(item)).toList();
   }
 
-  factory SerialNO.fromJsonMap(Map<String, dynamic> map) =>
-      SerialNO.fromMap(map);
+  factory SerialNOModel.fromJsonMap(Map<String, dynamic> map) =>
+      SerialNOModel.fromMap(map);
 }
 
-class DeliveryNote {
+class DeliveryNoteModel {
   int auto;
   var EntryNo;
   var name;
@@ -463,7 +464,7 @@ class DeliveryNote {
   var state;
   var statecode;
   var stype;
-  DeliveryNote({
+  DeliveryNoteModel({
     this.auto,
     this.EntryNo,
     this.name,
@@ -476,7 +477,7 @@ class DeliveryNote {
     this.stype,
   });
 
-  DeliveryNote.fromJson(Map<String, dynamic> json) {
+  DeliveryNoteModel.fromJson(Map<String, dynamic> json) {
     auto = json['auto'];
     EntryNo = json['EntryNo'];
     name = json['name'];
@@ -489,7 +490,8 @@ class DeliveryNote {
     stype = json['stype'];
   }
 
-  factory DeliveryNote.fromMap(Map<String, dynamic> json) => DeliveryNote(
+  factory DeliveryNoteModel.fromMap(Map<String, dynamic> json) =>
+      DeliveryNoteModel(
         auto: json['auto'],
         EntryNo: json['EntryNo'],
         name: json['name'],
@@ -515,16 +517,16 @@ class DeliveryNote {
         "stype": stype,
       };
 
-  static List<DeliveryNote> fromJsonList(List list) {
-    return list.map((item) => DeliveryNote.fromJson(item)).toList();
+  static List<DeliveryNoteModel> fromJsonList(List list) {
+    return list.map((item) => DeliveryNoteModel.fromJson(item)).toList();
   }
 
-  static List<DeliveryNote> fromJsonListDynamic(List<dynamic> list) {
-    return list.map((item) => DeliveryNote.fromJsonMap(item)).toList();
+  static List<DeliveryNoteModel> fromJsonListDynamic(List<dynamic> list) {
+    return list.map((item) => DeliveryNoteModel.fromJsonMap(item)).toList();
   }
 
-  factory DeliveryNote.fromJsonMap(Map<String, dynamic> map) =>
-      DeliveryNote.fromMap(map);
+  factory DeliveryNoteModel.fromJsonMap(Map<String, dynamic> map) =>
+      DeliveryNoteModel.fromMap(map);
 }
 
 class OtherAmount {

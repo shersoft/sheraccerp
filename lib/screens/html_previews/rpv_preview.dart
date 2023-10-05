@@ -1,18 +1,27 @@
 import 'dart:async';
 import 'dart:convert';
+// ignore: avoid_web_libraries_in_flutter
+// import 'dart:html' as html;
 import 'dart:io';
+import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:flutter_sunmi_printer/flutter_sunmi_printer.dart';
+import 'package:image/image.dart' as images;
 import 'package:json_table/json_table.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:sunmi_printer_service/sunmi_printer_service.dart' as sum_mi;
+import 'package:sunmi_printer_service/sunmi_printer_service.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/rp_model.dart';
 import 'package:sheraccerp/models/sales_bill.dart';
@@ -25,13 +34,6 @@ import 'package:sheraccerp/util/invoice.dart';
 import 'package:sheraccerp/util/number_to_word.dart';
 import 'package:sheraccerp/widget/loading.dart';
 import 'package:sheraccerp/widget/pdf_screen.dart';
-
-import 'package:image/image.dart' as images;
-import 'package:sunmi_printer_service/sunmi_printer_service.dart';
-import 'dart:ui' as ui;
-import 'package:sunmi_printer_service/sunmi_printer_service.dart' as sum_mi;
-
-import 'package:webview_flutter/webview_flutter.dart';
 
 class RVPreviewShow extends StatefulWidget {
   String title = '';
@@ -1439,11 +1441,31 @@ Future<String> _createPDF(
 }
 
 Future<String> savePreviewPDF(pw.Document pdf, var title) async {
-  var output = await getTemporaryDirectory();
   title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
-  final file = File('${output.path}/' + title + '.pdf');
-  await file.writeAsBytes(await pdf.save());
-  return file.path.toString();
+  if (kIsWeb) {
+    try {
+      // final bytes = await pdf.save();
+      // final blob = html.Blob([bytes], 'application/pdf');
+      // final url = html.Url.createObjectUrlFromBlob(blob);
+      // final anchor = html.AnchorElement()
+      //   ..href = url
+      //   ..style.display = 'none'
+      //   ..download = '$title.pdf';
+      // html.document.body!.children.add(anchor);
+      // anchor.click();
+      // html.document.body!.children.remove(anchor);
+      // html.Url.revokeObjectUrl(url);
+      return '';
+    } catch (ex) {
+      ex.toString();
+    }
+    return '';
+  } else {
+    var output = await getTemporaryDirectory();
+    final file = File('${output.path}/' + title + '.pdf');
+    await file.writeAsBytes(await pdf.save());
+    return file.path.toString();
+  }
 }
 
 Future<pw.Document> makePDF(

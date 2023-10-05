@@ -945,6 +945,38 @@ class DioService {
     return ret;
   }
 
+  Future<bool> deleteDeliveryNote(entryNo, type, form) async {
+    bool ret = false;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.delete(
+        pref.getString('api' ?? '127.0.0.1:80/api/') +
+            apiV +
+            'sale/deleteDeliveryNote/$dataBase',
+        queryParameters: {
+          'entryNo': entryNo,
+          'type': type,
+          'form': form,
+          'fyId': currentFinancialYear.id,
+        },
+      );
+      if (response.statusCode == 200) {
+        ret = response.data > 0 ? true : false;
+      } else {
+        ret = false;
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
   Future<int> addVoucher(data) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
@@ -1715,7 +1747,7 @@ class DioService {
         List<dynamic> jsonResponse = response.data;
         if (jsonResponse.isNotEmpty) {
           userNameC = jsonResponse[0]['Name'];
-          userIdC = jsonResponse[0]['UserID'];
+          userIdC = jsonResponse[0]['Auto'];
           if (jsonResponse[0]['Name'].toUpperCase() == name &&
               jsonResponse[0]['Password'].toUpperCase() == password) {
             ret = true;
@@ -3520,6 +3552,86 @@ class DioService {
     return _items;
   }
 
+  Future<bool> addOtherRegistration(data) async {
+    bool ret = false;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.post(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'OtherRegistration/Add/$dataBase',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+        ret = jsonResponse['returnValue'] > 0 ? true : false;
+      } else {
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
+  Future<bool> editOtherRegistration(data) async {
+    bool ret = false;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'OtherRegistration/Edit/$dataBase',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+        ret = jsonResponse['returnValue'] > 0 ? true : false;
+      } else {
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
+  Future<bool> deleteOtherRegistration(id) async {
+    bool ret = false;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.delete(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'OtherRegistration/Delete/$dataBase',
+          queryParameters: {'auto': id},
+          options: Options(headers: {'Content-Type': 'application/json'}));
+      if (response.statusCode == 200) {
+        ret = true;
+      } else {
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
   Future<List<dynamic>> fetchDetailAmount() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
@@ -3615,6 +3727,37 @@ class DioService {
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
               'sale/find/$dataBase',
+          queryParameters: {
+            'id': id,
+            'type': type,
+            'fyId': currentFinancialYear.id,
+          });
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+
+        _items = jsonResponse;
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<dynamic> fetchDeliveryNoteInvoice(int id, int type) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    dynamic _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'sale/findDeliveryNote/$dataBase',
           queryParameters: {
             'id': id,
             'type': type,
@@ -4146,6 +4289,33 @@ class DioService {
     return _items;
   }
 
+  Future<List<dynamic>> getSoldProductTracking(id, ledger) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    List<dynamic> _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'sale/getSoldProductTracking/$dataBase',
+          queryParameters: {'id': id, 'ledger': ledger});
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        _items = data;
+      } else {
+        debugPrint('Failed to load data');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
   Future<List<ProductManageModel>> fetchProductDetails(id, String date) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp', location = '0';
@@ -4466,11 +4636,15 @@ class DioService {
 
   Future<bool> updateGeneralSetting(data) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
     try {
       final response = await dio.put(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'updateGeneralSetting',
+              'updateGeneralSetting/$dataBase',
           data: json.encode(data),
           options: Options(headers: {'Content-Type': 'application/json'}));
 
@@ -4596,8 +4770,7 @@ class DioService {
       String companyGstNo) async {
     GstNoResult data;
     try {
-      final response = await dio.get(
-          "https://api.mastergst.com/einvoice/type/GSTNDETAILS/version/V1_03",
+      final response = await dio.get(gstBaseApi + gstDetailsApi,
           queryParameters: {
             "param1": taxNumber,
             "email": bClient != "SHERSOFT"
@@ -4605,7 +4778,10 @@ class DioService {
                 : "shersoftware@gmail.com"
           },
           options: Options(headers: {
-            'accept': '*/*',
+            "param1": taxNumber,
+            "email": bClient != "SHERSOFT"
+                ? "abc@gmail.com"
+                : "shersoftware@gmail.com",
             'ip_address': ipAddress,
             'client_id': clientId,
             'client_secret': clientSecret,
@@ -4615,8 +4791,33 @@ class DioService {
           }));
 
       if (response.statusCode == 200) {
-        var _data = response.data;
-        data = GstNoResult.fromMap(_data);
+        if (response.data != null) {
+          var _data = response.data;
+          if (_data['status_cd'] == '0') {
+            data = GstNoResult(
+              data: GSTNoData(
+                  AddrBnm: '',
+                  AddrBno: '',
+                  AddrFlno: '',
+                  AddrLoc: '',
+                  AddrPncd: 0,
+                  AddrSt: '',
+                  BlkStatus: '',
+                  DtDReg: '',
+                  DtReg: '',
+                  Gstin: '',
+                  LegalName: '',
+                  StateCode: 0,
+                  Status: '',
+                  TradeName: '',
+                  TxpType: ''),
+              status_cd: _data['status_cd'] ?? '',
+              status_desc: _data['status_desc'] ?? '',
+            );
+          } else {
+            data = GstNoResult.fromMap(_data);
+          }
+        }
         return data;
       } else {
         debugPrint('Failed to load data');
@@ -4640,8 +4841,7 @@ class DioService {
       data) async {
     IRnResult data;
     try {
-      final response = await dio.post(
-          "https://api.mastergst.com/einvoice/type/GENERATE/version/V1_03",
+      final response = await dio.post(gstBaseApi + gstIrnApi,
           queryParameters: {
             "email": bClient != "SHERSOFT"
                 ? "ac.japansquare@gmail.com"
@@ -4685,8 +4885,7 @@ class DioService {
       data) async {
     IRnResult data;
     try {
-      final response = await dio.post(
-          "https://api.mastergst.com/einvoice/type/GENERATE/version/V1_03",
+      final response = await dio.post(gstBaseApi + gstCancelIrnApi,
           queryParameters: {
             "email": bClient != "SHERSOFT"
                 ? "ac.japansquare@gmail.com"
@@ -4719,17 +4918,12 @@ class DioService {
     }
   }
 
-  Future<File> getInvoiceDesignerPdf(data) async {
+  Future<File> getInvoiceDesignerPdfFile(data) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
-    String dataBase = 'cSharp';
-    dataBase = isEstimateDataBase
-        ? (pref.getString('DBName') ?? "cSharp")
-        : (pref.getString('DBNameT') ?? "cSharp");
     data.update('code', (value) => pref.getString('Code') ?? 'COM');
 
     try {
-      final response = await dio.post(
-          'http://148.72.210.101:888/Home/DownloadPdf',
+      final response = await dio.post(invoiceUrl,
           data: json.encode(data),
           options: Options(
               headers: {'Content-Type': 'application/json'},
@@ -4754,6 +4948,148 @@ class DioService {
       debugPrint(value.toString());
     }
     return null;
+  }
+
+  Future<List<int>> getInvoiceDesignerPdfData(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    data.update('code', (value) => pref.getString('Code') ?? 'COM');
+
+    try {
+      final response = await dio.post(invoiceUrl,
+          data: json.encode(data),
+          options: Options(
+              headers: {'Content-Type': 'application/json'},
+              responseType: ResponseType.bytes));
+      if (response != null) {
+        return response.data;
+      }
+      debugPrint('The download failed.');
+    } catch (value) {
+      if (value is DioError) {
+        debugPrint(value.response.toString());
+      }
+      debugPrint(value.toString());
+    }
+    return null;
+  }
+
+  Future<bool> updateBillInfo(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'sale/editIrn/$dataBase',
+          data: data,
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        debugPrint('Failed to load data');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
+  }
+
+  Future<bool> updateReturnBillInfo(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'sale/editSalesReturnIrn/$dataBase',
+          data: data,
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        debugPrint('Failed to load data');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
+  }
+
+  Future<bool> updateCanceledBillInfo(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'sale/editCanceledSaleIrn/$dataBase',
+          data: data,
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        debugPrint('Failed to load data');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
+  }
+
+  Future<bool> updateCanceledReturnBillInfo(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'sale/editCanceledSalesReturnIrn/$dataBase',
+          data: data,
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        debugPrint('Failed to load data');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>> getGeoCode(String pin) async {
+    final response = await dio.get(geoApiFy.replaceAll('pin', pin),
+        options: Options(headers: {'Content-Type': 'application/json'}));
+    if (response.statusCode == 200) {
+      var data = response.data['results'][0];
+      return {'place': data['county'], 'lon': data['lon'], 'lat': data['lat']};
+    } else {
+      return {};
+    }
   }
 }
 

@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:csv/csv.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -16,6 +17,8 @@ import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/pdf_screen.dart';
 import 'package:pdf/widgets.dart' as pw;
+// ignore: avoid_web_libraries_in_flutter
+// import 'dart:html' as html;
 
 class ProductReport extends StatefulWidget {
   const ProductReport({Key key}) : super(key: key);
@@ -741,11 +744,31 @@ class _ProductReportState extends State<ProductReport> {
   }
 
   Future<String> savePreviewPDF(pw.Document pdf, var title) async {
-    var output = await getTemporaryDirectory();
-    title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
-    final file = File('${output.path}/' + title + '.pdf');
-    await file.writeAsBytes(await pdf.save());
-    return file.path.toString();
+    title = title.replaceAll(RegExp(r'[^\w\s]+'), '');
+    if (kIsWeb) {
+      try {
+        // final bytes = await pdf.save();
+        // final blob = html.Blob([bytes], 'application/pdf');
+        // final url = html.Url.createObjectUrlFromBlob(blob);
+        // final anchor = html.AnchorElement()
+        //   ..href = url
+        //   ..style.display = 'none'
+        //   ..download = '$title.pdf';
+        // html.document.body.children.add(anchor);
+        // anchor.click();
+        // html.document.body.children.remove(anchor);
+        // html.Url.revokeObjectUrl(url);
+        return '';
+      } catch (ex) {
+        ex.toString();
+      }
+      return '';
+    } else {
+      var output = await getTemporaryDirectory();
+      final file = File('${output.path}/' + title + '.pdf');
+      await file.writeAsBytes(await pdf.save());
+      return file.path.toString();
+    }
   }
 
   Future<String> _createCSV(String title) async {
@@ -774,11 +797,31 @@ class _ProductReportState extends State<ProductReport> {
   }
 
   Future<String> savePreviewCSV(var csv, var title) async {
-    var output = await getTemporaryDirectory();
-    title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
-    final file = File('${output.path}/' + title + '.csv');
-    await file.writeAsString(csv);
-    return file.path.toString();
+    title = title.replaceAll(RegExp(r'[^\w\s]+'), '');
+    if (kIsWeb) {
+      try {
+        // final bytes = utf8.encode(csv);
+        // final blob = html.Blob([bytes], 'application/csv');
+        // final url = html.Url.createObjectUrlFromBlob(blob);
+        // final anchor = html.AnchorElement()
+        //   ..href = url
+        //   ..style.display = 'none'
+        //   ..download = '$title.csv';
+        // html.document.body.children.add(anchor);
+        // anchor.click();
+        // html.document.body.children.remove(anchor);
+        // html.Url.revokeObjectUrl(url);
+        return '';
+      } catch (ex) {
+        ex.toString();
+      }
+      return '';
+    } else {
+      var output = await getTemporaryDirectory();
+      final file = File('${output.path}/' + title + '.csv');
+      await file.writeAsString(csv);
+      return file.path.toString();
+    }
   }
 
   Future<void> urlFileShare(BuildContext context, String text, String subject,

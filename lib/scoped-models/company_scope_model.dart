@@ -6,13 +6,14 @@ import 'package:scoped_model/scoped_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
+import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
 
 mixin CompanyScopeModel on Model {
   MainModel model;
   CompanyInformation _company;
   final List<FinancialYear> _financialYear = [];
-  final List<CompanySettings> _settings = [];
+  List<CompanySettings> _settings = [];
   List<ReportDesign> _reportDesign = [];
   var dio = Dio();
 
@@ -22,6 +23,10 @@ mixin CompanyScopeModel on Model {
 
   List<CompanySettings> getSettings() {
     return _settings;
+  }
+
+  setSettings(List<CompanySettings> values) {
+    _settings = values;
   }
 
   List<FinancialYear> getFinancialYear() {
@@ -60,6 +65,10 @@ mixin CompanyScopeModel on Model {
         var lockSettings =
             ComSettings.getValue('KEY LOCK SETTINGS', _settings).toString();
         sherSoftPassword = lockSettings.isNotEmpty ? lockSettings : '';
+        final settingsData = await DioService().getSoftwareSettings();
+        if (settingsData != null) {
+          _settings = settingsData;
+        }
         notifyListeners();
       } else {
         _company = null;

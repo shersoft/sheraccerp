@@ -37,6 +37,8 @@ import 'package:image/image.dart' as img;
 import 'package:image/image.dart' as images;
 import 'package:sunmi_printer_service/sunmi_printer_service.dart';
 import 'dart:ui' as ui;
+// ignore: avoid_web_libraries_in_flutter
+// import 'dart:html' as html;
 import 'package:sunmi_printer_service/sunmi_printer_service.dart' as sum_mi;
 
 import 'package:webview_flutter/webview_flutter.dart';
@@ -180,10 +182,14 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
 
     if (printSettingsList != null) {
       if (printSettingsList.isNotEmpty) {
-        printSettingsModel = printSettingsList.firstWhere((element) =>
-            element.model == 'INVOICE DESIGNER' &&
-            element.dTransaction == 'SALES-BB' &&
-            element.fyId == currentFinancialYear.id);
+        printSettingsModel = printSettingsList.firstWhere(
+            (element) =>
+                element.model == 'INVOICE DESIGNER' &&
+                element.dTransaction == salesTypeData.type &&
+                element.fyId == currentFinancialYear.id,
+            orElse: () => printSettingsList.isNotEmpty
+                ? printSettingsList[0]
+                : PrintSettingsModel.empty());
       }
     }
 
@@ -632,6 +638,11 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                             _otherAmount() +
                             '''
                               <tr>
+                                <td colspan="3" class="blank"></td>
+                                <td colspan="2" class="total-value1" align="right">Tax :</td>
+                                    <td class="total-value" align="right">${(double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString()) + double.tryParse(dataInformation['IGST'].toString()) + double.tryParse(dataInformation['cess'].toString()) + double.tryParse(dataInformation['TCS'].toString())).toStringAsFixed(decimal)}</td>
+                              </tr>
+                              <tr>
                       <td colspan="3" class="blank"></td>
                       <td colspan="2" class="total-value1" align="right">Net Total :</td>
                           <td class="total-value" align="right">${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}</td>
@@ -786,7 +797,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
               ' ',
       "code": ' ',
       "id": dataInformation['EntryNo'].toString() ?? '0',
-      "decimalPoint": decimal,
+      "decimalPoint": decimal ?? 2,
       "CurrencyFormat": "##0.00",
       "printCaption": invoiceHead ?? ' ',
       "obTotal": "0.00",
@@ -797,7 +808,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
       "bankbranch": ' ',
       "Warehousename": ' ',
       "WareHouseAdd1": ' ',
-      "bill_lines": printLines,
+      "bill_lines": printLines ?? 12,
       "WareHouseAdd2": ' ',
       "WareHouseAdd3": ' ',
       "SiVa": ' ',
@@ -819,18 +830,21 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
       "State": companyState ?? ' ',
       "StateCode": companyStateCode ?? ' ',
       "ledName": dataInformation['ToName'].toString() ?? ' ',
-      "ledAdd1": ledger['add1'].toString() ?? ' ',
-      "ledAdd2": ledger['add2'].toString() ?? ' ',
-      "ledAdd3": ledger['add3'].toString() ?? ' ',
-      "ledAdd4": ledger['add4'].toString() ?? ' ',
-      "ledTaxNo": ledger['gstno'].toString() ?? ' ',
-      "ledPan": ledger['pan'].toString() ?? ' ',
-      "ledmobile": ledger['Mobile'].toString() ?? ' ',
-      "ledState": ledger['state'].toString() ?? ' ',
-      "ledStateCode": ledger['stateCode'].toString() ?? ' ',
-      "ledCperson": ledger['CPerson'].toString() ?? ' ',
-      "ledCreditDays": ledger['CDays'].toString() ?? '0',
-      "ledMailId": ledger['Email'].toString() ?? ' ',
+      "ledAdd1": ledger['add1'] != null ? ledger['add1'].toString() : ' ',
+      "ledAdd2": ledger['add2'] != null ? ledger['add2'].toString() : ' ',
+      "ledAdd3": ledger['add3'] != null ? ledger['add3'].toString() : ' ',
+      "ledAdd4": ledger['add4'] != null ? ledger['add4'].toString() : ' ',
+      "ledTaxNo": ledger['gstno'] != null ? ledger['gstno'].toString() : ' ',
+      "ledPan": ledger['pan'] != null ? ledger['pan'].toString() : ' ',
+      "ledmobile": ledger['Mobile'] != null ? ledger['Mobile'].toString() : ' ',
+      "ledState": ledger['state'] != null ? ledger['state'].toString() : ' ',
+      "ledStateCode":
+          ledger['stateCode'] != null ? ledger['stateCode'].toString() : ' ',
+      "ledCperson":
+          ledger['CPerson'] != null ? ledger['CPerson'].toString() : ' ',
+      "ledCreditDays":
+          ledger['CDays'] != null ? ledger['CDays'].toString() : '0',
+      "ledMailId": ledger['Email'] != null ? ledger['Email'].toString() : ' ',
       "invoiceLetter": printSettingsModel.invoiceLetter ?? ' ',
       "invoiceNo": dataInformation['EntryNo'].toString() ?? '0',
       "invoiceSuffix": printSettingsModel.invoiceSuffix ?? ' ',
@@ -840,15 +854,15 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
       "Location": "SHOP",
       "Project": "-1",
       "TotalGross": dataInformation['GrossValue'].toString() ?? '0',
-      "TotalDisc": subTotalDiscount,
-      "TotalNet": subTotalGross,
-      "TotalCgst": subTotalCGST,
-      "TotalSgst": subTotalSGST,
-      "TotalIgst": subTotalIGST,
+      "TotalDisc": subTotalDiscount.toStringAsFixed(decimal) ?? '0',
+      "TotalNet": subTotalGross.toStringAsFixed(decimal) ?? '0',
+      "TotalCgst": subTotalCGST.toStringAsFixed(decimal) ?? '0',
+      "TotalSgst": subTotalSGST.toStringAsFixed(decimal) ?? '0',
+      "TotalIgst": subTotalIGST.toStringAsFixed(decimal) ?? '0',
       "TotalCess": dataInformation['cess'].toString() ?? '0',
       "TotalKfc": "0.00",
       "TotalTotal": dataInformation['Total'].toString() ?? '0',
-      "TotalQty": subTotalQty,
+      "TotalQty": subTotalQty.toString() ?? '0',
       "OtherCharges": dataInformation['OtherCharges'].toString() ?? '0',
       "OtherdiscAmount": dataInformation['OtherDiscount'].toString() ?? '0',
       "LoadingCharge": dataInformation['loadingCharge'].toString() ?? '0',
@@ -925,22 +939,54 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
       "itemList": itemData
     };
 
-    return FutureBuilder<File>(
-      future: api.getInvoiceDesignerPdf(data),
-      builder: (context, snapshot) {
+    // if (kIsWeb) {
+    //   try {
+    //     final bytes = await pdf.save();
+    //     final blob = html.Blob([bytes], 'application/pdf');
+    //     final url = html.Url.createObjectUrlFromBlob(blob);
+    //     final anchor = html.AnchorElement()
+    //       ..href = url
+    //       ..style.display = 'none'
+    //       ..download = '$title.pdf';
+    //     html.document.body.children.add(anchor);
+    //     anchor.click();
+    //     html.document.body.children.remove(anchor);
+    //     html.Url.revokeObjectUrl(url);
+    //     return '';
+    //   } catch (ex) {
+    //     ex.toString();
+    //   }
+    //   return '';
+    // } else {
+    //   var output = await getTemporaryDirectory();
+    //   final file = File('${output.path}/xxx.pdf');
+    //   await file.writeAsBytes(await pdf.save());
+    //   return file.path.toString();
+    // }
+
+    return FutureBuilder<List<int>>(
+      future: api.getInvoiceDesignerPdfData(data),
+      builder: (context, AsyncSnapshot<List<int>> snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data != null) {
-            File file = snapshot.data;
-            var path = file.path.toString();
-            if (path.isNotEmpty) {
-              Future.delayed(const Duration(seconds: 1), () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => PDFScreen(
-                          pathPDF: path.toString(),
-                          subject: 'title',
-                          text: 'this is title',
-                        )));
-              });
+            List<int> bytes = snapshot.data;
+            if (kIsWeb) {
+              try {
+                // final blob = html.Blob([bytes], 'application/pdf');
+                // final url = html.Url.createObjectUrlFromBlob(blob);
+                // final anchor = html.AnchorElement()
+                //   ..href = url
+                //   ..style.display = 'none'
+                //   ..download = '$title.pdf';
+                // html.document.body.children.add(anchor);
+                // anchor.click();
+                // html.document.body.children.remove(anchor);
+                // html.Url.revokeObjectUrl(url);
+              } catch (ex) {
+                ex.toString();
+              }
+            } else {
+              pdfFunction(bytes);
             }
           } else {
             return Center(
@@ -1137,7 +1183,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 Text(
-                                    'CGST : ${dataInformation['CGST']} SGST : ${dataInformation['SGST']} = ${(dataInformation['CGST'] + dataInformation['SGST'])}'),
+                                    'CESS : ${double.tryParse(dataInformation['cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
                               ],
                             )
                           : Row(
@@ -1453,6 +1499,33 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
     // print(bs64);
     setState(() {});
     return pngBytes;
+  }
+
+  pdfFunction(List<int> bytes) async {
+    try {
+      final Directory appDir = await getTemporaryDirectory();
+      String tempPath = appDir.path;
+      final String fileName =
+          DateTime.now().microsecondsSinceEpoch.toString() + '-' + 's.pdf';
+      File file = File('$tempPath/$fileName');
+      if (!await file.exists()) {
+        await file.create();
+      }
+      await file.writeAsBytes(bytes);
+      var path = file.path.toString();
+      if (path.isNotEmpty) {
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => PDFScreen(
+                    pathPDF: path.toString(),
+                    subject: 'title',
+                    text: 'this is title',
+                  )));
+        });
+      }
+    } catch (ex) {
+      debugPrint(ex.toString());
+    }
   }
 }
 
@@ -1862,8 +1935,8 @@ Future<dynamic> printBluetooth(
 // }
 
 void printSunmiV1(dataAll) async {
-  var firm = dataAll[0];
-  var settings = dataAll[1];
+  CompanyInformation firm = dataAll[0];
+  List<CompanySettings> settings = dataAll[1];
   var bill = dataAll[2];
   var inf = bill['Information'][0];
   var det = bill['Particulars'];
@@ -1890,11 +1963,11 @@ void printSunmiV1(dataAll) async {
     if (taxSale) {
       await SPrinter.setAlign(sum_mi.Align.center);
       await SPrinter.setFontSize(30);
-      await SPrinter.text(firm['name']);
+      await SPrinter.text(firm.name);
       await SPrinter.setFontSize(26);
       await SPrinter.lineWrap();
-      await SPrinter.text(firm['add1']);
-      await SPrinter.text('Tel : ${firm['telephone'] + ',' + firm['mobile']}');
+      await SPrinter.text(firm.add1);
+      await SPrinter.text('Tel : ${firm.telephone + ',' + firm.mobile}');
       await SPrinter.lineWrap();
       await SPrinter.text(companyTaxMode == 'INDIA'
           ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
@@ -1953,12 +2026,11 @@ void printSunmiV1(dataAll) async {
       if (ComSettings.appSettings('bool', 'key-print-header-es', false)) {
         await SPrinter.setAlign(sum_mi.Align.center);
         await SPrinter.setFontSize(30);
-        await SPrinter.text(firm['name']);
+        await SPrinter.text(firm.name);
         await SPrinter.setFontSize(26);
         await SPrinter.lineWrap();
-        await SPrinter.text(firm['add1']);
-        await SPrinter.text(
-            'Tel : ${firm['telephone'] + ',' + firm['mobile']}');
+        await SPrinter.text(firm.add1);
+        await SPrinter.text('Tel : ${firm.telephone + ',' + firm.mobile}');
         await SPrinter.lineWrap();
         await SPrinter.text(companyTaxMode == 'INDIA'
             ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
@@ -2071,7 +2143,7 @@ void printSunmiV1(dataAll) async {
     if (isQrCodeKSA) {
       if (taxSale) {
         await SPrinter.qrCode(SaudiConversion.getBase64(
-            settings.name,
+            firm.name,
             ComSettings.getValue('GST-NO', settings),
             DateUtil.dateTimeQrDMY(DateUtil.datedYMD(inf['DDate']) +
                 ' ' +
@@ -2084,7 +2156,7 @@ void printSunmiV1(dataAll) async {
       }
     } else if (isEsQrCodeKSA) {
       await SPrinter.qrCode(SaudiConversion.getBase64(
-          settings.name,
+          firm.name,
           ComSettings.getValue('GST-NO', settings),
           DateUtil.dateTimeQrDMY(DateUtil.datedYMD(inf['DDate']) +
               ' ' +
@@ -2100,8 +2172,8 @@ void printSunmiV1(dataAll) async {
 }
 
 void printSunmiV2(dataAll) async {
-  var firm = dataAll[0];
-  var setting = dataAll[1];
+  CompanyInformation firm = dataAll[0];
+  List<CompanySettings> setting = dataAll[1];
   var bill = dataAll[2];
   var inf = bill['Information'][0];
   var det = bill['Particulars'];
@@ -2111,7 +2183,7 @@ void printSunmiV2(dataAll) async {
 
   SunmiPrinter.hr();
   SunmiPrinter.text(
-    firm['name'],
+    firm.name,
     styles: const SunmiStyles(
         bold: true,
         underline: true,
@@ -2124,11 +2196,11 @@ void printSunmiV2(dataAll) async {
         bold: true, underline: true, align: SunmiAlign.center),
   );
   SunmiPrinter.text(
-    firm['add1'],
+    firm.add1,
     styles: const SunmiStyles(align: SunmiAlign.center),
   );
   SunmiPrinter.text(
-    'Tel : ${firm['telephone'] + ',' + firm['mobile']}',
+    'Tel : ${firm.telephone + ',' + firm.mobile}',
     styles: const SunmiStyles(align: SunmiAlign.center),
   );
   SunmiPrinter.emptyLines(1);
@@ -2367,8 +2439,8 @@ void printUrovo(dataAll) async {
               gstno: inf["gstno"])
         ],
         particulars: Particular.fromJsonListDynamic(det),
-        serialNo: SerialNO.fromJsonListDynamic(serialNo),
-        deliveryNote: DeliveryNote.fromJsonListDynamic(deliveryNote),
+        serialNo: SerialNOModel.fromJsonListDynamic(serialNo),
+        deliveryNote: DeliveryNoteModel.fromJsonListDynamic(deliveryNote),
         otherAmount: BillOtherAmount.fromJsonListDynamic(otherAmount),
         printHeaderInEs:
             ComSettings.appSettings('bool', 'key-print-header-es', false),
@@ -2654,31 +2726,31 @@ Future<String> _createPDF(
 }
 
 Future<String> savePreviewPDF(pw.Document pdf, var title) async {
-  title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
-  // if (kIsWeb) {
-  //   try {
-  //     final bytes = await pdf.save();
-  //     final blob = html.Blob([bytes], 'application/pdf');
-  //     final url = html.Url.createObjectUrlFromBlob(blob);
-  //     final anchor = html.AnchorElement()
-  //       ..href = url
-  //       ..style.display = 'none'
-  //       ..download = '$title.pdf';
-  //     html.document.body.children.add(anchor);
-  //     anchor.click();
-  //     html.document.body.children.remove(anchor);
-  //     html.Url.revokeObjectUrl(url);
-  //     return '';
-  //   } catch (ex) {
-  //     ex.toString();
-  //   }
-  //   return '';
-  // } else {
-  var output = await getTemporaryDirectory();
-  final file = File('${output.path}/' + title + '.pdf');
-  await file.writeAsBytes(await pdf.save());
-  return file.path.toString();
-  // }
+  title = title.replaceAll(RegExp(r'[^\w\s]+'), '');
+  if (kIsWeb) {
+    try {
+      // final bytes = await pdf.save();
+      // final blob = html.Blob([bytes], 'application/pdf');
+      // final url = html.Url.createObjectUrlFromBlob(blob);
+      // final anchor = html.AnchorElement()
+      //   ..href = url
+      //   ..style.display = 'none'
+      //   ..download = '$title.pdf';
+      // html.document.body.children.add(anchor);
+      // anchor.click();
+      // html.document.body.children.remove(anchor);
+      // html.Url.revokeObjectUrl(url);
+      return '';
+    } catch (ex) {
+      ex.toString();
+    }
+    return '';
+  } else {
+    var output = await getTemporaryDirectory();
+    final file = File('${output.path}/' + title + '.pdf');
+    await file.writeAsBytes(await pdf.save());
+    return file.path.toString();
+  }
 }
 
 Future<pw.Document> makePDF(
@@ -3699,7 +3771,7 @@ Future<pw.Document> makePDF(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               children: [
                                 pw.Text(
-                                    'CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
+                                    'CESS : ${double.tryParse(dataInformation['cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
                               ],
                             )
                           : pw.Row(
@@ -5456,7 +5528,7 @@ Future<pw.Document> makePDF(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               children: [
                                 pw.Text(
-                                    'CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
+                                    'CESS : ${double.tryParse(dataInformation['cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
                               ],
                             )
                           : pw.Row(
@@ -7862,7 +7934,7 @@ Future<pw.Document> makePDF(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               children: [
                                 pw.Text(
-                                    'CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
+                                    'CESS : ${double.tryParse(dataInformation['cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
                               ],
                             )
                           : pw.Row(
@@ -9179,7 +9251,7 @@ Future<pw.Document> makePDF(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               children: [
                                 pw.Text(
-                                    'CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
+                                    'CESS : ${double.tryParse(dataInformation['cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
                               ],
                             )
                           : pw.Row(
@@ -10496,7 +10568,7 @@ Future<pw.Document> makePDF(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               children: [
                                 pw.Text(
-                                    'CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
+                                    'CESS : ${double.tryParse(dataInformation['cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
                               ],
                             )
                           : pw.Row(

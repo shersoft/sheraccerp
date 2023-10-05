@@ -365,7 +365,7 @@ class SalesProvider with ChangeNotifier {
 
   int get totalItem => _cartItem.length;
 
-  CartItem addCart(Particulars product) {
+  CartItem addCart(ParticularsModel product) {
     return CartItem(
         stock: 0,
         id: totalItem + 1,

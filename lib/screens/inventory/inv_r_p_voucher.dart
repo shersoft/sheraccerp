@@ -726,11 +726,12 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
   void _getMoreBillData(mode) async {
     if (!lastRecordBill) {
       if (dataDisplayBill.isEmpty ||
-          // ignore: curly_braces_in_flow_control_structures
-          dataDisplayBill.length < totalRecordsBill) if (!isLoadingDataBill) {
-        setState(() {
-          isLoadingDataBill = true;
-        });
+          dataDisplayBill.length < totalRecordsBill) {
+        if (!isLoadingDataBill) {
+          setState(() {
+            isLoadingDataBill = true;
+          });
+        }
 
         List tempList = [];
         var _type = mode == 'Payment Invoice' ? 'PV' : 'RV';
@@ -803,8 +804,8 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
             'total': total,
             'location': 1,
             'user': 1,
-            'project': '-1',
-            'salesman': '-1',
+            'project': '0',
+            'salesman': '0',
             'month': '2022-01-01',
             'particular': particular,
             'vType': mode == 'Payment Invoice' ? 'PV' : 'RV',

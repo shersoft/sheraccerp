@@ -4429,8 +4429,46 @@ class _BtPrintState extends State<BtPrint> {
         bytes += ticket.text('${bill['message']}',
             styles: const PosStyles(align: PosAlign.center));
 
-        bytes += ticket
-            .feed(ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
+        if (isQrCodeKSA) {
+          // Print QR Code using native function
+          // bytes += ticket.qrcode('example.com');
+          if (taxSale) {
+            bytes += ticket.qrcode(SaudiConversion.getBase64(
+                companySettings.name,
+                ComSettings.getValue('GST-NO', settings),
+                DateUtil.dateTimeQrDMY(
+                    DateUtil.datedYMD(dataInformation['DDate']) +
+                        ' ' +
+                        DateUtil.timeHMS(dataInformation['BTime'])),
+                double.tryParse(dataInformation['GrandTotal'].toString())
+                    .toStringAsFixed(2),
+                (double.tryParse(dataInformation['CGST'].toString()) +
+                        double.tryParse(dataInformation['SGST'].toString()) +
+                        double.tryParse(dataInformation['IGST'].toString()))
+                    .toStringAsFixed(2)));
+            bytes += ticket.feed(
+                ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
+          } else if (isEsQrCodeKSA) {
+            bytes += ticket.qrcode(SaudiConversion.getBase64(
+                companySettings.name,
+                ComSettings.getValue('GST-NO', settings),
+                DateUtil.dateTimeQrDMY(
+                    DateUtil.datedYMD(dataInformation['DDate']) +
+                        ' ' +
+                        DateUtil.timeHMS(dataInformation['BTime'])),
+                double.tryParse(dataInformation['GrandTotal'].toString())
+                    .toStringAsFixed(2),
+                (double.tryParse(dataInformation['CGST'].toString()) +
+                        double.tryParse(dataInformation['SGST'].toString()) +
+                        double.tryParse(dataInformation['IGST'].toString()))
+                    .toStringAsFixed(2)));
+            bytes += ticket.feed(
+                ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
+          }
+        } else {
+          bytes += ticket.feed(
+              ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
+        }
 
         bytes += ticket.feed(2);
         return bytes;

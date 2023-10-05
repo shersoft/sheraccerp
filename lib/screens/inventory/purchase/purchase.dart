@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:sheraccerp/models/cart_item.dart';
 import 'package:sheraccerp/models/company.dart';
+import 'package:sheraccerp/models/unit_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
@@ -49,7 +50,7 @@ class _PurchaseState extends State<Purchase> {
       isFreeQty = false,
       realPRATEBASEDPROFITPERCENTAGE = false;
   List<CartItemP> cartItem = [];
-  int page = 1, pageTotal = 0, totalRecords = 0;
+  int page = 1, pageTotal = 0, totalRecords = 0, _dropDownUnit = 0;
   List<dynamic> itemDisplay = [];
   List<dynamic> items = [];
   final List<dynamic> _ledger = [];
@@ -98,6 +99,7 @@ class _PurchaseState extends State<Purchase> {
     isItemSerialNo = ComSettings.getStatus('KEY ITEM SERIAL NO', settings);
     labelSerialNo =
         ComSettings.getValue('KEY ITEM SERIAL NO', settings).toString();
+    labelSerialNo = labelSerialNo.isEmpty ? 'Remark' : labelSerialNo;
     salesManId = ComSettings.appSettings(
             'int', 'key-dropdown-default-salesman-view', 1) -
         1;
@@ -1305,9 +1307,10 @@ class _PurchaseState extends State<Purchase> {
       retailPer = 0,
       spRetail = 0,
       spRetailPer = 0,
-      branchPer = 0;
+      branchPer = 0,
+      _conversion = 0;
   String expDate = '1900-01-01', serialNo = '';
-  var unit;
+  DataJson unit;
   int uniqueCode = 0, fUnitId = 0, barcode = 0;
   bool editableMrp = false,
       editableRetail = false,
@@ -1337,6 +1340,8 @@ class _PurchaseState extends State<Purchase> {
       taxP = isTax ? cartItem.elementAt(position).taxP : 0;
       // kfcP = double.tryParse(productModel['KFC'].toString());
       quantity = cartItem[position].quantity;
+      defaultUnitID = cartItem[position].unitId;
+
       if (quantity > 0 && !editableQuantity) {
         controllerQuantity.text = quantity.toString();
       }
@@ -1388,6 +1393,10 @@ class _PurchaseState extends State<Purchase> {
         tax = 0;
       }
       total = cartItem.elementAt(position).total;
+      serialNo = cartItem.elementAt(position).serialNo;
+      if (serialNo.isNotEmpty) {
+        controllerSerialNo.text = serialNo.toString();
+      }
     } else {
       adCessPer =
           isTax ? double.tryParse(productModel['adcessper'].toString()) : 0;
@@ -1499,7 +1508,7 @@ class _PurchaseState extends State<Purchase> {
       serialNo =
           controllerSerialNo.text.isNotEmpty ? controllerSerialNo.text : '';
 
-      // unitValue = _conversion > 0 ? _conversion : 1;
+      unitValue = _conversion > 0 ? _conversion : 1;
     }
 
     calculateRate() {
@@ -1520,6 +1529,7 @@ class _PurchaseState extends State<Purchase> {
           : 0;
     }
 
+    List<UnitModel> unitListData = [];
     return Container(
       padding: const EdgeInsets.all(8.0),
       child: SingleChildScrollView(
@@ -1630,8 +1640,8 @@ class _PurchaseState extends State<Purchase> {
                           cartItem[position].taxP = taxP;
                           cartItem[position].total = total;
                           cartItem[position].uniqueCode = uniqueCode;
-                          // cartItem[position].unitId = unit.id;
-                          // cartItem[position].unitName = unit.name;
+                          cartItem[position].unitId = unit.id;
+                          cartItem[position].unitName = unit.name;
                           cartItem[position].unitValue = unitValue;
                           cartItem[position].wholesale = wholeSale;
                           cartItem[position].wholesalePer = wholesalePer;
@@ -1769,7 +1779,7 @@ class _PurchaseState extends State<Purchase> {
                     child: TextField(
                       controller: controllerSerialNo,
                       decoration: InputDecoration(
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
                           labelText:
                               isItemSerialNo ? labelSerialNo : 'SerialNo'),
                       onChanged: (value) {
@@ -1783,18 +1793,140 @@ class _PurchaseState extends State<Purchase> {
               ),
             ),
             const Divider(),
-            DropdownSearch<dynamic>(
-              maxHeight: 300,
-              onFind: (String filter) =>
-                  dio.getSalesListData(filter, 'sales_list/unit'),
-              dropdownSearchDecoration: const InputDecoration(
-                  border: OutlineInputBorder(), label: Text('Select Unit')),
-              onChanged: (dynamic data) {
-                unit = data;
-                calculate();
-              },
-              showSearchBox: true,
-            ),
+            // DropdownSearch<dynamic>(
+            //   maxHeight: 300,
+            //   onFind: (String filter) =>
+            //       dio.getSalesListData(filter, 'sales_list/unit'),
+            //   dropdownSearchDecoration: const InputDecoration(
+            //       border: OutlineInputBorder(), label: Text('Select Unit')),
+            //   onChanged: (dynamic data) {
+            //     unit = data;
+            //     calculate();
+            //   },
+            //   showSearchBox: true,
+            // ),
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Visibility(
+                visible: enableMULTIUNIT,
+                child: Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(2.0),
+                    child: FutureBuilder(
+                      future: dio.fetchUnitOf(editItem
+                          ? cartItem[position].itemId
+                          : productModel['slno']),
+                      builder: (BuildContext context, AsyncSnapshot snapshot) {
+                        if (snapshot.hasData) {
+                          unitListData.clear();
+                          for (var i = 0; i < snapshot.data.length; i++) {
+                            if (defaultUnitID.toString().isNotEmpty) {
+                              if (snapshot.data[i].id == defaultUnitID - 1) {
+                                _dropDownUnit = snapshot.data[i].id;
+                                _conversion = snapshot.data[i].conversion;
+                                unit = DataJson(
+                                    id: snapshot.data[i].id,
+                                    name: snapshot.data[i].name);
+                              }
+                            }
+                            unitListData.add(UnitModel(
+                                id: snapshot.data[i].id,
+                                itemId: snapshot.data[i].itemId,
+                                conversion: snapshot.data[i].conversion,
+                                name: snapshot.data[i].name,
+                                pUnit: snapshot.data[i].pUnit,
+                                sUnit: snapshot.data[i].sUnit,
+                                unit: snapshot.data[i].unit,
+                                rate: snapshot.data[i].rate));
+                          }
+                        }
+                        return snapshot.data != null && snapshot.data.length > 0
+                            ? DropdownButton<String>(
+                                hint: Text(_dropDownUnit > 0
+                                    ? UnitSettings.getUnitName(_dropDownUnit)
+                                    : 'SKU'),
+                                items: snapshot.data
+                                    .map<DropdownMenuItem<String>>((item) {
+                                  return DropdownMenuItem<String>(
+                                    value: item.id.toString(),
+                                    child: Text(item.name),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _dropDownUnit = int.tryParse(value);
+                                    // for (var i = 0;
+                                    //     i < unitListData.length;
+                                    //     i++) {
+                                    UnitModel _unit = unitListData.firstWhere(
+                                        (element) =>
+                                            element.id == _dropDownUnit);
+                                    // if (_unit.unit == int.tryParse(value)) {
+                                    // if (_unit.rate.isNotEmpty) {
+                                    // rateTypeItem = rateTypeList
+                                    //     .firstWhere((element) =>
+                                    //         element.name ==
+                                    //         _unit.rate);
+                                    // }
+                                    _conversion = _unit.conversion;
+                                    unit = DataJson(
+                                        id: _unit.id, name: _unit.name);
+                                    // break;
+                                    // }
+                                    // }
+                                    calculate();
+                                  });
+                                },
+                              )
+                            : DropdownButton<String>(
+                                hint: Text(_dropDownUnit > 0
+                                    ? UnitSettings.getUnitName(_dropDownUnit)
+                                    : 'SKU'),
+                                items: unitList
+                                    .map<DropdownMenuItem<String>>((item) {
+                                  return DropdownMenuItem<String>(
+                                    value: item.key.toString(),
+                                    child: Text(item.value),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _dropDownUnit = int.tryParse(value);
+                                    // for (var i = 0;
+                                    //     i < unitListData.length;
+                                    //     i++) {
+                                    //   UnitModel _unit = unitListData[i];
+                                    //   if (_unit.unit ==
+                                    //       int.tryParse(value)) {
+                                    //     _conversion = _unit.conversion;
+                                    //     break;
+                                    //   }
+                                    // }
+                                    // calculate();
+                                    unit = DataJson(
+                                        id: _dropDownUnit,
+                                        name: UnitSettings.getUnitName(
+                                            _dropDownUnit));
+                                  });
+                                },
+                              );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              Visibility(
+                visible: enableMULTIUNIT
+                    ? _conversion > 0
+                        ? true
+                        : false
+                    : false,
+                child: Expanded(
+                    child: Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: Text('$_conversion'),
+                )),
+              ),
+            ]),
             const Divider(),
             TextField(
               controller: controllerRate,

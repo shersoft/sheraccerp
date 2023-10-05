@@ -93,4 +93,29 @@ class PrintSettingsModel {
         "Additionalpath2": additionalPath2,
         "FyID": fyId,
       };
+
+  static empty() {
+    return PrintSettingsModel(
+        tearOff: 0,
+        topMargin: 0,
+        bottomMargin: 0,
+        dTransaction: '',
+        model: '',
+        heading: false,
+        declaration: false,
+        startSpace: 0,
+        port: '',
+        billLines: 0,
+        copies: 0,
+        invoiceLetter: '',
+        auto: 0,
+        note: '',
+        caption: '',
+        invoiceSuffix: '',
+        filePath: '',
+        pdf: 0,
+        additionalPath1: '',
+        additionalPath2: '',
+        fyId: 0);
+  }
 }

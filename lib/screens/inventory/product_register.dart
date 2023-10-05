@@ -138,7 +138,7 @@ class _ProductRegisterState extends State<ProductRegister> {
         //     .map((item) => (DataJson(id: item['id'], name: item['name']))));
 
         unitModel
-            .addAll(DataJson.fromJsonList(otherRegistrationList[0]['unit']));
+            .addAll(DataJson.fromJsonListX(otherRegistrationList[0]['unit']));
         rateTypeModel = [
           DataJson(id: 0, name: ''),
           DataJson(id: 1, name: 'MRP'),

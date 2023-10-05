@@ -1,8 +1,4 @@
 import 'dart:convert';
-import 'dart:ffi';
-
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 // class eInvoiceModel
 //     {
@@ -58,7 +54,7 @@ class AttribDtl {
 
 class AuthClass {
   AuthData data;
-  Headers header;
+  dynamic header;
   String status_cd;
   String status_desc;
   AuthClass({
@@ -80,7 +76,7 @@ class AuthClass {
   factory AuthClass.fromMap(Map<String, dynamic> map) {
     return AuthClass(
       data: AuthData.fromMap(map['data']),
-      header: Headers.fromMap(map['header']),
+      header: map['header'],
       status_cd: map['status_cd'] ?? '',
       status_desc: map['status_desc'] ?? '',
     );
@@ -778,7 +774,7 @@ class ExpDtls {
 class IrnData {
   String AckDt;
 
-  Long AckNo;
+  int AckNo;
 
   Object EwbDt;
 

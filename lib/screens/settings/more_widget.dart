@@ -202,7 +202,7 @@ class SettingsMenu extends StatelessWidget {
               ),
             ),
             onTap: () {
-              _showDialog(context);
+              Navigator.of(context).pushNamed('/OtherRegistration');
             },
           ),
         ],

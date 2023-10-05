@@ -2,13 +2,14 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/gst_auth_model.dart';
+import 'package:sheraccerp/models/print_settings_model.dart';
+import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
@@ -17,9 +18,11 @@ import 'package:sheraccerp/util/res_color.dart';
 
 class GenerateE_Invoice extends StatefulWidget {
   final data;
+  final type;
   GenerateE_Invoice({
     Key key,
     this.data,
+    this.type,
   }) : super(key: key);
 
   @override
@@ -27,20 +30,6 @@ class GenerateE_Invoice extends StatefulWidget {
 }
 
 class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
-//   0:
-// "success" -> true
-// 1:
-// "Information" -> List (1 item)
-// 2:
-// "Particulars" -> List (1 item)
-// 3:
-// "SerialNO" -> List (0 items)
-// 4:
-// "DeliveryNote" -> List (0 items)
-// 5:
-// "message" -> "have a nice day"
-// 6:
-// "otherAmount" -> List (3 items)
   dynamic data;
   var information, particulars, serialNO, deliveryNoteDetails;
   List otherAmountList;
@@ -48,6 +37,7 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
   DateTime now = DateTime.now();
   CompanyInformation companySettings;
   List<CompanySettings> settings;
+  PrintSettingsModel printSettingsModel;
 
   TextEditingController ackNoControl = TextEditingController();
   TextEditingController ackExpiryControl = TextEditingController();
@@ -72,7 +62,7 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
   TextEditingController buyer_pinCodeControl = TextEditingController();
   TextEditingController buyer_eMailControl = TextEditingController();
   TextEditingController buyer_phoneControl = TextEditingController();
-  TextEditingController Control = TextEditingController();
+  TextEditingController control = TextEditingController();
 
   String invoiceId = '',
       invoiceNo = '',
@@ -120,13 +110,16 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
   bool isEWayBill = false;
   String ipAddress = '127.0.0.1';
   DioService api = DioService();
-  bool salesmanAsVehicle = false;
-  String eWayBillClient = '';
+  bool manualInvoiceNumberInSales = false;
+  String eWayBillClient = '',
+      companyTaxNumber = '',
+      companyState = '',
+      companyStateCode = '';
 
   @override
   void initState() {
-    formattedDate =
-        getToDay.isNotEmpty ? getToDay : DateFormat('dd-MM-yyyy').format(now);
+    entryType = widget.type ?? '';
+    formattedDate = DateFormat('dd/MM/yyyy').format(now);
     data = widget.data;
     information = data['Information'][0];
     particulars = data['Particulars'];
@@ -139,12 +132,26 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
 
     companySettings = ScopedModel.of<MainModel>(context).getCompanySettings();
     settings = ScopedModel.of<MainModel>(context).getSettings();
-    formattedDate = companySettings.eDate.isNotEmpty
-        ? DateUtil.dateDMY(companySettings.eDate)
-        : formattedDate;
-    salesmanAsVehicle =
-        ComSettings.getStatus('USE SALESMAN AS VEHICLE', settings);
+    manualInvoiceNumberInSales =
+        ComSettings.getStatus('MANNUAL INVOICE NUMBER IN SALES', settings);
     eWayBillClient = ComSettings.getValue('EWAYBILLAPI OWNER', settings);
+    companyTaxNumber = ComSettings.getValue('GST-NO', settings);
+    companyState = ComSettings.getValue('COMP-STATE', settings);
+    companyStateCode = ComSettings.getValue('COMP-STATECODE', settings);
+
+    if (printSettingsList != null) {
+      if (printSettingsList.isNotEmpty) {
+        printSettingsModel = printSettingsList.firstWhere(
+            (element) =>
+                element.model == 'INVOICE DESIGNER' &&
+                element.dTransaction == salesTypeData.type &&
+                element.fyId == currentFinancialYear.id,
+            orElse: () => printSettingsList.isNotEmpty
+                ? printSettingsList[0]
+                : PrintSettingsModel.empty());
+      }
+    }
+
     super.initState();
     // printIps();
     api.eInvoiceDetails().then((value) {
@@ -199,7 +206,6 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
     totalTotal = information['Total'].toStringAsFixed(2);
     grandTotal = information['GrandTotal'].toStringAsFixed(2);
     irn = ''; //information['irn'].toStringAsFixed(2);
-    entryType = '';
 
     fetchPublicIp();
   }
@@ -221,13 +227,6 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
 
   @override
   Widget build(BuildContext context) {
-    var data = widget.data;
-    var information = data['Information'][0];
-    var particulars = data['Particulars'];
-    // var serialNO = value['SerialNO'];
-    // var deliveryNoteDetails = value['DeliveryNote'];
-    otherAmountList = data['otherAmount'];
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('E-Invoice'),
@@ -246,7 +245,7 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
               onPressed: () {
                 setState(
                   () {
-                    //
+                    cancelEInvoice();
                   },
                 );
               }),
@@ -706,7 +705,7 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
         firstDate: DateTime(2000),
         lastDate: DateTime(2100));
     if (picked != null) {
-      setState(() => {formattedDate = DateFormat('dd-MM-yyyy').format(picked)});
+      setState(() => {formattedDate = DateFormat('dd/MM/yyyy').format(picked)});
     }
   }
 
@@ -714,16 +713,14 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
   var _password = '';
   var _clientId = '';
   var _clientSecret = '';
-  var _gstIn = '';
+  final _gstIn = '29AABCT1332L000';
 
   void generateEInvoice() {
-    companySettings.pin = '676521';
     if (companySettings.pin.isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Add Company PinCode!')));
       return;
     }
-    companySettings.email = 'test@gmail.com';
     if (companySettings.email.isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Add Company Email!')));
@@ -734,216 +731,278 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
           .showSnackBar(const SnackBar(content: Text('Add Company Mobile!')));
       return;
     }
-    String companyTaxNumber = ComSettings.getValue('GST-NO', settings);
-    String companyState = ComSettings.getValue('COMP-STATE', settings);
-    String companyStateCode = ComSettings.getValue('COMP-STATECODE', settings);
-    api
-        .authenticateGSTPortal(
-            _username, _password, ipAddress, _clientId, _clientSecret, _gstIn)
-        .then((value) {
-      // debugPrint(value.toString());
-      if (value != null) {
-        AuthClass authData = value;
-        if (authData.status_cd.toString() != "1") {
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(data['status_desc'].toString())));
-          return;
-        } else {
-          ackExpiry = authData.data.TokenExpiry;
-          ackExpiryControl.text = ackExpiry;
-          ackNo = authData.data.AuthToken;
-          ackExpiryControl.text = ackExpiry;
-          if (buyer_pinCodeControl.text.isEmpty ||
-              desp_pinCodeControl.text.isEmpty ||
-              buyer_phoneControl.text.isEmpty) {
-            api
-                .getGstResult(eWayBillClient, buyer_gstIn, _username, ipAddress,
-                    _clientId, _clientSecret, ackNo, companyTaxNumber)
-                .then((value) {
-              if (value.status_cd == '1') {
-                buyer_gstIn = value.data.Gstin;
-                buyer_gstInControl.text = buyer_gstIn;
-                buyer_tradeName = value.data.TradeName;
-                buyer_tradeNameControl.text = buyer_tradeName;
-                buyer_address1 = value.data.AddrBno;
-                buyer_address1Control.text = buyer_address1;
-                if (value.data.AddrFlno.length <= 3) {
-                  buyer_address2 = "abc";
-                } else {
-                  buyer_address2 = value.data.AddrFlno;
-                }
-                buyer_address2Control.text = buyer_address2;
 
-                buyer_address3 = value.data.AddrSt;
-                buyer_address3Control.text = value.data.AddrSt;
-                buyer_address4 = value.data.AddrLoc;
-                buyer_address4Control.text = value.data.AddrLoc;
-                var txtBuyerPinCode = buyer_pinCode; //TextBox
-                int addrPncd = value.data.AddrPncd;
-                buyer_pinCodeControl.text = addrPncd.toString();
-                var txtBStateCode = buyer_stateCodeControl.text; //TextBox
-                addrPncd = value.data.StateCode;
-                buyer_stateCodeControl.text = addrPncd.toString();
-                if (buyer_eMailControl.text.isEmpty) {
-                  buyer_eMailControl.text = "abc@gmail.com";
-                }
-                if (buyer_eMailControl.text == " ") {
-                  buyer_eMailControl.text = "abc@gmail.com";
-                }
-                if (buyer_phoneControl.text.isEmpty) {
-                  buyer_phoneControl.text = "9000000000";
-                }
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Invalid GST Number')));
-                return;
-              }
-            });
-          }
-          if (entryType == 'SALES') {
-            //str5 = select type from SalesType where id
-          } else if (entryType == 'SALES RETURN') {
-            //str5 = elect type from SalesReturnType where id
-          }
-          var invoiceLetter = '';
-          // invoiceLetter = SherClass.FundbReader(string.Concat(new object[] { "select invoiceletter from printsettings where DTransaction= '", str5, "' AND FYid = ", SherClass.FyID }) ?? "").Rows[0]["invoiceletter"].ToString();
-          var invoiceLetterSuffix = '';
-          // invoiceLetterSuffix = SherClass.FundbReader(string.Concat(new object[] { "select invoicesuffix from printsettings where DTransaction= '", str5, "' AND FYid = ", SherClass.FyID }) ?? "").Rows[0]["invoicesuffix"].ToString();
-          TranDtls tranDtls = TranDtls(
-              EcmGstin: null,
-              IgstOnIntra: "N",
-              RegRev: "N",
-              SupTyp: "B2B",
-              TaxSch: "GST");
-          invoiceLetter = invoiceLetter + invoiceId + invoiceLetterSuffix;
-          String str6 = "INV";
-          if (entryType == "SALES") {
-            str6 = "INV";
-          } else if (entryType == "SALES RETURN") {
-            str6 = "CRN";
-          }
-          DocDtls docDtl =
-              DocDtls(Dt: formattedDate, No: invoiceLetter, Typ: str6);
-
-          SellerDtls sellerDtl = SellerDtls(
-              Addr1: companySettings.add1,
-              Addr2: companySettings.add2,
-              Em: companySettings.email,
-              Gstin: companyTaxNumber,
-              LglNm: companySettings.name,
-              Loc: companySettings.add3,
-              Ph: companySettings.mobile,
-              Pin: int.parse(companySettings.pin),
-              Stcd: companyStateCode,
-              TrdNm: companySettings.name);
-          BuyerDtls buyerDtl = BuyerDtls(
-              Addr1: buyer_address1,
-              Addr2: buyer_address2,
-              Em: buyer_eMail,
-              Gstin: buyer_gstIn,
-              LglNm: buyer_tradeName,
-              Loc: buyer_address4,
-              Ph: buyer_phone,
-              Pin: int.parse(buyer_pinCode),
-              Pos: buyer_stateCode,
-              Stcd: buyer_stateCode,
-              TrdNm: buyer_tradeName);
-
-          List<ItemListEinvoice> itemListEinvoices = <ItemListEinvoice>[];
-          List<BchDtls> bchDtls = <BchDtls>[];
-          int slNo = 1;
-          for (var product in particulars) {
-            BchDtls bchDtl = BchDtls(
-                Expdt: formattedDate,
-                Nm: product["Barcde"].ToString(),
-                wrDt: formattedDate);
-
-            List<AttribDtl> attribDtls = <AttribDtl>[];
-            attribDtls
-                .add(AttribDtl(Nm: product["PrdDesc"].ToString(), Val: "1000"));
-
-            itemListEinvoices.add(ItemListEinvoice(
-                AssAmt: double.tryParse(product['Net'].toString()),
-                AttribDtls: attribDtls,
-                Barcde: product["UniqueCode"].ToString(),
-                bchDtls: bchDtl,
-                CesAmt: double.tryParse(product['cess'].toString()),
-                CesNonAdvlAmt: 0,
-                CesRt: int.tryParse(product['cessper'].toString()),
-                CgstAmt: int.tryParse(product['CGST'].toString()),
-                Discount: int.tryParse(product['RDisc'].toString()),
-                FreeQty: int.tryParse(product['freeQty'].toString()),
-                GstRt: int.tryParse(product['igst'].toString()),
-                HsnCd: product['hsncode'].toString(),
-                IgstAmt: double.tryParse(product['IGST'].toString()),
-                IsServc:
-                    product['typeofsupply'].toString().toUpperCase() == 'GOODS'
-                        ? 'N'
-                        : 'Y',
-                OrdLineRef: '',
-                OrgCntry: 'IN',
-                OthChrg: 0,
-                PrdDesc: product['itemname'].toString(),
-                PrdSlNo: product['itemId'].toString(),
-                PreTaxVal: int.tryParse(product['igst'].toString()),
-                Qty: double.tryParse(product['Qty'].toString()),
-                SgstAmt: int.tryParse(product['SGST'].toString()),
-                SlNo: slNo.toString(),
-                StateCesAmt: 0,
-                StateCesNonAdvlAmt: 0,
-                StateCesRt: 0,
-                TotAmt: double.tryParse(product['GrossValue'].toString()),
-                TotItemVal: double.tryParse(product['Total'].toString()),
-                Unit: product['unitName'].toString(),
-                UnitPrice: double.tryParse(product['RealRate'].toString())));
-            slNo++;
-          }
-          ValDtls valDtl = ValDtls(
-              AssVal: double.parse(net),
-              CesVal: double.parse(cess),
-              CgstVal: int.parse(cGst),
-              Discount: int.parse(discount),
-              IgstVal: double.parse(iGst),
-              OthChrg: int.parse(otherCharge),
-              RndOffAmt: double.parse(roundOff),
-              SgstVal: int.parse(sGst),
-              StCesVal: double.parse(stateCess),
-              TotInvVal: int.parse(totalTotal),
-              TotInvValFc: double.parse(grandTotal));
-          EInvoice eInvoice = EInvoice(
-              buyerDtls: buyerDtl,
-              docDtls: docDtl,
-              ItemList: itemListEinvoices,
-              sellerDtls: sellerDtl,
-              tranDtls: tranDtls,
-              valDtls: valDtl,
-              Version: "1.1");
-          var _data = json.encode(eInvoice);
-          api
-              .generateEInvoice(eWayBillClient, _username, ipAddress, _clientId,
-                  _clientSecret, ackNo, companyTaxNumber, _data)
-              .then((value) {
-            //
-          });
-          //           if (rnResult.status_cd != "1")
-          //           {
-          //               MessageBox.Show(restResponse.get_Content());
-          //           }
-          //           else
-          //           {
-          //               this.Irn = rnResult.data.Irn;
-          //               this.txtirn.Text = this.Irn;
-          //               this.SignedInvoice = rnResult.data.SignedInvoice;
-          //               this.SignedQRCode = rnResult.data.SignedQRCode;
-          //               this.txtackdate.Text = rnResult.data.AckDt;
-          //               this.txtackno.Text = rnResult.data.AckNo.ToString();
-          //               this.AckDate = this.txtackdate.Text;
-          //               this.AckNo = this.txtackno.Text;
-          //               base.Close();
-          //           }
-        }
+    bool isHsnOk = false;
+    List<ItemListEinvoice> itemListEinvoices = <ItemListEinvoice>[];
+    List<BchDtls> bchDtls = <BchDtls>[];
+    int slNo = 1;
+    for (var product in particulars) {
+      String hsn = product['hsncode'].toString() ?? '';
+      if (hsn.isEmpty && (hsn.length < 4 || hsn.length > 8)) {
+        isHsnOk = false;
+        break;
+      } else {
+        isHsnOk = true;
       }
-    });
+      if (isHsnOk) {
+        String unitName = product['unitName'].toString();
+        var unit = unitName == "KG"
+            ? "KGS"
+            : unitName == "NOS"
+                ? "NOS"
+                : unitName == "PCS"
+                    ? "PCS"
+                    : unitName == "PKT"
+                        ? "PAC"
+                        : unitName == "BOTTLE"
+                            ? "BTL"
+                            : unitName == "CS"
+                                ? "BOX"
+                                : unitName != "TIN"
+                                    ? "NOS"
+                                    : "BOX";
+
+        BchDtls bchDtl = BchDtls(
+            Expdt: formattedDate,
+            Nm: product["Barcde"].ToString(),
+            wrDt: formattedDate);
+
+        List<AttribDtl> attribDtls = <AttribDtl>[];
+        attribDtls
+            .add(AttribDtl(Nm: product["PrdDesc"].ToString(), Val: "1000"));
+
+        itemListEinvoices.add(ItemListEinvoice(
+            AssAmt: double.tryParse(product['Net'].toString()),
+            AttribDtls: attribDtls,
+            Barcde: product["UniqueCode"].ToString(),
+            bchDtls: bchDtl,
+            CesAmt: double.tryParse(product['cess'].toString()),
+            CesNonAdvlAmt: 0,
+            CesRt: int.tryParse(product['cessper'].toString()),
+            CgstAmt: int.tryParse(product['CGST'].toString()),
+            Discount: int.tryParse(product['RDisc'].toString()),
+            FreeQty: int.tryParse(product['freeQty'].toString()),
+            GstRt: int.tryParse(product['igst'].toString()),
+            HsnCd: hsn,
+            IgstAmt: double.tryParse(product['IGST'].toString()),
+            IsServc: product['typeofsupply'].toString().toUpperCase() == 'GOODS'
+                ? 'N'
+                : 'Y',
+            OrdLineRef: '',
+            OrgCntry: 'IN',
+            OthChrg: 0,
+            PrdDesc: product['itemname'].toString(),
+            PrdSlNo: product['itemId'].toString(),
+            PreTaxVal: int.tryParse(product['igst'].toString()),
+            Qty: double.tryParse(product['Qty'].toString()),
+            SgstAmt: int.tryParse(product['SGST'].toString()),
+            SlNo: slNo.toString(),
+            StateCesAmt: 0,
+            StateCesNonAdvlAmt: 0,
+            StateCesRt: 0,
+            TotAmt: double.tryParse(product['GrossValue'].toString()),
+            TotItemVal: double.tryParse(product['Total'].toString()),
+            Unit: unit,
+            UnitPrice: double.tryParse(product['RealRate'].toString())));
+        slNo++;
+      } else {
+        break;
+      }
+
+      if (isHsnOk) {
+        api
+            .authenticateGSTPortal(_username, _password, ipAddress, _clientId,
+                _clientSecret, _gstIn)
+            .then((authResponse) {
+          // debugPrint(value.toString());
+          if (authResponse != null) {
+            AuthClass authData = authResponse;
+            if (authData.status_cd.toString() != "Sucess") {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(authResponse.status_desc.toString())));
+              return;
+            } else {
+              ackExpiry = authData.data.TokenExpiry;
+              ackExpiryControl.text = ackExpiry;
+              ackNo = authData.data.AuthToken;
+              ackNoControl.text = ackNo;
+              if (ackExpiryControl.text.isEmpty || ackNoControl.text.isEmpty) {
+                api
+                    .getGstResult(
+                        eWayBillClient,
+                        buyer_gstIn,
+                        _username,
+                        ipAddress,
+                        _clientId,
+                        _clientSecret,
+                        ackNo,
+                        companyTaxNumber)
+                    .then((resultResponse) {
+                  if (resultResponse.status_cd == '1') {
+                    buyer_gstIn = resultResponse.data.Gstin;
+                    buyer_gstInControl.text = buyer_gstIn;
+                    buyer_tradeName = resultResponse.data.TradeName;
+                    buyer_tradeNameControl.text = buyer_tradeName;
+                    buyer_address1 = resultResponse.data.AddrBno;
+                    buyer_address1Control.text = buyer_address1;
+                    if (resultResponse.data.AddrFlno.length <= 3) {
+                      buyer_address2 = "abc";
+                    } else {
+                      buyer_address2 = resultResponse.data.AddrFlno;
+                    }
+                    buyer_address2Control.text = buyer_address2;
+
+                    buyer_address3 = resultResponse.data.AddrSt;
+                    buyer_address3Control.text = buyer_address3;
+                    buyer_address4 = resultResponse.data.AddrLoc;
+                    buyer_address4Control.text = buyer_address4;
+                    buyer_pinCode = resultResponse.data.AddrPncd.toString();
+                    buyer_pinCodeControl.text = buyer_pinCode;
+                    buyer_stateCode = resultResponse.data.StateCode.toString();
+                    buyer_stateCodeControl.text = buyer_stateCode;
+                    if (buyer_eMailControl.text.trim().isEmpty) {
+                      buyer_eMail = "abc@gmail.com";
+                      buyer_eMailControl.text = buyer_eMail;
+                    }
+                    if (buyer_phoneControl.text.trim().isEmpty) {
+                      buyer_phone = "9000000000";
+                      buyer_phoneControl.text = buyer_phone;
+                    }
+
+                    var invoiceLetter = '';
+                    var invoiceLetterSuffix = '';
+                    invoiceLetter = printSettingsModel.invoiceLetter ?? '';
+                    invoiceLetterSuffix =
+                        printSettingsModel.invoiceSuffix ?? '';
+
+                    TranDtls tranDtls = TranDtls(
+                        EcmGstin: null,
+                        IgstOnIntra: "N",
+                        RegRev: "N",
+                        SupTyp: "B2B",
+                        TaxSch: "GST");
+                    invoiceLetter = manualInvoiceNumberInSales
+                        ? invoiceLetter + invoiceId + invoiceLetterSuffix
+                        : invoiceNo;
+                    String typ = "INV";
+                    if (entryType == "SALES") {
+                      typ = "INV";
+                    } else if (entryType == "SALES RETURN") {
+                      typ = "CRN";
+                    }
+                    DocDtls docDtl =
+                        DocDtls(Dt: formattedDate, No: invoiceLetter, Typ: typ);
+
+                    SellerDtls sellerDtl = SellerDtls(
+                        Addr1: companySettings.add1,
+                        Addr2: companySettings.add2,
+                        Em: companySettings.email,
+                        Gstin: companyTaxNumber,
+                        LglNm: companySettings.name,
+                        Loc: companySettings.add3,
+                        Ph: companySettings.mobile,
+                        Pin: int.parse(companySettings.pin),
+                        Stcd: companyStateCode,
+                        TrdNm: companySettings.name);
+                    BuyerDtls buyerDtl = BuyerDtls(
+                        Addr1: buyer_address1,
+                        Addr2: buyer_address2,
+                        Em: buyer_eMail,
+                        Gstin: buyer_gstIn,
+                        LglNm: buyer_tradeName,
+                        Loc: buyer_address4,
+                        Ph: buyer_phone,
+                        Pin: int.parse(buyer_pinCode),
+                        Pos: buyer_stateCode,
+                        Stcd: buyer_stateCode,
+                        TrdNm: buyer_tradeName);
+                    ValDtls valDtl = ValDtls(
+                        AssVal: double.parse(net),
+                        CesVal: double.parse(cess),
+                        CgstVal: int.parse(cGst),
+                        Discount: int.parse(discount),
+                        IgstVal: double.parse(iGst),
+                        OthChrg: int.parse(otherCharge),
+                        RndOffAmt: double.parse(roundOff),
+                        SgstVal: int.parse(sGst),
+                        StCesVal: double.parse(stateCess),
+                        TotInvVal: int.parse(totalTotal),
+                        TotInvValFc: double.parse(grandTotal));
+                    DispDtls dispDtl = DispDtls(
+                        Addr1: desp_address1,
+                        Addr2: desp_address2,
+                        Loc: desp_place,
+                        Nm: desp_name,
+                        Pin: int.parse(desp_pinCode),
+                        Stcd: desp_state);
+                    EInvoice eInvoice = desp_name.length <= 3
+                        ? EInvoice(
+                            Version: "1.1",
+                            tranDtls: tranDtls,
+                            docDtls: docDtl,
+                            sellerDtls: sellerDtl,
+                            buyerDtls: buyerDtl,
+                            ItemList: itemListEinvoices,
+                            valDtls: valDtl)
+                        : EInvoice(
+                            Version: "1.1",
+                            tranDtls: tranDtls,
+                            docDtls: docDtl,
+                            sellerDtls: sellerDtl,
+                            buyerDtls: buyerDtl,
+                            dispDtls: dispDtl,
+                            ItemList: itemListEinvoices,
+                            valDtls: valDtl);
+                    var _data = json.encode(eInvoice);
+                    api
+                        .generateEInvoice(
+                            eWayBillClient,
+                            _username,
+                            ipAddress,
+                            _clientId,
+                            _clientSecret,
+                            ackNo,
+                            companyTaxNumber,
+                            _data)
+                        .then((rnResult) {
+                      if (rnResult.status_cd != "1") {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(rnResult.status_desc.toString())));
+                        return;
+                      } else {
+                        updateBillStatus();
+                        irn = rnResult.data.Irn;
+                        signedInvoice = rnResult.data.SignedInvoice;
+                        signedQrCode = rnResult.data.SignedQRCode;
+                        formattedDate = rnResult.data.AckDt;
+                        setState(() {
+                          irInControl.text = irn;
+                          ackNoControl.text = rnResult.data.AckNo.toString();
+                          // this.AckDate = this.txtackdate.Text;
+                          // this.AckNo = this.txtackno.Text;
+                        });
+                      }
+                    });
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(resultResponse.status_desc.toString())));
+                    return;
+                  }
+                });
+              }
+            }
+          } else {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(const SnackBar(content: Text('no responds')));
+            return;
+          }
+        });
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('check HSN code')));
+        return;
+      }
+    }
   }
 
   showEditDialog(BuildContext context) async {
@@ -980,7 +1039,7 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: "Enter password"),
-                    onChanged: (value) => _username = value,
+                    onChanged: (value) => _password = value,
                   ),
                   const SizedBox(
                     height: 5,
@@ -1042,21 +1101,104 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
         });
   }
 
-  void setEInvoiceDetails() {
-    var data = json.encode({
-      "username": _username,
-      "password": _password,
-      "clientId": _clientId,
-      "clientSecrete": _clientSecret
-    });
-    api.eInvoiceUpdate(data).then((value) {
-      if (value) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Updated')));
-      } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Error')));
-      }
-    });
+  // void setEInvoiceDetails() {
+  //   var data = json.encode({
+  //     "username": _username,
+  //     "password": _password,
+  //     "clientId": _clientId,
+  //     "clientSecrete": _clientSecret
+  //   });
+  //   api.eInvoiceUpdate(data).then((value) {
+  //     if (value) {
+  //       ScaffoldMessenger.of(context)
+  //           .showSnackBar(const SnackBar(content: Text('Updated')));
+  //     } else {
+  //       ScaffoldMessenger.of(context)
+  //           .showSnackBar(const SnackBar(content: Text('Error')));
+  //     }
+  //   });
+  // }
+
+  void cancelEInvoice() {
+    try {
+      CancelIrn cancelEinvoice =
+          CancelIrn(CnlRem: "Wrong entry", CnlRsn: "1", Irn: irn);
+      api
+          .authenticateGSTPortal(
+              _username, _password, ipAddress, _clientId, _clientSecret, _gstIn)
+          .then((authResult) {
+        AuthClass result = authResult;
+        if (result.status_cd.toString() != "Sucess") {
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(result.status_desc.toString())));
+          return;
+        } else {
+          ackExpiry = result.data.TokenExpiry;
+          ackNo = result.data.AuthToken;
+
+          api
+              .cancelIRN(eWayBillClient, _username, ipAddress, _clientId,
+                  _clientSecret, ackNo, companyTaxNumber, cancelEinvoice)
+              .then((irnResult) {
+            if (irnResult.status_cd != "1") {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(irnResult.status_desc.toString())));
+              return;
+            } else {
+              cancelBillStatus();
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(result.status_desc.toString())));
+            }
+          });
+        }
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error${e.toString()}')));
+    }
+  }
+
+  void updateBillStatus() {
+    if (entryType == "SALES") {
+      api.updateBillInfo({
+        'signedInv': signedInvoiceControl.text,
+        'signedQr': signedQrCodeControl.text,
+        'irn': irInControl.text,
+        'ackNo': ackNoControl.text,
+        'date': formattedDate,
+        'id': invoiceId,
+        'type': salesTypeData.id,
+        'fyId': currentFinancialYear.id
+      });
+    } else if (entryType == "SALES RETURN") {
+      api.updateReturnBillInfo({
+        'signedInv': signedInvoiceControl.text,
+        'signedQr': signedQrCodeControl.text,
+        'irn': irInControl.text,
+        'ackNo': ackNoControl.text,
+        'date': formattedDate,
+        'id': invoiceId,
+        'type': 1,
+        'fyId': currentFinancialYear.id
+      });
+    }
+  }
+
+  void cancelBillStatus() {
+    if (entryType == "SALES") {
+      api.updateCanceledBillInfo({
+        'irn': irInControl.text,
+        'id': invoiceId,
+        'type': salesTypeData.id,
+        'fyId': currentFinancialYear.id
+      });
+    } else if (entryType == "SALES RETURN") {
+      api.updateCanceledReturnBillInfo({
+        'irn': irInControl.text,
+        'id': invoiceId,
+        'type': 1,
+        'fyId': currentFinancialYear.id
+      });
+    }
   }
 }

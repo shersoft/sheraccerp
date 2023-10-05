@@ -5,14 +5,24 @@ class NumberToWord {
   // spanish => es
   String convertDouble(String locale, double? number) {
     if (number == null) return '';
-    int firstNumber = int.parse(number.toString().split('.')[0]);
-    int secondNumber = int.parse(number.toString().split('.')[1]);
-    String numberInCharacters;
-    numberInCharacters =
-        firstNumber == 0 ? zeroWord(locale) : convertInt(locale, firstNumber);
-    numberInCharacters +=
-        (secondNumber == 0 ? "" : " and  ${convertInt(locale, secondNumber)}");
-    return numberInCharacters;
+    try {
+      int firstNumber = number.toString().contains('.')
+          ? int.parse(number.toString().split('.')[0])
+          : number.toInt();
+      int secondNumber = number.toString().contains('.')
+          ? int.parse(number.toString().split('.')[1])
+          : 0;
+      String numberInCharacters;
+      numberInCharacters =
+          firstNumber == 0 ? zeroWord(locale) : convertInt(locale, firstNumber);
+      numberInCharacters += (secondNumber == 0
+          ? ""
+          : " and  ${convertInt(locale, secondNumber)}");
+      return numberInCharacters;
+    } catch (e) {
+      e.toString();
+      return '';
+    }
   }
 
   String zeroWord(String locale) {
