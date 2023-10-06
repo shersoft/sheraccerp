@@ -33,6 +33,11 @@ const gstB2BQRDetailsApi = "/einvoice/qrcode";
 const invoiceUrl = 'http://148.72.210.101:888/Home/DownloadPdf';
 const geoApiFy =
     'https://api.geoapify.com/v1/geocode/search?text=pin&lang=en&limit=1&type=postcode&format=json&apiKey=d1f13eb6d5b04bcdbe6cfdad0d01cbaa';
+const eWayAuthApi = "/ewaybillapi/v1.03/authenticate";
+const eWayBillApi = "/ewayapi/genewaybill";
+const eWayBillCancelApi = "/ewaybillapi/v1.03/ewayapi/canewb";
+//05AAACH6188F1ZM
+//mastergst	Malli#123	29AABCT1332L000
 
 bool isDarkTheme = false;
 bool isUsingHive = true;
@@ -42,7 +47,7 @@ String _sherSoftPassword = '';
 get sherSoftPassword => _sherSoftPassword;
 set sherSoftPassword(String value) => _sherSoftPassword = value;
 
-const String apiV = 'v20/';
+const String apiV = 'v19/';
 const currencySymbol = '₹';
 // const bool isVariant = false;
 const bool isKFC = false;

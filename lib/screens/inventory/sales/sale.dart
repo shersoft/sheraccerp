@@ -2186,7 +2186,7 @@ class _SaleState extends State<Sale> {
   bool isItemData = false;
   String itemLike = 'a';
   selectProductWidget() {
-    if (itemStockAll) {
+    if (!itemStockAll) {
       return FutureBuilder<List<StockItem>>(
         future:
             (salesTypeData.type == 'SALES-O' || salesTypeData.type == 'SALES-Q')
@@ -2308,9 +2308,18 @@ class _SaleState extends State<Sale> {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    SizedBox(height: 20),
-                    Text('No Data Found..')
+                  children: [
+                    const SizedBox(height: 20),
+                    const Text('No Data Found..'),
+                    ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            itemLike =
+                                itemLike.substring(0, itemLike.length - 1);
+                            nextWidget = 2;
+                          });
+                        },
+                        child: const Text('Select Again'))
                   ],
                 ),
               );
@@ -2478,9 +2487,18 @@ class _SaleState extends State<Sale> {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    SizedBox(height: 20),
-                    Text('No Data Found..')
+                  children: [
+                    const SizedBox(height: 20),
+                    const Text('No Data Found..'),
+                    ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            itemLike =
+                                itemLike.substring(0, itemLike.length - 1);
+                            nextWidget = 2;
+                          });
+                        },
+                        child: const Text('Select Again'))
                   ],
                 ),
               );

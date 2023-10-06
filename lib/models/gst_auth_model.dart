@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 // class eInvoiceModel
 //     {
@@ -1577,3 +1578,212 @@ const generateEwaybillExample = {
     "Stcd": "29"
   }
 };
+
+class EwayItemListModel {
+  int cessNonadvol;
+  int cessRate;
+  double cgstRate;
+  int hsnCode;
+  double igstRate;
+  String productDesc;
+  String productName;
+  String qtyUnit;
+  double quantity;
+  double sgstRate;
+  double taxableAmount;
+  EwayItemListModel({
+    required this.cessNonadvol,
+    required this.cessRate,
+    required this.cgstRate,
+    required this.hsnCode,
+    required this.igstRate,
+    required this.productDesc,
+    required this.productName,
+    required this.qtyUnit,
+    required this.quantity,
+    required this.sgstRate,
+    required this.taxableAmount,
+  });
+}
+
+class EwayModel {
+  int actFromStateCode;
+  int actToStateCode;
+  int cessNonAdvolValue;
+  int cessValue;
+  double cgstValue;
+  String docDate;
+  String docNo;
+  String docType;
+  String fromAddr1;
+  String fromAddr2;
+  String fromGstin;
+
+  int fromPincode;
+
+  String fromPlace;
+
+  int fromStateCode;
+
+  String fromTrdName;
+
+  int igstValue;
+
+  List<EwayItemListModel> itemList;
+
+  int otherValue;
+
+  double sgstValue;
+
+  String subSupplyDesc;
+
+  String subSupplyType;
+
+  String supplyType;
+
+  String toAddr1;
+
+  String toAddr2;
+
+  String toGstin;
+
+  int toPincode;
+
+  String toPlace;
+
+  int toStateCode;
+
+  double totalValue;
+
+  int totInvValue;
+
+  String toTrdName;
+
+  int transactionType;
+
+  String transDistance;
+
+  String transDocDate;
+
+  String transDocNo;
+
+  String transMode;
+
+  String transporterId;
+
+  String transporterName;
+
+  String vehicleNo;
+
+  String vehicleType;
+  EwayModel({
+    required this.actFromStateCode,
+    required this.actToStateCode,
+    required this.cessNonAdvolValue,
+    required this.cessValue,
+    required this.cgstValue,
+    required this.docDate,
+    required this.docNo,
+    required this.docType,
+    required this.fromAddr1,
+    required this.fromAddr2,
+    required this.fromGstin,
+    required this.fromPincode,
+    required this.fromPlace,
+    required this.fromStateCode,
+    required this.fromTrdName,
+    required this.igstValue,
+    required this.itemList,
+    required this.otherValue,
+    required this.sgstValue,
+    required this.subSupplyDesc,
+    required this.subSupplyType,
+    required this.supplyType,
+    required this.toAddr1,
+    required this.toAddr2,
+    required this.toGstin,
+    required this.toPincode,
+    required this.toPlace,
+    required this.toStateCode,
+    required this.totalValue,
+    required this.totInvValue,
+    required this.toTrdName,
+    required this.transactionType,
+    required this.transDistance,
+    required this.transDocDate,
+    required this.transDocNo,
+    required this.transMode,
+    required this.transporterId,
+    required this.transporterName,
+    required this.vehicleNo,
+    required this.vehicleType,
+  });
+}
+
+class EWayResultModel {
+  EWayDataModel data;
+  dynamic header;
+  String status_cd;
+  String status_desc;
+  EWayResultModel({
+    required this.data,
+    required this.header,
+    required this.status_cd,
+    required this.status_desc,
+  });
+
+  factory EWayResultModel.fromMap(map) {
+    return EWayResultModel(
+        data: map['status_cd'] != '0'
+            ? EWayDataModel.fromMap(map['data'])
+            : EWayDataModel.emptyData(),
+        header: map['header'] ?? {},
+        status_cd: map['status_cd'],
+        status_desc: map['status_desc']);
+  }
+
+  static emptyData() {
+    return EWayResultModel(
+        data: EWayDataModel.emptyData(),
+        header: '',
+        status_cd: '0',
+        status_desc: '');
+  }
+}
+
+class EWayDataModel {
+  String alert;
+  String ewayBillDate;
+  String ewayBillNo;
+  String validUpto;
+  EWayDataModel({
+    required this.alert,
+    required this.ewayBillDate,
+    required this.ewayBillNo,
+    required this.validUpto,
+  });
+
+  factory EWayDataModel.fromMap(map) {
+    return EWayDataModel(
+        alert: map['alert'],
+        ewayBillDate: map['ewayBillDate'],
+        ewayBillNo: map['ewayBillNo'],
+        validUpto: map['validUpto']);
+  }
+
+  static emptyData() {
+    return EWayDataModel(
+        alert: '', ewayBillDate: '', ewayBillNo: '', validUpto: '');
+  }
+}
+
+class EWayBillCancelModel {
+  String cancelRmrk;
+  int cancelRsnCode;
+  String ewbNo;
+  EWayBillCancelModel({
+    required this.cancelRmrk,
+    required this.cancelRsnCode,
+    required this.ewbNo,
+  });
+}

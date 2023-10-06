@@ -13,8 +13,8 @@ import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
-import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/util/res_color.dart';
+import 'package:sheraccerp/widget/progress_hud.dart';
 
 class GenerateE_Invoice extends StatefulWidget {
   final data;
@@ -110,7 +110,7 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
   bool isEWayBill = false;
   String ipAddress = '127.0.0.1';
   DioService api = DioService();
-  bool manualInvoiceNumberInSales = false;
+  bool manualInvoiceNumberInSales = false, _isLoading = false;
   String eWayBillClient = '',
       companyTaxNumber = '',
       companyState = '',
@@ -236,6 +236,7 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
               onPressed: () {
                 setState(
                   () {
+                    _isLoading = true;
                     generateEInvoice();
                   },
                 );
@@ -245,453 +246,459 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
               onPressed: () {
                 setState(
                   () {
+                    _isLoading = true;
                     cancelEInvoice();
                   },
                 );
               }),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(3.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Date : ',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                  ),
-                  InkWell(
-                    child: Text(
-                      formattedDate,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 18),
+      body: ProgressHUD(
+        inAsyncCall: _isLoading,
+        opacity: 0.0,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(3.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Date : ',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                     ),
-                    onTap: () => _selectDate(),
-                  ),
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.settings, color: blue),
-                    onSelected: (value) {
-                      setState(() {
-                        if (value == 'Configure') {
-                          showEditDialog(context);
-                        }
-                      });
-                    },
-                    itemBuilder: (BuildContext context) => [
-                      const PopupMenuItem<String>(
-                        value: 'Configure',
-                        child: Text('Configure e-Invoice Client'),
+                    InkWell(
+                      child: Text(
+                        formattedDate,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 18),
                       ),
-                      // const PopupMenuItem<String>(
-                      //   value: 'Edit  e-Invoice',
-                      //   child: Text('Edit  e-Invoice Details'),
-                      // ),
-                    ],
-                  ),
-                ],
-              ),
-              const Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: ackNoControl,
-                      decoration: const InputDecoration(
-                        labelText: 'Ack No',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        ackNo = value;
+                      onTap: () => _selectDate(),
+                    ),
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.settings, color: blue),
+                      onSelected: (value) {
+                        setState(() {
+                          if (value == 'Configure') {
+                            showEditDialog(context);
+                          }
+                        });
                       },
+                      itemBuilder: (BuildContext context) => [
+                        const PopupMenuItem<String>(
+                          value: 'Configure',
+                          child: Text('Configure e-Invoice Client'),
+                        ),
+                        // const PopupMenuItem<String>(
+                        //   value: 'Edit  e-Invoice',
+                        //   child: Text('Edit  e-Invoice Details'),
+                        // ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(
-                    width: 5,
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: ackExpiryControl,
-                      decoration: const InputDecoration(
-                        labelText: 'Ack Expiry',
-                        border: OutlineInputBorder(),
+                  ],
+                ),
+                const Divider(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: ackNoControl,
+                        decoration: const InputDecoration(
+                          labelText: 'Ack No',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          ackNo = value;
+                        },
                       ),
-                      onChanged: (value) {
-                        ackExpiry = value;
-                      },
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 5,
-              ),
-              TextField(
-                controller: irInControl,
-                decoration: const InputDecoration(
-                  labelText: 'IRN',
-                  border: OutlineInputBorder(),
-                ),
-                onChanged: (value) {
-                  irIn = value;
-                },
-              ),
-              const SizedBox(
-                height: 5,
-              ),
-              TextField(
-                controller: signedInvoiceControl,
-                decoration: const InputDecoration(
-                  labelText: 'Signed Invoice',
-                  border: OutlineInputBorder(),
-                ),
-                onChanged: (value) {
-                  signedInvoice = value;
-                },
-              ),
-              const SizedBox(
-                height: 5,
-              ),
-              TextField(
-                controller: signedQrCodeControl,
-                decoration: const InputDecoration(
-                  labelText: 'Signed QrCode',
-                  border: OutlineInputBorder(),
-                ),
-                onChanged: (value) {
-                  signedQrCode = value;
-                },
-              ),
-              const Divider(
-                thickness: 1,
-                color: black,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  const Center(
-                      child: Card(
-                          elevation: 0,
-                          child: Text(
-                            'Place Of Party',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ))),
-                  const SizedBox(
-                    width: 5,
-                  ),
-                  const Text('Sent E-Way Bill?'),
-                  DropdownButton(
-                    hint: const Center(
-                      child: Text('Sent E-Way Bill?'),
+                    const SizedBox(
+                      width: 5,
                     ),
-                    items: const [
-                      DropdownMenuItem(
-                        child: Text("Yes"),
-                        value: 'Yes',
+                    Expanded(
+                      child: TextField(
+                        controller: ackExpiryControl,
+                        decoration: const InputDecoration(
+                          labelText: 'Ack Expiry',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          ackExpiry = value;
+                        },
                       ),
-                      DropdownMenuItem(
-                        child: Text("No"),
-                        value: 'No',
-                      )
-                    ],
-                    value: isEWayBill ? 'Yes' : 'No',
-                    onChanged: (value) {
-                      setState(() {
-                        isEWayBill = value == 'Yes' ? true : false;
-                      });
-                    },
-                  )
-                ],
-              ),
-              const SizedBox(
-                height: 5,
-              ),
-              TextField(
-                controller: bill_to_placeControl,
-                decoration: const InputDecoration(
-                  labelText: 'Bill To Place',
-                  border: OutlineInputBorder(),
+                    ),
+                  ],
                 ),
-                onChanged: (value) {
-                  bill_to_place = value;
-                },
-              ),
-              const SizedBox(
-                height: 5,
-              ),
-              TextField(
-                controller: ship_to_placeControl,
-                decoration: const InputDecoration(
-                  labelText: 'Ship To Place',
-                  border: OutlineInputBorder(),
+                const SizedBox(
+                  height: 5,
                 ),
-                onChanged: (value) {
-                  ship_to_place = value;
-                },
-              ),
-              const Divider(
-                thickness: 1,
-                color: black,
-              ),
-              Card(
-                elevation: 6,
-                surfaceTintColor: indigoAccent,
-                shadowColor: blue,
-                child: Column(
+                TextField(
+                  controller: irInControl,
+                  decoration: const InputDecoration(
+                    labelText: 'IRN',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) {
+                    irIn = value;
+                  },
+                ),
+                const SizedBox(
+                  height: 5,
+                ),
+                TextField(
+                  controller: signedInvoiceControl,
+                  decoration: const InputDecoration(
+                    labelText: 'Signed Invoice',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) {
+                    signedInvoice = value;
+                  },
+                ),
+                const SizedBox(
+                  height: 5,
+                ),
+                TextField(
+                  controller: signedQrCodeControl,
+                  decoration: const InputDecoration(
+                    labelText: 'Signed QrCode',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) {
+                    signedQrCode = value;
+                  },
+                ),
+                const Divider(
+                  thickness: 1,
+                  color: black,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     const Center(
                         child: Card(
                             elevation: 0,
                             child: Text(
-                              'Dispatch From Details',
+                              'Place Of Party',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ))),
                     const SizedBox(
-                      height: 5,
+                      width: 5,
                     ),
-                    TextField(
-                      controller: desp_nameControl,
-                      decoration: const InputDecoration(
-                        labelText: 'Name',
-                        border: OutlineInputBorder(),
+                    const Text('Sent E-Way Bill?'),
+                    DropdownButton(
+                      hint: const Center(
+                        child: Text('Sent E-Way Bill?'),
                       ),
+                      items: const [
+                        DropdownMenuItem(
+                          child: Text("Yes"),
+                          value: 'Yes',
+                        ),
+                        DropdownMenuItem(
+                          child: Text("No"),
+                          value: 'No',
+                        )
+                      ],
+                      value: isEWayBill ? 'Yes' : 'No',
                       onChanged: (value) {
-                        desp_name = value;
+                        setState(() {
+                          isEWayBill = value == 'Yes' ? true : false;
+                        });
                       },
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextField(
-                      controller: desp_address1Control,
-                      decoration: const InputDecoration(
-                        labelText: 'Address',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        desp_address1 = value;
-                      },
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextField(
-                      controller: desp_address2Control,
-                      decoration: const InputDecoration(
-                        labelText: 'Address',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        desp_address2 = value;
-                      },
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextField(
-                      controller: desp_stateControl,
-                      decoration: const InputDecoration(
-                        labelText: 'State',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        desp_state = value;
-                      },
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextField(
-                      controller: desp_pinCodeControl,
-                      decoration: const InputDecoration(
-                        labelText: 'Pin Code',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        desp_pinCode = value;
-                      },
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextField(
-                      controller: desp_placeControl,
-                      decoration: const InputDecoration(
-                        labelText: 'Place',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        desp_place = value;
-                      },
-                    ),
+                    )
                   ],
                 ),
-              ),
-              const Divider(
-                thickness: 1,
-                color: black,
-              ),
-              Card(
-                elevation: 6,
-                surfaceTintColor: indigoAccent,
-                shadowColor: blue,
-                child: Column(
-                  children: [
-                    const Center(
-                        child: Card(
-                            elevation: 0,
-                            child: Text(
-                              'Buyer Details',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ))),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextField(
-                      controller: buyer_gstInControl,
-                      decoration: const InputDecoration(
-                        labelText: 'GSTin',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        buyer_gstIn = value;
-                      },
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextField(
-                      controller: buyer_tradeNameControl,
-                      decoration: const InputDecoration(
-                        labelText: 'TradeName',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        buyer_tradeName = value;
-                      },
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextField(
-                      controller: buyer_address1Control,
-                      decoration: const InputDecoration(
-                        labelText: 'Address',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        buyer_address1 = value;
-                      },
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextField(
-                      controller: buyer_address2Control,
-                      decoration: const InputDecoration(
-                        labelText: 'Address',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        buyer_address2 = value;
-                      },
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextField(
-                      controller: buyer_address3Control,
-                      decoration: const InputDecoration(
-                        labelText: 'Address',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        buyer_address3 = value;
-                      },
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextField(
-                      controller: buyer_address4Control,
-                      decoration: const InputDecoration(
-                        labelText: 'Address',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        buyer_address4 = value;
-                      },
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextField(
-                      controller: buyer_stateCodeControl,
-                      decoration: const InputDecoration(
-                        labelText: 'State Code',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        buyer_stateCode = value;
-                      },
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextField(
-                      controller: buyer_pinCodeControl,
-                      decoration: const InputDecoration(
-                        labelText: 'Pin Code',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        buyer_pinCode = value;
-                      },
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextField(
-                      controller: buyer_eMailControl,
-                      decoration: const InputDecoration(
-                        labelText: 'E-Mail',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        buyer_eMail = value;
-                      },
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextField(
-                      controller: buyer_phoneControl,
-                      decoration: const InputDecoration(
-                        labelText: 'Phone',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        buyer_phone = value;
-                      },
-                    ),
-                  ],
+                const SizedBox(
+                  height: 5,
                 ),
-              ),
-            ],
+                TextField(
+                  controller: bill_to_placeControl,
+                  decoration: const InputDecoration(
+                    labelText: 'Bill To Place',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) {
+                    bill_to_place = value;
+                  },
+                ),
+                const SizedBox(
+                  height: 5,
+                ),
+                TextField(
+                  controller: ship_to_placeControl,
+                  decoration: const InputDecoration(
+                    labelText: 'Ship To Place',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) {
+                    ship_to_place = value;
+                  },
+                ),
+                const Divider(
+                  thickness: 1,
+                  color: black,
+                ),
+                Card(
+                  elevation: 6,
+                  surfaceTintColor: indigoAccent,
+                  shadowColor: blue,
+                  child: Column(
+                    children: [
+                      const Center(
+                          child: Card(
+                              elevation: 0,
+                              child: Text(
+                                'Dispatch From Details',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ))),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextField(
+                        controller: desp_nameControl,
+                        decoration: const InputDecoration(
+                          labelText: 'Name',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          desp_name = value;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextField(
+                        controller: desp_address1Control,
+                        decoration: const InputDecoration(
+                          labelText: 'Address',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          desp_address1 = value;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextField(
+                        controller: desp_address2Control,
+                        decoration: const InputDecoration(
+                          labelText: 'Address',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          desp_address2 = value;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextField(
+                        controller: desp_stateControl,
+                        decoration: const InputDecoration(
+                          labelText: 'State',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          desp_state = value;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextField(
+                        controller: desp_pinCodeControl,
+                        decoration: const InputDecoration(
+                          labelText: 'Pin Code',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          desp_pinCode = value;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextField(
+                        controller: desp_placeControl,
+                        decoration: const InputDecoration(
+                          labelText: 'Place',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          desp_place = value;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(
+                  thickness: 1,
+                  color: black,
+                ),
+                Card(
+                  elevation: 6,
+                  surfaceTintColor: indigoAccent,
+                  shadowColor: blue,
+                  child: Column(
+                    children: [
+                      const Center(
+                          child: Card(
+                              elevation: 0,
+                              child: Text(
+                                'Buyer Details',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ))),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextField(
+                        controller: buyer_gstInControl,
+                        decoration: const InputDecoration(
+                          labelText: 'GSTin',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          buyer_gstIn = value;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextField(
+                        controller: buyer_tradeNameControl,
+                        decoration: const InputDecoration(
+                          labelText: 'TradeName',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          buyer_tradeName = value;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextField(
+                        controller: buyer_address1Control,
+                        decoration: const InputDecoration(
+                          labelText: 'Address',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          buyer_address1 = value;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextField(
+                        controller: buyer_address2Control,
+                        decoration: const InputDecoration(
+                          labelText: 'Address',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          buyer_address2 = value;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextField(
+                        controller: buyer_address3Control,
+                        decoration: const InputDecoration(
+                          labelText: 'Address',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          buyer_address3 = value;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextField(
+                        controller: buyer_address4Control,
+                        decoration: const InputDecoration(
+                          labelText: 'Address',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          buyer_address4 = value;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextField(
+                        controller: buyer_stateCodeControl,
+                        decoration: const InputDecoration(
+                          labelText: 'State Code',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          buyer_stateCode = value;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextField(
+                        controller: buyer_pinCodeControl,
+                        decoration: const InputDecoration(
+                          labelText: 'Pin Code',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          buyer_pinCode = value;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextField(
+                        controller: buyer_eMailControl,
+                        decoration: const InputDecoration(
+                          labelText: 'E-Mail',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          buyer_eMail = value;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextField(
+                        controller: buyer_phoneControl,
+                        decoration: const InputDecoration(
+                          labelText: 'Phone',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          buyer_phone = value;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -719,16 +726,25 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
     if (companySettings.pin.isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Add Company PinCode!')));
+      setState(() {
+        _isLoading = false;
+      });
       return;
     }
     if (companySettings.email.isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Add Company Email!')));
+      setState(() {
+        _isLoading = false;
+      });
       return;
     }
     if (companySettings.mobile.isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Add Company Mobile!')));
+      setState(() {
+        _isLoading = false;
+      });
       return;
     }
 
@@ -820,6 +836,9 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
             if (authData.status_cd.toString() != "Sucess") {
               ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(authResponse.status_desc.toString())));
+              setState(() {
+                _isLoading = false;
+              });
               return;
             } else {
               ackExpiry = authData.data.TokenExpiry;
@@ -980,12 +999,16 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
                           ackNoControl.text = rnResult.data.AckNo.toString();
                           // this.AckDate = this.txtackdate.Text;
                           // this.AckNo = this.txtackno.Text;
+                          _isLoading = false;
                         });
                       }
                     });
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: Text(resultResponse.status_desc.toString())));
+                    setState(() {
+                      _isLoading = false;
+                    });
                     return;
                   }
                 });
@@ -994,12 +1017,18 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
           } else {
             ScaffoldMessenger.of(context)
                 .showSnackBar(const SnackBar(content: Text('no responds')));
+            setState(() {
+              _isLoading = false;
+            });
             return;
           }
         });
       } else {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text('check HSN code')));
+        setState(() {
+          _isLoading = false;
+        });
         return;
       }
     }
@@ -1131,6 +1160,9 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
         if (result.status_cd.toString() != "Sucess") {
           ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(result.status_desc.toString())));
+          setState(() {
+            _isLoading = false;
+          });
           return;
         } else {
           ackExpiry = result.data.TokenExpiry;
@@ -1143,11 +1175,17 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
             if (irnResult.status_cd != "1") {
               ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(irnResult.status_desc.toString())));
+              setState(() {
+                _isLoading = false;
+              });
               return;
             } else {
               cancelBillStatus();
               ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(result.status_desc.toString())));
+              setState(() {
+                _isLoading = false;
+              });
             }
           });
         }
@@ -1155,6 +1193,9 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
     } catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Error${e.toString()}')));
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 

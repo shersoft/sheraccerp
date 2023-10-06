@@ -40,6 +40,11 @@ class DateUtil {
     return DateFormat("dd/MM/yyyy").format(dateTime);
   }
 
+  static String dateDMmmY(value) {
+    var dateTime = DateFormat("yyyy-MM-dd").parse(value.toString());
+    return DateFormat("dd/MMM/yyyy").format(dateTime);
+  }
+
   static DateTime dateTimeYMDHMS(_date, _time) {
     var date = DateFormat("yyyy-MM-dd").parse(_date.toString());
     var time =

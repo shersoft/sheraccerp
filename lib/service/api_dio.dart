@@ -3142,7 +3142,7 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'Product/getProductList/$dataBase',
+              'Product/getProductListLike/$dataBase',
           queryParameters: {'date': date, 'like': like});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
@@ -5089,6 +5089,122 @@ class DioService {
       return {'place': data['county'], 'lon': data['lon'], 'lat': data['lat']};
     } else {
       return {};
+    }
+  }
+
+  Future<EWayResultModel> authEWay(
+      String bClient,
+      String username,
+      String password,
+      String ipAddress,
+      clientId,
+      String clientSecret,
+      gstNo) async {
+    EWayResultModel data;
+    try {
+      final response = await dio.get(gstBaseApi + eWayAuthApi,
+          queryParameters: {
+            "email": bClient != "SHERSOFT"
+                ? "ac.japansquare@gmail.com"
+                : "shersoftware@gmail.com",
+            'username': username,
+            'password': password
+          },
+          options: Options(headers: {
+            'Accept': 'application/json',
+            'ip_address': ipAddress,
+            'client_id': clientId,
+            'client_secret': clientSecret,
+            'gstin': gstNo
+          }));
+      if (response.statusCode == 200) {
+        var _data = response.data;
+        return data = EWayResultModel.fromMap(_data);
+      } else {
+        debugPrint('Failed to load data');
+        return EWayResultModel.emptyData();
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return EWayResultModel.emptyData();
+    }
+  }
+
+  Future<EWayResultModel> generateEWayBill(
+      String bClient,
+      String gstNo,
+      String password,
+      String ipAddress,
+      clientId,
+      String clientSecret,
+      data) async {
+    EWayResultModel data;
+    try {
+      final response = await dio.post(gstBaseApi + eWayBillApi,
+          queryParameters: {
+            "email": bClient != "SHERSOFT"
+                ? "ac.japansquare@gmail.com"
+                : "shersoftware@gmail.com"
+          },
+          options: Options(headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'ip_address': ipAddress,
+            'client_id': clientId,
+            'client_secret': clientSecret,
+            'gstin': gstNo
+          }),
+          data: data);
+      if (response.statusCode == 200) {
+        var _data = response.data;
+        return data = EWayResultModel.fromMap(_data);
+      } else {
+        debugPrint('Failed to load data');
+        return EWayResultModel.emptyData();
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return EWayResultModel.emptyData();
+    }
+  }
+
+  Future<EWayResultModel> cancelEWayBill(
+      String bClient,
+      String gstNo,
+      String password,
+      String ipAddress,
+      clientId,
+      String clientSecret,
+      data) async {
+    try {
+      final response = await dio.post(gstBaseApi + eWayBillCancelApi,
+          queryParameters: {
+            "email": bClient != "SHERSOFT"
+                ? "ac.japansquare@gmail.com"
+                : "shersoftware@gmail.com"
+          },
+          options: Options(headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'ip_address': ipAddress,
+            'client_id': clientId,
+            'client_secret': clientSecret,
+            'gstin': gstNo
+          }),
+          data: data);
+      if (response.statusCode == 200) {
+        var _data = response.data;
+        return EWayResultModel.fromMap(_data);
+      } else {
+        debugPrint('Failed to load data');
+        return EWayResultModel.emptyData();
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return EWayResultModel.emptyData();
     }
   }
 }

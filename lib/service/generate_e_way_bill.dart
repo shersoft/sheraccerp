@@ -1,11 +1,14 @@
 // @dart = 2.11
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:scoped_model/scoped_model.dart';
 import 'package:intl/intl.dart';
+import 'package:scoped_model/scoped_model.dart';
+
 import 'package:sheraccerp/models/company.dart';
+import 'package:sheraccerp/models/gst_auth_model.dart';
 import 'package:sheraccerp/models/print_settings_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
@@ -13,6 +16,7 @@ import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/loading.dart';
+import 'package:sheraccerp/widget/progress_hud.dart';
 
 class GenerateEWaybill extends StatefulWidget {
   final data;
@@ -29,13 +33,14 @@ class GenerateEWaybill extends StatefulWidget {
 
 class _GenerateEWaybillState extends State<GenerateEWaybill> {
   dynamic data;
-  var information, particulars, serialNO, deliveryNoteDetails;
+  var information, particulars, particularData, serialNO, deliveryNoteDetails;
   List otherAmountList;
-  String formattedDate, _narration = '';
+  String formattedDate, eWayBillClient = '';
   DateTime now = DateTime.now();
   CompanyInformation companySettings;
   List<CompanySettings> settings;
   PrintSettingsModel printSettingsModel;
+  bool _isLoading = false;
 
   List<String> supplyType = ["Outward", "Inward"];
   List<String> subSupplyType = [
@@ -75,28 +80,28 @@ class _GenerateEWaybillState extends State<GenerateEWaybill> {
       invoiceDate = '',
       entryType = '',
       eWaybillNo = '';
-  TextEditingController cGstNoControl = TextEditingController();
-  TextEditingController cNameControl = TextEditingController();
-  TextEditingController cAddress1Control = TextEditingController();
-  TextEditingController cAddress2Control = TextEditingController();
-  TextEditingController cAddress3Control = TextEditingController();
-  TextEditingController cAddress4Control = TextEditingController();
-  TextEditingController cStateControl = TextEditingController();
-  TextEditingController cStateCodeControl = TextEditingController();
-  TextEditingController actualStateCodeControl = TextEditingController();
-  TextEditingController cPinCodeControl = TextEditingController();
-  TextEditingController cEmailControl = TextEditingController();
-  TextEditingController cPhoneControl = TextEditingController();
+  TextEditingController fromGstNoControl = TextEditingController();
+  TextEditingController fromNameControl = TextEditingController();
+  TextEditingController fromAddress1Control = TextEditingController();
+  TextEditingController fromAddress2Control = TextEditingController();
+  TextEditingController fromAddress3Control = TextEditingController();
+  TextEditingController fromAddress4Control = TextEditingController();
+  TextEditingController fromStateControl = TextEditingController();
+  TextEditingController fromStateCodeControl = TextEditingController();
+  TextEditingController fromActualStateCodeControl = TextEditingController();
+  TextEditingController fromPinCodeControl = TextEditingController();
+  TextEditingController fromEmailControl = TextEditingController();
+  TextEditingController fromPhoneControl = TextEditingController();
 
-  TextEditingController gstNoControl = TextEditingController();
-  TextEditingController nameControl = TextEditingController();
-  TextEditingController address1Control = TextEditingController();
-  TextEditingController address2Control = TextEditingController();
-  TextEditingController address3Control = TextEditingController();
-  TextEditingController address4Control = TextEditingController();
-  TextEditingController pinCodeControl = TextEditingController();
-  TextEditingController stateCodeControl1 = TextEditingController();
-  TextEditingController stateCodeControl2 = TextEditingController();
+  TextEditingController toGstNoControl = TextEditingController();
+  TextEditingController toNameControl = TextEditingController();
+  TextEditingController toAddress1Control = TextEditingController();
+  TextEditingController toAddress2Control = TextEditingController();
+  TextEditingController toAddress3Control = TextEditingController();
+  TextEditingController toAddress4Control = TextEditingController();
+  TextEditingController toPinCodeControl = TextEditingController();
+  TextEditingController toStateCodeControl1 = TextEditingController();
+  TextEditingController toStateCodeControl2 = TextEditingController();
 
   TextEditingController transporterControl = TextEditingController(text: "OWN");
   TextEditingController transporterIdControl = TextEditingController();
@@ -116,39 +121,28 @@ class _GenerateEWaybillState extends State<GenerateEWaybill> {
   TextEditingController refNoControl = TextEditingController();
   TextEditingController eWayBillNoControl = TextEditingController();
   TextEditingController vehicleControl = TextEditingController();
-  TextEditingController xControl = TextEditingController();
-  String cGstNo = '',
-      cName = '',
-      cState = '',
-      cStateCode = '',
-      actualStateCode = '',
-      cAddress1 = '',
-      cAddress2 = '',
-      cAddress3 = '',
-      cAddress4 = '',
-      cPinCode = '',
-      cEmail = '',
-      cPhone = '';
-  String gstNo = '',
-      name = '',
-      state = '',
-      stateCode1 = '',
-      stateCode2 = '',
-      address1 = '',
-      address2 = '',
-      address3 = '',
-      address4 = '',
-      pinCode = '',
-      email = '',
-      phone = '';
+
   String supplyTypeValue = 'Outward',
       subSupplyTypeValue = 'Supply',
       doctypeValue = 'Tax Invoice',
       transModeValue = 'Road',
       vehicleTypeValue = 'Regular',
       transactionTypeValue = 'Regular';
-  String distance = '', vehicle = '';
   bool isKmLoading = false;
+  String transactionId = '';
+
+  List colHeader = [
+    "SlNo",
+    "ItemName",
+    "HSN",
+    "Qty",
+    "Unit",
+    "Net",
+    "CGST",
+    "SGST",
+    "IGST",
+    "CESS"
+  ];
 
   @override
   void initState() {
@@ -157,47 +151,48 @@ class _GenerateEWaybillState extends State<GenerateEWaybill> {
     formattedDate = DateFormat('dd/MM/yyyy').format(now);
     data = widget.data;
     information = data['Information'][0];
-    particulars = data['Particulars'];
+    particularData = data['Particulars'];
     serialNO = data['SerialNO'];
     deliveryNoteDetails = data['DeliveryNote'];
     otherAmountList = data['otherAmount'];
-
     invoiceId = information['EntryNo'].toString();
     invoiceNo = information['InvoiceNo'].toString();
     invoiceDate = DateUtil.dateDMY1(information['DDate'].toString());
     invoiceNoControl.text = invoiceNo;
     invoiceDateControl.text = invoiceDate;
+    transDocNoControl.text = invoiceNo;
+    transDocDateControl.text =
+        DateUtil.dateDMmmY(information['DDate'].toString());
+    particulars = partBData(particularData);
 
     companySettings = ScopedModel.of<MainModel>(context).getCompanySettings();
     settings = ScopedModel.of<MainModel>(context).getSettings();
+    totalValueControl.text = information['NetAmount'].toString();
+    cGSTControl.text = information['CGST'].toString();
+    sGSTControl.text = information['SGST'].toString();
+    iGSTControl.text = information['IGST'].toString();
+    cessControl.text = information['cess'].toString();
+    totalControl.text = information['Total'].toString();
+    otherChargeControl.text = information['OtherCharges'].toString();
+    refNoControl.text = invoiceNo;
 
     // manualInvoiceNumberInSales =
     //     ComSettings.getStatus('MANNUAL INVOICE NUMBER IN SALES', settings);
-    // eWayBillClient = ComSettings.getValue('EWAYBILLAPI OWNER', settings);
-    cGstNo = ComSettings.getValue('GST-NO', settings);
-    cGstNoControl.text = cGstNo;
-    cState = ComSettings.getValue('COMP-STATE', settings);
-    cStateControl.text = cState;
-    cStateCode = ComSettings.getValue('COMP-STATECODE', settings);
-    cStateCodeControl.text = cStateCode;
-    actualStateCodeControl.text = cStateCode;
-    cAddress1 = companySettings.add1;
-    cAddress1Control.text = cAddress1;
-    cAddress2 = companySettings.add2;
-    cAddress2Control.text = cAddress2;
-    cAddress3 = companySettings.add3;
-    cAddress3Control.text = cAddress3;
-    cAddress4 = companySettings.add4;
-    cAddress4Control.text = cAddress4;
+    eWayBillClient = ComSettings.getValue('EWAYBILLAPI OWNER', settings);
+    fromGstNoControl.text = ComSettings.getValue('GST-NO', settings);
+    fromStateControl.text = ComSettings.getValue('COMP-STATE', settings);
+    var cStateCode = ComSettings.getValue('COMP-STATECODE', settings);
+    fromStateCodeControl.text = cStateCode;
+    fromActualStateCodeControl.text = cStateCode;
+    fromAddress1Control.text = companySettings.add1;
+    fromAddress2Control.text = companySettings.add2;
+    fromAddress3Control.text = companySettings.add3;
+    fromAddress4Control.text = companySettings.add4;
     var cAddress5 = companySettings.add5;
-    cEmail = companySettings.email;
-    cEmailControl.text = cEmail;
-    cName = companySettings.name;
-    cNameControl.text = cName;
-    cPhone = companySettings.mobile;
-    cPhoneControl.text = cPhone;
-    cPinCode = companySettings.pin;
-    cPinCodeControl.text = cPinCode;
+    fromEmailControl.text = companySettings.email;
+    fromNameControl.text = companySettings.name;
+    fromPhoneControl.text = companySettings.mobile;
+    fromPinCodeControl.text = companySettings.pin;
     var sName = companySettings.sName;
     var tel = companySettings.telephone;
 
@@ -258,34 +253,46 @@ class _GenerateEWaybillState extends State<GenerateEWaybill> {
       // this.FnFindStktr(entryno.ToString());
     }
     fetchPublicIp();
-
+    api.eInvoiceDetails().then((value) {
+      var data = value[0];
+      _username = data['username'];
+      _password = data['password'];
+      if (eWayBillClient != "SHERSOFT") {
+        _clientId = data['ClientId'];
+        _clientSecret = data['Clientscreate'];
+      } else {
+        var cId = "2d9193c4-d528-42a0-b7bc-a01ac3d3827b";
+        var cSecret = "bb60872c-e8f7-4056-a34a-e9157c4110ca";
+        _clientId = cId;
+        _clientSecret = cSecret;
+      }
+    });
     api.getCustomerDetail(information['Customer']).then((value) {
       var data = value;
-      address1 = data.address1;
-      address1Control.text = address1;
-      address2 = data.address2;
-      address2Control.text = address2;
-      address3 = data.address3;
-      address3Control.text = address3;
-      address4 = data.address4;
-      address4Control.text = address4;
-      email = data.email;
-      // emailControl.text = email;
-      gstNo = data.taxNumber;
-      gstNoControl.text = gstNo;
-      phone = data.phone;
-      // phoneControl.text = phone;
-      pinCode = data.pinNo;
-      pinCodeControl.text = pinCode;
-      stateCode1 = data.stateCode;
-      stateCode2 = data.stateCode;
-      stateCodeControl1.text = stateCode1;
-      stateCodeControl2.text = stateCode2;
-      name = data.name;
-      nameControl.text = name;
+      toAddress1Control.text = data.address1;
+      toAddress2Control.text = data.address2;
+      toAddress3Control.text = data.address3;
+      toAddress4Control.text = data.address4;
+      // emailControl.text = data.email;
+      toGstNoControl.text = data.taxNumber;
+      // phoneControl.text = data.phone;
+      toPinCodeControl.text = data.pinNo;
+      var stateCode1 = data.stateCode;
+      var stateCode2 = data.stateCode;
+      toStateCodeControl1.text = stateCode1;
+      toStateCodeControl2.text = stateCode2;
+      toNameControl.text = data.name;
+      if (toPinCodeControl.text.isNotEmpty &&
+          fromPinCodeControl.text.isNotEmpty) {
+        calculateDistance();
+      }
     });
   }
 
+  var _username = '';
+  var _password = '';
+  var _clientId = '';
+  var _clientSecret = '';
   fetchPublicIp() {
     api.getPublicIp().then((value) => ipAddress = value);
   }
@@ -304,822 +311,1208 @@ class _GenerateEWaybillState extends State<GenerateEWaybill> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('E-Way Bill'),
-        actions: [
-          IconButton(
-              icon: const Icon(Icons.save),
-              onPressed: () {
-                setState(
-                  () {
-                    generateEWayBill();
-                  },
-                );
-              }),
-          IconButton(
-              icon: const Icon(Icons.cancel),
-              onPressed: () {
-                setState(
-                  () {
-                    cancelEWayBill();
-                  },
-                );
-              }),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 0.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Row(
-              //   mainAxisAlignment: MainAxisAlignment.center,
-              //   children: [
-              //     const Text(
-              //       'Date : ',
-              //       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              //     ),
-              //     InkWell(
-              //       child: Text(
-              //         formattedDate,
-              //         style: const TextStyle(
-              //             fontWeight: FontWeight.bold, fontSize: 18),
-              //       ),
-              //       onTap: () => _selectDate(),
-              //     ),
-              //   ],
-              // ),
-              ExpansionTile(
-                  title: const Text(
-                    "Your Details",
+        appBar: AppBar(
+          title: const Text('E-Way Bill'),
+          actions: [
+            IconButton(
+                icon: const Icon(Icons.save),
+                onPressed: () {
+                  setState(
+                    () {
+                      _isLoading = true;
+                      generateEWayBill();
+                    },
+                  );
+                }),
+            IconButton(
+                icon: const Icon(Icons.cancel),
+                onPressed: () {
+                  setState(
+                    () {
+                      _isLoading = true;
+                      cancelEWayBill();
+                    },
+                  );
+                }),
+            IconButton(
+                icon: const Icon(Icons.print),
+                onPressed: () {
+                  setState(
+                    () {
+                      _isLoading = true;
+                      printEWayBill();
+                    },
+                  );
+                }),
+          ],
+        ),
+        body: ProgressHUD(
+          inAsyncCall: _isLoading,
+          opacity: 0.0,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.center,
+                  //   children: [
+                  //     const Text(
+                  //       'Date : ',
+                  //       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  //     ),
+                  //     InkWell(
+                  //       child: Text(
+                  //         formattedDate,
+                  //         style: const TextStyle(
+                  //             fontWeight: FontWeight.bold, fontSize: 18),
+                  //       ),
+                  //       onTap: () => _selectDate(),
+                  //     ),
+                  //   ],
+                  // ),
+                  ExpansionTile(
+                      title: const Text(
+                        "Your Details",
+                        style: TextStyle(
+                            fontSize: 18.0, fontWeight: FontWeight.bold),
+                      ),
+                      children: [
+                        const SizedBox(
+                          height: 1,
+                        ),
+                        Card(
+                          elevation: 5,
+                          color: blue[50],
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              TextField(
+                                controller: fromGstNoControl,
+                                decoration: const InputDecoration(
+                                  labelText: 'GST No.',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              TextField(
+                                controller: fromNameControl,
+                                decoration: const InputDecoration(
+                                  labelText: 'Name',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              TextField(
+                                controller: fromAddress1Control,
+                                decoration: const InputDecoration(
+                                  labelText: 'Address1',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              TextField(
+                                controller: fromAddress2Control,
+                                decoration: const InputDecoration(
+                                  labelText: 'Address2',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              TextField(
+                                controller: fromAddress3Control,
+                                decoration: const InputDecoration(
+                                  labelText: 'Place',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              TextField(
+                                controller: fromPinCodeControl,
+                                decoration: const InputDecoration(
+                                  labelText: 'PinCode',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: fromStateCodeControl,
+                                      decoration: const InputDecoration(
+                                        labelText: 'StateCode',
+                                        border: OutlineInputBorder(),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    width: 5,
+                                  ),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: fromActualStateCodeControl,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Actual StateCode',
+                                        border: OutlineInputBorder(),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ]),
+                  ExpansionTile(
+                    title: const Text(
+                      "Party Details",
+                      style: TextStyle(
+                          fontSize: 18.0, fontWeight: FontWeight.bold),
+                    ),
+                    children: [
+                      const SizedBox(
+                        height: 1,
+                      ),
+                      Card(
+                          elevation: 5,
+                          color: blue[50],
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              TextField(
+                                controller: toGstNoControl,
+                                decoration: const InputDecoration(
+                                  labelText: 'GST No.',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              TextField(
+                                controller: toNameControl,
+                                decoration: const InputDecoration(
+                                  labelText: 'Name',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              TextField(
+                                controller: toAddress1Control,
+                                decoration: const InputDecoration(
+                                  labelText: 'Address1',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              TextField(
+                                controller: toAddress2Control,
+                                decoration: const InputDecoration(
+                                  labelText: 'Address2',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              TextField(
+                                controller: toAddress3Control,
+                                decoration: const InputDecoration(
+                                  labelText: 'Place',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              TextField(
+                                controller: toPinCodeControl,
+                                decoration: const InputDecoration(
+                                  labelText: 'PinCode',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: toStateCodeControl1,
+                                      decoration: const InputDecoration(
+                                        labelText: 'StateCode',
+                                        border: OutlineInputBorder(),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    width: 5,
+                                  ),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: toStateCodeControl2,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Actual StateCode',
+                                        border: OutlineInputBorder(),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          )),
+                    ],
+                  ),
+                  const Text(
+                    "Transport Details",
                     style:
                         TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
                   ),
-                  children: [
-                    const SizedBox(
-                      height: 1,
-                    ),
-                    Card(
-                      elevation: 5,
-                      color: blue[50],
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          TextField(
-                            controller: cGstNoControl,
-                            decoration: const InputDecoration(
-                              labelText: 'GST No.',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              cGstNo = value;
-                            },
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          TextField(
-                            controller: cNameControl,
-                            decoration: const InputDecoration(
-                              labelText: 'Name',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              cName = value;
-                            },
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          TextField(
-                            controller: cAddress1Control,
-                            decoration: const InputDecoration(
-                              labelText: 'Address1',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              cAddress1 = value;
-                            },
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          TextField(
-                            controller: cAddress2Control,
-                            decoration: const InputDecoration(
-                              labelText: 'Address2',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              cAddress2 = value;
-                            },
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          TextField(
-                            controller: cAddress3Control,
-                            decoration: const InputDecoration(
-                              labelText: 'Place',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              cAddress3 = value;
-                            },
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          TextField(
-                            controller: cPinCodeControl,
-                            decoration: const InputDecoration(
-                              labelText: 'PinCode',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              cPinCode = value;
-                            },
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: cStateCodeControl,
-                                  decoration: const InputDecoration(
-                                    labelText: 'StateCode',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                  onChanged: (value) {
-                                    cStateCode = value;
-                                  },
-                                ),
-                              ),
-                              const SizedBox(
-                                width: 5,
-                              ),
-                              Expanded(
-                                child: TextField(
-                                  controller: actualStateCodeControl,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Actual StateCode',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                  onChanged: (value) {
-                                    actualStateCode = value;
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ]),
-              ExpansionTile(
-                title: const Text(
-                  "Party Details",
-                  style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-                ),
-                children: [
-                  const SizedBox(
-                    height: 1,
-                  ),
                   Card(
-                      elevation: 5,
-                      color: blue[50],
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          TextField(
-                            controller: gstNoControl,
-                            decoration: const InputDecoration(
-                              labelText: 'GST No.',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              gstNo = value;
-                            },
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          TextField(
-                            controller: nameControl,
-                            decoration: const InputDecoration(
-                              labelText: 'Name',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              name = value;
-                            },
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          TextField(
-                            controller: address1Control,
-                            decoration: const InputDecoration(
-                              labelText: 'Address1',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              address1 = value;
-                            },
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          TextField(
-                            controller: address2Control,
-                            decoration: const InputDecoration(
-                              labelText: 'Address2',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              address2 = value;
-                            },
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          TextField(
-                            controller: address3Control,
-                            decoration: const InputDecoration(
-                              labelText: 'Place',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              address3 = value;
-                            },
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          TextField(
-                            controller: pinCodeControl,
-                            decoration: const InputDecoration(
-                              labelText: 'PinCode',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              pinCode = value;
-                            },
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: stateCodeControl1,
-                                  decoration: const InputDecoration(
-                                    labelText: 'StateCode',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                  onChanged: (value) {
-                                    stateCode1 = value;
-                                  },
-                                ),
-                              ),
-                              const SizedBox(
-                                width: 5,
-                              ),
-                              Expanded(
-                                child: TextField(
-                                  controller: stateCodeControl2,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Actual StateCode',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                  onChanged: (value) {
-                                    stateCode2 = value;
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      )),
-                ],
-              ),
-              const Text(
-                "Transport Details",
-                style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-              ),
-              Card(
-                elevation: 5,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Supply Type',
-                      style: TextStyle(fontSize: 10),
-                    ),
-                    DropdownButton(
-                      items: supplyType.map<DropdownMenuItem<String>>((item) {
-                        return DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(item),
-                        );
-                      }).toList(),
-                      value: supplyTypeValue,
-                      onChanged: (value) {
-                        setState(() {
-                          supplyTypeValue = value;
-                        });
-                      },
-                    ),
-                    const SizedBox(
-                      width: 5,
-                    ),
-                    const Text(
-                      'Sub Supply Type',
-                      style: TextStyle(fontSize: 10),
-                    ),
-                    DropdownButton(
-                      items:
-                          subSupplyType.map<DropdownMenuItem<String>>((item) {
-                        return DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(item),
-                        );
-                      }).toList(),
-                      value: subSupplyTypeValue,
-                      onChanged: (value) {
-                        setState(() {
-                          subSupplyTypeValue = value;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Card(
-                elevation: 5,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'InvoiceNo',
-                      style: TextStyle(fontSize: 13),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        controller: invoiceNoControl,
-                        decoration: const InputDecoration(
-                          labelText: 'InvoiceNo',
-                          border: OutlineInputBorder(),
+                    elevation: 5,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        const Text(
+                          'Supply Type',
+                          style: TextStyle(fontSize: 13),
                         ),
-                        style: const TextStyle(fontSize: 13),
-                        onChanged: (value) {
-                          invoiceNo = value;
-                        },
-                      ),
-                    ),
-                    const SizedBox(
-                      width: 5,
-                    ),
-                    const Text(
-                      'Invoice Date',
-                      style: TextStyle(fontSize: 13),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        controller: invoiceDateControl,
-                        decoration: const InputDecoration(
-                          labelText: 'Invoice Date',
-                          border: OutlineInputBorder(),
-                        ),
-                        style: const TextStyle(fontSize: 13),
-                        onChanged: (value) {
-                          invoiceDate = value;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Card(
-                elevation: 5,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Trans Mode',
-                      style: TextStyle(fontSize: 10),
-                    ),
-                    DropdownButton(
-                      items: transMode.map<DropdownMenuItem<String>>((item) {
-                        return DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(item),
-                        );
-                      }).toList(),
-                      value: transModeValue,
-                      onChanged: (value) {
-                        setState(() {
-                          transModeValue = value;
-                        });
-                      },
-                    ),
-                    const Text(
-                      'Distance',
-                      style: TextStyle(fontSize: 13),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        controller: distanceControl,
-                        decoration: const InputDecoration(
-                          labelText: 'Distance',
-                          border: OutlineInputBorder(),
-                        ),
-                        style: const TextStyle(fontSize: 13),
-                        onChanged: (value) {
-                          distance = value;
-                        },
-                      ),
-                    ),
-                    isKmLoading
-                        ? const Loading()
-                        : ElevatedButton(
-                            onPressed: () {
+                        SizedBox(
+                          width: 80,
+                          child: DropdownButton(
+                            items: supplyType
+                                .map<DropdownMenuItem<String>>((item) {
+                              return DropdownMenuItem<String>(
+                                value: item,
+                                child: Text(item),
+                              );
+                            }).toList(),
+                            value: supplyTypeValue,
+                            onChanged: (value) {
                               setState(() {
-                                isKmLoading = true;
+                                supplyTypeValue = value;
                               });
-                              calculateDistance();
                             },
-                            child: const Text('KM'))
-                  ],
-                ),
-              ),
-              Card(
-                elevation: 5,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Vehicle Type',
-                      style: TextStyle(fontSize: 10),
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 8,
+                        ),
+                        const Text(
+                          'Sub Supply Type',
+                          style: TextStyle(fontSize: 13),
+                        ),
+                        SizedBox(
+                          width: 80,
+                          child: DropdownButton(
+                            items: subSupplyType
+                                .map<DropdownMenuItem<String>>((item) {
+                              return DropdownMenuItem<String>(
+                                value: item,
+                                child: Text(item),
+                              );
+                            }).toList(),
+                            value: subSupplyTypeValue,
+                            onChanged: (value) {
+                              setState(() {
+                                subSupplyTypeValue = value;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                    DropdownButton(
-                      items: vehicleType.map<DropdownMenuItem<String>>((item) {
-                        return DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(item),
-                        );
-                      }).toList(),
-                      value: vehicleTypeValue,
-                      onChanged: (value) {
-                        setState(() {
-                          vehicleTypeValue = value;
-                        });
-                      },
-                    ),
-                    const Text(
-                      'Vehicle No',
-                      style: TextStyle(fontSize: 13),
-                    ),
-                    SizedBox(
-                      width: 100,
-                      child: Expanded(
+                  ),
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
                         child: TextField(
-                          controller: vehicleControl,
+                          controller: invoiceNoControl,
                           decoration: const InputDecoration(
-                            labelText: 'Vehicle No',
+                            labelText: 'InvoiceNo',
                             border: OutlineInputBorder(),
                           ),
                           style: const TextStyle(fontSize: 13),
                           onChanged: (value) {
-                            vehicle = value;
+                            invoiceNo = value;
                           },
                         ),
                       ),
-                    )
-                  ],
-                ),
-              ),
-              Card(
-                elevation: 5,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Doc Type',
-                      style: TextStyle(fontSize: 10),
-                    ),
-                    DropdownButton(
-                      items: doctype.map<DropdownMenuItem<String>>((item) {
-                        return DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(item),
-                        );
-                      }).toList(),
-                      value: doctypeValue,
-                      onChanged: (value) {
-                        setState(() {
-                          doctypeValue = value;
-                        });
-                      },
-                    ),
-                    const Text(
-                      'Transaction Type',
-                      style: TextStyle(fontSize: 13),
-                    ),
-                    DropdownButton(
-                      items:
-                          transactionType.map<DropdownMenuItem<String>>((item) {
-                        return DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(item),
-                        );
-                      }).toList(),
-                      value: transactionTypeValue,
-                      onChanged: (value) {
-                        setState(() {
-                          transactionTypeValue = value;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Transporter Name',
-                    style: TextStyle(fontSize: 10),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: transporterControl,
-                      decoration: const InputDecoration(
-                        labelText: 'Transporter Name',
-                        border: OutlineInputBorder(),
+                      const SizedBox(
+                        width: 5,
                       ),
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                  const Text(
-                    'Id',
-                    style: TextStyle(fontSize: 13),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: cGstNoControl,
-                      decoration: const InputDecoration(
-                        labelText: 'Id',
-                        border: OutlineInputBorder(),
+                      Expanded(
+                        child: TextField(
+                          controller: invoiceDateControl,
+                          decoration: const InputDecoration(
+                            labelText: 'Invoice Date',
+                            border: OutlineInputBorder(),
+                          ),
+                          style: const TextStyle(fontSize: 13),
+                          onChanged: (value) {
+                            invoiceDate = value;
+                          },
+                        ),
                       ),
-                      style: const TextStyle(fontSize: 13),
+                    ],
+                  ),
+                  const Divider(),
+                  Card(
+                    elevation: 3,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        const Text(
+                          'Trans Mode',
+                          // style: TextStyle(fontSize: 13),
+                        ),
+                        const SizedBox(width: 1),
+                        DropdownButton(
+                          items:
+                              transMode.map<DropdownMenuItem<String>>((item) {
+                            return DropdownMenuItem<String>(
+                              value: item,
+                              child: Text(item),
+                            );
+                          }).toList(),
+                          value: transModeValue,
+                          onChanged: (value) {
+                            setState(() {
+                              transModeValue = value;
+                            });
+                          },
+                        ),
+                        SizedBox(
+                          width: 90,
+                          child: Expanded(
+                            child: TextField(
+                              controller: distanceControl,
+                              decoration: const InputDecoration(
+                                labelText: 'Distance',
+                                border: OutlineInputBorder(),
+                              ),
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                        ),
+                        isKmLoading
+                            ? const Loading()
+                            : ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    isKmLoading = true;
+                                  });
+                                  calculateDistance();
+                                },
+                                child: const Text('KM'))
+                      ],
                     ),
                   ),
+                  Card(
+                    elevation: 5,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        const Text(
+                          'Vehicle Type',
+                          // style: TextStyle(fontSize: 10),
+                        ),
+                        DropdownButton(
+                          items:
+                              vehicleType.map<DropdownMenuItem<String>>((item) {
+                            return DropdownMenuItem<String>(
+                              value: item,
+                              child: Text(item),
+                            );
+                          }).toList(),
+                          value: vehicleTypeValue,
+                          onChanged: (value) {
+                            setState(() {
+                              vehicleTypeValue = value;
+                            });
+                          },
+                        ),
+                        SizedBox(
+                          width: 120,
+                          child: Expanded(
+                            child: TextField(
+                              controller: vehicleControl,
+                              decoration: const InputDecoration(
+                                labelText: 'Vehicle No',
+                                border: OutlineInputBorder(),
+                              ),
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  Card(
+                    elevation: 5,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        const Text(
+                          'Doc Type',
+                          style: TextStyle(fontSize: 13),
+                        ),
+                        const SizedBox(width: 2),
+                        SizedBox(
+                          width: 100,
+                          child: DropdownButton(
+                            items:
+                                doctype.map<DropdownMenuItem<String>>((item) {
+                              return DropdownMenuItem<String>(
+                                value: item,
+                                child:
+                                    Text(item, style: TextStyle(fontSize: 13)),
+                              );
+                            }).toList(),
+                            value: doctypeValue,
+                            onChanged: (value) {
+                              setState(() {
+                                doctypeValue = value;
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Transaction Type',
+                          style: TextStyle(fontSize: 13),
+                        ),
+                        const SizedBox(width: 2),
+                        SizedBox(
+                          width: 120,
+                          child: DropdownButton(
+                            items: transactionType
+                                .map<DropdownMenuItem<String>>((item) {
+                              return DropdownMenuItem<String>(
+                                value: item,
+                                child:
+                                    Text(item, style: TextStyle(fontSize: 13)),
+                              );
+                            }).toList(),
+                            value: transactionTypeValue,
+                            onChanged: (value) {
+                              setState(() {
+                                transactionTypeValue = value;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: transporterControl,
+                          decoration: const InputDecoration(
+                            labelText: 'Transporter Name',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: TextField(
+                          controller: fromGstNoControl,
+                          decoration: const InputDecoration(
+                            labelText: 'Id',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: transDocNoControl,
+                          decoration: const InputDecoration(
+                            labelText: 'Trans Doc No',
+                            border: OutlineInputBorder(),
+                          ),
+                          onChanged: (value) {
+                            // invoiceNo = value;
+                          },
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 5,
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: transDocDateControl,
+                          decoration: const InputDecoration(
+                            labelText: 'Trans Doc Date',
+                            border: OutlineInputBorder(),
+                          ),
+                          onChanged: (value) {
+                            // invoiceDate = value;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: totalValueControl,
+                          decoration: const InputDecoration(
+                            labelText: 'Total Value',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Expanded(
+                        child: TextField(
+                          controller: sGSTControl,
+                          decoration: const InputDecoration(
+                            labelText: 'SGST',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Expanded(
+                        child: TextField(
+                          controller: cGSTControl,
+                          decoration: const InputDecoration(
+                            labelText: 'CGST',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: iGSTControl,
+                          decoration: const InputDecoration(
+                            labelText: 'IGST',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Expanded(
+                        child: TextField(
+                          controller: cessControl,
+                          decoration: const InputDecoration(
+                            labelText: 'CESS',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Expanded(
+                        child: TextField(
+                          controller: totalControl,
+                          decoration: const InputDecoration(
+                            labelText: 'Total',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: mainHSNControl,
+                          decoration: const InputDecoration(
+                            labelText: 'Main HSN',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: TextField(
+                          controller: otherChargeControl,
+                          decoration: const InputDecoration(
+                            labelText: 'Other Charges',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: refNoControl,
+                          decoration: const InputDecoration(
+                            labelText: 'Ref No',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: TextField(
+                          controller: eWayBillNoControl,
+                          decoration: const InputDecoration(
+                            labelText: 'E-Way Bill No',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade200),
+                        border:
+                            TableBorder.all(width: 1.0, color: Colors.black),
+                        columnSpacing: 12,
+                        dataRowHeight: 20,
+                        headingRowHeight: 30,
+                        columns: [
+                          for (int i = 0; i < colHeader.length; i++)
+                            DataColumn(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: Text(
+                                  colHeader[i],
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                        ],
+                        rows: [
+                          for (var values in particulars)
+                            DataRow(cells: [
+                              DataCell(
+                                Align(
+                                  alignment: ComSettings.oKNumeric(
+                                    values['no'].toString(),
+                                  )
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: Text(
+                                    values['no'].toString(),
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    // style: TextStyle(fontSize: 6),
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Align(
+                                  alignment: ComSettings.oKNumeric(
+                                    values['name'].toString(),
+                                  )
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: Text(
+                                    values['name'].toString(),
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    // style: TextStyle(fontSize: 6),
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Align(
+                                  alignment: ComSettings.oKNumeric(
+                                    values['hsn'].toString(),
+                                  )
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: Text(
+                                    values['hsn'] != null
+                                        ? values['hsn'].toString()
+                                        : '',
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    // style: TextStyle(fontSize: 6),
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Align(
+                                  alignment: ComSettings.oKNumeric(
+                                    values['qty'].toString(),
+                                  )
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: Text(
+                                    values['qty'].toString(),
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    // style: TextStyle(fontSize: 6),
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Align(
+                                  alignment: ComSettings.oKNumeric(
+                                    values['unit'].toString(),
+                                  )
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: Text(
+                                    values['unit'].toString(),
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    // style: TextStyle(fontSize: 6),
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Align(
+                                  alignment: ComSettings.oKNumeric(
+                                    values['net'].toString(),
+                                  )
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: Text(
+                                    values['net'].toString(),
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    // style: TextStyle(fontSize: 6),
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Align(
+                                  alignment: ComSettings.oKNumeric(
+                                    values['cGst'].toString(),
+                                  )
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: Text(
+                                    values['cGst'].toString(),
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    // style: TextStyle(fontSize: 6),
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Align(
+                                  alignment: ComSettings.oKNumeric(
+                                    values['cGst'].toString(),
+                                  )
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: Text(
+                                    values['cGst'].toString(),
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    // style: TextStyle(fontSize: 6),
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Align(
+                                  alignment: ComSettings.oKNumeric(
+                                    values['iGst'].toString(),
+                                  )
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: Text(
+                                    values['iGst'].toString(),
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    // style: TextStyle(fontSize: 6),
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Align(
+                                  alignment: ComSettings.oKNumeric(
+                                    values['cess'].toString(),
+                                  )
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: Text(
+                                    values['cess'].toString(),
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    // style: TextStyle(fontSize: 6),
+                                  ),
+                                ),
+                              ),
+                            ]),
+                        ]),
+                  ),
+                  const Divider(),
                 ],
               ),
-              const Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'TransDocNo',
-                    style: TextStyle(fontSize: 13),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: transDocNoControl,
-                      decoration: const InputDecoration(
-                        labelText: 'Trans Doc No',
-                        border: OutlineInputBorder(),
-                      ),
-                      style: const TextStyle(fontSize: 13),
-                      onChanged: (value) {
-                        // invoiceNo = value;
-                      },
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 5,
-                  ),
-                  const Text(
-                    'TransDocDate',
-                    style: TextStyle(fontSize: 13),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: transDocDateControl,
-                      decoration: const InputDecoration(
-                        labelText: 'Trans Doc Date',
-                        border: OutlineInputBorder(),
-                      ),
-                      style: const TextStyle(fontSize: 13),
-                      onChanged: (value) {
-                        // invoiceDate = value;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Total Value',
-                    style: TextStyle(fontSize: 10),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: totalValueControl,
-                      decoration: const InputDecoration(
-                        labelText: 'Total Value',
-                        border: OutlineInputBorder(),
-                      ),
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                  const Text(
-                    'SGST',
-                    style: TextStyle(fontSize: 13),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: sGSTControl,
-                      decoration: const InputDecoration(
-                        labelText: 'SGST',
-                        border: OutlineInputBorder(),
-                      ),
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                  const Text(
-                    'CGST',
-                    style: TextStyle(fontSize: 13),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: cGSTControl,
-                      decoration: const InputDecoration(
-                        labelText: 'CGST',
-                        border: OutlineInputBorder(),
-                      ),
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-              const Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'IGST',
-                    style: TextStyle(fontSize: 10),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: iGSTControl,
-                      decoration: const InputDecoration(
-                        labelText: 'IGST',
-                        border: OutlineInputBorder(),
-                      ),
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                  const Text(
-                    'CESS',
-                    style: TextStyle(fontSize: 13),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: cessControl,
-                      decoration: const InputDecoration(
-                        labelText: 'CESS',
-                        border: OutlineInputBorder(),
-                      ),
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                  const Text(
-                    'Total',
-                    style: TextStyle(fontSize: 13),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: totalControl,
-                      decoration: const InputDecoration(
-                        labelText: 'Total',
-                        border: OutlineInputBorder(),
-                      ),
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-              const Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Main HSN',
-                    style: TextStyle(fontSize: 10),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: mainHSNControl,
-                      decoration: const InputDecoration(
-                        labelText: 'Main HSN',
-                        border: OutlineInputBorder(),
-                      ),
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                  const Text(
-                    'Other Charges',
-                    style: TextStyle(fontSize: 13),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: otherChargeControl,
-                      decoration: const InputDecoration(
-                        labelText: 'Other Charges',
-                        border: OutlineInputBorder(),
-                      ),
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-              const Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Ref No',
-                    style: TextStyle(fontSize: 10),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: refNoControl,
-                      decoration: const InputDecoration(
-                        labelText: 'Ref No',
-                        border: OutlineInputBorder(),
-                      ),
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                  const Text(
-                    'E-Way No',
-                    style: TextStyle(fontSize: 13),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: eWayBillNoControl,
-                      decoration: const InputDecoration(
-                        labelText: 'E-Way Bill No',
-                        border: OutlineInputBorder(),
-                      ),
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
+        ));
   }
 
-  Future _selectDate() async {
-    DateTime picked = await showDatePicker(
-        context: context,
-        initialDate: DateTime.now(),
-        firstDate: DateTime(2000),
-        lastDate: DateTime(2100));
-    if (picked != null) {
-      setState(() => {formattedDate = DateFormat('dd/MM/yyyy').format(picked)});
+  void generateEWayBill() {
+    if (fromPinCodeControl.text.isNotEmpty &&
+        fromPinCodeControl.text.isNotEmpty &&
+        distanceControl.text.isNotEmpty &&
+        transporterControl.text.isNotEmpty &&
+        transDocNoControl.text.isNotEmpty &&
+        transactionId.isNotEmpty) {
+      String docType = doctypeValue == 'Tax Invoice'
+          ? 'INV'
+          : doctypeValue == 'Bill of Supply'
+              ? 'BIL'
+              : doctypeValue == 'Bill of Entry'
+                  ? 'BOE'
+                  : doctypeValue == 'Delivery Challan'
+                      ? 'CHL'
+                      : doctypeValue == 'Others'
+                          ? 'OTH'
+                          : '';
+      String supplyType = supplyTypeValue == 'Inward'
+          ? 'I'
+          : supplyTypeValue == 'Outward'
+              ? 'O'
+              : '';
+      String subSupplyType = subSupplyTypeValue == 'Supply'
+          ? '1'
+          : subSupplyTypeValue == 'Import'
+              ? '2'
+              : subSupplyTypeValue == 'Export'
+                  ? '3'
+                  : subSupplyTypeValue == 'Job Work'
+                      ? '4'
+                      : subSupplyTypeValue == 'For Own Use'
+                          ? '5'
+                          : subSupplyTypeValue == 'Job work Returns'
+                              ? '6'
+                              : subSupplyTypeValue == 'Sales Return'
+                                  ? '7'
+                                  : subSupplyTypeValue == 'SKD/CKD'
+                                      ? '8'
+                                      : subSupplyTypeValue == 'Line Sales'
+                                          ? '9'
+                                          : subSupplyTypeValue ==
+                                                  'Recipient Not Known'
+                                              ? '10'
+                                              : subSupplyTypeValue ==
+                                                      'Exhibition or Fairs'
+                                                  ? '11'
+                                                  : subSupplyTypeValue ==
+                                                          'Others'
+                                                      ? '12'
+                                                      : '0';
+      String transMode = transModeValue == "Road"
+          ? "1"
+          : transModeValue == "Rail"
+              ? "2"
+              : transModeValue == "Air"
+                  ? "3"
+                  : transModeValue == "Ship"
+                      ? "4"
+                      : '0';
+      String vehicleType = vehicleTypeValue != "Regular" ? "O" : "R";
+      int transactionType = vehicleTypeValue == "Regular"
+          ? 1
+          : vehicleTypeValue == "Bill To-Ship To"
+              ? 2
+              : vehicleTypeValue == "Bill From-Dispatch From"
+                  ? 3
+                  : vehicleTypeValue == "Combination of 2 and 3"
+                      ? 4
+                      : 0;
+      List<EwayItemListModel> itemList = [];
+      for (var item in particulars) {
+        if (item['name'] == null) {
+          continue;
+        }
+        itemList.add(EwayItemListModel(
+            cessNonadvol: 0,
+            cessRate: int.parse(item['cess'].toString()),
+            cgstRate: double.parse(item['cGst'].toString()),
+            hsnCode: int.parse(item['hsn'].toString()),
+            igstRate: double.parse(item['iGst'].toString()),
+            productDesc: item['name'].toString(),
+            productName: item['name'].toString(),
+            qtyUnit: item['unit'].toString(),
+            quantity: double.parse(item['qty'].toString()),
+            sgstRate: double.parse(item['sGst'].toString()),
+            taxableAmount: double.parse(item['net'].toString())));
+      }
+      int actFromStateCode = fromActualStateCodeControl.text.isNotEmpty
+              ? int.parse(fromActualStateCodeControl.text)
+              : 0,
+          actToStateCode = toStateCodeControl2.text.isNotEmpty
+              ? int.parse(toStateCodeControl2.text)
+              : 0,
+          cessNonAdvolValue = 0,
+          cessValue =
+              cessControl.text.isNotEmpty ? int.parse(cessControl.text) : 0,
+          fromPincode = fromPinCodeControl.text.isNotEmpty
+              ? int.parse(fromPinCodeControl.text)
+              : 0,
+          fromStateCode = fromStateCodeControl.text.isNotEmpty
+              ? int.parse(fromStateCodeControl.text)
+              : 0,
+          igstValue =
+              iGSTControl.text.isNotEmpty ? int.parse(iGSTControl.text) : 0,
+          otherValue = 0,
+          toPincode = toPinCodeControl.text.isNotEmpty
+              ? int.parse(toPinCodeControl.text)
+              : 0,
+          toStateCode = toStateCodeControl1.text.isNotEmpty
+              ? int.parse(toStateCodeControl1.text)
+              : 0,
+          totInvValue =
+              totalControl.text.isNotEmpty ? int.parse(totalControl.text) : 0;
+      double cgstValue =
+              cGSTControl.text.isNotEmpty ? int.parse(cGSTControl.text) : 0,
+          sgstValue =
+              sGSTControl.text.isNotEmpty ? int.parse(sGSTControl.text) : 0,
+          totalValue = totalValueControl.text.isNotEmpty
+              ? int.parse(totalValueControl.text)
+              : 0;
+      String docDate =
+              invoiceDateControl.text.isNotEmpty ? invoiceDateControl.text : '',
+          docNo = invoiceNoControl.text.isNotEmpty ? invoiceNoControl.text : '',
+          fromAddr1 = fromAddress1Control.text.isNotEmpty
+              ? fromAddress1Control.text
+              : '',
+          fromAddr2 = fromAddress2Control.text.isNotEmpty
+              ? fromAddress2Control.text
+              : '',
+          fromGstin =
+              fromGstNoControl.text.isNotEmpty ? fromGstNoControl.text : '',
+          fromPlace = fromAddress3Control.text.isNotEmpty
+              ? fromAddress3Control.text
+              : '',
+          fromTrdName =
+              fromNameControl.text.isNotEmpty ? fromNameControl.text : '',
+          subSupplyDesc = '',
+          toAddr1 =
+              toAddress1Control.text.isNotEmpty ? toAddress1Control.text : '',
+          toAddr2 =
+              toAddress2Control.text.isNotEmpty ? toAddress2Control.text : '',
+          toGstin = toGstNoControl.text.isNotEmpty ? toGstNoControl.text : '',
+          toPlace =
+              toAddress3Control.text.isNotEmpty ? toAddress3Control.text : '',
+          toTrdName = toNameControl.text.isNotEmpty ? toNameControl.text : '',
+          transDistance =
+              distanceControl.text.isNotEmpty ? distanceControl.text : '',
+          transDocDate = transDocDateControl.text.isNotEmpty
+              ? transDocDateControl.text
+              : '',
+          transDocNo =
+              transDocNoControl.text.isNotEmpty ? transDocNoControl.text : '',
+          transporterId = transporterIdControl.text.isNotEmpty
+              ? transporterIdControl.text
+              : '',
+          transporterName =
+              transporterControl.text.isNotEmpty ? transporterControl.text : '',
+          vehicleNo = vehicleControl.text.isNotEmpty ? vehicleControl.text : '';
+      EwayModel eWayModel = EwayModel(
+          actFromStateCode: actFromStateCode,
+          actToStateCode: actToStateCode,
+          cessNonAdvolValue: cessNonAdvolValue,
+          cessValue: cessValue,
+          cgstValue: cgstValue,
+          docDate: docDate,
+          docNo: docNo,
+          docType: docType,
+          fromAddr1: fromAddr1,
+          fromAddr2: fromAddr2,
+          fromGstin: fromGstin,
+          fromPincode: fromPincode,
+          fromPlace: fromPlace,
+          fromStateCode: fromStateCode,
+          fromTrdName: fromTrdName,
+          igstValue: igstValue,
+          itemList: itemList,
+          otherValue: otherValue,
+          sgstValue: sgstValue,
+          subSupplyDesc: subSupplyDesc,
+          subSupplyType: subSupplyType,
+          supplyType: supplyType,
+          toAddr1: toAddr1,
+          toAddr2: toAddr2,
+          toGstin: toGstin,
+          toPincode: toPincode,
+          toPlace: toPlace,
+          toStateCode: toStateCode,
+          totalValue: totalValue,
+          totInvValue: totInvValue,
+          toTrdName: toTrdName,
+          transactionType: transactionType,
+          transDistance: transDistance,
+          transDocDate: transDocDate,
+          transDocNo: transDocNo,
+          transMode: transMode,
+          transporterId: transporterId,
+          transporterName: transporterName,
+          vehicleNo: vehicleNo,
+          vehicleType: vehicleType);
+      if (eWayBillClient != "SHERSOFT") {
+        api
+            .authEWay(eWayBillClient, _username, _password, ipAddress,
+                _clientId, _clientSecret, fromGstNoControl.text)
+            .then((respond) {
+          if (respond.status_cd != '0') {
+            api
+                .generateEWayBill(eWayBillClient, fromGstNoControl.text,
+                    _password, ipAddress, _clientId, _clientSecret, eWayModel)
+                .then((result) {
+              if (result.status_cd != '0') {
+                setState(() {
+                  var billNo = result.data.ewayBillNo ?? '';
+                  var billDate = result.data.ewayBillDate ?? '';
+                  var validUpTo = result.data.validUpto ?? '';
+                  eWayBillNoControl.text = billNo + billDate + validUpTo;
+                  _isLoading = false;
+                });
+              } else {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text(result.status_desc)));
+                setState(() {
+                  _isLoading = false;
+                });
+              }
+            });
+          } else {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(respond.status_desc)));
+            setState(() {
+              _isLoading = false;
+            });
+          }
+        });
+      } else {
+        api
+            .generateEWayBill(eWayBillClient, fromGstNoControl.text, _password,
+                ipAddress, _clientId, _clientSecret, eWayModel)
+            .then((result) {
+          if (result.status_cd != '0') {
+            setState(() {
+              var billNo = result.data.ewayBillNo ?? '';
+              var billDate = result.data.ewayBillDate ?? '';
+              var validUpTo = result.data.validUpto ?? '';
+              eWayBillNoControl.text = billNo + billDate + validUpTo;
+              _isLoading = false;
+            });
+          } else {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(result.status_desc)));
+            setState(() {
+              _isLoading = false;
+            });
+          }
+        });
+      }
     }
   }
 
-  void generateEWayBill() {}
-
-  void cancelEWayBill() {}
+  void cancelEWayBill() {
+    EWayBillCancelModel _data = EWayBillCancelModel(
+        cancelRmrk: 'Data Entry Mistake',
+        cancelRsnCode: 3,
+        ewbNo: eWayBillNoControl.text);
+    if (eWayBillClient != "SHERSOFT") {
+      api
+          .cancelEWayBill(eWayBillClient, fromGstNoControl.text, _password,
+              ipAddress, _clientId, _clientSecret, _data)
+          .then((result) {
+        _isLoading = false;
+        if (result.status_cd != '0') {
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Canceled! ' + result.status_desc)));
+          setState(() {
+            _isLoading = false;
+          });
+        } else {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(result.status_desc)));
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      });
+    } else {
+      api
+          .cancelEWayBill(eWayBillClient, fromGstNoControl.text, _password,
+              ipAddress, _clientId, _clientSecret, _data)
+          .then((result) {
+        _isLoading = false;
+        if (result.status_cd != '0') {
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Canceled! ' + result.status_desc)));
+          setState(() {
+            _isLoading = false;
+          });
+        } else {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(result.status_desc)));
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      });
+    }
+  }
 
   void showErrorCodeList(BuildContext context) {}
 
   calculateDistance() async {
-    var pin1 = cPinCodeControl.text ?? '';
-    var pin2 = pinCodeControl.text ?? '';
+    var pin1 = fromPinCodeControl.text ?? '';
+    var pin2 = toPinCodeControl.text ?? '';
     if (pin1.isNotEmpty && pin2.isNotEmpty) {
       var yourData = await api.getGeoCode(pin1);
       var partyData = await api.getGeoCode(pin2);
@@ -1132,13 +1525,12 @@ class _GenerateEWaybillState extends State<GenerateEWaybill> {
             calculateDistanceInKilometer(userLat, userLng, venueLat, venueLng)
                 .toStringAsFixed(2);
         setState(() {
-          distance = result;
-          distanceControl.text = distance;
+          distanceControl.text = result;
           if (yourData['place'].toString().trim().isNotEmpty) {
-            cAddress3Control.text = yourData['place'].toString().trim();
+            fromAddress3Control.text = yourData['place'].toString().trim();
           }
           if (partyData['place'].toString().trim().isNotEmpty) {
-            address3Control.text = partyData['place'].toString().trim();
+            toAddress3Control.text = partyData['place'].toString().trim();
           }
         });
       }
@@ -1162,5 +1554,74 @@ class _GenerateEWaybillState extends State<GenerateEWaybill> {
         c((lat2 - lat1) * p) / 2 +
         c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p)) / 2;
     return 12742 * asin(sqrt(a));
+  }
+
+  void printEWayBill() {
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  bool interState = false;
+  partBData(_data) {
+    var itemData = [];
+    int no = 0;
+    for (var item in _data) {
+      itemData.add({
+        'no': no + 1,
+        'name': item['itemname'],
+        'hsn': item['hsncode'],
+        'qty': item['Qty'],
+        'unit': unitNameFormat(item['unitName']),
+        'net': item['Net'],
+        'cGst': interState ? '0' : gstDiv(item['igst'], 1),
+        'sGst': interState ? '0' : gstDiv(item['igst'], 1),
+        'iGst': interState ? item['igst'] : '0',
+        'cess': item['cessper']
+      });
+      no++;
+    }
+
+    return itemData;
+  }
+
+  unitNameFormat(var name) {
+    String result = 'NOS';
+    if (name == null || name.toString().isEmpty) {
+      return result;
+    }
+    if (name == "KG") {
+      result = "KGS";
+    } else if (name == "KGS") {
+      result = "KGS";
+    } else if (name == "NOS") {
+      result = "NOS";
+    } else if (name == "PCS") {
+      result = "PCS";
+    } else if (name == "PKT") {
+      result = "PAC";
+    } else if (name == "BOTTLE") {
+      result = "BTL";
+    } else if (name == "CS") {
+      result = "BOX";
+    } else if (name != "TIN") {
+      result = "NOS";
+    } else {
+      result = "BOX";
+    }
+    return result;
+  }
+
+  gstDiv(value, int decimal) {
+    String result = '0';
+    if (value == null) {
+      return result;
+    } else {
+      result = (double.parse(value.toString()) / 2).toStringAsFixed(decimal);
+      result = int.parse(result.split('.')[1].toString()) > 0
+          ? result
+          : result.split('.')[0].toString();
+      return result;
+    }
   }
 }
