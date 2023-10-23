@@ -121,9 +121,27 @@ class _DeliveryHomeState extends State<DeliveryHome> {
     );
   }
 
+  bool isPopDone = false, isExpireWarning = false;
   @override
   Widget build(BuildContext context) {
     final CompanyUser args = ModalRoute.of(context).settings.arguments;
+    int daysLeft = 0;
+    if (!isPopDone) {
+      if (args != null && args.active == 'false') {
+        daysLeft = _commonService.getDaysLeft(args.atDate);
+        if (daysLeft <= 3 && daysLeft >= 0) {
+          setState(() {
+            isExpireWarning = true;
+          });
+          Future.delayed(const Duration(seconds: 5), () {
+            setState(() {
+              isPopDone = true;
+              isExpireWarning = false;
+            });
+          });
+        }
+      }
+    }
     return Scaffold(
         appBar: AppBar(
           title: const Text("SherAcc"),
@@ -228,367 +246,375 @@ class _DeliveryHomeState extends State<DeliveryHome> {
         ),
         body: isExpired
             ? _expireWidget(args, context)
-            : Center(
-                child: ListView(
-                  shrinkWrap: true,
-                  children: [
-                    Card(
-                      elevation: 5,
-                      shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(50),
-                              topRight: Radius.circular(50))),
-                      child: TextButton(
-                        child: Text('Date : $getToDay',
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                                fontFamily: 'Poppins')),
-                        onPressed: () => _selectDate(),
-                      ),
-                    ),
-                    Card(
-                      elevation: 5,
-                      shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(50),
-                              bottomRight: Radius.circular(50))),
-                      child: TextButton(
-                        child: Text('Hi  ' + args.username,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                                fontFamily: 'Poppins')),
-                        onPressed: () {
-                          //
-                        },
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    Visibility(
-                      visible: ComSettings.userControl('SALE ORDER'),
-                      child: Card(
-                        elevation: 2,
-                        shape: const StadiumBorder(
-                            side: BorderSide(
-                          color: blue,
-                          width: 2.0,
-                        )),
-                        child: TextButton(
-                          child: const Text('Sales Order',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  fontFamily: 'Poppins')),
-                          onPressed: () {
-                            bool sType = true;
-                            salesTypeData = salesTypeList.firstWhere(
-                                (element) =>
-                                    element.name == 'Sales Order Entry');
-                            bool isSimpleSales = ComSettings.appSettings(
-                                    'bool', 'key-simple-sales', false)
-                                ? true
-                                : false;
-                            args.active == "false"
-                                ? _commonService.getTrialPeriod(args.atDate)
-                                    ? isSimpleSales
+            : isExpireWarning
+                ? Center(
+                    child: _expireWarningWidget(args, context, daysLeft),
+                  )
+                : Center(
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: [
+                        Card(
+                          elevation: 5,
+                          shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(50),
+                                  topRight: Radius.circular(50))),
+                          child: TextButton(
+                            child: Text('Date : $getToDay',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                    fontFamily: 'Poppins')),
+                            onPressed: () => _selectDate(),
+                          ),
+                        ),
+                        Card(
+                          elevation: 5,
+                          shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.only(
+                                  bottomLeft: Radius.circular(50),
+                                  bottomRight: Radius.circular(50))),
+                          child: TextButton(
+                            child: Text('Hi  ' + args.username,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                    fontFamily: 'Poppins')),
+                            onPressed: () {
+                              //
+                            },
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        Visibility(
+                          visible: ComSettings.userControl('SALE ORDER'),
+                          child: Card(
+                            elevation: 2,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('Sales Order',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      fontFamily: 'Poppins')),
+                              onPressed: () {
+                                bool sType = true;
+                                salesTypeData = salesTypeList.firstWhere(
+                                    (element) =>
+                                        element.name == 'Sales Order Entry');
+                                bool isSimpleSales = ComSettings.appSettings(
+                                        'bool', 'key-simple-sales', false)
+                                    ? true
+                                    : false;
+                                args.active == "false"
+                                    ? _commonService.getTrialPeriod(args.atDate)
+                                        ? isSimpleSales
+                                            ? Navigator.pushNamed(
+                                                context, '/SimpleSale')
+                                            : Navigator.pushNamed(
+                                                context, '/sales',
+                                                arguments: {'default': sType})
+                                        : _expire(args, context)
+                                    : isSimpleSales
                                         ? Navigator.pushNamed(
                                             context, '/SimpleSale')
                                         : Navigator.pushNamed(context, '/sales',
-                                            arguments: {'default': sType})
-                                    : _expire(args, context)
-                                : isSimpleSales
-                                    ? Navigator.pushNamed(
-                                        context, '/SimpleSale')
-                                    : Navigator.pushNamed(context, '/sales',
-                                        arguments: {'default': sType});
-                          },
+                                            arguments: {'default': sType});
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    Visibility(
-                      visible: ComSettings.userControl('SALE'),
-                      child: Card(
-                        elevation: 2,
-                        shape: const StadiumBorder(
-                            side: BorderSide(
-                          color: blue,
-                          width: 2.0,
-                        )),
-                        child: TextButton(
-                          child: const Text('Sale',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  fontFamily: 'Poppins')),
-                          onPressed: () {
-                            bool sType = true;
-                            salesTypeData = ComSettings.appSettings(
-                                    'bool', 'key-switch-sales-form-set', false)
-                                ? salesTypeList.firstWhere((element) =>
-                                    element.name ==
-                                    ComSettings.salesFormList(
-                                            'key-item-sale-form-', false)[0]
-                                        .name)
-                                : salesTypeList.firstWhere((element) =>
-                                    element.name == 'Sales Estimate Entry');
-                            bool isSimpleSales = ComSettings.appSettings(
-                                    'bool', 'key-simple-sales', false)
-                                ? true
-                                : false;
-                            args.active == "false"
-                                ? _commonService.getTrialPeriod(args.atDate)
-                                    ? isSimpleSales
+                        Visibility(
+                          visible: ComSettings.userControl('SALE'),
+                          child: Card(
+                            elevation: 2,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('Sale',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      fontFamily: 'Poppins')),
+                              onPressed: () {
+                                bool sType = true;
+                                salesTypeData = ComSettings.appSettings('bool',
+                                        'key-switch-sales-form-set', false)
+                                    ? salesTypeList.firstWhere((element) =>
+                                        element.name ==
+                                        ComSettings.salesFormList(
+                                                'key-item-sale-form-', false)[0]
+                                            .name)
+                                    : salesTypeList.firstWhere((element) =>
+                                        element.name == 'Sales Estimate Entry');
+                                bool isSimpleSales = ComSettings.appSettings(
+                                        'bool', 'key-simple-sales', false)
+                                    ? true
+                                    : false;
+                                args.active == "false"
+                                    ? _commonService.getTrialPeriod(args.atDate)
+                                        ? isSimpleSales
+                                            ? Navigator.pushNamed(
+                                                context, '/SimpleSale')
+                                            : Navigator.pushNamed(
+                                                context, '/sales',
+                                                arguments: {'default': sType})
+                                        : _expire(args, context)
+                                    : isSimpleSales
                                         ? Navigator.pushNamed(
                                             context, '/SimpleSale')
                                         : Navigator.pushNamed(context, '/sales',
-                                            arguments: {'default': sType})
-                                    : _expire(args, context)
-                                : isSimpleSales
-                                    ? Navigator.pushNamed(
-                                        context, '/SimpleSale')
-                                    : Navigator.pushNamed(context, '/sales',
-                                        arguments: {'default': sType});
-                          },
+                                            arguments: {'default': sType});
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    Visibility(
-                      visible: ComSettings.userControl('RECEIPT'),
-                      child: Card(
-                        elevation: 5,
-                        shape: const StadiumBorder(
-                            side: BorderSide(
-                          color: blue,
-                          width: 2.0,
-                        )),
-                        child: TextButton(
-                          child: const Text('Receipt',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  fontFamily: 'Poppins')),
-                          onPressed: () {
-                            args.active == "false"
-                                ? _commonService.getTrialPeriod(args.atDate)
-                                    ? Navigator.pushNamed(context, '/RPVoucher',
-                                        arguments: {'voucher': 'Receipt'})
-                                    : _expire(args, context)
-                                : Navigator.pushNamed(context, '/RPVoucher',
-                                    arguments: {'voucher': 'Receipt'});
-                          },
+                        Visibility(
+                          visible: ComSettings.userControl('RECEIPT'),
+                          child: Card(
+                            elevation: 5,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('Receipt',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      fontFamily: 'Poppins')),
+                              onPressed: () {
+                                args.active == "false"
+                                    ? _commonService.getTrialPeriod(args.atDate)
+                                        ? Navigator.pushNamed(
+                                            context, '/RPVoucher',
+                                            arguments: {'voucher': 'Receipt'})
+                                        : _expire(args, context)
+                                    : Navigator.pushNamed(context, '/RPVoucher',
+                                        arguments: {'voucher': 'Receipt'});
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    Visibility(
-                      visible: ComSettings.userControl('PAYMENT'),
-                      child: Card(
-                        elevation: 5,
-                        shape: const StadiumBorder(
-                            side: BorderSide(
-                          color: blue,
-                          width: 2.0,
-                        )),
-                        child: TextButton(
-                          child: const Text('Payment',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  fontFamily: 'Poppins')),
-                          onPressed: () {
-                            args.active == "false"
-                                ? _commonService.getTrialPeriod(args.atDate)
-                                    ? Navigator.pushNamed(context, '/RPVoucher',
-                                        arguments: {'voucher': 'Payment'})
-                                    : _expire(args, context)
-                                : Navigator.pushNamed(context, '/RPVoucher',
-                                    arguments: {'voucher': 'Payment'});
-                          },
+                        Visibility(
+                          visible: ComSettings.userControl('PAYMENT'),
+                          child: Card(
+                            elevation: 5,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('Payment',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      fontFamily: 'Poppins')),
+                              onPressed: () {
+                                args.active == "false"
+                                    ? _commonService.getTrialPeriod(args.atDate)
+                                        ? Navigator.pushNamed(
+                                            context, '/RPVoucher',
+                                            arguments: {'voucher': 'Payment'})
+                                        : _expire(args, context)
+                                    : Navigator.pushNamed(context, '/RPVoucher',
+                                        arguments: {'voucher': 'Payment'});
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    Visibility(
-                      visible: ComSettings.userControl('PURCHASE'),
-                      child: Card(
-                        elevation: 5,
-                        shape: const StadiumBorder(
-                            side: BorderSide(
-                          color: blue,
-                          width: 2.0,
-                        )),
-                        child: TextButton(
-                          child: const Text('Purchase',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  fontFamily: 'Poppins')),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/purchase');
-                          },
+                        Visibility(
+                          visible: ComSettings.userControl('PURCHASE'),
+                          child: Card(
+                            elevation: 5,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('Purchase',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      fontFamily: 'Poppins')),
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/purchase');
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    Visibility(
-                      visible: ComSettings.userControl('ORDER LIST'),
-                      child: Card(
-                        elevation: 2,
-                        shape: const StadiumBorder(
-                            side: BorderSide(
-                          color: blue,
-                          width: 2.0,
-                        )),
-                        child: TextButton(
-                          child: const Text('Order List',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  fontFamily: 'Poppins')),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/OrderList');
-                          },
+                        Visibility(
+                          visible: ComSettings.userControl('ORDER LIST'),
+                          child: Card(
+                            elevation: 2,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('Order List',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      fontFamily: 'Poppins')),
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/OrderList');
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    Visibility(
-                      visible: ComSettings.userControl('SALE'),
-                      child: Card(
-                        elevation: 2,
-                        shape: const StadiumBorder(
-                            side: BorderSide(
-                          color: blue,
-                          width: 2.0,
-                        )),
-                        child: TextButton(
-                          child: const Text('Bill List',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  fontFamily: 'Poppins')),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/BillList');
-                          },
+                        Visibility(
+                          visible: ComSettings.userControl('SALE'),
+                          child: Card(
+                            elevation: 2,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('Bill List',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      fontFamily: 'Poppins')),
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/BillList');
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    Visibility(
-                      visible: ComSettings.userControl('SALE RETURN'),
-                      child: Card(
-                        elevation: 2,
-                        shape: const StadiumBorder(
-                            side: BorderSide(
-                          color: blue,
-                          width: 2.0,
-                        )),
-                        child: TextButton(
-                          child: const Text('Sales Return',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  fontFamily: 'Poppins')),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/salesReturn');
-                          },
+                        Visibility(
+                          visible: ComSettings.userControl('SALE RETURN'),
+                          child: Card(
+                            elevation: 2,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('Sales Return',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      fontFamily: 'Poppins')),
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/salesReturn');
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    Visibility(
-                      visible: ComSettings.userControl('DAMAGE'),
-                      child: Card(
-                        elevation: 2,
-                        shape: const StadiumBorder(
-                            side: BorderSide(
-                          color: blue,
-                          width: 2.0,
-                        )),
-                        child: TextButton(
-                          child: const Text('Damage Entry',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  fontFamily: 'Poppins')),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/damageEntry');
-                          },
+                        Visibility(
+                          visible: ComSettings.userControl('DAMAGE'),
+                          child: Card(
+                            elevation: 2,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('Damage Entry',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      fontFamily: 'Poppins')),
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/damageEntry');
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    Visibility(
-                      visible: ComSettings.userControl('LEDGER REPORT'),
-                      child: Card(
-                        elevation: 2,
-                        shape: const StadiumBorder(
-                            side: BorderSide(
-                          color: blue,
-                          width: 2.0,
-                        )),
-                        child: TextButton(
-                          child: const Text('Ledger Report',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  fontFamily: 'Poppins')),
-                          onPressed: () {
-                            argumentsPass = {'mode': 'ledger'};
-                            Navigator.pushNamed(
-                              context,
-                              '/select_ledger',
-                            );
-                          },
+                        Visibility(
+                          visible: ComSettings.userControl('LEDGER REPORT'),
+                          child: Card(
+                            elevation: 2,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('Ledger Report',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      fontFamily: 'Poppins')),
+                              onPressed: () {
+                                argumentsPass = {'mode': 'ledger'};
+                                Navigator.pushNamed(
+                                  context,
+                                  '/select_ledger',
+                                );
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    Visibility(
-                      visible: ComSettings.userControl('GROUP LIST'),
-                      child: Card(
-                        elevation: 2,
-                        shape: const StadiumBorder(
-                            side: BorderSide(
-                          color: blue,
-                          width: 2.0,
-                        )),
-                        child: TextButton(
-                          child: const Text('Group List',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  fontFamily: 'Poppins')),
-                          onPressed: () {
-                            argumentsPass = {'mode': 'GroupList'};
-                            Navigator.pushNamed(
-                              context,
-                              '/select_ledger',
-                            );
-                          },
+                        Visibility(
+                          visible: ComSettings.userControl('GROUP LIST'),
+                          child: Card(
+                            elevation: 2,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('Group List',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      fontFamily: 'Poppins')),
+                              onPressed: () {
+                                argumentsPass = {'mode': 'GroupList'};
+                                Navigator.pushNamed(
+                                  context,
+                                  '/select_ledger',
+                                );
+                              },
+                            ),
+                          ),
                         ),
-                      ),
+                        Card(
+                          elevation: 2,
+                          shape: const StadiumBorder(
+                              side: BorderSide(
+                            color: blue,
+                            width: 2.0,
+                          )),
+                          child: TextButton(
+                            child: const Text('About',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                    fontFamily: 'Poppins')),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => AboutSherSoft()),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                    Card(
-                      elevation: 2,
-                      shape: const StadiumBorder(
-                          side: BorderSide(
-                        color: blue,
-                        width: 2.0,
-                      )),
-                      child: TextButton(
-                        child: const Text('About',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                                fontFamily: 'Poppins')),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => AboutSherSoft()),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ));
+                  ));
   }
 
   _expire(CompanyUser args, context) {
@@ -661,5 +687,61 @@ class _DeliveryHomeState extends State<DeliveryHome> {
     if (picked != null) {
       setState(() => {setToDay = DateFormat('dd-MM-yyyy').format(picked)});
     }
+  }
+
+  _expireWarningWidget(CompanyUser args, context, int daysLeft) {
+    return Center(
+      child: Card(
+        elevation: 10,
+        margin: const EdgeInsets.all(10),
+        child: Container(
+          padding: const EdgeInsets.all(0.0),
+          height: 220,
+          child: Column(
+            children: [
+              Image.asset(
+                'assets/logo.png',
+                height: 100,
+                width: 90,
+              ),
+              Text(
+                firm.toUpperCase(),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              ),
+              const Divider(
+                height: 1,
+              ),
+              Text(
+                "CustomerId : $fId / $_regId",
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 19, color: blue),
+              ),
+              const Divider(
+                height: 1,
+              ),
+              Text(
+                "UserId : ${args.userId}",
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 19, color: blue),
+              ),
+              const Divider(
+                height: 1,
+              ),
+              Text(
+                "Dear ${args.username}",
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 19, color: red),
+              ),
+              Text(
+                'Your trial period $daysLeft days left',
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 19, color: red),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

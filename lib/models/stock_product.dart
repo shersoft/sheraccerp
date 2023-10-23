@@ -17,6 +17,8 @@ class StockProduct {
   final double spRetailPrice;
   final double branch;
   final double minimumRate;
+  final String serialNo;
+  final String oBarcode;
 
   const StockProduct(
       {this.name,
@@ -36,27 +38,32 @@ class StockProduct {
       this.adCessPer,
       this.spRetailPrice,
       this.branch,
-      this.minimumRate});
+      this.minimumRate,
+      this.serialNo,
+      this.oBarcode});
 
   factory StockProduct.fromJson(Map<String, dynamic> json) {
     return StockProduct(
-        name: json['itemname'],
-        itemId: json['ItemId'],
-        productId: json['uniquecode'],
-        quantity: double.tryParse(json['Qty'].toString()),
-        buyingPrice: double.tryParse(json['prate'].toString()),
-        buyingPriceReal: double.tryParse(json['RealPrate'].toString()),
-        sellingPrice: double.tryParse(json['mrp'].toString()),
-        retailPrice: double.tryParse(json['retail'].toString()),
-        wholeSalePrice: double.tryParse(json['WSrate'].toString()),
-        hsnCode: json['hsncode'],
-        stockValuation: json['stockvaluation'],
-        tax: double.tryParse(json['tax'].toString()),
-        cess: double.tryParse(json['cess'].toString()),
-        cessPer: double.tryParse(json['cessper'].toString()),
-        adCessPer: double.tryParse(json['adcessper'].toString()),
-        spRetailPrice: double.tryParse(json['Spretail'].toString()),
-        branch: double.tryParse(json['Branch'].toString()),
-        minimumRate: double.tryParse(json['minimumRate'].toString()));
+      name: json['itemname'],
+      itemId: json['ItemId'],
+      productId: json['uniquecode'],
+      quantity: double.tryParse(json['Qty'].toString()),
+      buyingPrice: double.tryParse(json['prate'].toString()),
+      buyingPriceReal: double.tryParse(json['RealPrate'].toString()),
+      sellingPrice: double.tryParse(json['mrp'].toString()),
+      retailPrice: double.tryParse(json['retail'].toString()),
+      wholeSalePrice: double.tryParse(json['WSrate'].toString()),
+      hsnCode: json['hsncode'],
+      stockValuation: json['stockvaluation'],
+      tax: double.tryParse(json['tax'].toString()),
+      cess: double.tryParse(json['cess'].toString()),
+      cessPer: double.tryParse(json['cessper'].toString()),
+      adCessPer: double.tryParse(json['adcessper'].toString()),
+      spRetailPrice: double.tryParse(json['Spretail'].toString()),
+      branch: double.tryParse(json['Branch'].toString()),
+      minimumRate: double.tryParse(json['minimumRate'].toString()),
+      serialNo: json['serialno'] ?? '',
+      oBarcode: json['obarcode'] ?? '',
+    );
   }
 }

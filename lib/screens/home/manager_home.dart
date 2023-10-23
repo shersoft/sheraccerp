@@ -128,9 +128,27 @@ class _ManagerHomeState extends State<ManagerHome>
     });
   }
 
+  bool isPopDone = false, isExpireWarning = false;
   @override
   Widget build(BuildContext context) {
     final CompanyUser args = ModalRoute.of(context).settings.arguments;
+    int daysLeft = 0;
+    if (!isPopDone) {
+      if (args != null && args.active == 'false') {
+        daysLeft = _commonService.getDaysLeft(args.atDate);
+        if (daysLeft <= 3 && daysLeft >= 0) {
+          setState(() {
+            isExpireWarning = true;
+          });
+          Future.delayed(const Duration(seconds: 5), () {
+            setState(() {
+              isPopDone = true;
+              isExpireWarning = false;
+            });
+          });
+        }
+      }
+    }
     return DefaultTabController(
         length: 10,
         child: Scaffold(
@@ -175,42 +193,82 @@ class _ManagerHomeState extends State<ManagerHome>
             children: [
               (args.active == "false"
                   ? _commonService.getTrialPeriod(args.atDate)
-                      ? const DashPage()
+                      ? isExpireWarning
+                          ? Center(
+                              child:
+                                  _expireWarningWidget(args, context, daysLeft),
+                            )
+                          : const DashPage()
                       : _expire(args, context)
                   : const DashPage()),
               args.active == "false"
                   ? _commonService.getTrialPeriod(args.atDate)
-                      ? const Statement()
+                      ? isExpireWarning
+                          ? Center(
+                              child:
+                                  _expireWarningWidget(args, context, daysLeft),
+                            )
+                          : const Statement()
                       : _expire(args, context)
                   : const Statement(),
               args.active == "false"
                   ? _commonService.getTrialPeriod(args.atDate)
-                      ? const Expense()
+                      ? isExpireWarning
+                          ? Center(
+                              child:
+                                  _expireWarningWidget(args, context, daysLeft),
+                            )
+                          : const Expense()
                       : _expire(args, context)
                   : const Expense(),
               args.active == "false"
                   ? _commonService.getTrialPeriod(args.atDate)
-                      ? CashAndBank()
+                      ? isExpireWarning
+                          ? Center(
+                              child:
+                                  _expireWarningWidget(args, context, daysLeft),
+                            )
+                          : CashAndBank()
                       : _expire(args, context)
                   : CashAndBank(),
               args.active == "false"
                   ? _commonService.getTrialPeriod(args.atDate)
-                      ? ReceivablesAndPayables()
+                      ? isExpireWarning
+                          ? Center(
+                              child:
+                                  _expireWarningWidget(args, context, daysLeft),
+                            )
+                          : ReceivablesAndPayables()
                       : _expire(args, context)
                   : ReceivablesAndPayables(),
               args.active == "false"
                   ? _commonService.getTrialPeriod(args.atDate)
-                      ? const AccountsReportMenu()
+                      ? isExpireWarning
+                          ? Center(
+                              child:
+                                  _expireWarningWidget(args, context, daysLeft),
+                            )
+                          : const AccountsReportMenu()
                       : _expire(args, context)
                   : const AccountsReportMenu(),
               args.active == "false"
                   ? _commonService.getTrialPeriod(args.atDate)
-                      ? const InventoryReportMenu()
+                      ? isExpireWarning
+                          ? Center(
+                              child:
+                                  _expireWarningWidget(args, context, daysLeft),
+                            )
+                          : const InventoryReportMenu()
                       : _expire(args, context)
                   : const InventoryReportMenu(),
               args.active == "false"
                   ? _commonService.getTrialPeriod(args.atDate)
-                      ? Report()
+                      ? isExpireWarning
+                          ? Center(
+                              child:
+                                  _expireWarningWidget(args, context, daysLeft),
+                            )
+                          : Report()
                       : _expire(args, context)
                   : Report(),
               const AppSettings(),
@@ -420,6 +478,62 @@ class _ManagerHomeState extends State<ManagerHome>
               const Text(
                 'Your trial period expired',
                 style: TextStyle(fontWeight: FontWeight.bold, color: red),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  _expireWarningWidget(CompanyUser args, context, int daysLeft) {
+    return Center(
+      child: Card(
+        elevation: 10,
+        margin: const EdgeInsets.all(10),
+        child: Container(
+          padding: const EdgeInsets.all(0.0),
+          height: 220,
+          child: Column(
+            children: [
+              Image.asset(
+                'assets/logo.png',
+                height: 100,
+                width: 90,
+              ),
+              Text(
+                firm.toUpperCase(),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              ),
+              const Divider(
+                height: 1,
+              ),
+              Text(
+                "CustomerId : $fId / $_regId",
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 19, color: blue),
+              ),
+              const Divider(
+                height: 1,
+              ),
+              Text(
+                "UserId : ${args.userId}",
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 19, color: blue),
+              ),
+              const Divider(
+                height: 1,
+              ),
+              Text(
+                "Dear ${args.username}",
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 19, color: red),
+              ),
+              Text(
+                'Your trial period $daysLeft days left',
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 19, color: red),
               ),
             ],
           ),

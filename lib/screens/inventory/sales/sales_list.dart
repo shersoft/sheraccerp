@@ -152,6 +152,20 @@ class _SalesListState extends State<SalesList> {
                     totalRecords = 0;
                     dataDisplay = [];
                     dataDisplayHead = [];
+                    itemId = null;
+                    itemName = null;
+                    customer = null;
+                    mfr = null;
+                    category = null;
+                    subCategory = null;
+                    locationId = null;
+                    project != null;
+                    salesMan != null;
+                    taxGroup = null;
+                    stockValuation = false;
+                    supplier = null;
+                    area = '0';
+                    route = '0';
                   });
                 },
                 icon: const Icon(Icons.filter_alt)),
@@ -291,6 +305,9 @@ class _SalesListState extends State<SalesList> {
       }
       String areaId = area.isNotEmpty ? area : '0';
       String routeId = route.isNotEmpty ? route : '0';
+      if (itemName != null) {
+        itemId = itemName;
+      }
 
       var dataJson = '[' +
           json.encode({
@@ -409,7 +426,7 @@ class _SalesListState extends State<SalesList> {
                         scrollDirection: Axis.vertical,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
+                          children: [
                             Center(
                                 child: Text(
                               title +

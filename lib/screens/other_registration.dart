@@ -45,8 +45,6 @@ class _OtherRegistrationState extends State<OtherRegistration> {
     });
     nameListDisplay.addAll(List<String>.from(
         otherList.map((item) => (item.name)).toList().map((s) => s).toList()));
-
-    var dd = nameListDisplay;
   }
 
   @override
@@ -146,12 +144,13 @@ class _OtherRegistrationState extends State<OtherRegistration> {
             onChanged: (value) {
               setState(() {
                 _dropDownValue = value!;
+                nameListDisplay.clear();
                 nameListDisplay.addAll(List<String>.from(otherList
-                    .map((item) => (item.type.toLowerCase() ==
-                        _dropDownValue.toLowerCase()))
+                    .where((element) =>
+                        element.type.toLowerCase() ==
+                        _dropDownValue.toLowerCase())
                     .toList()
-                    .map((s) => s)
-                    .toList()));
+                    .map((e) => e.name)));
                 nameControl.text = '';
               });
             },
@@ -164,7 +163,7 @@ class _OtherRegistrationState extends State<OtherRegistration> {
           clearOnSubmit: false,
           suggestions: nameListDisplay,
           decoration: const InputDecoration(
-              border: OutlineInputBorder(), labelText: 'Ledger Name'),
+              border: OutlineInputBorder(), labelText: 'Name'),
           textSubmitted: (data) {
             lName = data;
             if (lName.isNotEmpty) {
@@ -180,11 +179,25 @@ class _OtherRegistrationState extends State<OtherRegistration> {
             }
           },
         ),
+        TextField(
+          controller: descriptionControl,
+          decoration: const InputDecoration(
+              border: OutlineInputBorder(), labelText: 'Description'),
+        )
       ],
     );
   }
 
-  clear() {}
+  clear() {
+    nameControl.text = '';
+    descriptionControl.text = '';
+    lName = '';
+    id = '';
+    _dropDownValue = '';
+    setState(() {
+      isExist = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -215,16 +228,20 @@ class _OtherRegistrationState extends State<OtherRegistration> {
 
     var name = nameControl.text,
         description = descriptionControl.text,
-        type = '';
-    var data = [
-      {
-        'name': name.toUpperCase(),
-        'add1': description.toUpperCase(),
-        'add2': type.toUpperCase(),
-        'id': id.isNotEmpty ? id : 0,
-        'bpr': 0,
-      }
-    ];
+        type = _dropDownValue;
+    var data = {
+      'name': name.toUpperCase(),
+      'description': description.toUpperCase(),
+      'type': type.toUpperCase(),
+      'auto': id.isNotEmpty ? id.toString() : '0',
+      'add1': '',
+      'add2': '',
+      'add3': '',
+      'email': '',
+      'user': userIdC,
+      'cash': 0,
+      'toolBarSale': 0
+    };
 
     bool result = action == 'edit'
         ? await api.editOtherRegistration(data)
@@ -259,14 +276,12 @@ class _OtherRegistrationState extends State<OtherRegistration> {
     setState(() {
       _isLoading = true;
     });
-    // api.findLedger(id).then((data) {
-    //   setState(() {
-    //     nameControl.text = data[0].name ?? '';
-    //     descriptionControl.text = data[0]['add1'] ?? '';
-    //   });
-    //   setState(() {
-    //     _isLoading = false;
-    //   });
-    // });
+    OtherRegistrationModel data = otherList.firstWhere((element) =>
+        element.name.toLowerCase() == nameControl.text.toLowerCase());
+    setState(() {
+      nameControl.text = data.name ?? '';
+      descriptionControl.text = data.description ?? '';
+      _isLoading = false;
+    });
   }
 }

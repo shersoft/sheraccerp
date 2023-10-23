@@ -19,6 +19,7 @@ import 'package:sheraccerp/provider/sales_provider.dart';
 import 'package:sheraccerp/provider/stock_provider.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/accounts/journal.dart';
+import 'package:sheraccerp/screens/accounts/tax_report.dart';
 import 'package:sheraccerp/screens/inventory/delivery_note.dart';
 import 'package:sheraccerp/screens/inventory/invoice_design.dart';
 import 'package:sheraccerp/screens/other_registration.dart';
@@ -198,6 +199,7 @@ class MyApp extends StatelessWidget {
               '/InvoiceDesign': (context) => const InvoiceDesign(),
               '/OtherRegistration': (context) => const OtherRegistration(),
               '/DeliveryNote': (context) => const DeliveryNote(),
+              '/TaxReport': (context) => const TaxReport(),
             },
             theme: isDarkTheme
                 ? ThemeData(

@@ -505,6 +505,35 @@ class AccountsReportMenu extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
                   Icon(
+                    Icons.list_rounded,
+                    color: kPrimaryColor[300],
+                    size: 90.0,
+                  ),
+                  const Text(
+                    'Tax Report',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            Navigator.pushNamed(
+              context,
+              '/TaxReport',
+            );
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Icon(
                     Icons.ballot_rounded,
                     color: kPrimaryColor[300],
                     size: 90.0,

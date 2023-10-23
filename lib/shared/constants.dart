@@ -47,7 +47,7 @@ String _sherSoftPassword = '';
 get sherSoftPassword => _sherSoftPassword;
 set sherSoftPassword(String value) => _sherSoftPassword = value;
 
-const String apiV = 'v19/';
+const String apiV = 'v20/';
 const currencySymbol = '₹';
 // const bool isVariant = false;
 const bool isKFC = false;

@@ -17,6 +17,17 @@ class CommonService {
     }
   }
 
+  int getDaysLeft(String dated) {
+    // int y, m, d;
+    var date = dated.contains("T") ? dated.split("T") : dated.split(" ");
+    var ymd = date[0].toString().split("-");
+    final day =
+        DateTime(int.parse(ymd[0]), int.parse(ymd[1]), int.parse(ymd[2]));
+    final date2 = DateTime.now();
+    final difference = date2.difference(day).inDays;
+    return 30 - difference;
+  }
+
   int getDoubleToInteger(String value) {
     double x = double.parse(value);
     int ret = x.toInt();

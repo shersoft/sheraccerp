@@ -3566,7 +3566,7 @@ class DioService {
               'OtherRegistration/Add/$dataBase',
           data: json.encode(data),
           options: Options(headers: {'Content-Type': 'application/json'}));
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         var jsonResponse = response.data;
         ret = jsonResponse['returnValue'] > 0 ? true : false;
       } else {
@@ -3593,7 +3593,7 @@ class DioService {
               'OtherRegistration/Edit/$dataBase',
           data: json.encode(data),
           options: Options(headers: {'Content-Type': 'application/json'}));
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         var jsonResponse = response.data;
         ret = jsonResponse['returnValue'] > 0 ? true : false;
       } else {
@@ -5205,6 +5205,34 @@ class DioService {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
       return EWayResultModel.emptyData();
+    }
+  }
+
+  Future<List<dynamic>> getTaxReport(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.post(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'TaxReport/$dataBase',
+          data: data,
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        return data;
+      } else {
+        debugPrint('Failed to load data');
+        return [];
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return [];
     }
   }
 }

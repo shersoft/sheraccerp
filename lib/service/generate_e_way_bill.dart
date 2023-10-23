@@ -175,6 +175,8 @@ class _GenerateEWaybillState extends State<GenerateEWaybill> {
     totalControl.text = information['Total'].toString();
     otherChargeControl.text = information['OtherCharges'].toString();
     refNoControl.text = invoiceNo;
+    eWayBillNoControl.text = information['EWayBillNo'].toString().trim();
+    vehicleControl.text = information['EVehicleNo'].toString().trim();
 
     // manualInvoiceNumberInSales =
     //     ComSettings.getStatus('MANNUAL INVOICE NUMBER IN SALES', settings);
@@ -310,6 +312,9 @@ class _GenerateEWaybillState extends State<GenerateEWaybill> {
 
   @override
   Widget build(BuildContext context) {
+    if (eWayBillNoControl.text.trim().isNotEmpty) {
+      //
+    }
     return Scaffold(
         appBar: AppBar(
           title: const Text('E-Way Bill'),

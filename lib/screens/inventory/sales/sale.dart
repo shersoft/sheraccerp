@@ -49,7 +49,8 @@ class _SaleState extends State<Sale> {
       thisSale = false,
       _isLoading = false,
       isCustomForm = false,
-      buttonEvent = false;
+      buttonEvent = false,
+      isSerialNoInStockVariant = false;
   // final bool _autoVariantSelect = true;
   DioService api = DioService();
   Size deviceSize;
@@ -247,6 +248,8 @@ class _SaleState extends State<Sale> {
         ComSettings.getStatus('KEY LOCK QTY ONLY IN SALES', settings);
     isSalesManWiseLedger =
         ComSettings.getStatus('KEY SALESMAN WISE LEDGER', settings);
+    isSerialNoInStockVariant =
+        ComSettings.getStatus('SHOW SERIALNO IN STOCK WINDOW', settings);
   }
 
   @override
@@ -2808,29 +2811,40 @@ class _SaleState extends State<Sale> {
                         width: 400.0,
                         child: ListView(children: [
                           Center(child: Text(name + ' / ' + quantity)),
-                          ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: snapshot.data.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return Card(
-                                elevation: 5,
-                                child: ListTile(
-                                    title: Text(
-                                        'Id: ${snapshot.data[index].productId} / Quantity : ${snapshot.data[index].quantity} '),
-                                    subtitle: Text(ComSettings.appSettings(
-                                            'bool',
-                                            'key-item-sale-retail',
-                                            false)
-                                        ? 'Mrp : ${snapshot.data[index].sellingPrice} / Retail : ${snapshot.data[index].retailPrice}'
-                                        : 'Rate : ${snapshot.data[index].sellingPrice}'),
-                                    onTap: () {
-                                      setState(() {
-                                        isVariantSelected = true;
-                                        positionID = index;
-                                      });
-                                    }),
-                              );
-                            },
+                          SizedBox(
+                            height: deviceSize.height - 100,
+                            width: 400.0,
+                            child: ListView.builder(
+                              // shrinkWrap: true,
+                              itemCount: snapshot.data.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return Card(
+                                  elevation: 5,
+                                  child: ListTile(
+                                      title: Text(
+                                          'Id: ${snapshot.data[index].productId} / Quantity : ${snapshot.data[index].quantity} '),
+                                      subtitle: Text(ComSettings.appSettings(
+                                              'bool',
+                                              'key-item-sale-retail',
+                                              false)
+                                          ? 'Mrp : ${snapshot.data[index].sellingPrice} / Retail : ${snapshot.data[index].retailPrice}'
+                                          : 'Rate : ${snapshot.data[index].sellingPrice}'),
+                                      trailing: isSerialNoInStockVariant
+                                          ? Text(
+                                              snapshot.data[index].serialNo,
+                                              style:
+                                                  const TextStyle(fontSize: 10),
+                                            )
+                                          : const Text(''),
+                                      onTap: () {
+                                        setState(() {
+                                          isVariantSelected = true;
+                                          positionID = index;
+                                        });
+                                      }),
+                                );
+                              },
+                            ),
                           ),
                         ]),
                       )
@@ -3166,6 +3180,7 @@ class _SaleState extends State<Sale> {
       rate = _conversion > 0 ? saleRate * _conversion : saleRate;
     }
     uniqueCode = product.productId;
+    _serialNoController.text = isSerialNoInStockVariant ? product.serialNo : '';
     List<UnitModel> unitListData = [];
 
     return Container(
