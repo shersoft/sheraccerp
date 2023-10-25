@@ -1861,10 +1861,7 @@ class _SaleState extends State<Sale> {
                             });
                           },
                           style: ElevatedButton.styleFrom(
-                              elevation: 0,
-                              primary: kPrimaryColor,
-                              onPrimary: white,
-                              onSurface: grey),
+                              foregroundColor: white, backgroundColor: kPrimaryColor, elevation: 0, disabledForegroundColor: grey.withOpacity(0.38), disabledBackgroundColor: grey.withOpacity(0.12)),
                           child: Center(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,

@@ -90,6 +90,8 @@ class _DeliveryHomeState extends State<DeliveryHome> {
       firm = (pref.getString('CompanyName') ?? "");
       firmCode = (pref.getString('CustomerCode') ?? "");
       fId = (pref.getString('fId') ?? "");
+      // /**Web only**/
+      // setApiV = (pref.getString('apiV') ?? "v13");
     });
   }
 

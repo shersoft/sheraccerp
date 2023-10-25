@@ -125,6 +125,8 @@ class _ManagerHomeState extends State<ManagerHome>
       firm = (prefs.getString('CompanyName') ?? "");
       firmCode = (prefs.getString('CustomerCode') ?? "");
       fId = (prefs.getString('fId') ?? "");
+      // /**Web only**/
+      // setApiV = (pref.getString('apiV') ?? "v13");
     });
   }
 

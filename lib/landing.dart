@@ -412,6 +412,8 @@ class _LandingState extends State<Landing> {
   loadingFirmList() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     _regId = (pref.getString('regId') ?? "");
+    // setApiV = (pref.getString('apiV') ?? "v13");
+    debugPrint(apiV);
     if (_regId.trim().isNotEmpty) {
       isBioAuthSwitched = pref.getBool('bioModeLogin') ?? false;
       isUserSwitched = pref.getBool("userModeLogin") ?? false;
@@ -895,7 +897,10 @@ class _LandingState extends State<Landing> {
   _loadingCompanyInfo() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     _regId = (pref.getString('regId') ?? "");
-    if (_regId.isNotEmpty) {
+    /**Web only**/
+    // setApiV = (pref.getString('apiV') ?? "v13");
+    // debugPrint(apiV);
+    if (_regId.trim().isNotEmpty) {
       var dataBase = isEstimateDataBase
           ? pref.getString('DBName')
           : pref.getString('DBNameT');

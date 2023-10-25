@@ -89,7 +89,8 @@ class _SimpleSaleState extends State<SimpleSale> {
         ScopedModel.of<MainModel>(context).getSettings();
 
     String cashAc =
-        ComSettings.getValue('CASH A/C', settings).toString().trim() ?? 'CASH';
+        ComSettings.getValue('CASH A/C', settings).toString().trim();
+    cashAc = cashAc.isNotEmpty ? cashAc : 'CASH';
     acId = mainAccount
         .firstWhere((element) => element['LedName'] == cashAc)['LedCode'];
     acId = ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) -

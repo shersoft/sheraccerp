@@ -48,6 +48,11 @@ get sherSoftPassword => _sherSoftPassword;
 set sherSoftPassword(String value) => _sherSoftPassword = value;
 
 const String apiV = 'v20/';
+/**Web only**/
+// String _apiV = 'v20/';
+// String get apiV => _apiV;
+// set setApiV(String value) => _apiV = value + '/';
+
 const currencySymbol = '₹';
 // const bool isVariant = false;
 const bool isKFC = false;

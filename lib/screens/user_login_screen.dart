@@ -57,6 +57,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
               Navigator.of(context).pop(true);
               pref.remove('fId');
               pref.remove('api');
+              pref.remove('apiV');
               pref.remove('regId');
               pref.remove('CompanyName');
               pref.remove('DBName');

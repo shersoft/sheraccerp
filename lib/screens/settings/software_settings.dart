@@ -132,26 +132,24 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
   }
 
   _listItem(int index) {
-    debugPrint(settingsDisplayList[index].toJson());
+    CompanySettings item = settingsDisplayList[index];
+    // debugPrint(item.toJson());
     return Card(
       elevation: 2,
-      child: Column(
-          children: settingsDisplayList
-              .map(
-                (CompanySettings item) => CheckboxListTile(
-                  title: Text(item.name),
-                  value: item.status == 1 ? true : false,
-                  onChanged: (bool? val) {
-                    setState(() => item.status = val != null
-                        ? val
-                            ? 1
-                            : 0
-                        : 0);
-                    updateItem(item);
-                  },
-                ),
-              )
-              .toList()),
+      child: Column(children: [
+        CheckboxListTile(
+          title: Text(item.name),
+          value: item.status == 1 ? true : false,
+          onChanged: (bool? val) {
+            setState(() => item.status = val != null
+                ? val
+                    ? 1
+                    : 0
+                : 0);
+            updateItem(item);
+          },
+        ),
+      ]),
     );
   }
 

@@ -390,7 +390,7 @@ class _StockReportState extends State<StockReport> {
                     child: PaginatedDataTable(
                     header: Text(
                       'Date: From ' + fromDate + ' To ' + toDate,
-                      style: const TextStyle(fontSize: 18),
+                      style: const TextStyle(fontSize: 14),
                     ),
                     rowsPerPage: 100,
                     horizontalMargin: 10,

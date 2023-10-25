@@ -288,6 +288,7 @@ class _BusinessCardState extends State<BusinessCard> {
     if (byteImage.isNotEmpty) {
       if (kIsWeb) {
         try {
+          /**Web only**/
           // final bytes = byteImage;
           // final blob = html.Blob([bytes], 'application/pdf');
           // final url = html.Url.createObjectUrlFromBlob(blob);

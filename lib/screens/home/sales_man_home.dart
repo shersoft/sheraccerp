@@ -155,6 +155,8 @@ class _SalesManHomeState extends State<SalesManHome> {
       firm = (pref.getString('CompanyName') ?? "");
       firmCode = (pref.getString('CustomerCode') ?? "");
       fId = (pref.getString('fId') ?? "");
+      // /**Web only**/
+      // setApiV = (pref.getString('apiV') ?? "v13");
     });
   }
 
