@@ -345,16 +345,7 @@ class _DeliveryNoteState extends State<DeliveryNote> {
                             _isLoading = true;
                             buttonEvent = true;
                           });
-                          _insert(
-                              'Delete DateTime:' +
-                                  formattedDate +
-                                  timeIs +
-                                  ' location:' +
-                                  lId.toString() +
-                                  ' ' +
-                                  CartItem.encodeCartToJson(cartItem)
-                                      .toString(),
-                              0);
+
                           deleteDeliveryNote(context);
                         } else {
                           Fluttertoast.showToast(
@@ -388,16 +379,6 @@ class _DeliveryNoteState extends State<DeliveryNote> {
                               _isLoading = true;
                               buttonEvent = true;
                             });
-                            _insert(
-                                'Edit DateTime:' +
-                                    formattedDate +
-                                    timeIs +
-                                    ' location:' +
-                                    lId.toString() +
-                                    ' ' +
-                                    CartItem.encodeCartToJson(cartItem)
-                                        .toString(),
-                                0);
                             updateDeliveryNote();
                           } else {
                             Fluttertoast.showToast(
@@ -723,17 +704,6 @@ class _DeliveryNoteState extends State<DeliveryNote> {
                   label: const Text('Take New DeliveryNote'))
             ],
           ));
-  }
-
-  void _insert(name, status) async {
-    /***Test Data***/
-    // row to insert
-    Map<String, dynamic> row = {
-      DatabaseHelper.columnName: name,
-      DatabaseHelper.columnstatus: status
-    };
-    Carts car = Carts.fromMap(row);
-    final id = await dbHelper.insert(car);
   }
 
   saveDeliveryNote() async {

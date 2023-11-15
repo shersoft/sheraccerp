@@ -176,16 +176,7 @@ class _ServiceEntryState extends State<ServiceEntry> {
                         //     _isLoading = true;
                         //     buttonEvent = true;
                         //   });
-                        //   _insert(
-                        //       'Delete DateTime:' +
-                        //           formattedDate +
-                        //           timeIs +
-                        //           ' location:' +
-                        //           lId.toString() +
-                        //           ' ' +
-                        //           CartItem.encodeCartToJson(cartItem)
-                        //               .toString(),
-                        //       0);
+
                         //   deleteSale(context);
                         // } else {
                         //   Fluttertoast.showToast(
@@ -219,16 +210,7 @@ class _ServiceEntryState extends State<ServiceEntry> {
                           //     _isLoading = true;
                           //     buttonEvent = true;
                           //   });
-                          //   _insert(
-                          //       'Edit DateTime:' +
-                          //           formattedDate +
-                          //           timeIs +
-                          //           ' location:' +
-                          //           lId.toString() +
-                          //           ' ' +
-                          //           CartItem.encodeCartToJson(cartItem)
-                          //               .toString(),
-                          //       0);
+
                           //   updateSale();
                           // } else {
                           //   Fluttertoast.showToast(
@@ -260,16 +242,7 @@ class _ServiceEntryState extends State<ServiceEntry> {
                           //     _isLoading = true;
                           //     buttonEvent = true;
                           //   });
-                          //   _insert(
-                          //       'SAVE DateTime:' +
-                          //           formattedDate +
-                          //           timeIs +
-                          //           ' location:' +
-                          //           lId.toString() +
-                          //           ' ' +
-                          //           CartItem.encodeCartToJson(cartItem)
-                          //               .toString(),
-                          //       0);
+
                           //   saveSale();
                           // } else {
                           //   Fluttertoast.showToast(

@@ -16,10 +16,12 @@ import 'package:sheraccerp/provider/purchase_provider.dart';
 import 'package:sheraccerp/provider/sales_provider.dart';
 import 'package:sheraccerp/provider/stock_provider.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
+import 'package:sheraccerp/screens/accounts/bank_voucher.dart';
 import 'package:sheraccerp/screens/accounts/journal.dart';
 import 'package:sheraccerp/screens/accounts/tax_report.dart';
 import 'package:sheraccerp/screens/inventory/delivery_note.dart';
 import 'package:sheraccerp/screens/inventory/invoice_design.dart';
+import 'package:sheraccerp/screens/inventory/serial_no_list.dart';
 import 'package:sheraccerp/screens/other_registration.dart';
 import 'package:sheraccerp/screens/settings/software_settings.dart';
 import 'package:sheraccerp/screens/html_previews/invoice_models.dart';
@@ -196,6 +198,8 @@ class MyApp extends StatelessWidget {
               '/OtherRegistration': (context) => const OtherRegistration(),
               '/DeliveryNote': (context) => const DeliveryNote(),
               '/TaxReport': (context) => const TaxReport(),
+              '/BankVoucher': (context) => const BankVoucher(),
+              '/serialNoList': (context) => const SerialNoList(),
             },
             theme: isDarkTheme
                 ? ThemeData(

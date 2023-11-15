@@ -388,13 +388,24 @@ class _SalesManHomeState extends State<SalesManHome> {
                                             ? Navigator.pushNamed(
                                                 context, '/SimpleSale')
                                             : Navigator.pushNamed(
-                                                context, '/sales',
+                                                context,
+                                                ComSettings.appSettings(
+                                                        'bool',
+                                                        'key-simple-sales',
+                                                        false)
+                                                    ? '/SimpleSale'
+                                                    : '/sales',
                                                 arguments: {'default': sType})
                                         : _expire(args, context)
                                     : isSimpleSales
                                         ? Navigator.pushNamed(
                                             context, '/SimpleSale')
-                                        : Navigator.pushNamed(context, '/sales',
+                                        : Navigator.pushNamed(
+                                            context,
+                                            ComSettings.appSettings('bool',
+                                                    'key-simple-sales', false)
+                                                ? '/SimpleSale'
+                                                : '/sales',
                                             arguments: {'default': sType});
                               },
                             ),
@@ -437,13 +448,24 @@ class _SalesManHomeState extends State<SalesManHome> {
                                             ? Navigator.pushNamed(
                                                 context, '/SimpleSale')
                                             : Navigator.pushNamed(
-                                                context, '/sales',
+                                                context,
+                                                ComSettings.appSettings(
+                                                        'bool',
+                                                        'key-simple-sales',
+                                                        false)
+                                                    ? '/SimpleSale'
+                                                    : '/sales',
                                                 arguments: {'default': sType})
                                         : _expire(args, context)
                                     : isSimpleSales
                                         ? Navigator.pushNamed(
                                             context, '/SimpleSale')
-                                        : Navigator.pushNamed(context, '/sales',
+                                        : Navigator.pushNamed(
+                                            context,
+                                            ComSettings.appSettings('bool',
+                                                    'key-simple-sales', false)
+                                                ? '/SimpleSale'
+                                                : '/sales',
                                             arguments: {'default': sType});
                               },
                             ),

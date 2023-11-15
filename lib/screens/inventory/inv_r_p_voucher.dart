@@ -39,7 +39,6 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
   DateTime now = DateTime.now();
   String formattedDate, narration = '';
   double balance = 0, total = 0, amount = 0, discount = 0;
-  var iD = '';
   var _invoiceData;
   LedgerModel ledData;
   bool _isLoading = false,
@@ -58,7 +57,7 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
       pageTotalBill = 0,
       totalRecords = 0,
       totalRecordsBill = 0;
-  int locationId = 1, salesManId = 0, decimal = 2;
+  int locationId = 1, salesManId = -1, decimal = 2;
   final TextEditingController _controllerAmount = TextEditingController();
   final TextEditingController _controllerDiscount = TextEditingController();
   final TextEditingController _controllerNarration = TextEditingController();
@@ -156,7 +155,6 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
                     if (buttonEvent) {
                       return;
                     } else {
-                      iD = acId > 0 ? acId.toString() : '';
                       if (companyUserData.deleteData) {
                         title == 'Payment Invoice'
                             ? submitData('Payment Invoice', 'DELETE')
@@ -178,7 +176,6 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
                     iconSize: 40,
                     onPressed: () {
                       //edit
-                      iD = acId > 0 ? acId.toString() : '';
                       if (companyUserData.updateData) {
                         title == 'Payment Invoice'
                             ? submitData('Payment Invoice', 'UPDATE')
@@ -197,9 +194,6 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
                     iconSize: 40,
                     onPressed: () {
                       //save
-                      if (iD.trim().isEmpty) {
-                        iD = acId > 0 ? acId.toString() : '';
-                      }
                       if (companyUserData.insertData) {
                         title == 'Payment Invoice'
                             ? submitData('Payment Invoice', 'INSERT')
@@ -348,7 +342,7 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
         List tempList = [];
         var _type = mode == 'Payment Invoice' ? 'PV' : 'RV';
         salesManId = salesManId > 0 ? salesManId : -1;
-        locationId = locationId > 0 ? locationId : -1;
+        locationId = locationId > 0 ? locationId : 1;
         api
             .getPaginationList('InvoicePRList', page, locationId.toString(),
                 _type, DateUtil.dateYMD(formattedDate), salesManId.toString())
@@ -726,12 +720,11 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
   void _getMoreBillData(mode) async {
     if (!lastRecordBill) {
       if (dataDisplayBill.isEmpty ||
-          dataDisplayBill.length < totalRecordsBill) {
-        if (!isLoadingDataBill) {
-          setState(() {
-            isLoadingDataBill = true;
-          });
-        }
+          // ignore: curly_braces_in_flow_control_structures
+          dataDisplayBill.length < totalRecordsBill) if (!isLoadingDataBill) {
+        setState(() {
+          isLoadingDataBill = true;
+        });
 
         List tempList = [];
         var _type = mode == 'Payment Invoice' ? 'PV' : 'RV';
@@ -766,7 +759,7 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
   }
 
   void submitData(mode, operation) async {
-    if (iD.isEmpty) {
+    if (acId.toString().isEmpty && acId > 0) {
       Fluttertoast.showToast(msg: 'Select Cash Account');
     } else {
       if (amount <= 0 || ledData.id <= 0) {
@@ -785,7 +778,7 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
               'entryType': _invoiceData['Stype'].toString(),
               'pEntryNo': _invoiceData['entryno'].toString(),
               'invoiceNo': _invoiceData['invoiceNo'].toString(),
-              'date': operation == 'UPDATE'
+              'date': operation == 'UPDATE' || operation == 'DELETE'
                   ? _invoiceData['Ddate']
                   : DateUtil.dateYMD1(_invoiceData['Ddate'].toString()),
               'amount': amount,
@@ -798,14 +791,14 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
           {
             'entryNo': oldVoucher ? dataDynamic[0]['EntryNo'].toString() : '0',
             'date': DateUtil.dateYMD(formattedDate),
-            'debitAccount': iD,
+            'debitAccount': acId.toString(),
             'amount': amount,
             'discount': discount,
             'total': total,
             'location': 1,
             'user': 1,
-            'project': '0',
-            'salesman': '0',
+            'project': -1,
+            'salesman': salesManId,
             'month': '2022-01-01',
             'particular': particular,
             'vType': mode == 'Payment Invoice' ? 'PV' : 'RV',
@@ -849,7 +842,6 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
     _controllerDiscount.text = '';
     _controllerNarration.text = '';
     acId = 0;
-    iD = '';
     _dropDownValue = '';
     balance = 0;
     amount = 0;
@@ -891,7 +883,7 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
       onChanged: (value) {
         setState(() {
           _dropDownValue = value;
-          iD = value.split('-')[0];
+          acId = int.parse(value.split('-')[0]);
         });
       },
     );
@@ -1018,9 +1010,13 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
         ];
 
         voucherTotal = double.tryParse(information['Total'].toString());
-        _dropDownValue = information['DEBITACCOUNT'].toString() +
-            '-CASH'; //+information['LedName'].toString();
-        iD = information['DEBITACCOUNT'].toString();
+        LedgerModel acLedger = cashBankACList.firstWhere(
+            (element) =>
+                element.id == int.parse(information['DEBITACCOUNT'].toString()),
+            orElse: () => LedgerModel(
+                id: int.parse(information['DEBITACCOUNT'].toString()),
+                name: '-CASH'));
+        _dropDownValue = '${acLedger.id}-${acLedger.name}';
         acId = information['DEBITACCOUNT'];
         var part1 = particulars[0];
         ledData = LedgerModel(id: part1['Name'], name: '');

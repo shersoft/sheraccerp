@@ -273,6 +273,58 @@ class AccountsMenu extends StatelessWidget {
             // _showDialog(context);
           },
         ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.payment_rounded,
+                    color: Colors.red[500],
+                    size: 90.0,
+                  ),
+                  const Text(
+                    'Bank Payment',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            Navigator.pushNamed(context, '/BankVoucher',
+                arguments: {'voucher': 'Payment'});
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.receipt_rounded,
+                    color: Colors.green[500],
+                    size: 90.0,
+                  ),
+                  const Text(
+                    'Bank Receipt',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            Navigator.pushNamed(context, '/BankVoucher',
+                arguments: {'voucher': 'Receipt'});
+          },
+        ),
       ],
     );
   }

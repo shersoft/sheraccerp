@@ -3,6 +3,8 @@ import 'package:sheraccerp/screens/about_shersoft.dart';
 import 'package:sheraccerp/screens/html_previews/invoice_make.dart';
 import 'package:sheraccerp/util/res_color.dart';
 
+import '../shared/constants.dart';
+
 class InventoryMenu extends StatelessWidget {
   const InventoryMenu({Key? key}) : super(key: key);
 
@@ -118,7 +120,11 @@ class InventoryMenu extends StatelessWidget {
             ),
           ),
           onTap: () {
-            Navigator.pushNamed(context, '/sales',
+            Navigator.pushNamed(
+                context,
+                ComSettings.appSettings('bool', 'key-simple-sales', false)
+                    ? '/SimpleSale'
+                    : '/sales',
                 arguments: {'default': false});
           },
         ),

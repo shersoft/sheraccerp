@@ -1,78 +1,54 @@
 // @dart = 2.7
-
+import 'dart:convert';
 import 'dart:io';
-// ignore: avoid_web_libraries_in_flutter
-// import 'dart:html' as html;
 
 import 'package:csv/csv.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
-import 'package:sheraccerp/service/api_dio.dart';
-import 'package:sheraccerp/shared/constants.dart';
-import 'package:sheraccerp/util/res_color.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:sheraccerp/service/api_dio.dart';
+import 'package:sheraccerp/shared/constants.dart';
+import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/pdf_screen.dart';
+import 'package:pdf/widgets.dart' as pw;
+// ignore: avoid_web_libraries_in_flutter
+// import 'dart:html' as html;
 
-class PurchaseList extends StatefulWidget {
-  const PurchaseList({Key key}) : super(key: key);
+class SerialNoList extends StatefulWidget {
+  const SerialNoList({Key key}) : super(key: key);
 
   @override
-  _PurchaseListState createState() => _PurchaseListState();
+  State<SerialNoList> createState() => _SerialNoListState();
 }
 
-class _PurchaseListState extends State<PurchaseList> {
-  String fromDate;
-  String toDate;
-  var _data;
-  int menuId = 0;
+class _SerialNoListState extends State<SerialNoList> {
   bool loadReport = false;
   DateTime now = DateTime.now();
-  List<dynamic> purchaseTypeList = [
-    {'id': 0, 'name': 'All'},
-    {'id': 1, 'name': 'Purchase'},
-    {'id': 2, 'name': 'Return'},
-    {'id': 3, 'name': 'Order'}
-  ];
-  List<TypeItem> dropdownItemsType = [
-    TypeItem(1, 'All Summary'),
-    TypeItem(2, 'Purchase Summary'),
-    TypeItem(3, 'Return Summary'),
-    TypeItem(4, 'Order Summary'),
-    TypeItem(5, 'ItemWise'),
-    TypeItem(6, 'Return ItemWise'),
-    TypeItem(7, 'Order ItemWise'),
-    TypeItem(8, 'UnRegistered Summery'),
-    TypeItem(9, 'UnRegistered ItemWise')
-  ];
-  int valueType = 1;
   DioService api = DioService();
-  var itemId,
-      itemName,
-      supplier,
-      mfr,
-      category,
-      subCategory,
-      locationId,
-      salesMan,
-      project,
-      taxGroup,
-      title = '',
-      reportType = {'Summery', 'ItemWise'};
-  final controller = ScrollController();
-  double offset = 0;
-  List<dynamic> resultData = [];
+  var itemName, mfr, category, subCategory, dropDownType;
+  var _data;
+  TextEditingController serialNoController = TextEditingController();
+  List<String> reportType = ['Select All', 'Details', 'Transactions'];
+  var dropDownBranchId;
 
   @override
   void initState() {
     super.initState();
-    fromDate = DateFormat('dd-MM-yyyy').format(now);
-    toDate = DateFormat('dd-MM-yyyy').format(now);
+    if (locationList.isNotEmpty) {
+      dropDownBranchId = locationList
+          .where((element) => element.value == defaultLocation)
+          .map((e) => e.key)
+          .first;
+    }
+    int _branchId = ComSettings.appSettings(
+            'int', 'key-dropdown-default-location-view', 0) -
+        1;
+    dropDownBranchId = _branchId > 0 ? _branchId : dropDownBranchId;
   }
 
   @override
@@ -101,39 +77,20 @@ class _PurchaseListState extends State<PurchaseList> {
               ],
               onSelected: (menuId) {
                 setState(() {
-                  // debugPrint(menuId.toString());
                   if (menuId == 1) {
                     Future.delayed(const Duration(milliseconds: 1000), () {
-                      _createPDF(title + ' Date :' + fromDate + ' - ' + toDate)
-                          .then((value) =>
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (_) => PDFScreen(
-                                        pathPDF: value,
-                                        subject: title +
-                                            ' Date :' +
-                                            fromDate +
-                                            ' - ' +
-                                            toDate,
-                                        text: 'this is ' +
-                                            title +
-                                            ' Date :' +
-                                            fromDate +
-                                            ' - ' +
-                                            toDate,
-                                      ))));
+                      _createPDF('SerialNo List').then((value) =>
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => PDFScreen(
+                                    pathPDF: value,
+                                    subject: 'SerialNo List',
+                                  ))));
                     });
                   } else if (menuId == 2) {
                     Future.delayed(const Duration(milliseconds: 1000), () {
-                      _createCSV(title + ' Date :' + fromDate + ' - ' + toDate)
-                          .then((value) {
-                        var text = 'this is ' +
-                            title +
-                            ' Date :' +
-                            fromDate +
-                            ' - ' +
-                            toDate;
-                        var subject =
-                            title + ' Date :' + fromDate + ' - ' + toDate;
+                      _createCSV('SerialNo List').then((value) {
+                        var text = 'SerialNo List';
+                        var subject = 'SerialNo List';
                         List<String> paths = [];
                         paths.add(value);
                         urlFileShare(context, text, subject, paths);
@@ -144,67 +101,25 @@ class _PurchaseListState extends State<PurchaseList> {
               },
             )
           ],
-          title: const Text('Purchase Report'),
+          title: const Text('SerialNo List'),
         ),
-        body: loadReport ? reportView(title) : selectData());
+        body: loadReport ? reportView() : selectData());
   }
 
-  reportView(statement) {
-    controller.addListener(onScroll);
-    // List<dynamic> dataSType = [];
-    // for (var data in purchaseTypeList) {
-    // if (data['name']) dataSType.add({'id': data['id']});
-    // }
-
-    statement = dropdownItemsType
-        .where((TypeItem element) => element.id == valueType)
-        .map((e) => e.name)
-        .first;
-    var statementType = statement == 'All Summary'
-        ? 'All_Summery'
-        : statement == 'Purchase Summary'
-            ? 'P_Summery'
-            : statement == 'Return Summary'
-                ? 'Pr_Summery'
-                : statement == 'Order Summary'
-                    ? 'PO_Summery'
-                    : statement == 'ItemWise'
-                        ? 'P_ItemWise'
-                        : statement == 'Return ItemWise'
-                            ? 'Pr_ItemWise'
-                            : statement == 'Order ItemWise'
-                                ? 'PO_ItemWise'
-                                : statement == 'UnRegistered Summery'
-                                    ? 'UnP_Summery'
-                                    : statement == 'UnRegistered ItemWise'
-                                        ? 'UnP_ItemWise'
-                                        : 'All_Summery';
-    var sDate = fromDate.isEmpty ? '2021-01-011' : formatYMD(fromDate);
-    var eDate = toDate.isEmpty ? '2021-01-011' : formatYMD(toDate);
-    var itemsId = itemId != null ? itemId['id'] : '0';
-    var supplierId = supplier != null ? supplier['id'] : '0';
-    var mfrId = mfr != null ? mfr['id'] : '0';
-    var categoryId = category != null ? category['id'] : '0';
-    var subcategoryId = subCategory != null ? subCategory['id'] : '0';
-    var locationsId = locationId != null ? locationId.id : '0';
-    var projectId = project != null ? project['id'] : '0';
-    var salesManId = salesMan != null ? salesMan['id'] : '0';
-    var taxGroupId = taxGroup != null ? taxGroup['id'] : '0';
+  reportView() {
+    var _type =
+        dropDownType.toString().isNotEmpty ? dropDownType : 'Transactions';
+    String _mfr = mfr != null ? mfr['id'] : '0';
+    String _serialNo =
+        serialNoController.text.isNotEmpty ? serialNoController.text : '';
+    String _itemId = itemName != null ? itemName['id'] : '0';
+    String _category = category != null ? category['id'] : '0';
+    String _subCategory = subCategory != null ? subCategory['id'] : '0';
+    String _branch = dropDownBranchId > 0 ? dropDownBranchId.toString() : '1';
 
     return FutureBuilder<List<dynamic>>(
-      future: api.getPurchaseReport(
-          locationsId,
-          statementType,
-          sDate,
-          eDate,
-          supplierId,
-          projectId,
-          itemsId,
-          mfrId,
-          categoryId,
-          subcategoryId,
-          salesManId,
-          taxGroupId),
+      future: api.getSerialNoReport(
+          _type, _serialNo, _itemId, _mfr, _category, _subCategory, _branch),
       builder: (ctx, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
@@ -218,10 +133,10 @@ class _PurchaseListState extends State<PurchaseList> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Center(
+                    const Center(
                         child: Text(
-                      statement + ' Date: From ' + fromDate + ' To ' + toDate,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      'SerialNo List',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     )),
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
@@ -267,6 +182,7 @@ class _PurchaseListState extends State<PurchaseList> {
                                               : '',
                                           softWrap: true,
                                           overflow: TextOverflow.ellipsis,
+                                          // style: TextStyle(fontSize: 6),
                                         ),
                                       ),
                                     ),
@@ -322,7 +238,6 @@ class _PurchaseListState extends State<PurchaseList> {
             ],
           );
         }
-        // By default, show a loading spinner.
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -344,117 +259,46 @@ class _PurchaseListState extends State<PurchaseList> {
           padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
-              Card(
-                elevation: 0.5,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    const Text(
-                      'From : ',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    InkWell(
-                      child: Text(
-                        fromDate,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 22),
-                      ),
-                      onTap: () => _selectDate('f'),
-                    ),
-                    const Text(
-                      'To : ',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    InkWell(
-                      child: Text(
-                        toDate,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 22),
-                      ),
-                      onTap: () => _selectDate('t'),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(),
-              // Card(
-              //   elevation: 2,
-              //   child: DropDownSettingsTile<int>(
-              //     title: 'Branch',
-              //     settingKey: 'key-dropdown-default-location-view',
-              //     values: locationList.isNotEmpty
-              //         ? {for (var e in locationList) e.key + 1: e.value}
-              //         : {
-              //             2: '',
-              //           },
-              //     selected: 2,
-              //     onChange: (value) {
-              //       debugPrint('key-dropdown-default-location-view: $value');
-              //       dropDownBranchId = value - 1;
-              //     },
-              //   ),
-              // ),
-              DropdownSearch<dynamic>(
-                maxHeight: 300,
-                onFind: (String filter) =>
-                    api.getSalesListData(filter, 'sales_list/location'),
-                dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), label: Text('Select Branch')),
-                onChanged: (dynamic data) {
-                  locationId = data;
-                },
-                showSearchBox: true,
-              ),
-              // Divider(),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('Type : '),
-                  DropdownButton(
-                    value: valueType,
-                    items: dropdownItemsType.map((TypeItem item) {
-                      return DropdownMenuItem<int>(
-                        child: Text(item.name),
-                        value: item.id,
-                      );
-                    }).toList(),
-                    onChanged: (value) {
+                  TextButton(
+                    onPressed: () {
                       setState(() {
-                        valueType = value;
+                        loadReport = true;
                       });
                     },
+                    child: const Text('Show'),
+                    style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(kPrimaryColor),
+                      foregroundColor:
+                          MaterialStateProperty.all<Color>(Colors.white),
+                    ),
                   ),
                 ],
               ),
-              // Divider(),
-              TextButton(
-                onPressed: () {
+              const Divider(),
+              DropdownButton<String>(
+                hint: const Text('Report Type'),
+                value: dropDownType,
+                items: reportType.map<DropdownMenuItem<String>>((value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: (value) {
                   setState(() {
-                    loadReport = true;
+                    dropDownType = value;
                   });
                 },
-                child: const Text('Show'),
-                style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(kPrimaryColor),
-                  foregroundColor:
-                      MaterialStateProperty.all<Color>(Colors.white),
-                ),
               ),
               const Divider(),
-              DropdownSearch<dynamic>(
-                maxHeight: 300,
-                onFind: (String filter) =>
-                    api.getSalesListData(filter, 'sales_list/ItemCode'),
-                dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    label: Text('Select Item Code')),
-                onChanged: (dynamic data) {
-                  itemId = data;
-                },
-                showSearchBox: true,
+              TextField(
+                controller: serialNoController,
+                decoration: const InputDecoration(
+                    border: OutlineInputBorder(), label: Text('Serial No')),
               ),
               const Divider(),
               DropdownSearch<dynamic>(
@@ -463,22 +307,9 @@ class _PurchaseListState extends State<PurchaseList> {
                     api.getSalesListData(filter, 'sales_list/itemName'),
                 dropdownSearchDecoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    label: Text('Select Item Name')),
+                    label: Text("Select Item Name")),
                 onChanged: (dynamic data) {
                   itemName = data;
-                },
-                showSearchBox: true,
-              ),
-              const Divider(),
-              DropdownSearch<dynamic>(
-                maxHeight: 300,
-                onFind: (String filter) =>
-                    api.getSalesListData(filter, 'sales_list/supplier'),
-                dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    label: Text('Select Supplier')),
-                onChanged: (dynamic data) {
-                  supplier = data;
                 },
                 showSearchBox: true,
               ),
@@ -489,7 +320,7 @@ class _PurchaseListState extends State<PurchaseList> {
                     api.getSalesListData(filter, 'sales_list/manufacture'),
                 dropdownSearchDecoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    label: Text('Select Item MFR')),
+                    label: Text("Select Item MFR")),
                 onChanged: (dynamic data) {
                   mfr = data;
                 },
@@ -502,7 +333,7 @@ class _PurchaseListState extends State<PurchaseList> {
                     api.getSalesListData(filter, 'sales_list/category'),
                 dropdownSearchDecoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    label: Text('Select Category')),
+                    label: Text("Select Category")),
                 onChanged: (dynamic data) {
                   category = data;
                 },
@@ -515,107 +346,18 @@ class _PurchaseListState extends State<PurchaseList> {
                     api.getSalesListData(filter, 'sales_list/subCategory'),
                 dropdownSearchDecoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    label: Text('Select SubCategory')),
+                    label: Text("Select SubCategory")),
                 onChanged: (dynamic data) {
                   subCategory = data;
                 },
                 showSearchBox: true,
               ),
               const Divider(),
-              DropdownSearch<dynamic>(
-                maxHeight: 300,
-                onFind: (String filter) =>
-                    api.getSalesListData(filter, 'sales_list/salesMan'),
-                dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    label: Text('Select SalesMan')),
-                onChanged: (dynamic data) {
-                  salesMan = data;
-                },
-                showSearchBox: true,
-              ),
-              const Divider(),
-              DropdownSearch<dynamic>(
-                maxHeight: 300,
-                onFind: (String filter) =>
-                    api.getSalesListData(filter, 'sales_list/project'),
-                dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    label: Text('Select Project')),
-                onChanged: (dynamic data) {
-                  project = data;
-                },
-                showSearchBox: true,
-              ),
-              const Divider(),
-              DropdownSearch<dynamic>(
-                maxHeight: 300,
-                onFind: (String filter) =>
-                    api.getSalesListData(filter, 'sales_list/taxGroup'),
-                dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    label: Text('Select TaxGroup')),
-                onChanged: (dynamic data) {
-                  taxGroup = data;
-                },
-                showSearchBox: true,
-              ),
-              const Divider(),
-              // Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              //   for (var data in purchaseTypeList)
-              //     Row(children: [
-              //       Radio(
-              //         value: data['id'],
-              //         groupValue: purchaseTypeListID,
-              //         onChanged: (value) {
-              //           setState(() {
-              //             purchaseTypeListID = value;
-              //           });
-              //         },
-              //       ),
-              //       Text(data['name']),
-              //     ]),
-              // ]),
             ],
           ),
         ),
       ],
     );
-  }
-
-  int purchaseTypeListID = 0;
-
-  Future _selectDate(String type) async {
-    DateTime picked = await showDatePicker(
-        context: context,
-        initialDate: DateTime.now(),
-        firstDate: DateTime(2000),
-        lastDate: DateTime(2100));
-    if (picked != null) {
-      setState(() => {
-            if (type == 'f')
-              {fromDate = DateFormat('dd-MM-yyyy').format(picked)}
-            else
-              {toDate = DateFormat('dd-MM-yyyy').format(picked)}
-          });
-    }
-  }
-
-  String formatYMD(value) {
-    var dateTime = DateFormat("dd-MM-yyyy").parse(value.toString());
-    return DateFormat("yyyy-MM-dd").format(dateTime);
-  }
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  void onScroll() {
-    setState(() {
-      offset = (controller.hasClients) ? controller.offset : 0;
-    });
   }
 
   Future<String> _createPDF(String title) async {
@@ -834,7 +576,7 @@ class _PurchaseListState extends State<PurchaseList> {
   }
 
   Future<String> savePreviewPDF(pw.Document pdf, var title) async {
-    title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
+    title = title.replaceAll(RegExp(r'[^\w\s]+'), '');
     if (kIsWeb) {
       try {
         // final bytes = await pdf.save();
@@ -887,7 +629,7 @@ class _PurchaseListState extends State<PurchaseList> {
   }
 
   Future<String> savePreviewCSV(var csv, var title) async {
-    title = title.replaceAll(new RegExp(r'[^\w\s]+'), '');
+    title = title.replaceAll(RegExp(r'[^\w\s]+'), '');
     if (kIsWeb) {
       try {
         // final bytes = utf8.encode(csv);
@@ -928,10 +670,4 @@ class _PurchaseListState extends State<PurchaseList> {
           sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
     }
   }
-}
-
-class TypeItem {
-  int id;
-  String name;
-  TypeItem(this.id, this.name);
 }

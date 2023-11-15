@@ -5522,7 +5522,7 @@ class _BtPrintState extends State<BtPrint> {
     var profile = await CapabilityProfile.load();
     final Generator ticket = Generator(paper, profile);
     List<int> bytes = [];
-    var bill = widget.data[2][0];
+    var bill = widget.data[2][0][0];
     var printerSize = widget.data[3];
     CompanyInformation companySettings = widget.data[0];
     List<CompanySettings> settings = widget.data[1];
@@ -5949,7 +5949,7 @@ class _BtPrintState extends State<BtPrint> {
     var profile = await CapabilityProfile.load();
     final Generator ticket = Generator(paper, profile);
     List<int> bytes = [];
-    var bill = widget.data[2][0];
+    var bill = widget.data[2][0][0];
     var printerSize = widget.data[3];
     CompanyInformation companySettings = widget.data[0];
     List<CompanySettings> settings = widget.data[1];

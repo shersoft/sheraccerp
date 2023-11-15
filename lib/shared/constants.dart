@@ -9,12 +9,15 @@ import 'package:pdf/widgets.dart';
 import 'package:sheraccerp/app_settings_page.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/company_user.dart';
+import 'package:sheraccerp/models/customer_model.dart';
 import 'package:sheraccerp/models/form_model.dart';
 import 'package:sheraccerp/models/option_rate_type.dart';
 import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/models/print_settings_model.dart';
 import 'package:sheraccerp/models/sales_type.dart';
+import 'package:sheraccerp/models/sms_data_model.dart';
 import 'package:sheraccerp/models/unit_model.dart';
+import 'package:sheraccerp/screens/accounts/ledger.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 
 const gstBaseApi = "https://api.mastergst.com";
@@ -71,6 +74,7 @@ int userIdC = 1;
 String _toDay;
 String get getToDay => _toDay;
 set setToDay(String day) => _toDay = day;
+CustomerModel tempLedgerData;
 
 List<UnitModel> unitData = [];
 List unitList = [];
@@ -92,6 +96,7 @@ List<OtherRegistrationModel> otherRegAreaList = [];
 List<OtherRegistrationModel> otherRegRouteList = [];
 List<OptionRateType> optionRateTypeList = [];
 List<PrintSettingsModel> printSettingsList = [];
+List<SmsDataModel> smsSettingsList = [];
 List otherRegSalesManList = [];
 List mainAccount = [];
 List cashAccount = [];
@@ -273,6 +278,8 @@ class ComSettings {
         printSettingsList.addAll(value);
       }
     });
+
+    api.getSMSApiDataList().then((value) => smsSettingsList.addAll(value));
   }
 
   static getStatus(String name, List<CompanySettings> data) {

@@ -1,5 +1,6 @@
 // @dart = 2.9
 import 'dart:convert';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -54,12 +55,15 @@ class _SaleState extends State<Sale> {
   // final bool _autoVariantSelect = true;
   DioService api = DioService();
   Size deviceSize;
-  var ledgerModel;
+  var ledgerModel, vehicleData;
+  String vehicleName = '';
   StockItem productModel;
   List<CartItem> cartItem = [];
   List<dynamic> otherAmountList = [];
   bool isTax = true,
+      blockTaxLedgerOnB2CorBOS = false,
       otherAmountLoaded = false,
+      salesmanAsVehicle = false,
       valueMore = false,
       lastRecord = false,
       widgetID = true,
@@ -214,13 +218,15 @@ class _SaleState extends State<Sale> {
     negativeStock = ComSettings.getStatus('ALLOW NEGETIVE STOCK', settings);
     companyTaxMode = ComSettings.getValue('PACKAGE', settings);
     cessOnNetAmount = ComSettings.getStatus('CESS ON NET AMOUNT', settings);
+    blockTaxLedgerOnB2CorBOS =
+        ComSettings.getStatus('BLOCK B2C BOS SALES TO GST CUSTOMERS', settings);
     enableKeralaFloodCess = false;
     enableBarcode = ComSettings.getStatus('ENABLE BARCODE OPTION', settings);
     isEnableProfitlessSalesWarning =
         ComSettings.getStatus('ENABLE PROFITLESS SALES WARNING', settings);
-    useUNIQUECODEASBARCODE =
+    useUniqueCodeAsBarcode =
         ComSettings.getStatus('USE UNIQUECODE AS BARCODE', settings);
-    useOLDBARCODE = ComSettings.getStatus('USE OLD BARCODE', settings);
+    useOldBarcode = ComSettings.getStatus('USE OLD BARCODE', settings);
     decimal = ComSettings.getValue('DECIMAL', settings).toString().isNotEmpty
         ? int.tryParse(ComSettings.getValue('DECIMAL', settings).toString())
         : 2;
@@ -250,6 +256,8 @@ class _SaleState extends State<Sale> {
         ComSettings.getStatus('KEY SALESMAN WISE LEDGER', settings);
     isSerialNoInStockVariant =
         ComSettings.getStatus('SHOW SERIALNO IN STOCK WINDOW', settings);
+    salesmanAsVehicle =
+        ComSettings.getStatus('USE SALESMAN AS VEHICLE', settings);
   }
 
   @override
@@ -379,12 +387,7 @@ class _SaleState extends State<Sale> {
                             buttonEvent = true;
                           });
                           _insert(
-                              'Delete DateTime:' +
-                                  formattedDate +
-                                  timeIs +
-                                  ' location:' +
-                                  lId.toString() +
-                                  ' ' +
+                              'Delete DateTime:$formattedDate $timeIs location:${lId.toString()} ledger:${ledgerModel.id} ' +
                                   CartItem.encodeCartToJson(cartItem)
                                       .toString(),
                               0);
@@ -422,12 +425,7 @@ class _SaleState extends State<Sale> {
                               buttonEvent = true;
                             });
                             _insert(
-                                'Edit DateTime:' +
-                                    formattedDate +
-                                    timeIs +
-                                    ' location:' +
-                                    lId.toString() +
-                                    ' ' +
+                                'Edit DateTime:$formattedDate $timeIs location:${lId.toString()} ledger:${ledgerModel.id} ' +
                                     CartItem.encodeCartToJson(cartItem)
                                         .toString(),
                                 0);
@@ -463,12 +461,7 @@ class _SaleState extends State<Sale> {
                               buttonEvent = true;
                             });
                             _insert(
-                                'SAVE DateTime:' +
-                                    formattedDate +
-                                    timeIs +
-                                    ' location:' +
-                                    lId.toString() +
-                                    ' ' +
+                                'SAVE DateTime:$formattedDate $timeIs location:${lId.toString()} ledger:${ledgerModel.id} ' +
                                     CartItem.encodeCartToJson(cartItem)
                                         .toString(),
                                 0);
@@ -1034,6 +1027,9 @@ class _SaleState extends State<Sale> {
                       sendSms(ledgerModel.phone, smsBody);
                     }
                   }
+                  if (ComSettings.getStatus('ENABLE SMS OPTION', settings)) {
+                    //
+                  }
                   clearCart();
                   showMore(context);
                 }
@@ -1247,8 +1243,8 @@ class _SaleState extends State<Sale> {
             'location': order.location.toString(),
             'id': order.customerModel[0].id.toString()
           };
-          api.addOtherAmount(bodyJsonAmount).then((ret) {
-            if (ret) {
+          if (salesTypeData.accounts) {
+            api.addOtherAmount(bodyJsonAmount).then((retNotUsed) {
               final bodyJson = {
                 'statement': 'CheckPrint',
                 'entryNo': dataDynamic[0]['EntryNo'].toString(),
@@ -1264,8 +1260,8 @@ class _SaleState extends State<Sale> {
                   showMore(context);
                 }
               });
-            }
-          });
+            });
+          }
           setState(() {
             _isLoading = false;
           });
@@ -1324,7 +1320,12 @@ class _SaleState extends State<Sale> {
                   TextButton(
                     onPressed: () {
                       Navigator.of(context).pop();
-                      Navigator.pushReplacementNamed(context, '/sales',
+                      Navigator.pushReplacementNamed(
+                          context,
+                          ComSettings.appSettings(
+                                  'bool', 'key-simple-sales', false)
+                              ? '/SimpleSale'
+                              : '/sales',
                           arguments: {'default': thisSale});
                     },
                     child: const Text('CANCEL'),
@@ -1836,8 +1837,14 @@ class _SaleState extends State<Sale> {
                             },
                           ),
                         ),
+                        salesManVehicle(),
                         ElevatedButton(
                           onPressed: () {
+                            customerName = customerName.isEmpty
+                                ? snapshot.data.name == 'CASH'
+                                    ? 'CASH'
+                                    : customerName
+                                : customerName;
                             setState(() {
                               if (salesTypeData.rateType.isNotEmpty) {
                                 rateType = salesTypeData.id.toString();
@@ -1861,7 +1868,11 @@ class _SaleState extends State<Sale> {
                             });
                           },
                           style: ElevatedButton.styleFrom(
-                              foregroundColor: white, backgroundColor: kPrimaryColor, elevation: 0, disabledForegroundColor: grey.withOpacity(0.38), disabledBackgroundColor: grey.withOpacity(0.12)),
+                              foregroundColor: white,
+                              backgroundColor: kPrimaryColor,
+                              elevation: 0,
+                              disabledForegroundColor: grey.withOpacity(0.38),
+                              disabledBackgroundColor: grey.withOpacity(0.12)),
                           child: Center(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -1917,6 +1928,7 @@ class _SaleState extends State<Sale> {
                             });
                           },
                         ),
+                        salesManVehicle(),
                         Visibility(
                             visible: customerReusableProduct,
                             child: Text('Stock IN :' + snapshot.data.remarks)),
@@ -2011,6 +2023,12 @@ class _SaleState extends State<Sale> {
                                   }
                                   ledgerModel = snapshot.data;
                                   nextWidget = 2;
+                                } else if (!blockTaxLedgerOnB2CorBOS) {
+                                  if (salesTypeData.rateType.isNotEmpty) {
+                                    rateType = salesTypeData.id.toString();
+                                  }
+                                  ledgerModel = snapshot.data;
+                                  nextWidget = 2;
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
@@ -2018,6 +2036,17 @@ class _SaleState extends State<Sale> {
                                               'B2B Invoice not allow without a TAX number')));
                                 }
                               } else {
+                                if (blockTaxLedgerOnB2CorBOS) {
+                                  if ((salesTypeData.type == 'SALES-BC' ||
+                                          salesTypeData.type == 'SALES-BOS') &&
+                                      snapshot.data.taxNumber.isNotEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            content:
+                                                Text('Tax Registered Ledger')));
+                                    return;
+                                  }
+                                }
                                 if (salesTypeData.rateType.isNotEmpty) {
                                   rateType = salesTypeData.id.toString();
                                 }
@@ -2179,13 +2208,19 @@ class _SaleState extends State<Sale> {
       cessOnNetAmount = false,
       negativeStockStatus = false,
       enableKeralaFloodCess = false,
-      useUNIQUECODEASBARCODE = false,
-      useOLDBARCODE = false,
+      useUniqueCodeAsBarcode = false,
+      useOldBarcode = false,
       isMinimumRatedLock = false;
 
   bool isItemData = false;
   String itemLike = 'a';
   selectProductWidget() {
+    if (salesmanAsVehicle) {
+      double square = vehicleData['Salary'].toDouble();
+      if (square > 0) {
+        _quantityController.text = vehicleData['Salary'].toString();
+      }
+    }
     if (!itemStockAll) {
       return FutureBuilder<List<StockItem>>(
         future:
@@ -3040,9 +3075,9 @@ class _SaleState extends State<Sale> {
         : 0;
     rRate = taxMethod == 'MINUS'
         ? cessOnNetAmount
-            ? CommonService.getRound(
+            ? CommonService.getRound(4, (100 * rate) / (100 + taxP + kfcP))
+            : CommonService.getRound(
                 4, (100 * rate) / (100 + taxP + kfcP + cessPer))
-            : CommonService.getRound(4, (100 * rate) / (100 + taxP + kfcP))
         : rate;
     discount = _discountController.text.isNotEmpty
         ? double.tryParse(_discountController.text)
@@ -3105,6 +3140,9 @@ class _SaleState extends State<Sale> {
       tax = 0;
     }
     if (cessOnNetAmount) {
+      cess = 0;
+      adCess = 0;
+    } else {
       if (cessPer > 0) {
         cess = CommonService.getRound(4, ((subTotal * cessPer) / 100));
         adCess = CommonService.getRound(4, (quantity * adCessPer));
@@ -3112,9 +3150,6 @@ class _SaleState extends State<Sale> {
         cess = 0;
         adCess = 0;
       }
-    } else {
-      cess = 0;
-      adCess = 0;
     }
     total = CommonService.getRound(
         2, (subTotal + csGST + csGST + iGST + cess + kfc + adCess));
@@ -3320,43 +3355,87 @@ class _SaleState extends State<Sale> {
                                       }
                                     }
                                     if (profitable) {
-                                      addProduct(CartItem(
-                                          id: totalItem + 1,
-                                          itemId: product.itemId,
-                                          itemName: product.name,
-                                          quantity: quantity,
-                                          rate: rate,
-                                          rRate: rRate,
-                                          uniqueCode: uniqueCode,
-                                          gross: gross,
-                                          discount: discount,
-                                          discountPercent: discountPercent,
-                                          rDiscount: rDisc,
-                                          fCess: kfc,
-                                          serialNo: _serialNoController.text,
-                                          tax: tax,
-                                          taxP: taxP,
-                                          unitId: _dropDownUnit,
-                                          unitValue: unitValue,
-                                          pRate: pRate,
-                                          rPRate: rPRate,
-                                          barcode: barcode,
-                                          expDate: expDate,
-                                          free: freeQty,
-                                          fUnitId: fUnitId,
-                                          cdPer: cdPer,
-                                          cDisc: cDisc,
-                                          net: subTotal,
-                                          cess: cess,
-                                          total: total,
-                                          profitPer: profitPer,
-                                          fUnitValue: fUnitValue,
-                                          adCess: adCess,
-                                          iGST: iGST,
-                                          cGST: csGST,
-                                          sGST: csGST,
-                                          stock: product.quantity,
-                                          minimumRate: product.minimumRate));
+                                      bool isUnit = true;
+                                      if (enableMULTIUNIT) {
+                                        if (_dropDownUnit <= 0) {
+                                          int united = unitListData != null
+                                              ? unitListData.isNotEmpty
+                                                  ? unitListData[0].sUnit
+                                                  : unitData
+                                                      .firstWhere((element) =>
+                                                          element.name == 'NOS')
+                                                      .id
+                                              : 0;
+                                          _dropDownUnit = united;
+                                          double unitedValue = unitListData !=
+                                                  null
+                                              ? unitListData.isNotEmpty
+                                                  ? unitListData[0].conversion
+                                                  : unitData
+                                                      .firstWhere((element) =>
+                                                          element.name == 'NOS')
+                                                      .conversion
+                                              : 0;
+                                          _conversion = unitedValue;
+                                        }
+                                        isUnit =
+                                            _dropDownUnit > 0 ? true : false;
+                                      }
+                                      if (isUnit) {
+                                        addProduct(CartItem(
+                                            id: totalItem + 1,
+                                            itemId: product.itemId,
+                                            itemName: product.name,
+                                            quantity: quantity,
+                                            rate: rate,
+                                            rRate: rRate,
+                                            uniqueCode: uniqueCode,
+                                            gross: gross,
+                                            discount: discount,
+                                            discountPercent: discountPercent,
+                                            rDiscount: rDisc,
+                                            fCess: kfc,
+                                            serialNo: _serialNoController.text,
+                                            tax: tax,
+                                            taxP: taxP,
+                                            unitId: _dropDownUnit,
+                                            unitValue: unitValue,
+                                            pRate: pRate,
+                                            rPRate: rPRate,
+                                            barcode: barcode,
+                                            expDate: expDate,
+                                            free: freeQty,
+                                            fUnitId: fUnitId,
+                                            cdPer: cdPer,
+                                            cDisc: cDisc,
+                                            net: subTotal,
+                                            cess: cess,
+                                            total: total,
+                                            profitPer: profitPer,
+                                            fUnitValue: fUnitValue,
+                                            adCess: adCess,
+                                            iGST: iGST,
+                                            cGST: csGST,
+                                            sGST: csGST,
+                                            stock: product.quantity,
+                                            minimumRate: product.minimumRate));
+                                      } else {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(SnackBar(
+                                          content:
+                                              const Text('Please select SKU'),
+                                          duration: const Duration(seconds: 1),
+                                          action: SnackBarAction(
+                                            label: 'Click',
+                                            onPressed: () {
+                                              // print('Action is clicked');
+                                            },
+                                            textColor: Colors.white,
+                                            disabledTextColor: Colors.grey,
+                                          ),
+                                          backgroundColor: Colors.red,
+                                        ));
+                                      }
                                     } else {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(SnackBar(
@@ -3636,7 +3715,7 @@ class _SaleState extends State<Sale> {
                                                                         : rateType ==
                                                                                 '3'
                                                                             ? product.wholeSalePrice
-                                                                            : 0;
+                                                                            : rate;
                                                 if (_unit.rate.isNotEmpty) {
                                                   rateTypeItem = rateTypeList
                                                       .firstWhere((element) =>
@@ -4003,9 +4082,9 @@ class _SaleState extends State<Sale> {
                                     ? labelSerialNo
                                     : 'SerialNo'),
                             onChanged: (value) {
-                              setState(() {
-                                calculate(product);
-                              });
+                              // setState(() {
+                              //   // calculate(product);
+                              // });
                             },
                           ),
                         )),
@@ -4613,10 +4692,10 @@ class _SaleState extends State<Sale> {
   TextEditingController returnAmountController = TextEditingController();
 
   void addProduct(product) {
-    int index = cartItem.indexWhere((i) => i.id == product.id);
+    int index = cartItem.indexWhere((i) => i.itemId == product.itemId);
 
     if (index != -1) {
-      updateProduct(product, product.quantity + 1);
+      updateProduct(product, cartItem[index].quantity + product.quantity);
     } else {
       cartItem.add(product);
       calculateTotal();
@@ -4624,13 +4703,13 @@ class _SaleState extends State<Sale> {
   }
 
   void removeProduct(product) {
-    int index = cartItem.indexWhere((i) => i.id == product.id);
+    int index = cartItem.indexWhere((i) => i.itemId == product.itemId);
     cartItem[index].quantity = 1;
     cartItem.removeWhere((item) => item.id == product.id);
   }
 
   void updateProduct(product, qty) {
-    int index = cartItem.indexWhere((i) => i.id == product.id);
+    int index = cartItem.indexWhere((i) => i.itemId == product.itemId);
     cartItem[index].quantity = qty;
 
     cartItem[index].gross = CommonService.getRound(
@@ -5100,22 +5179,22 @@ class _SaleState extends State<Sale> {
                     : _balance.roundToDouble().toString()),
               ],
             ),
-            Card(
-              elevation: 5,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  const Text('More Details'),
-                  Switch(
-                      value: valueMore,
-                      onChanged: (value) {
-                        setState(() {
-                          valueMore = value;
-                        });
-                      }),
-                ],
-              ),
-            ),
+            // Card(
+            //   elevation: 5,
+            //   child: Row(
+            //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            //     children: [
+            //       const Text('More Details'),
+            //       Switch(
+            //           value: valueMore,
+            //           onChanged: (value) {
+            //             setState(() {
+            //               valueMore = value;
+            //             });
+            //           }),
+            //     ],
+            //   ),
+            // ),
             Visibility(
               visible: valueMore,
               child: Column(
@@ -5287,9 +5366,21 @@ class _SaleState extends State<Sale> {
                 ],
               ),
             ),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      valueMore = valueMore == true ? false : true;
+                    });
+                    // showBottom(context);
+                  },
+                  child: const Text('More',
+                      style: TextStyle(
+                          fontSize: 20.0, fontWeight: FontWeight.bold)),
+                ),
                 const Text('GrandTotal : ',
                     style: TextStyle(
                         fontSize: 22.0,
@@ -5317,7 +5408,7 @@ class _SaleState extends State<Sale> {
                     style: const TextStyle(
                         fontSize: 22.0,
                         fontWeight: FontWeight.bold,
-                        color: Colors.red))
+                        color: Colors.red)),
               ],
             ),
           ],
@@ -5558,7 +5649,11 @@ class _SaleState extends State<Sale> {
         icon: Icons.check,
         onPressedNo: () {
           Navigator.of(context).pop();
-          Navigator.pushReplacementNamed(context, '/sales',
+          Navigator.pushReplacementNamed(
+              context,
+              ComSettings.appSettings('bool', 'key-simple-sales', false)
+                  ? '/SimpleSale'
+                  : '/sales',
               arguments: {'default': thisSale});
         },
         onPressedYes: () {
@@ -5809,6 +5904,300 @@ class _SaleState extends State<Sale> {
     } on PlatformException catch (e) {
       debugPrint(e.toString());
     }
+  }
+
+  salesManVehicle() {
+    return Visibility(
+        visible: salesmanAsVehicle,
+        child: Row(
+          children: [
+            // const Text('Vehicle No'),
+            SizedBox(
+              width: 120,
+              // child: Expanded(
+              //   child: TextField(
+              //     decoration: const InputDecoration(
+              //       border: OutlineInputBorder(),
+              //       label: Text('No'),
+              //     ),
+              //     onChanged: (value) {
+              //       setState(() {
+              //         // customerName =
+              //         //     value.isNotEmpty ? value.toUpperCase() : 'CASH';
+              //       });
+              //     },
+              //   ),
+              // ),
+              child: DropdownSearch<dynamic>(
+                maxHeight: 300,
+                onFind: (String filter) => getSalesManListData(filter),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), labelText: 'V No'),
+                onChanged: (dynamic data) {
+                  vehicleData = otherRegSalesManList.firstWhere((element) =>
+                      element['Auto'].toString() == data.id.toString());
+                  vehicleName = vehicleData['Name'];
+                },
+                showSearchBox: true,
+              ),
+            ),
+            const SizedBox(
+              width: 10,
+            ),
+            Expanded(
+              child: TextField(
+                // enabled: false,
+                readOnly: true,
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  label: Text(vehicleName),
+                ),
+              ),
+            ),
+          ],
+        ));
+  }
+
+  Future<List<dynamic>> getSalesManListData(String filter) async {
+    var dd = otherRegSalesManList
+        .where((element) => element['Name']
+            .toString()
+            .toLowerCase()
+            .contains(filter.toLowerCase()))
+        .toList();
+    List<DataJson> dataResult = [];
+    for (var data in dd) {
+      dataResult.add(DataJson(
+          id: data['Auto'],
+          name: data['Name'].trim().split(' ')[0].toString()));
+    }
+    return dataResult;
+  }
+
+  showBottom0(BuildContext ctx) {
+    showModalBottomSheet(
+        isScrollControlled: true,
+        elevation: 5,
+        context: ctx,
+        builder: (ctx) => Padding(
+              padding: EdgeInsets.only(
+                  top: 15,
+                  left: 15,
+                  right: 15,
+                  bottom: MediaQuery.of(ctx).viewInsets.bottom + 15),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Narration...',
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _narration = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  Visibility(
+                    visible: _isReturnInSales,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: returnEntryNoController,
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              labelText: 'Bill No :',
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                                  allow: true)
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                returnBillId = int.tryParse(value);
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        TextButton(
+                            onPressed: () {
+                              setState(() {
+                                loadReturnForm = true;
+                              });
+                            },
+                            style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all(
+                                    kPrimaryDarkColor),
+                                foregroundColor:
+                                    MaterialStateProperty.all(white)),
+                            child: const Text('Return Bill')),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        Expanded(
+                          child: TextField(
+                            controller: returnAmountController,
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              labelText: 'Amount :',
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                                  allow: true, replacementString: '.')
+                            ],
+                            onChanged: (value) {
+                              if (value.isNotEmpty) {
+                                setState(() {
+                                  returnAmount = double.tryParse(value);
+                                  grandTotal = grandTotal - returnAmount;
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    // height: deviceSize.height / 6,
+                    child: Container(
+                      color: white,
+                      child: ListView.builder(
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: otherAmountList.length,
+                          shrinkWrap: true,
+                          itemBuilder: (BuildContext context, int index) {
+                            _controllers.add(TextEditingController());
+                            _controllers[index].text =
+                                otherAmountList[index]['Amount'].toString();
+                            return Container(
+                                padding: const EdgeInsets.only(
+                                    top: 0, right: 10, left: 10),
+                                child: Row(children: <Widget>[
+                                  expandStyle(
+                                      2,
+                                      Container(
+                                          margin:
+                                              const EdgeInsets.only(top: 35),
+                                          child: Text(otherAmountList[index]
+                                              ['LedName']))),
+                                  expandStyle(
+                                      1,
+                                      TextFormField(
+                                          controller: TextEditingController
+                                              .fromValue(TextEditingValue(
+                                                  text: otherAmountList[index]
+                                                          ['Amount']
+                                                      .toString(),
+                                                  selection: TextSelection(
+                                                      baseOffset: 0,
+                                                      extentOffset:
+                                                          otherAmountList[index]
+                                                                  ['Amount']
+                                                              .toString()
+                                                              .length))),
+                                          keyboardType: const TextInputType
+                                              .numberWithOptions(decimal: true),
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter(
+                                                RegExp(r'[0-9]'),
+                                                allow: true,
+                                                replacementString: '.')
+                                          ],
+                                          onFieldSubmitted: (String str) {
+                                            var cartTotal = totalCartValue;
+                                            if (str.isNotEmpty) {
+                                              otherAmountList[index]['Amount'] =
+                                                  double.tryParse(str);
+                                              otherAmountList[index]
+                                                      ['Percentage'] =
+                                                  CommonService.getRound(
+                                                      decimal,
+                                                      ((double.tryParse(str) *
+                                                              100) /
+                                                          cartTotal));
+                                              var netTotal = (cartTotal -
+                                                      returnAmount) +
+                                                  otherAmountList.fold(
+                                                      0.0,
+                                                      (t, e) =>
+                                                          t +
+                                                          double.parse(e[
+                                                                      'Symbol'] ==
+                                                                  '-'
+                                                              ? (e['Amount'] *
+                                                                      -1)
+                                                                  .toString()
+                                                              : e['Amount']
+                                                                  .toString()));
+                                              setState(() {
+                                                grandTotal = netTotal;
+                                              });
+                                            }
+                                          }))
+                                ]));
+                          }),
+                    ),
+                  ),
+                ],
+              ),
+            ));
+
+    // child: Column(
+    //   mainAxisSize: MainAxisSize.min,
+    //   crossAxisAlignment: CrossAxisAlignment.start,
+    //   children: [
+    //     TextField(
+    //       controller: _otherDiscountController,
+    //       focusNode: _focusNodeOtherDiscount,
+    //       keyboardType:
+    //           TextInputType.numberWithOptions(decimal: true),
+    //       decoration: InputDecoration(labelText: 'Other Discount'),
+    //     ),
+    //     TextField(
+    //       controller: _otherChargesController,
+    //       focusNode: _focusNodeOtherCharges,
+    //       keyboardType:
+    //           TextInputType.numberWithOptions(decimal: true),
+    //       decoration: InputDecoration(labelText: 'Other Charges'),
+    //     ),
+    //     TextField(
+    //       controller: _narrationController,
+    //       decoration: InputDecoration(labelText: 'Narration'),
+    //     ),
+    //     const SizedBox(
+    //       height: 15,
+    //     ),
+    //     Text(calculateGrandTotal()),
+    //     Center(
+    //         child: ElevatedButton(
+    //             onPressed: () {
+    //               setState(() {
+    //                 calculateGrandTotal();
+    //               });
+    //             },
+    //             child: const Text('Submit')))
+    //   ],
+    // ),
   }
 }
 

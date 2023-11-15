@@ -199,6 +199,32 @@ class InventoryReportMenu extends StatelessWidget {
             Navigator.pushNamed(context, '/priceList');
           },
         ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Icon(
+                    Icons.format_list_numbered,
+                    color: Colors.cyan[500],
+                    size: 90.0,
+                  ),
+                  const Text(
+                    'SerialNo List',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            Navigator.pushNamed(context, '/serialNoList');
+          },
+        ),
       ],
     );
   }

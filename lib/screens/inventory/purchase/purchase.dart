@@ -1,8 +1,6 @@
 // @dart = 2.11
 import 'dart:convert';
-import 'dart:math';
 
-import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_awesome_alert_box/flutter_awesome_alert_box.dart';
@@ -18,7 +16,6 @@ import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/util/show_confirm_alert_box.dart';
-import 'package:sheraccerp/widget/loading.dart';
 import 'package:sheraccerp/widget/popup_menu_action.dart';
 import 'package:sheraccerp/widget/progress_hud.dart';
 
@@ -48,7 +45,7 @@ class _PurchaseState extends State<Purchase> {
       lastRecord = false,
       isItemSerialNo = false,
       isFreeQty = false,
-      realPRATEBASEDPROFITPERCENTAGE = false;
+      realPRateBasedProfitPercentage = false;
   List<CartItemP> cartItem = [];
   int page = 1, pageTotal = 0, totalRecords = 0, _dropDownUnit = 0;
   List<dynamic> itemDisplay = [];
@@ -57,8 +54,8 @@ class _PurchaseState extends State<Purchase> {
   bool enableMULTIUNIT = false,
       cessOnNetAmount = false,
       enableKeralaFloodCess = false,
-      useUNIQUECODEASBARCODE = false,
-      useOLDBARCODE = false,
+      useUniqueCodeAaBarcode = false,
+      useOldBarcode = false,
       buttonEvent = false;
   int locationId = 1, salesManId = 0, decimal = 2;
   String labelSerialNo = 'SerialNo';
@@ -90,10 +87,10 @@ class _PurchaseState extends State<Purchase> {
     companyTaxMode = ComSettings.getValue('PACKAGE', settings);
     cessOnNetAmount = ComSettings.getStatus('CESS ON NET AMOUNT', settings);
     enableKeralaFloodCess = false;
-    useUNIQUECODEASBARCODE =
+    useUniqueCodeAaBarcode =
         ComSettings.getStatus('USE UNIQUECODE AS BARCODE', settings);
-    useOLDBARCODE = ComSettings.getStatus('USE OLD BARCODE', settings);
-    realPRATEBASEDPROFITPERCENTAGE =
+    useOldBarcode = ComSettings.getStatus('USE OLD BARCODE', settings);
+    realPRateBasedProfitPercentage =
         ComSettings.getStatus('REAL PRATE BASED PROFIT PERCENTAGE', settings);
 
     isItemSerialNo = ComSettings.getStatus('KEY ITEM SERIAL NO', settings);
@@ -1475,32 +1472,32 @@ class _PurchaseState extends State<Purchase> {
           decimal, (net + csGST + csGST + iGST + cess + adCess));
       // total = net + tax;
       if (mrp > 0) {
-        profitPer = realPRATEBASEDPROFITPERCENTAGE
+        profitPer = realPRateBasedProfitPercentage
             ? CommonService.getRound(decimal, (((mrp - rRate) * 100) / rRate))
             : CommonService.getRound(decimal, (((mrp - rate) * 100) / rate));
       }
       if (retail > 0) {
-        retailPer = realPRATEBASEDPROFITPERCENTAGE
+        retailPer = realPRateBasedProfitPercentage
             ? CommonService.getRound(
                 decimal, (((retail - rRate) * 100) / rRate))
             : CommonService.getRound(decimal, (((retail - rate) * 100) / rate));
       }
       if (wholeSale > 0) {
-        wholesalePer = realPRATEBASEDPROFITPERCENTAGE
+        wholesalePer = realPRateBasedProfitPercentage
             ? CommonService.getRound(
                 decimal, (((wholeSale - rRate) * 100) / rRate))
             : CommonService.getRound(
                 decimal, (((wholeSale - rate) * 100) / rate));
       }
       if (spRetail > 0) {
-        spRetailPer = realPRATEBASEDPROFITPERCENTAGE
+        spRetailPer = realPRateBasedProfitPercentage
             ? CommonService.getRound(
                 decimal, (((spRetail - rRate) * 100) / rRate))
             : CommonService.getRound(
                 decimal, (((spRetail - rate) * 100) / rate));
       }
       if (branch > 0) {
-        branchPer = realPRATEBASEDPROFITPERCENTAGE
+        branchPer = realPRateBasedProfitPercentage
             ? CommonService.getRound(
                 decimal, (((branch - rRate) * 100) / rRate))
             : CommonService.getRound(decimal, (((branch - rate) * 100) / rate));
@@ -2618,19 +2615,21 @@ class _PurchaseState extends State<Purchase> {
                     controller: _otherDiscountController,
                     focusNode: _focusNodeOtherDiscount,
                     keyboardType:
-                        TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(labelText: 'Other Discount'),
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration:
+                        const InputDecoration(labelText: 'Other Discount'),
                   ),
                   TextField(
                     controller: _otherChargesController,
                     focusNode: _focusNodeOtherCharges,
                     keyboardType:
-                        TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(labelText: 'Other Charges'),
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration:
+                        const InputDecoration(labelText: 'Other Charges'),
                   ),
                   TextField(
                     controller: _narrationController,
-                    decoration: InputDecoration(labelText: 'Narration'),
+                    decoration: const InputDecoration(labelText: 'Narration'),
                   ),
                   const SizedBox(
                     height: 15,

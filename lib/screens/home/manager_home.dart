@@ -336,10 +336,19 @@ class _ManagerHomeState extends State<ManagerHome>
                 : false;
             args.active == "false"
                 ? _commonService.getTrialPeriod(args.atDate)
-                    ? Navigator.pushNamed(context, '/sales',
+                    ? Navigator.pushNamed(
+                        context,
+                        ComSettings.appSettings(
+                                'bool', 'key-simple-sales', false)
+                            ? '/SimpleSale'
+                            : '/sales',
                         arguments: {'default': sType})
                     : _expire(args, context)
-                : Navigator.pushNamed(context, '/sales',
+                : Navigator.pushNamed(
+                    context,
+                    ComSettings.appSettings('bool', 'key-simple-sales', false)
+                        ? '/SimpleSale'
+                        : '/sales',
                     arguments: {'default': sType});
           },
           // onLongPress: () => print('FIRST CHILD LONG PRESS'),

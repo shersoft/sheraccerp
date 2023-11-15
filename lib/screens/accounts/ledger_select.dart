@@ -1,6 +1,7 @@
 // @dart = 2.11
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:sheraccerp/models/customer_model.dart';
 import 'package:sheraccerp/models/ledger_parent.dart';
 import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
@@ -2237,6 +2238,23 @@ class _LedgerSelectState extends State<LedgerSelect> {
           _loading = false;
           _ledger = itemDisplay[index].name;
           _id = itemDisplay[index].id;
+
+          api.getCustomerDetail(_id).then((_data) => tempLedgerData =
+              CustomerModel(
+                  id: _data.id,
+                  name: _ledger,
+                  address1: _data.address1,
+                  address2: _data.address2,
+                  address3: _data.address3,
+                  address4: _data.address4,
+                  balance: _data.balance,
+                  city: _data.city,
+                  email: _data.email,
+                  phone: _data.phone,
+                  route: _data.route,
+                  state: _data.state,
+                  stateCode: _data.stateCode,
+                  taxNumber: _data.taxNumber));
         });
       },
     );

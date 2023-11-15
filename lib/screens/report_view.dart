@@ -92,10 +92,12 @@ class _ReportViewState extends State<ReportView> {
     loadSettings();
   }
 
+  var companyTaxNo = '';
   loadSettings() {
     companySettings = ScopedModel.of<MainModel>(context).getCompanySettings();
     settings = ScopedModel.of<MainModel>(context).getSettings();
     reportDesign = ScopedModel.of<MainModel>(context).getReportDesign();
+    companyTaxNo = ComSettings.getValue('GST-NO', settings);
   }
 
   @override
@@ -131,7 +133,8 @@ class _ReportViewState extends State<ReportView> {
               onSelected: (menuId) {
                 setState(() {
                   if (menuId == 1) {
-                    _createPDF(widget.name +
+                    _createPDF('Ledger Report ' +
+                            widget.name +
                             ' Date :' +
                             DateUtil.dateDMY(widget.sDate) +
                             ' - ' +
@@ -340,9 +343,10 @@ class _ReportViewState extends State<ReportView> {
                 controller: controller,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
+                  children: [
                     Center(
-                        child: Text('Date : From ' +
+                        child: Text(widget.name +
+                            ' Date : From ' +
                             DateUtil.dateDMY(widget.sDate) +
                             ' To ' +
                             DateUtil.dateDMY(widget.eDate))),
@@ -749,7 +753,8 @@ class _ReportViewState extends State<ReportView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Center(
-                        child: Text('Date : From ' +
+                        child: Text(widget.name +
+                            ' Date : From ' +
                             DateUtil.dateDMY(widget.sDate) +
                             ' To ' +
                             DateUtil.dateDMY(widget.eDate))),
@@ -1420,7 +1425,8 @@ class _ReportViewState extends State<ReportView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Center(
-                        child: Text('Date : From ' +
+                        child: Text(widget.name +
+                            ' Date : From ' +
                             DateUtil.dateDMY(widget.sDate) +
                             ' To ' +
                             DateUtil.dateDMY(widget.eDate))),
@@ -1595,7 +1601,8 @@ class _ReportViewState extends State<ReportView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Center(
-                        child: Text('Date : From ' +
+                        child: Text(widget.name +
+                            ' Date : From ' +
                             DateUtil.dateDMY(widget.sDate) +
                             ' To ' +
                             DateUtil.dateDMY(widget.eDate))),
@@ -2838,7 +2845,8 @@ class _ReportViewState extends State<ReportView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Center(
-                              child: Text('Date : From ' +
+                              child: Text(widget.name +
+                                  ' Date : From ' +
                                   DateUtil.dateDMY(widget.sDate) +
                                   ' To ' +
                                   DateUtil.dateDMY(widget.eDate))),
@@ -2989,7 +2997,8 @@ class _ReportViewState extends State<ReportView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Center(
-                        child: Text('Date : From ' +
+                        child: Text(widget.name +
+                            ' Date : From ' +
                             DateUtil.dateDMY(widget.sDate) +
                             ' To ' +
                             DateUtil.dateDMY(widget.eDate))),
@@ -3138,7 +3147,8 @@ class _ReportViewState extends State<ReportView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Center(
-                        child: Text('Date : From ' +
+                        child: Text(widget.name +
+                            ' Date : From ' +
                             DateUtil.dateDMY(widget.sDate) +
                             ' To ' +
                             DateUtil.dateDMY(widget.eDate))),
@@ -3283,11 +3293,48 @@ class _ReportViewState extends State<ReportView> {
         // pageFormat: PdfPageFormat.a4,
         maxPages: 100,
         header: (context) => pw.Column(children: [
+              pw.Center(
+                  child: pw.Column(children: [
+                pw.Text(companySettings.name),
+                pw.Text(companySettings.add1),
+                pw.Text(companySettings.add2),
+                pw.Text(companySettings.add3),
+                pw.Text(companySettings.mobile),
+                pw.Text(companyTaxNo.isNotEmpty
+                    ? (companyTaxMode == 'INDIA'
+                        ? 'GST NO : $companyTaxNo'
+                        : companyTaxMode == 'AFRICA'
+                            ? 'NUIT : $companyTaxNo'
+                            : companyTaxMode == 'GULF'
+                                ? 'TRN : $companyTaxNo'
+                                : '')
+                    : ''),
+              ])),
               pw.Text(title,
-                  style: pw.TextStyle(
-                      color: const PdfColor.fromInt(0),
-                      fontSize: 25,
-                      fontWeight: pw.FontWeight.bold)),
+                  style: const pw.TextStyle(color: PdfColor.fromInt(0))),
+
+              tempLedgerData != null
+                  ? pw.Align(
+                      alignment: pw.Alignment.centerLeft,
+                      child: pw.RichText(
+                          textAlign: pw.TextAlign.left,
+                          text: pw.TextSpan(
+                              text: 'Ledger   : ${tempLedgerData.name}\n',
+                              children: [
+                                pw.TextSpan(
+                                    text:
+                                        'Address : ${tempLedgerData.address1}\n'),
+                                pw.TextSpan(
+                                    text:
+                                        '                ${tempLedgerData.address2}\n'),
+                                pw.TextSpan(
+                                    text:
+                                        '                ${tempLedgerData.address3}\n'),
+                                pw.TextSpan(
+                                    text:
+                                        'Mobile    : ${tempLedgerData.phone}\n'),
+                              ])))
+                  : pw.Text(''),
               // if (context.pageNumber > 1) pw.SizedBox(height: 20)
             ]),
         build: (context) => [

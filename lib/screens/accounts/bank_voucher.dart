@@ -24,23 +24,30 @@ import 'package:sheraccerp/widget/progress_hud.dart';
 
 import '../../scoped-models/main.dart';
 
-class RPVoucher extends StatefulWidget {
-  const RPVoucher({Key key}) : super(key: key);
+class BankVoucher extends StatefulWidget {
+  const BankVoucher({Key key}) : super(key: key);
 
   @override
-  _RPVoucherState createState() => _RPVoucherState();
+  _BankVoucherState createState() => _BankVoucherState();
 }
 
-class _RPVoucherState extends State<RPVoucher> {
+class _BankVoucherState extends State<BankVoucher> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   List<LedgerModel> cashBankACList = [];
   Size deviceSize;
   List<dynamic> items = [];
+  List<String> type = ['', 'CHEQUE', 'RTGS/NFT', 'UPI'];
+  List<String> statusType = ['', 'PENDING', 'CLEARED', 'BOUNCED', 'CANCELLED'];
+  String dropDownType = '', dropDownStatusType = '';
   List<dynamic> itemDisplay = [];
   DioService api = DioService();
   DateTime now = DateTime.now();
-  String formattedDate, narration = '', projectId = '-1';
-  double balance = 0, total = 0, amount = 0, discount = 0;
+  String formattedDate,
+      formattedClearDate,
+      chequeNo = '',
+      narration = '',
+      projectId = '-1';
+  double balance = 0, total = 0, amount = 0, discount = 0, bankCharge = 0;
   var accountId = '', accountName = '';
   LedgerModel ledData;
   bool _isLoading = false,
@@ -63,6 +70,8 @@ class _RPVoucherState extends State<RPVoucher> {
   CompanyInformation companySettings;
   final TextEditingController _controllerAmount = TextEditingController();
   final TextEditingController _controllerDiscount = TextEditingController();
+  final TextEditingController _controllerChequeNo = TextEditingController();
+  final TextEditingController _controllerBankCharge = TextEditingController();
   final TextEditingController _controllerNarration = TextEditingController();
 
   @override
@@ -70,10 +79,15 @@ class _RPVoucherState extends State<RPVoucher> {
     super.initState();
     formattedDate =
         getToDay.isNotEmpty ? getToDay : DateFormat('dd-MM-yyyy').format(now);
-
-    api.getCashBankAc().then((value) {
+    formattedClearDate = formattedDate;
+    api.getLedgerByType('SelectbankOnly').then((value) {
+      List<LedgerModel> _dataTemp = [];
+      for (var ledger in value) {
+        _dataTemp
+            .add(LedgerModel(id: ledger['ledcode'], name: ledger['LedName']));
+      }
       setState(() {
-        cashBankACList.addAll(value);
+        cashBankACList.addAll(_dataTemp);
       });
     });
 
@@ -84,17 +98,7 @@ class _RPVoucherState extends State<RPVoucher> {
   loadSettings() {
     companySettings = ScopedModel.of<MainModel>(context).getCompanySettings();
     settings = ScopedModel.of<MainModel>(context).getSettings();
-
-    String cashAc =
-        ComSettings.getValue('CASH A/C', settings).toString().trim() ?? 'CASH';
-    acId = mainAccount
-        .firstWhere((element) => element['LedName'] == cashAc)['LedCode'];
-    acId = ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) -
-                1 >
-            acId
-        ? ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', acId) -
-            1
-        : acId;
+    acId = 0;
     salesManId = ComSettings.appSettings(
             'int', 'key-dropdown-default-salesman-view', 1) -
         1;
@@ -121,6 +125,7 @@ class _RPVoucherState extends State<RPVoucher> {
     final routes =
         ModalRoute.of(context).settings.arguments as Map<String, String>;
     var title = routes != null ? routes['voucher'].toString() : 'Voucher';
+    title = 'Bank $title';
     return WillPopScope(
         onWillPop: _onWillPop,
         child: widgetID ? widgetPrefix(title) : widgetSuffix(title));
@@ -162,11 +167,12 @@ class _RPVoucherState extends State<RPVoucher> {
                     if (buttonEvent) {
                       return;
                     } else {
-                      accountId = acId > 0 ? acId.toString() : '';
+                      accountId =
+                          int.parse(accountId) > 0 ? accountId.toString() : '0';
                       if (companyUserData.deleteData) {
-                        title == 'Payment'
-                            ? deleteVoucher('Payment', 'DELETE')
-                            : deleteVoucher('Receipt', 'DELETE');
+                        title == 'Bank Payment'
+                            ? deleteVoucher('Bank Payment', 'DELETE')
+                            : deleteVoucher('Bank Receipt', 'DELETE');
                       } else {
                         Fluttertoast.showToast(
                             msg: 'Permission denied\ncan`t delete');
@@ -184,11 +190,12 @@ class _RPVoucherState extends State<RPVoucher> {
                     iconSize: 40,
                     onPressed: () {
                       //edit
-                      accountId = acId > 0 ? acId.toString() : '';
+                      accountId =
+                          int.parse(accountId) > 0 ? accountId.toString() : '0';
                       if (companyUserData.updateData) {
-                        title == 'Payment'
-                            ? submitData('Payment', 'UPDATE')
-                            : submitData('Receipt', 'UPDATE');
+                        title == 'Bank Payment'
+                            ? submitData('Bank Payment', 'UPDATE')
+                            : submitData('Bank Receipt', 'UPDATE');
                       } else {
                         Fluttertoast.showToast(
                             msg: 'Permission denied\ncan`t edit');
@@ -204,12 +211,14 @@ class _RPVoucherState extends State<RPVoucher> {
                     onPressed: () {
                       //save
                       if (accountId.trim().isEmpty) {
-                        accountId = acId > 0 ? acId.toString() : '';
+                        accountId = int.parse(accountId) > 0
+                            ? accountId.toString()
+                            : '0';
                       }
                       if (companyUserData.insertData) {
-                        title == 'Payment'
-                            ? submitData('Payment', 'INSERT')
-                            : submitData('Receipt', 'INSERT');
+                        title == 'Bank Payment'
+                            ? submitData('Bank Payment', 'INSERT')
+                            : submitData('Bank Receipt', 'INSERT');
                       } else {
                         Fluttertoast.showToast(
                             msg: 'Permission denied\ncan`t save');
@@ -234,9 +243,7 @@ class _RPVoucherState extends State<RPVoucher> {
     return Container(
       padding: const EdgeInsets.all(6.0),
       child: SingleChildScrollView(
-        child:
-            isMultiRvPv ? voucherParticularWidget(mode) : voucherWidget(mode),
-        // mode == 'Payment' ? paymentVoucher() : receiptVoucher(),
+        child: voucherWidget(mode),
       ),
     );
   }
@@ -283,7 +290,7 @@ class _RPVoucherState extends State<RPVoucher> {
         });
 
         List tempList = [];
-        var statement = mode == 'Payment' ? 'PVList' : 'RVList';
+        var statement = mode == 'Bank Payment' ? 'BPVList' : 'BRVList';
         salesManId = salesManId > 0 ? salesManId : -1;
         locationId = locationId > 0 ? locationId : -1;
         String salesMan = salesManId > 0 ? salesManId.toString() : '';
@@ -349,40 +356,6 @@ class _RPVoucherState extends State<RPVoucher> {
     );
   }
 
-  // paymentVoucher() {
-  //   //Payment
-  //   return Column(
-  //     children: [
-  //       TextButton(
-  //           onPressed: () async {
-  //             submitData('Payment');//submitData('Receipt');
-  //           },
-  //           style: TextButton.styleFrom(
-  //               primary: white,
-  //               backgroundColor: blue,
-  //               side: const BorderSide(color: kPrimaryDarkColor, width: 1)),
-  //           child: const Text('Save'))
-  //     ],
-  //   );
-  // }
-
-  // receiptVoucher() {
-  //   //Receipt
-  //   return Column(
-  //     children: [
-  //       TextButton(
-  //           onPressed: () async {
-  //             submitData('Receipt');
-  //           },
-  //           style: TextButton.styleFrom(
-  //               primary: white,
-  //               backgroundColor: blue,
-  //               side: const BorderSide(color: kPrimaryDarkColor, width: 1)),
-  //           child: const Text('Save'))
-  //     ],
-  //   );
-  // }
-
   void submitData(mode, operation) async {
     if (accountId.isEmpty) {
       Fluttertoast.showToast(msg: 'Select Cash Account');
@@ -408,52 +381,58 @@ class _RPVoucherState extends State<RPVoucher> {
             ']';
         var data = [
           {
-            'entryno': oldVoucher ? dataDynamic[0]['EntryNo'].toString() : '0',
+            'entryno': oldVoucher ? dataDynamic[0]['EntryNo'].toString() : '1',
+            'nameId': ledData.id,
+            'bankId': accountId,
+            'type': dropDownType,
+            'chequeNo': _controllerChequeNo.text,
+            'status': dropDownStatusType,
             'date': formatDMY(formattedDate),
-            'debitAccount': accountId,
-            'amount': amount,
-            'discount': discount,
-            'total': total,
+            'clrdate': formatDMY(formattedClearDate),
             'location': locationId,
-            'user': 1,
-            'project': projectId,
-            'salesman': salesManId,
-            'month': '',
-            'particular': particular,
+            'amount': amount,
+            'bankCharge': _controllerBankCharge.text.isNotEmpty
+                ? '_controllerBankCharge.text'
+                : '0',
+            'discount': discount,
+            'narration': narration,
+            'user': userIdC,
             'fyId': currentFinancialYear.id,
             'statementType': operation == 'UPDATE'
-                ? mode == 'Payment'
-                    ? 'Update_Pv'
-                    : 'Update_Rv'
-                : mode == 'Payment'
-                    ? 'InsertPv'
-                    : 'Insert_Rv'
-            // 'Update_Rv'  Update_Pv Delete_Pv Delete_Rv  FindPv FindRv
+                ? mode == 'Bank Payment'
+                    ? 'PvUpdate'
+                    : 'RvUpdate'
+                : mode == 'Bank Payment'
+                    ? 'PvInsert'
+                    : 'RvInsert'
+            //PvFind, RvFind
           }
         ];
-        refNo = await api.addVoucher(data);
+        refNo = await api.addBankVoucher(data);
         if (refNo > 0) {
           setState(() {
             _isLoading = false;
             buttonEvent = false;
-            // showInSnackBar(operation == 'DELETE'
-            //     ? 'Deleted : ' + mode + ' voucher.'
-            //     : operation == 'UPDATE'
-            //         ? 'Update : ' + mode + ' voucher.'
-            //         : 'Saved : ' + mode + ' voucher.');
             if (operation == 'DELETE') {
               showInSnackBar('Deleted');
             } else {
               var dataAll = [
                 {
-                  'entryNo':
-                      oldVoucher ? dataDynamic[0]['EntryNo'].toString() : refNo,
+                  'entryno':
+                      oldVoucher ? dataDynamic[0]['EntryNo'].toString() : '0',
+                  'nameId': ledData.id,
+                  'bankId': accountId,
+                  'type': dropDownType,
+                  'chequeNo': _controllerChequeNo.text,
+                  'status': dropDownStatusType,
                   'date': formatDMY(formattedDate),
-                  'debitAccount': accountId,
+                  'clrdate': formatDMY(formattedClearDate),
+                  'location': locationId,
                   'amount': amount,
+                  'bankCharge': _controllerBankCharge.text,
                   'discount': discount,
-                  'total': total,
-                  'particular': particular,
+                  'narration': narration,
+                  'user': userIdC,
                   'account': accountName,
                   'name': ledgerData.name,
                   'oldBalance': ledgerData.balance,
@@ -461,86 +440,6 @@ class _RPVoucherState extends State<RPVoucher> {
                 }
               ];
               actionShow(mode, context, dataAll);
-              if (ComSettings.appSettings('bool', 'key-sms-customer', false)) {
-                var bal = ledgerData.balance.toString().split(' ');
-                if (bal[1] == 'Dr') {
-                  var oldBalance = double.tryParse(bal[0].toString()) ?? 0;
-                  if (mode == 'Payment') {
-                    balance = oldBalance - data[0]['total'];
-                  } else {
-                    balance = operation == 'UPDATE'
-                        ? oldBalance
-                        : oldBalance - data[0]['total'];
-                  }
-                } else {
-                  var oldBalance = (double.tryParse(bal[0].toString()) * (-1));
-                  balance = oldBalance - data[0]['total'];
-                }
-                var amt = balance.toStringAsFixed(2);
-                var form = mode == 'Payment' ? 'PAYMENT' : 'RECEIPT';
-                String smsBody =
-                    "Dear ${ledgerData.name.toString()},\nYour $form ${data[0]['entryno'].toString()}, Dated : $formattedDate for the Amount of ${data[0]['total'].toString()}/- \nBalance:$amt /- has been confirmed  \n${companySettings.name}";
-                if (ledgerData.phone.toString().isNotEmpty) {
-                  sendSms(ledgerData.phone, smsBody);
-                }
-              }
-
-              if (ComSettings.getStatus('ENABLE SMS OPTION', settings)) {
-                String form = mode == 'Payment' ? 'PAYMENT' : 'RECEIPT';
-                SmsDataModel smsData = smsSettingsList.firstWhere(
-                    (element) => element.voucher == form,
-                    orElse: () => SmsDataModel.emptyData());
-                if (smsData != null && smsData.apiLink.isNotEmpty) {
-                  String smsBody = smsData.messageBody;
-                  String urlData = smsData.apiLink;
-                  var bal = ledgerData.balance.toString().split(' ');
-                  double oldBalance = 0;
-                  if (bal[1] == 'Dr') {
-                    oldBalance = double.tryParse(bal[0].toString()) ?? 0;
-                    if (mode == 'Payment') {
-                      balance = oldBalance - data[0]['total'];
-                    } else {
-                      balance = operation == 'UPDATE'
-                          ? oldBalance
-                          : oldBalance - data[0]['total'];
-                    }
-                  } else {
-                    oldBalance = (double.tryParse(bal[0].toString()) * (-1));
-                    balance = oldBalance - data[0]['total'];
-                  }
-                  double cashReceived = 0, billAmount = 0;
-                  billAmount = data[0]['total'];
-                  smsBody = smsBody
-                      .replaceFirst("#Customer#", ledgerData.name.toString())
-                      .replaceFirst("#OB#", oldBalance.toStringAsFixed(2))
-                      .replaceFirst("#EntryNo#", data[0]['entryno'].toString())
-                      .replaceFirst("#ThisBill#", billAmount.toStringAsFixed(2))
-                      .replaceFirst(
-                          "#CashReceived#", cashReceived.toStringAsFixed(2));
-                  double totalBalance =
-                      ((billAmount + cashReceived)).roundToDouble();
-                  smsBody = smsBody
-                      .replaceFirst(
-                          "#TotalBalance#", totalBalance.toStringAsFixed(2))
-                      .replaceFirst("#NetBalance#", balance.toString())
-                      .replaceFirst(
-                          "#GrandTotal#", billAmount.toStringAsFixed(2))
-                      .replaceFirst(
-                          "#Narration#", billAmount.toStringAsFixed(2));
-
-                  if (ledgerData.phone.toString().trim().isNotEmpty) {
-                    if (ledgerData.phone.toString().trim().length == 10) {
-                      urlData = urlData
-                          .replaceFirst(
-                              "#MobileNo#", ledgerData.phone.toString().trim())
-                          .replaceFirst("#SMS#", smsBody);
-                      api.sentSmsOverApi(urlData);
-                    }
-                  }
-                } else {
-                  debugPrint('sms data is empty');
-                }
-              }
             }
             clearData();
           });
@@ -572,8 +471,8 @@ class _RPVoucherState extends State<RPVoucher> {
         });
         var entryNo = oldVoucher ? dataDynamic[0]['EntryNo'].toString() : '0';
         var fyId = currentFinancialYear.id;
-        var statementType = mode == 'Payment' ? 'Delete_Pv' : 'Delete_Rv';
-        refNo = await api.deleteVoucher(entryNo, fyId, statementType);
+        var statementType = mode == 'Bank Payment' ? 'PvDelete' : 'RvDelete';
+        refNo = await api.deleteBankVoucher(entryNo, fyId, statementType);
         if (refNo > 0) {
           setState(() {
             _isLoading = false;
@@ -598,8 +497,10 @@ class _RPVoucherState extends State<RPVoucher> {
   }
 
   actionShow(mode, context, data) async {
-    var form = mode == 'Payment' ? 'PAYMENT' : 'RECEIPT';
-    var title = mode == 'Payment' ? 'Payment Voucher' : 'Receipt Voucher';
+    var form = mode == 'Bank Payment' ? 'BANK PAYMENT' : 'BANK RECEIPT';
+    var title = mode == 'Bank Payment'
+        ? 'Bank Payment Voucher'
+        : 'Bank Receipt Voucher';
 
     ConfirmAlertBox(
         buttonColorForNo: Colors.red,
@@ -621,58 +522,8 @@ class _RPVoucherState extends State<RPVoucher> {
         context: context);
   }
 
-  // List<String> newDataList = ["2", "3", "4"];
-
-  // Future<String> _showPrinterSize(BuildContext context) async {
-  //   return await showDialog<String>(
-  //       context: context,
-  //       barrierDismissible: true,
-  //       builder: (BuildContext context) {
-  //         return SimpleDialog(
-  //           title: const Text('Printer Size'),
-  //           children: <Widget>[
-  //             SimpleDialogOption(
-  //               onPressed: () {
-  //                 Navigator.pop(context, newDataList[0]);
-  //               },
-  //               child: const Text('2'),
-  //             ),
-  //             SimpleDialogOption(
-  //               onPressed: () {
-  //                 Navigator.pop(context, newDataList[1]);
-  //               },
-  //               child: const Text('3'),
-  //             ),
-  //             SimpleDialogOption(
-  //               onPressed: () {
-  //                 Navigator.pop(context, newDataList[2]);
-  //               },
-  //               child: const Text('4'),
-  //             ),
-  //             SimpleDialogOption(
-  //               onPressed: () {
-  //                 Navigator.pop(context, newDataList[3]);
-  //               },
-  //               child: const Text('5'),
-  //             ),
-  //           ],
-  //         );
-  //       });
-  // }
-
   sentToPreview(String title, String form, var data) {
-    // Future<dynamic> printBluetooth(
-    //     BuildContext context,
-    //     String title,
-    //     CompanyInformation companySettings,
-    //     List<CompanySettings> settings,
-    //     data,
-    //     byteImage,
-    //     size,
-    //     form) async {
     var dataAll = [data, form];
-    //   Navigator.push(context,
-    //       MaterialPageRoute(builder: (_) => BtPrint(dataAll, byteImage)));
     Navigator.push(
         context,
         MaterialPageRoute(
@@ -683,7 +534,6 @@ class _RPVoucherState extends State<RPVoucher> {
     _controllerAmount.text = '';
     _controllerDiscount.text = '';
     _controllerNarration.text = '';
-    acId = 0;
     accountId = '';
     accountName = '';
     ledgerData = null;
@@ -716,7 +566,7 @@ class _RPVoucherState extends State<RPVoucher> {
 
   calculate(mode) {
     setState(() {
-      total = amount + discount;
+      total = amount + discount + bankCharge;
     });
   }
 
@@ -725,7 +575,7 @@ class _RPVoucherState extends State<RPVoucher> {
     return DropdownButton<String>(
       hint: Text(_dropDownValue.isNotEmpty
           ? _dropDownValue.split('-')[1]
-          : 'Select cash account'),
+          : 'Select bank account'),
       items: cashBankACList.map<DropdownMenuItem<String>>((item) {
         return DropdownMenuItem<String>(
           value: item.id.toString() + "-" + item.name,
@@ -750,6 +600,18 @@ class _RPVoucherState extends State<RPVoucher> {
         lastDate: DateTime(2100));
     if (picked != null) {
       setState(() => {formattedDate = DateFormat('dd-MM-yyyy').format(picked)});
+    }
+  }
+
+  Future _selectClearDate() async {
+    DateTime picked = await showDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2100));
+    if (picked != null) {
+      setState(
+          () => {formattedClearDate = DateFormat('dd-MM-yyyy').format(picked)});
     }
   }
 
@@ -841,18 +703,15 @@ class _RPVoucherState extends State<RPVoucher> {
 
   var footerMessage = '';
   fetchVoucher(context, data, mode) {
-    double voucherTotal = 0;
-    int row = 0;
     api
-        .fetchVoucher(data['Id'], mode == 'Payment' ? 'FindPv' : 'FindRv')
+        .fetchBankVoucher(
+            data['Id'], mode == 'Bank Payment' ? 'FindPv' : 'FindRv')
         .then((value) {
       if (value != null) {
         var information = value[0][0];
-        var particulars = value[1];
-        footerMessage = value[2][0]['s_Value'];
-        List c = value[1].toList();
-        row = c.length;
+        footerMessage = value[1][0]['s_Value'];
         formattedDate = DateUtil.dateDMY(information['DDate']);
+        formattedClearDate = DateUtil.dateDMY(information['ClrDate']);
 
         dataDynamic = [
           {
@@ -862,48 +721,35 @@ class _RPVoucherState extends State<RPVoucher> {
             'Type': '0'
           }
         ];
-
-        voucherTotal = double.tryParse(information['Total'].toString());
-        _dropDownValue = information['LedCode'].toString() +
+        _dropDownValue = information['BankId'].toString() +
             '-' +
-            information['LedName'].toString();
-        accountName = information['LedName'].toString();
-        accountId = information['LedCode'].toString();
-        acId = information['LedCode'];
-        var part1 = particulars[0];
-        ledData = LedgerModel(id: part1['LedCode'], name: part1['LedName']);
-        amount = double.tryParse(part1['Amount'].toString());
-        discount = double.tryParse(part1['Discount'].toString());
-        total = double.tryParse(part1['Total'].toString());
-        narration = part1['Narration'].toString();
-        // for (var part in particulars) {
-        //   //
-        // }
+            information['BankName'].toString();
+        accountName = information['BankName'].toString();
+        accountId = information['BankId'].toString();
+        acId = information['NameId'];
+        ledData = LedgerModel(
+            id: information['NameId'], name: information['LedgerName']);
+        amount = double.tryParse(information['Amount'].toString());
+        bankCharge = double.tryParse(information['BankCharge'].toString());
+        discount = double.tryParse(information['Discount'].toString());
+        // total = double.tryParse(information['Total'].toString());
+        dropDownType = information['Type'].toString();
+        chequeNo = information['ChequeNo'].toString();
+        dropDownStatusType = information['Status'].toString();
+        narration = information['Narration'].toString();
         setState(() {
-          if (row > 0) {
-            widgetID = false;
-            oldVoucher = true;
-            isSelected = true;
-            _controllerAmount.text = amount.toString();
-            _controllerDiscount.text = discount > 0 ? discount.toString() : '';
-            _controllerNarration.text = narration.toString();
-          }
+          widgetID = false;
+          oldVoucher = true;
+          isSelected = true;
+          _controllerAmount.text = amount.toString();
+          _controllerBankCharge.text =
+              bankCharge > 0 ? bankCharge.toString() : '';
+          _controllerDiscount.text = discount > 0 ? discount.toString() : '';
+          _controllerNarration.text = narration.toString();
+          _controllerChequeNo.text = chequeNo.toString();
         });
       }
     });
-  }
-
-  static const platform = MethodChannel('sherAccChannel');
-
-  Future<void> sendSms(number, msg) async {
-    debugPrint("SendSMS");
-    try {
-      final String result = await platform.invokeMethod(
-          'sendSMS', <String, dynamic>{"phone": number, "msg": msg});
-      debugPrint(result);
-    } on PlatformException catch (e) {
-      debugPrint(e.toString());
-    }
   }
 
   voucherWidget(var mode) {
@@ -929,7 +775,7 @@ class _RPVoucherState extends State<RPVoucher> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            const Text('Cash Account',
+            const Text('Bank Account ',
                 style: TextStyle(fontWeight: FontWeight.bold)),
             widgetAccount(),
           ],
@@ -941,7 +787,8 @@ class _RPVoucherState extends State<RPVoucher> {
             children: [
               TextButton(
                 onPressed: () {
-                  var under = mode == 'Payment' ? 'SUPPLIERS' : 'CUSTOMERS';
+                  var under =
+                      mode == 'Bank Payment' ? 'SUPPLIERS' : 'CUSTOMERS';
                   Navigator.pushNamed(context, '/ledger',
                       arguments: {'parent': under});
                 },
@@ -953,7 +800,8 @@ class _RPVoucherState extends State<RPVoucher> {
                   color: kPrimaryColor,
                 ),
                 onPressed: () {
-                  var under = mode == 'Payment' ? 'SUPPLIERS' : 'CUSTOMERS';
+                  var under =
+                      mode == 'Bank Payment' ? 'SUPPLIERS' : 'CUSTOMERS';
                   Navigator.pushNamed(context, '/ledger',
                       arguments: {'parent': under});
                 },
@@ -997,6 +845,98 @@ class _RPVoucherState extends State<RPVoucher> {
                 ],
               ),
         const Divider(),
+        Card(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const SizedBox(
+                width: 10,
+              ),
+              const Text('Type '),
+              Expanded(
+                child: DropdownButton<String>(
+                  hint: const Text('Type'),
+                  value: dropDownType,
+                  items: type.map<DropdownMenuItem<String>>((value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      dropDownType = value;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Divider(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _controllerChequeNo,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  label: Text('Cheque No'),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    chequeNo = value;
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
+        Card(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const SizedBox(
+                width: 10,
+              ),
+              const Text('Status '),
+              Expanded(
+                child: DropdownButton<String>(
+                  hint: const Text('Status'),
+                  value: dropDownStatusType,
+                  items: statusType.map<DropdownMenuItem<String>>((value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      dropDownStatusType = value;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        Card(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              const Text('Clear Date : '),
+              InkWell(
+                child: Text(
+                  formattedClearDate,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                onTap: () => _selectClearDate(),
+              ),
+            ],
+          ),
+        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -1025,12 +965,9 @@ class _RPVoucherState extends State<RPVoucher> {
                 },
               ),
             ),
-          ],
-        ),
-        const Divider(),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
+            const SizedBox(
+              width: 2,
+            ),
             Expanded(
               child: TextField(
                 controller: _controllerDiscount,
@@ -1063,10 +1000,35 @@ class _RPVoucherState extends State<RPVoucher> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
-                child: Text(
-              'Total : ${total.toStringAsFixed(0)}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            )),
+              child: TextField(
+                controller: _controllerBankCharge,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                      allow: true, replacementString: '.')
+                ],
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  label: Text('Bank Charge'),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    bankCharge = value != null
+                        ? value.trim().isNotEmpty
+                            ? double.tryParse(value)
+                            : 0
+                        : 0;
+                    calculate(mode);
+                  });
+                },
+              ),
+            ),
+            // Expanded(
+            //     child: Text(
+            //   'Total : ${total.toStringAsFixed(0)}',
+            //   style: const TextStyle(fontWeight: FontWeight.bold),
+            // )),
           ],
         ),
         const Divider(),

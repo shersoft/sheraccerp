@@ -2829,7 +2829,7 @@ class _SalesReturnState extends State<SalesReturn> {
         for (var product in particulars) {
           addProduct(CartItem(
               id: totalItem + 1,
-              itemId: product['ItemId'],
+              itemId: product['itemId'],
               itemName: product['itemname'],
               quantity: double.tryParse(product['Qty'].toString()),
               rate: double.tryParse(product['Rate'].toString()),

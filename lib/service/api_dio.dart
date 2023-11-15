@@ -24,6 +24,8 @@ import 'package:sheraccerp/models/unit_model.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/widget/simple_piediagram_pay_rec.dart';
 
+import '../models/sms_data_model.dart';
+
 class DioService {
   var dio = Dio();
   DioService();
@@ -199,7 +201,6 @@ class DioService {
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      // if (dataBase == 'C1_DEEMATRADING22' || dataBase == 'Csharp') {
       final response = await dio.post(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
@@ -217,7 +218,6 @@ class DioService {
         ret = false;
         debugPrint('Unexpected error Occurred!');
       }
-      // }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
@@ -5234,6 +5234,211 @@ class DioService {
       debugPrint(errorMessage.toString());
       return [];
     }
+  }
+
+  Future<List<SmsDataModel>> getSMSApiData() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    List<SmsDataModel> data = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'getSMSSettings/$dataBase');
+      if (response.statusCode == 200) {
+        data = response.data;
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return data;
+  }
+
+  Future<List<SmsDataModel>> getSMSApiDataList() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    List<SmsDataModel> data = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'getSMSSettingsList/$dataBase');
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+        for (var _data in jsonResponse) {
+          data.add(SmsDataModel.fromMap(_data));
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return data;
+  }
+
+  Future<bool> sentSmsOverApi(String urlData) async {
+    try {
+      final response = await dio.get(urlData);
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        debugPrint('Failed to load data');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
+  }
+
+  Future<dynamic> fetchBankVoucher(int id, String type) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    dynamic _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              '/BankVoucher/find/$dataBase',
+          queryParameters: {
+            'id': id,
+            'type': type,
+            'fyId': currentFinancialYear.id
+          });
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+
+        _items = jsonResponse;
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<int> addBankVoucher(List<Map<String, Object>> data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.post(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'BankVoucher/add/$dataBase',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 201) {
+        if (response.data['returnValue'] > 0) {
+          return response.data['returnValue'];
+        } else {
+          return 0;
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+        return 0;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return 0;
+    }
+  }
+
+  Future<int> deleteBankVoucher(
+      String id, int fyId, String statementType) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.delete(
+        pref.getString('api' ?? '127.0.0.1:80/api/') +
+            apiV +
+            'BankVoucher/delete/$dataBase',
+        queryParameters: {
+          'id': id,
+          'statementType': statementType,
+          'fyId': currentFinancialYear.id
+        },
+      );
+
+      if (response.statusCode == 200) {
+        if (response.data['returnValue'] > 0) {
+          return response.data['returnValue'];
+        } else {
+          return 0;
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+        return 0;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return 0;
+    }
+  }
+
+  Future<List<dynamic>> getSerialNoReport(type, String serialNo, String itemId,
+      String mfr, String category, String subCategory, String branch) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    String statement = type == 'Select All'
+        ? 'all'
+        : type == 'Details'
+            ? 'details'
+            : 'transaction';
+    dynamic _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              '/serialNoReport/$statement/$dataBase',
+          queryParameters: {
+            'itemId': itemId,
+            'serialNo': serialNo,
+            'mfrId': mfr,
+            'categoryId': category,
+            'subCategoryId': subCategory,
+            'branch': branch
+          });
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+
+        _items = jsonResponse;
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
   }
 }
 
