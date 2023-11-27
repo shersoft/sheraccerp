@@ -46,6 +46,7 @@ bool isDarkTheme = false;
 bool isUsingHive = true;
 String deviceId = '0';
 const String isApp = '1';
+const softwarePassword = 'SHERSOFT';
 String _sherSoftPassword = '';
 get sherSoftPassword => _sherSoftPassword;
 set sherSoftPassword(String value) => _sherSoftPassword = value;
@@ -119,6 +120,13 @@ const List<String> stockValuationData = [
   'MRP CHANGE'
 ];
 const List<String> typeOfSupplyData = ['GOODS', 'SERVICE'];
+const List<String> rateTypeData = [
+  'MRP',
+  'RETAIL',
+  'SPRETAIL',
+  'WHOLESALE',
+  'BRANCH'
+];
 
 class ComSettings {
   fetchOtherData() {

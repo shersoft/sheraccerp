@@ -345,7 +345,7 @@ class _DamageEntryState extends State<DamageEntry> {
       if (_ledger.isNotEmpty) isData = true;
     });
     return FutureBuilder<List<dynamic>>(
-      future: dio.getLedgerByType('SelectExpenceOnly'),
+      future: dio.getLedgerListByType('SelectExpenceOnly'),
       builder: (ctx, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {

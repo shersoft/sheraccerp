@@ -2176,7 +2176,7 @@ class _ReportViewState extends State<ReportView> {
 
   reportViewLedgerList() {
     return FutureBuilder<List<dynamic>>(
-      future: api.getLedgerList('Ledger_List'),
+      future: api.getLedgerListByType('Ledger_List'),
       builder: (ctx, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {

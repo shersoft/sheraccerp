@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:sheraccerp/screens/about_shersoft.dart';
 import 'package:sheraccerp/screens/printer_settings.dart';
 import 'package:sheraccerp/screens/profile.dart';
+import 'package:sheraccerp/screens/salesman_registration.dart';
 import 'package:sheraccerp/screens/settings/software_settings.dart';
 import 'package:sheraccerp/screens/ui/add_screen.dart';
 import 'package:sheraccerp/screens/user_list.dart';
+import 'package:sheraccerp/screens/user_registration.dart';
 
 import '../../util/res_color.dart';
 
@@ -128,30 +130,30 @@ class SettingsMenu extends StatelessWidget {
               Navigator.of(context).pushNamed('/settings');
             },
           ),
-          GestureDetector(
-            child: Card(
-              elevation: 5.0,
-              child: Container(
-                padding: const EdgeInsets.all(0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: const <Widget>[
-                    Icon(
-                      Icons.business_rounded,
-                      color: blue,
-                      size: 90.0,
-                    ),
-                    Text('Default',
-                        style: TextStyle(
-                            color: Colors.black, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-            ),
-            onTap: () {
-              _showDialog(context);
-            },
-          ),
+          // GestureDetector(
+          //   child: Card(
+          //     elevation: 5.0,
+          //     child: Container(
+          //       padding: const EdgeInsets.all(0),
+          //       child: Column(
+          //         mainAxisAlignment: MainAxisAlignment.spaceAround,
+          //         children: const <Widget>[
+          //           Icon(
+          //             Icons.business_rounded,
+          //             color: blue,
+          //             size: 90.0,
+          //           ),
+          //           Text('Default',
+          //               style: TextStyle(
+          //                   color: Colors.black, fontWeight: FontWeight.bold)),
+          //         ],
+          //       ),
+          //     ),
+          //   ),
+          //   onTap: () {
+          //     _showAlert(context);
+          //   },
+          // ),
           GestureDetector(
             child: Card(
               elevation: 5.0,
@@ -205,12 +207,67 @@ class SettingsMenu extends StatelessWidget {
               Navigator.of(context).pushNamed('/OtherRegistration');
             },
           ),
+          GestureDetector(
+            child: Card(
+              elevation: 5.0,
+              child: Container(
+                padding: const EdgeInsets.all(0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: const <Widget>[
+                    Icon(
+                      Icons.man_rounded,
+                      color: blue,
+                      size: 90.0,
+                    ),
+                    Text(
+                      'Salesman',
+                      style: TextStyle(
+                          color: Colors.black, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (BuildContext context) =>
+                      const SalesmanRegistration()));
+            },
+          ),
+          GestureDetector(
+            child: Card(
+              elevation: 5.0,
+              child: Container(
+                padding: const EdgeInsets.all(0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: const <Widget>[
+                    Icon(
+                      Icons.supervised_user_circle,
+                      color: blue,
+                      size: 90.0,
+                    ),
+                    Text(
+                      'User',
+                      style: TextStyle(
+                          color: Colors.black, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (BuildContext context) => const UserRegistration()));
+            },
+          ),
         ],
       ),
     );
   }
 
-  void _showDialog(BuildContext context) {
+  void showAlert(BuildContext context) {
     // flutter defined function
     showDialog(
       context: context,

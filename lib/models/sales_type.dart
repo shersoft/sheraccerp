@@ -1,4 +1,6 @@
 // @dart = 2.11
+import 'dart:convert';
+
 class SalesType {
   int id;
   String name, type, rateType, sColor;
@@ -30,6 +32,23 @@ class SalesType {
         tax: json['Tax'] == 1 ? true : false,
         eInvoice: json['EInvoice'] == 1 ? true : false);
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'sType': type,
+      'rateType': rateType,
+      'stock': stock,
+      'accounts': accounts,
+      'location': location,
+      'sColor': sColor,
+      'tax': tax,
+      'eInvoice': eInvoice
+    };
+  }
+
+  String toJson() => json.encode(toMap());
 }
 
 SalesType salesTypeData;

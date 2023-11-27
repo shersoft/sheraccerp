@@ -1,6 +1,5 @@
 // @dart = 2.11
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
@@ -12,10 +11,8 @@ import 'package:scoped_model/scoped_model.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/customer_model.dart';
 import 'package:sheraccerp/models/ledger_name_model.dart';
-import 'package:sheraccerp/models/sms_data_model.dart';
 import 'package:sheraccerp/screens/html_previews/rpv_preview.dart';
 import 'package:sheraccerp/service/api_dio.dart';
-import 'package:sheraccerp/service/bt_print.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/util/res_color.dart';
@@ -80,7 +77,7 @@ class _BankVoucherState extends State<BankVoucher> {
     formattedDate =
         getToDay.isNotEmpty ? getToDay : DateFormat('dd-MM-yyyy').format(now);
     formattedClearDate = formattedDate;
-    api.getLedgerByType('SelectbankOnly').then((value) {
+    api.getLedgerListByType('SelectbankOnly').then((value) {
       List<LedgerModel> _dataTemp = [];
       for (var ledger in value) {
         _dataTemp

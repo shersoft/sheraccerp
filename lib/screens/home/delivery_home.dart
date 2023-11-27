@@ -214,6 +214,7 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                                       child: ElevatedButton(
                                         onPressed: () {
                                           if (_pass == sherSoftPassword) {
+                                            Navigator.of(context).pop();
                                             Navigator.of(context).push(
                                                 MaterialPageRoute(
                                                     builder: (BuildContext

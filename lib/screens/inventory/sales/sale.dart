@@ -89,9 +89,10 @@ class _SaleState extends State<Sale> {
       gstValidation = false;
   final List<TextEditingController> _controllers = [];
   DateTime now = DateTime.now();
-  String formattedDate, _narration = '';
+  String formattedDate;
   double _balance = 0, grandTotal = 0;
-  final TextEditingController _controllerCashReceived = TextEditingController();
+  final TextEditingController controllerCashReceived = TextEditingController();
+  final TextEditingController controllerNarration = TextEditingController();
   final FocusNode _focusNodeCashReceived = FocusNode();
 
   int page = 1, pageTotal = 0, totalRecords = 0;
@@ -100,6 +101,7 @@ class _SaleState extends State<Sale> {
   List<dynamic> _ledger = [];
   List<dynamic> itemDisplay = [];
   List<dynamic> items = [];
+  List<LedgerModel> cashBankACList = [];
   int lId = 0, groupId = 0, areaId = 0, routeId = 0;
   var salesManId = 0;
   String labelSerialNo = 'SerialNo';
@@ -185,6 +187,17 @@ class _SaleState extends State<Sale> {
       rateTypeItem = rateTypeList.firstWhere((element) =>
           element.name.toString().toUpperCase() == rateTypeS.toUpperCase());
     }
+
+    api.getLedgerListByType('SelectbankOnly').then((value) {
+      List<LedgerModel> _dataTemp = [];
+      for (var ledger in value) {
+        _dataTemp
+            .add(LedgerModel(id: ledger['ledcode'], name: ledger['LedName']));
+      }
+      setState(() {
+        cashBankACList.addAll(_dataTemp);
+      });
+    });
   }
 
   CompanyInformation companySettings;
@@ -270,8 +283,8 @@ class _SaleState extends State<Sale> {
         TextPosition(offset: _quantityController.text.length));
     _rateController.selection = TextSelection.fromPosition(
         TextPosition(offset: _rateController.text.length));
-    _controllerCashReceived.selection = TextSelection.fromPosition(
-        TextPosition(offset: _controllerCashReceived.text.length));
+    controllerCashReceived.selection = TextSelection.fromPosition(
+        TextPosition(offset: controllerCashReceived.text.length));
     _freeQuantityController.selection = TextSelection.fromPosition(
         TextPosition(offset: _freeQuantityController.text.length));
 
@@ -789,7 +802,6 @@ class _SaleState extends State<Sale> {
 
   saveSale() async {
     List<CustomerModel> ledger = [];
-    // ledger.add(ledgerModel);
     ledger.add(CustomerModel(
         address1: ledgerModel.address1 + " " + ledgerModel.address2,
         address2: ledgerModel.address3 + " " + ledgerModel.address4,
@@ -827,8 +839,8 @@ class _SaleState extends State<Sale> {
         grandTotal:
             grandTotal > 0 ? grandTotal.toString() : totalCartValue.toString(),
         profit: totalProfit.toString(),
-        cashReceived: _controllerCashReceived.text.isNotEmpty
-            ? _controllerCashReceived.text
+        cashReceived: controllerCashReceived.text.isNotEmpty
+            ? controllerCashReceived.text
             : '0',
         otherDiscount: '0',
         loadingCharge: '0',
@@ -837,24 +849,24 @@ class _SaleState extends State<Sale> {
         discountPer: '0',
         balanceAmount: _balance > 0
             ? _balance.toStringAsFixed(decimal)
-            : _controllerCashReceived.text.isNotEmpty
+            : controllerCashReceived.text.isNotEmpty
                 ? grandTotal > 0
                     ? ComSettings.appSettings(
                             'bool', 'key-round-off-amount', false)
                         ? (grandTotal -
-                                double.tryParse(_controllerCashReceived.text))
+                                double.tryParse(controllerCashReceived.text))
                             .toStringAsFixed(decimal)
                         : (grandTotal -
-                                double.tryParse(_controllerCashReceived.text))
+                                double.tryParse(controllerCashReceived.text))
                             .roundToDouble()
                             .toString()
                     : ComSettings.appSettings(
                             'bool', 'key-round-off-amount', false)
                         ? ((totalCartValue) -
-                                double.tryParse(_controllerCashReceived.text))
+                                double.tryParse(controllerCashReceived.text))
                             .toStringAsFixed(decimal)
                         : ((totalCartValue) -
-                                double.tryParse(_controllerCashReceived.text))
+                                double.tryParse(controllerCashReceived.text))
                             .roundToDouble()
                             .toString()
                 : grandTotal > 0
@@ -867,7 +879,8 @@ class _SaleState extends State<Sale> {
                         ? totalCartValue.toStringAsFixed(decimal)
                         : totalCartValue.roundToDouble().toString(),
         creditPeriod: '0',
-        narration: _narration.isNotEmpty ? _narration : '',
+        narration:
+            controllerNarration.text.isNotEmpty ? controllerNarration.text : '',
         takeUser: userIdC.toString(),
         location: locationId.toString(),
         billType: companyTaxMode == 'GULF' ? '2' : '0',
@@ -916,7 +929,7 @@ class _SaleState extends State<Sale> {
           json.encode({
             'statement': 'SalesInsert',
             'entryNo': 0,
-            'invoiceNo': 0,
+            'invoiceNo': '0',
             'saleFormId': saleFormId,
             'saleFormType': saleFormType,
             'taxType': taxType,
@@ -964,9 +977,16 @@ class _SaleState extends State<Sale> {
             'billType': order.billType,
             'returnNo': returnBillId,
             'returnAmount': returnAmount,
-            'invoiceNo': '0',
             'otherAmount': _otherAmountTotal(order.otherAmountData),
-            'fyId': currentFinancialYear.id
+            'fyId': currentFinancialYear.id,
+            'commissionAccount': commissionAccount ?? 0,
+            'commissionAmount': commissionAmountController.text.isEmpty
+                ? 0
+                : commissionAmountController.text,
+            'bankName': bankLedgerName ?? 0,
+            'bankAmount': bankAmountController.text.isEmpty
+                ? 0
+                : bankAmountController.text
           }) +
           ']';
 
@@ -985,57 +1005,107 @@ class _SaleState extends State<Sale> {
             'id': order.customerModel[0].id.toString(),
             'fyId': currentFinancialYear.id
           };
-          api.addOtherAmount(bodyJsonAmount).then((ret) {
-            if (ret) {
-              final bodyJson = {
-                'statement': 'CheckPrint',
-                'entryNo': int.tryParse(result.toString()),
-                'sType': saleFormId.toString(),
-                'grandTotal': ComSettings.appSettings(
-                        'bool', 'key-round-off-amount', false)
-                    ? grandTotal.toStringAsFixed(decimal)
-                    : grandTotal.roundToDouble().toString()
-              };
-              api.checkBill(bodyJson).then((data) {
-                if (data) {
-                  dataDynamic = [
-                    {
-                      'RealEntryNo': int.tryParse(result.toString()),
-                      'EntryNo': int.tryParse(result.toString()),
-                      'InvoiceNo': int.tryParse(result.toString()),
-                      'Type': saleFormId
+          if (salesTypeData.accounts) {
+            api.addOtherAmount(bodyJsonAmount).then((ret) {
+              if (ret) {
+                final bodyJson = {
+                  'statement': 'CheckPrint',
+                  'entryNo': int.tryParse(result.toString()),
+                  'sType': saleFormId.toString(),
+                  'grandTotal': ComSettings.appSettings(
+                          'bool', 'key-round-off-amount', false)
+                      ? grandTotal.toStringAsFixed(decimal)
+                      : grandTotal.roundToDouble().toString()
+                };
+                api.checkBill(bodyJson).then((data) {
+                  if (data) {
+                    dataDynamic = [
+                      {
+                        'RealEntryNo': int.tryParse(result.toString()),
+                        'EntryNo': int.tryParse(result.toString()),
+                        'InvoiceNo': int.tryParse(result.toString()),
+                        'Type': saleFormId
+                      }
+                    ];
+                    if (ComSettings.appSettings(
+                        'bool', 'key-sms-customer', false)) {
+                      var billName = salesTypeData.name == "Sales Order Entry"
+                          ? "Order"
+                          : "Bill";
+                      var ob = ledgerModel.balance.toString().split(' ');
+                      var ob1 = ob[0];
+                      var ob2 = ob[1];
+                      var amt = salesTypeData.name == "Sales Order Entry"
+                          ? ledgerModel.balance
+                          : ob2 == 'Dr'
+                              ? double.tryParse(ob1) +
+                                  double.tryParse(order.balanceAmount)
+                              : double.tryParse(order.balanceAmount) -
+                                  double.tryParse(ob1);
+                      String smsBody =
+                          "Dear ${ledgerModel.name},\nYour Sales $billName ${result.toString()}, Dated : $formattedDate for the Amount of ${order.grandTotal}/- \nBalance:$amt /- has been confirmed  \n${companySettings.name}";
+                      if (ledgerModel.phone.toString().isNotEmpty) {
+                        sendSms(ledgerModel.phone, smsBody);
+                      }
                     }
-                  ];
-                  if (ComSettings.appSettings(
-                      'bool', 'key-sms-customer', false)) {
-                    var billName = salesTypeData.name == "Sales Order Entry"
-                        ? "Order"
-                        : "Bill";
-                    var ob = ledgerModel.balance.toString().split(' ');
-                    var ob1 = ob[0];
-                    var ob2 = ob[1];
-                    var amt = salesTypeData.name == "Sales Order Entry"
-                        ? ledgerModel.balance
-                        : ob2 == 'Dr'
-                            ? double.tryParse(ob1) +
-                                double.tryParse(order.balanceAmount)
-                            : double.tryParse(order.balanceAmount) -
-                                double.tryParse(ob1);
-                    String smsBody =
-                        "Dear ${ledgerModel.name},\nYour Sales $billName ${result.toString()}, Dated : $formattedDate for the Amount of ${order.grandTotal}/- \nBalance:$amt /- has been confirmed  \n${companySettings.name}";
-                    if (ledgerModel.phone.toString().isNotEmpty) {
-                      sendSms(ledgerModel.phone, smsBody);
+                    if (ComSettings.getStatus('ENABLE SMS OPTION', settings)) {
+                      //
                     }
+                    clearCart();
+                    showMore(context, true);
                   }
-                  if (ComSettings.getStatus('ENABLE SMS OPTION', settings)) {
-                    //
+                });
+              }
+            });
+          } else {
+            final bodyJson = {
+              'statement': 'CheckPrint',
+              'entryNo': int.tryParse(result.toString()),
+              'sType': saleFormId.toString(),
+              'grandTotal':
+                  ComSettings.appSettings('bool', 'key-round-off-amount', false)
+                      ? grandTotal.toStringAsFixed(decimal)
+                      : grandTotal.roundToDouble().toString()
+            };
+            api.checkBill(bodyJson).then((data) {
+              if (data) {
+                dataDynamic = [
+                  {
+                    'RealEntryNo': int.tryParse(result.toString()),
+                    'EntryNo': int.tryParse(result.toString()),
+                    'InvoiceNo': int.tryParse(result.toString()),
+                    'Type': saleFormId
                   }
-                  clearCart();
-                  showMore(context);
+                ];
+                if (ComSettings.appSettings(
+                    'bool', 'key-sms-customer', false)) {
+                  var billName = salesTypeData.name == "Sales Order Entry"
+                      ? "Order"
+                      : "Bill";
+                  var ob = ledgerModel.balance.toString().split(' ');
+                  var ob1 = ob[0];
+                  var ob2 = ob[1];
+                  var amt = salesTypeData.name == "Sales Order Entry"
+                      ? ledgerModel.balance
+                      : ob2 == 'Dr'
+                          ? double.tryParse(ob1) +
+                              double.tryParse(order.balanceAmount)
+                          : double.tryParse(order.balanceAmount) -
+                              double.tryParse(ob1);
+                  String smsBody =
+                      "Dear ${ledgerModel.name},\nYour Sales $billName ${result.toString()}, Dated : $formattedDate for the Amount of ${order.grandTotal}/- \nBalance:$amt /- has been confirmed  \n${companySettings.name}";
+                  if (ledgerModel.phone.toString().isNotEmpty) {
+                    sendSms(ledgerModel.phone, smsBody);
+                  }
                 }
-              });
-            }
-          });
+                if (ComSettings.getStatus('ENABLE SMS OPTION', settings)) {
+                  //
+                }
+                clearCart();
+                showMore(context, true);
+              }
+            });
+          }
           setState(() {
             _isLoading = false;
           });
@@ -1087,8 +1157,8 @@ class _SaleState extends State<Sale> {
         grandTotal:
             grandTotal > 0 ? grandTotal.toString() : totalCartValue.toString(),
         profit: totalProfit.toString(),
-        cashReceived: _controllerCashReceived.text.isNotEmpty
-            ? _controllerCashReceived.text
+        cashReceived: controllerCashReceived.text.isNotEmpty
+            ? controllerCashReceived.text
             : '0',
         otherDiscount: '0',
         loadingCharge: '0',
@@ -1097,24 +1167,24 @@ class _SaleState extends State<Sale> {
         discountPer: '0',
         balanceAmount: _balance > 0
             ? _balance.toStringAsFixed(decimal)
-            : _controllerCashReceived.text.isNotEmpty
+            : controllerCashReceived.text.isNotEmpty
                 ? grandTotal > 0
                     ? ComSettings.appSettings(
                             'bool', 'key-round-off-amount', false)
                         ? (grandTotal -
-                                double.tryParse(_controllerCashReceived.text))
+                                double.tryParse(controllerCashReceived.text))
                             .toStringAsFixed(decimal)
                         : (grandTotal -
-                                double.tryParse(_controllerCashReceived.text))
+                                double.tryParse(controllerCashReceived.text))
                             .roundToDouble()
                             .toString()
                     : ComSettings.appSettings(
                             'bool', 'key-round-off-amount', false)
                         ? ((totalCartValue) -
-                                double.tryParse(_controllerCashReceived.text))
+                                double.tryParse(controllerCashReceived.text))
                             .toStringAsFixed(decimal)
                         : ((totalCartValue) -
-                                double.tryParse(_controllerCashReceived.text))
+                                double.tryParse(controllerCashReceived.text))
                             .roundToDouble()
                             .toString()
                 : grandTotal > 0
@@ -1127,7 +1197,8 @@ class _SaleState extends State<Sale> {
                         ? totalCartValue.toStringAsFixed(decimal)
                         : totalCartValue.roundToDouble().toString(),
         creditPeriod: '0',
-        narration: _narration.isNotEmpty ? _narration : '',
+        narration:
+            controllerNarration.text.isNotEmpty ? controllerNarration.text : '',
         takeUser: userIdC.toString(),
         location: locationId.toString(),
         billType: companyTaxMode == 'GULF' ? '2' : '0',
@@ -1176,7 +1247,7 @@ class _SaleState extends State<Sale> {
           json.encode({
             'statement': 'SalesUpdate',
             'entryNo': dataDynamic[0]['EntryNo'],
-            'invoiceNo': dataDynamic[0]['InvoiceNo'],
+            'invoiceNo': dataDynamic[0]['InvoiceNo'].toString(),
             'saleFormId': saleFormId,
             'saleFormType': saleFormType,
             'taxType': taxType,
@@ -1224,9 +1295,16 @@ class _SaleState extends State<Sale> {
             'billType': order.billType,
             'returnNo': returnBillId,
             'returnAmount': returnAmount,
-            'invoiceNo': '0',
             'otherAmount': _otherAmountTotal(order.otherAmountData),
             'fyId': currentFinancialYear.id,
+            'commissionAccount': commissionAccount ?? 0,
+            'commissionAmount': commissionAmountController.text.isEmpty
+                ? 0
+                : commissionAmountController.text,
+            'bankName': bankLedgerName ?? 0,
+            'bankAmount': bankAmountController.text.isEmpty
+                ? 0
+                : bankAmountController.text
           }) +
           ']';
 
@@ -1257,9 +1335,25 @@ class _SaleState extends State<Sale> {
               api.checkBill(bodyJson).then((data) {
                 if (data) {
                   clearCart();
-                  showMore(context);
+                  showMore(context, false);
                 }
               });
+            });
+          } else {
+            final bodyJson = {
+              'statement': 'CheckPrint',
+              'entryNo': dataDynamic[0]['EntryNo'].toString(),
+              'sType': dataDynamic[0]['Type'].toString(),
+              'grandTotal':
+                  ComSettings.appSettings('bool', 'key-round-off-amount', false)
+                      ? grandTotal.toStringAsFixed(decimal)
+                      : grandTotal.roundToDouble().toString()
+            };
+            api.checkBill(bodyJson).then((data) {
+              if (data) {
+                clearCart();
+                showMore(context, false);
+              }
             });
           }
           setState(() {
@@ -2216,9 +2310,10 @@ class _SaleState extends State<Sale> {
   String itemLike = 'a';
   selectProductWidget() {
     if (salesmanAsVehicle) {
-      double square = vehicleData['Salary'].toDouble();
-      if (square > 0) {
-        _quantityController.text = vehicleData['Salary'].toString();
+      double squareFeet =
+          vehicleData != null ? vehicleData['Salary'].toDouble() : 0;
+      if (squareFeet > 0) {
+        _quantityController.text = squareFeet.toString();
       }
     }
     if (!itemStockAll) {
@@ -3212,7 +3307,9 @@ class _SaleState extends State<Sale> {
       rate = _conversion > 0 ? saleRate * _conversion : saleRate;
     }
     uniqueCode = product.productId;
-    _serialNoController.text = isSerialNoInStockVariant ? product.serialNo : '';
+    if (isSerialNoInStockVariant) {
+      _serialNoController.text = product.serialNo;
+    }
     List<UnitModel> unitListData = [];
 
     return Container(
@@ -4687,9 +4784,13 @@ class _SaleState extends State<Sale> {
 
   bool loadReturnForm = false;
   double returnAmount = 0;
-  int returnBillId = 0;
+  int returnBillId = 0, commissionAccount = 0, bankAccount = 0;
+  var commissionLedgerData, bankLedgerData;
+  String bankLedgerName;
   TextEditingController returnEntryNoController = TextEditingController();
   TextEditingController returnAmountController = TextEditingController();
+  TextEditingController commissionAmountController = TextEditingController();
+  TextEditingController bankAmountController = TextEditingController();
 
   void addProduct(product) {
     int index = cartItem.indexWhere((i) => i.itemId == product.itemId);
@@ -5093,108 +5194,145 @@ class _SaleState extends State<Sale> {
         child: Column(
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Text("SubTotal : ",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.red[300])),
                 Text(
-                    CommonService.getRound(decimal, totalGrossValue)
-                        .toStringAsFixed(decimal),
+                    "SubTotal : " +
+                        CommonService.getRound(decimal, totalGrossValue)
+                            .toStringAsFixed(decimal),
                     style: TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.red[300])),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red[300])),
+                Text(
+                    "Discount : " +
+                        CommonService.getRound(decimal, totalDiscount)
+                            .toStringAsFixed(decimal),
+                    style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red[300])),
               ],
             ),
             Visibility(
               visible: isTax,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Tax : ",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.red[400])),
-                  Text(
-                      CommonService.getRound(decimal, taxTotalCartValue)
-                          .toStringAsFixed(decimal),
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.red[400])),
-                ],
-              ),
+              child: companyTaxMode == 'INDIA'
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("GST :- ",
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red)),
+                        Text(
+                            "CGST : " +
+                                CommonService.getRound(
+                                        decimal, taxTotalCartValue / 2)
+                                    .toStringAsFixed(decimal),
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[400])),
+                        Text(
+                            "SGST : " +
+                                CommonService.getRound(
+                                        decimal, taxTotalCartValue / 2)
+                                    .toStringAsFixed(decimal),
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[400])),
+                        Text(
+                            "IGST : " +
+                                CommonService.getRound(decimal, 0)
+                                    .toStringAsFixed(decimal),
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[400])),
+                        Text(
+                            " = " +
+                                CommonService.getRound(
+                                        decimal, taxTotalCartValue)
+                                    .toStringAsFixed(decimal),
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[400])),
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("VAT : ",
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[400])),
+                        Text(
+                            CommonService.getRound(decimal, taxTotalCartValue)
+                                .toStringAsFixed(decimal),
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[400])),
+                      ],
+                    ),
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text("Total : ",
                     style: TextStyle(
-                        fontSize: 20.0,
+                        fontSize: 15.0,
                         fontWeight: FontWeight.bold,
                         color: Colors.red[500])),
                 Text(
                     CommonService.getRound(decimal, totalCartValue)
                         .toStringAsFixed(decimal),
                     style: TextStyle(
-                        fontSize: 20.0,
+                        fontSize: 15.0,
                         fontWeight: FontWeight.bold,
                         color: Colors.red[500])),
               ],
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controllerCashReceived,
-                    focusNode: _focusNodeCashReceived,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter(RegExp(r'[0-9]'),
-                          allow: true, replacementString: '.')
-                    ],
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      label: Text('Cash Received : '),
+            Card(
+              elevation: 2,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(
+                    width: 145,
+                    height: 40,
+                    child: TextField(
+                      controller: controllerCashReceived,
+                      focusNode: _focusNodeCashReceived,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                            allow: true, replacementString: '.')
+                      ],
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        label: Text('Cash Received'),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          balanceCalculate();
+                        });
+                      },
                     ),
-                    onChanged: (value) {
-                      setState(() {
-                        _balance = _controllerCashReceived.text.isNotEmpty
-                            ? grandTotal > 0
-                                ? grandTotal -
-                                    double.tryParse(
-                                        _controllerCashReceived.text)
-                                : ((totalCartValue) -
-                                    double.tryParse(
-                                        _controllerCashReceived.text))
-                            : grandTotal > 0
-                                ? grandTotal
-                                : totalCartValue;
-                      });
-                    },
                   ),
-                ),
-                const Text('Balance : '),
-                Text(ComSettings.appSettings(
-                        'bool', 'key-round-off-amount', false)
-                    ? _balance.toStringAsFixed(decimal)
-                    : _balance.roundToDouble().toString()),
-              ],
+                  Text(
+                      'Balance : ${ComSettings.appSettings('bool', 'key-round-off-amount', false) ? _balance.toStringAsFixed(decimal) : _balance.roundToDouble().toString()}'),
+                ],
+              ),
             ),
-            // Card(
-            //   elevation: 5,
-            //   child: Row(
-            //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            //     children: [
-            //       const Text('More Details'),
-            //       Switch(
-            //           value: valueMore,
-            //           onChanged: (value) {
-            //             setState(() {
-            //               valueMore = value;
-            //             });
-            //           }),
-            //     ],
-            //   ),
-            // ),
+            const Divider(
+              height: 2,
+            ),
             Visibility(
               visible: valueMore,
               child: Column(
@@ -5202,88 +5340,198 @@ class _SaleState extends State<Sale> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      SizedBox(
+                        width: deviceSize.width - 18,
+                        height: 35,
                         child: TextField(
+                          controller: controllerNarration,
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),
-                            labelText: 'Narration...',
+                            labelText: 'Narration',
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _narration = value;
-                            });
-                          },
                         ),
                       ),
                     ],
                   ),
                   Visibility(
                     visible: _isReturnInSales,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: returnEntryNoController,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              labelText: 'Bill No :',
-                            ),
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
-                            inputFormatters: [
-                              FilteringTextInputFormatter(RegExp(r'[0-9]'),
-                                  allow: true)
-                            ],
-                            onChanged: (value) {
-                              setState(() {
-                                returnBillId = int.tryParse(value);
-                              });
-                            },
+                    child: Card(
+                      elevation: 2,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          const SizedBox(
+                            height: 3,
                           ),
-                        ),
-                        TextButton(
-                            onPressed: () {
-                              setState(() {
-                                loadReturnForm = true;
-                              });
-                            },
-                            style: ButtonStyle(
-                                backgroundColor: MaterialStateProperty.all(
-                                    kPrimaryDarkColor),
-                                foregroundColor:
-                                    MaterialStateProperty.all(white)),
-                            child: const Text('Return Bill')),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        Expanded(
-                          child: TextField(
-                            controller: returnAmountController,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              labelText: 'Amount :',
-                            ),
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
-                            inputFormatters: [
-                              FilteringTextInputFormatter(RegExp(r'[0-9]'),
-                                  allow: true, replacementString: '.')
-                            ],
-                            onChanged: (value) {
-                              if (value.isNotEmpty) {
+                          SizedBox(
+                            width: 100,
+                            height: 35,
+                            child: TextField(
+                              controller: returnEntryNoController,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                labelText: 'Bill No :',
+                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              inputFormatters: [
+                                FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                                    allow: true)
+                              ],
+                              onChanged: (value) {
                                 setState(() {
-                                  returnAmount = double.tryParse(value);
-                                  grandTotal = grandTotal - returnAmount;
+                                  returnBillId = int.tryParse(value);
                                 });
-                              }
-                            },
+                              },
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  loadReturnForm = true;
+                                });
+                              },
+                              style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all(
+                                    Colors.blue.shade100),
+                                // foregroundColor:
+                                //     MaterialStateProperty.all(white)
+                              ),
+                              child: const Text('Return Bill')),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          SizedBox(
+                            width: 100,
+                            height: 35,
+                            child: TextField(
+                              controller: returnAmountController,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                labelText: 'Amount',
+                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              inputFormatters: [
+                                FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                                    allow: true, replacementString: '.')
+                              ],
+                              onChanged: (value) {
+                                if (value.isNotEmpty) {
+                                  setState(() {
+                                    returnAmount = double.tryParse(value);
+                                    grandTotal = grandTotal - returnAmount;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                  Card(
+                    elevation: 2,
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          SizedBox(
+                            width: deviceSize.width - 125,
+                            height: 55,
+                            child: DropdownSearch<dynamic>(
+                              maxHeight: deviceSize.height - 110,
+                              onFind: (String filter) =>
+                                  api.getLedgerDataByParent(filter, 0, 0, 0, 0),
+                              dropdownSearchDecoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  labelText: 'Commission A/C'),
+                              onChanged: (dynamic data) {
+                                commissionLedgerData = data;
+                                commissionAccount = data.id;
+                              },
+                              showSearchBox: true,
+                              selectedItem: commissionLedgerData,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 100,
+                            height: 55,
+                            child: TextField(
+                              controller: commissionAmountController,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                labelText: 'Amount',
+                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              inputFormatters: [
+                                FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                                    allow: true, replacementString: '.')
+                              ],
+                            ),
+                          ),
+                        ]),
+                  ),
+                  Card(
+                    elevation: 2,
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          SizedBox(
+                            width: deviceSize.width - 125,
+                            height: 55,
+                            child: DropdownSearch<dynamic>(
+                              maxHeight: deviceSize.height - 110,
+                              onFind: (String filter) =>
+                                  widgetBankAccount(filter),
+                              dropdownSearchDecoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  labelText: 'Card A/C'),
+                              onChanged: (dynamic data) {
+                                bankLedgerData = data;
+                                bankLedgerName = data.name;
+                                bankAccount = data.id;
+                              },
+                              showSearchBox: true,
+                              selectedItem: bankLedgerData,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 100,
+                            height: 55,
+                            child: TextField(
+                              controller: bankAmountController,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                labelText: 'Amount',
+                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              inputFormatters: [
+                                FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                                    allow: true, replacementString: '.')
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  balanceCalculate();
+                                });
+                              },
+                            ),
+                          ),
+                        ]),
+                  ),
                   SizedBox(
-                    height: deviceSize.height / 6,
+                    height: deviceSize.height / 5,
                     child: Container(
                       color: white,
                       child: ListView.builder(
@@ -5294,22 +5542,32 @@ class _SaleState extends State<Sale> {
                             _controllers.add(TextEditingController());
                             _controllers[index].text =
                                 otherAmountList[index]['Amount'].toString();
-                            return Container(
-                                padding: const EdgeInsets.only(
-                                    top: 0, right: 10, left: 10),
-                                child: Row(children: <Widget>[
-                                  expandStyle(
-                                      2,
-                                      Container(
-                                          margin:
-                                              const EdgeInsets.only(top: 35),
-                                          child: Text(otherAmountList[index]
-                                              ['LedName']))),
-                                  expandStyle(
-                                      1,
-                                      TextFormField(
-                                          controller: TextEditingController
-                                              .fromValue(TextEditingValue(
+
+                            // List<FocusNode> _focusNodes =
+                            //     List<FocusNode>.generate(otherAmountList.length,
+                            //         (int ind) => FocusNode());
+
+                            return Card(
+                              elevation: 5,
+                              child: Row(children: [
+                                expandStyle(
+                                    2,
+                                    Container(
+                                        margin: const EdgeInsets.only(left: 2),
+                                        child: Align(
+                                          alignment: Alignment.centerRight,
+                                          child: Text(
+                                              '${otherAmountList[index]['LedName']} : '),
+                                        ))),
+                                SizedBox(
+                                  height: 35,
+                                  width: 100,
+                                  child: TextField(
+                                      decoration: const InputDecoration(
+                                          border: OutlineInputBorder()),
+                                      controller:
+                                          TextEditingController.fromValue(
+                                              TextEditingValue(
                                                   text: otherAmountList[index]
                                                           ['Amount']
                                                       .toString(),
@@ -5320,66 +5578,99 @@ class _SaleState extends State<Sale> {
                                                                   ['Amount']
                                                               .toString()
                                                               .length))),
-                                          keyboardType: const TextInputType
-                                              .numberWithOptions(decimal: true),
-                                          inputFormatters: [
-                                            FilteringTextInputFormatter(
-                                                RegExp(r'[0-9]'),
-                                                allow: true,
-                                                replacementString: '.')
-                                          ],
-                                          onFieldSubmitted: (String str) {
-                                            var cartTotal = totalCartValue;
-                                            if (str.isNotEmpty) {
-                                              otherAmountList[index]['Amount'] =
-                                                  double.tryParse(str);
-                                              otherAmountList[index]
-                                                      ['Percentage'] =
-                                                  CommonService.getRound(
-                                                      decimal,
-                                                      ((double.tryParse(str) *
-                                                              100) /
-                                                          cartTotal));
-                                              var netTotal = (cartTotal -
-                                                      returnAmount) +
-                                                  otherAmountList.fold(
-                                                      0.0,
-                                                      (t, e) =>
-                                                          t +
-                                                          double.parse(e[
-                                                                      'Symbol'] ==
-                                                                  '-'
+                                      // focusNode: _focusNodes[index],
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                              decimal: true),
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter(
+                                            RegExp(r'[0-9]'),
+                                            allow: true,
+                                            replacementString: '.')
+                                      ],
+                                      onChanged: (String str) {
+                                        var cartTotal = totalCartValue;
+                                        if (str.isNotEmpty) {
+                                          otherAmountList[index]['Amount'] =
+                                              double.tryParse(str);
+                                          otherAmountList[index]['Percentage'] =
+                                              CommonService.getRound(
+                                                  decimal,
+                                                  ((double.tryParse(str) *
+                                                          100) /
+                                                      cartTotal));
+                                          var netTotal = (cartTotal -
+                                                  returnAmount) +
+                                              otherAmountList.fold(
+                                                  0.0,
+                                                  (t, e) =>
+                                                      t +
+                                                      double.parse(
+                                                          e['Symbol'] == '-'
                                                               ? (e['Amount'] *
                                                                       -1)
                                                                   .toString()
                                                               : e['Amount']
                                                                   .toString()));
-                                              setState(() {
-                                                grandTotal = netTotal;
-                                              });
-                                            }
-                                          }))
-                                ]));
+                                          setState(() {
+                                            grandTotal = netTotal;
+                                          });
+                                        }
+                                      },
+                                      onSubmitted: (String str) {
+                                        var cartTotal = totalCartValue;
+                                        if (str.isNotEmpty) {
+                                          otherAmountList[index]['Amount'] =
+                                              double.tryParse(str);
+                                          otherAmountList[index]['Percentage'] =
+                                              CommonService.getRound(
+                                                  decimal,
+                                                  ((double.tryParse(str) *
+                                                          100) /
+                                                      cartTotal));
+                                          var netTotal = (cartTotal -
+                                                  returnAmount) +
+                                              otherAmountList.fold(
+                                                  0.0,
+                                                  (t, e) =>
+                                                      t +
+                                                      double.parse(
+                                                          e['Symbol'] == '-'
+                                                              ? (e['Amount'] *
+                                                                      -1)
+                                                                  .toString()
+                                                              : e['Amount']
+                                                                  .toString()));
+                                          setState(() {
+                                            grandTotal = netTotal;
+                                          });
+                                        }
+                                      }),
+                                )
+                              ]),
+                            );
                           }),
                     ),
                   ),
                 ],
               ),
             ),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                ElevatedButton(
+                TextButton(
                   onPressed: () {
                     setState(() {
                       valueMore = valueMore == true ? false : true;
                     });
-                    // showBottom(context);
                   },
-                  child: const Text('More',
-                      style: TextStyle(
-                          fontSize: 20.0, fontWeight: FontWeight.bold)),
+                  style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all(Colors.blue.shade200),
+                  ),
+                  child: Icon(valueMore
+                      ? Icons.keyboard_double_arrow_down_outlined
+                      : Icons.keyboard_double_arrow_up_outlined), //Text('More',
                 ),
                 const Text('GrandTotal : ',
                     style: TextStyle(
@@ -5642,7 +5933,7 @@ class _SaleState extends State<Sale> {
     );
   }
 
-  showMore(context) {
+  showMore(context, bool newBill) {
     ConfirmAlertBox(
         buttonColorForNo: Colors.red,
         buttonColorForYes: Colors.green,
@@ -5665,7 +5956,7 @@ class _SaleState extends State<Sale> {
         buttonTextForYes: 'YES',
         infoMessage:
             'Do you want to Preview\nEntryNo : ${dataDynamic[0]['EntryNo']}',
-        title: 'SAVED',
+        title: newBill ? 'SAVED' : 'EDITED',
         context: context);
   }
 
@@ -5730,7 +6021,6 @@ class _SaleState extends State<Sale> {
   fetchSale(context, data) {
     rateType = salesTypeData.id.toString();
     double billTotal = 0, billCash = 0;
-    String narration = ' ';
 
     api.fetchSalesInvoice(data['Id'], salesTypeData.id).then((value) {
       if (value != null) {
@@ -5755,7 +6045,46 @@ class _SaleState extends State<Sale> {
         billTotal = double.tryParse(information['GrandTotal'].toString());
         returnAmount = double.tryParse(information['ReturnAmount'].toString());
         returnBillId = information['ReturnNo'];
-        narration = information['Narration'];
+        controllerNarration.text = information['Narration'];
+
+        if (apiV != 'v19/') {
+          String _bankLedgerName = information['BankName'] != null
+              ? information['BankName'].toString()
+              : 0;
+          double _bankLedgerAmount = information['bankamount'] != null
+              ? double.tryParse(information['bankamount'].toString())
+              : 0;
+          if (_bankLedgerAmount > 0) {
+            bankAmountController.text = _bankLedgerAmount.toString();
+            bankLedgerData = cashBankACList.firstWhere((element) =>
+                element.name.toLowerCase() == _bankLedgerName.toLowerCase());
+            bankLedgerName = bankLedgerData.name;
+          } else {
+            bankAmountController.text = '';
+            bankLedgerData = null;
+            bankLedgerName = '';
+          }
+
+          int _commissionLedgerAc = information['CareOff'] != null
+              ? int.tryParse(information['CareOff'].toString())
+              : 0;
+          double _commissionLedgerAmount = information['CareOffAmount'] != null
+              ? double.tryParse(information['CareOffAmount'].toString())
+              : 0;
+
+          if (_commissionLedgerAmount > 0) {
+            commissionAmountController.text =
+                _commissionLedgerAmount.toString();
+            commissionAccount = _commissionLedgerAc;
+            api.getCustomerDetail(_commissionLedgerAc).then((ledgerData) =>
+                commissionLedgerData = LedgerModel(
+                    id: _commissionLedgerAc, name: ledgerData.name));
+          } else {
+            commissionAmountController.text = '';
+            commissionLedgerData = null;
+            commissionAccount = 0;
+          }
+        }
         CustomerModel cModel = CustomerModel(
             id: information['Customer'],
             name: information['ToName'],
@@ -5822,12 +6151,12 @@ class _SaleState extends State<Sale> {
         widgetID = false;
         grandTotal = billTotal - returnAmount;
         if (billCash > 0) {
-          _controllerCashReceived.text = billCash.toString();
-          _balance = _controllerCashReceived.text.isNotEmpty
+          controllerCashReceived.text = billCash.toString();
+          _balance = controllerCashReceived.text.isNotEmpty
               ? grandTotal > 0
-                  ? grandTotal - double.tryParse(_controllerCashReceived.text)
+                  ? grandTotal - double.tryParse(controllerCashReceived.text)
                   : ((totalCartValue) -
-                      double.tryParse(_controllerCashReceived.text))
+                      double.tryParse(controllerCashReceived.text))
               : grandTotal > 0
                   ? grandTotal
                   : totalCartValue;
@@ -5836,7 +6165,6 @@ class _SaleState extends State<Sale> {
           returnAmountController.text = returnAmount.toString();
           returnEntryNoController.text = returnBillId.toString();
         }
-        _narration = narration;
         nextWidget = 4;
         oldBill = true;
       });
@@ -5959,12 +6287,14 @@ class _SaleState extends State<Sale> {
   }
 
   Future<List<dynamic>> getSalesManListData(String filter) async {
-    var dd = otherRegSalesManList
-        .where((element) => element['Name']
-            .toString()
-            .toLowerCase()
-            .contains(filter.toLowerCase()))
-        .toList();
+    var dd = filter.isEmpty
+        ? otherRegSalesManList
+        : otherRegSalesManList
+            .where((element) => element['Name']
+                .toString()
+                .toLowerCase()
+                .contains(filter.toLowerCase()))
+            .toList();
     List<DataJson> dataResult = [];
     for (var data in dd) {
       dataResult.add(DataJson(
@@ -5994,15 +6324,11 @@ class _SaleState extends State<Sale> {
                     children: [
                       Expanded(
                         child: TextField(
+                          controller: controllerNarration,
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),
                             labelText: 'Narration...',
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _narration = value;
-                            });
-                          },
                         ),
                       ),
                     ],
@@ -6181,7 +6507,7 @@ class _SaleState extends State<Sale> {
     //       decoration: InputDecoration(labelText: 'Other Charges'),
     //     ),
     //     TextField(
-    //       controller: _narrationController,
+    //       controller: narrationController,
     //       decoration: InputDecoration(labelText: 'Narration'),
     //     ),
     //     const SizedBox(
@@ -6198,6 +6524,61 @@ class _SaleState extends State<Sale> {
     //             child: const Text('Submit')))
     //   ],
     // ),
+  }
+
+  // var _dropDownBankValue = '';
+  // widgetBankAccount() {
+  //   return DropdownButton<String>(
+  //     hint: Text(_dropDownBankValue.isNotEmpty
+  //         ? _dropDownBankValue.split('-')[1]
+  //         : 'Select bank account'),
+  //     items: cashBankACList.map<DropdownMenuItem<String>>((item) {
+  //       return DropdownMenuItem<String>(
+  //         value: item.id.toString() + "-" + item.name,
+  //         child: Text(item.name),
+  //       );
+  //     }).toList(),
+  //     onChanged: (value) {
+  //       setState(() {
+  //         _dropDownBankValue = value;
+  //         bankLedgerData = value;
+  //         bankAccount = int.parse(value.split('-')[0]);
+  //         bankLedgerName = value.split('-')[1];
+  //       });
+  //     },
+  //   );
+  // }
+
+  Future<List<dynamic>> widgetBankAccount(String filter) async {
+    var dd = filter.isEmpty
+        ? cashBankACList
+        : cashBankACList
+            .where((element) => element.name
+                .toString()
+                .toLowerCase()
+                .contains(filter.toLowerCase()))
+            .toList();
+    List<DataJson> dataResult = [];
+    for (var data in dd) {
+      dataResult.add(DataJson(id: data.id, name: data.name.trim().toString()));
+    }
+    return dataResult;
+  }
+
+  void balanceCalculate() {
+    double cashReceived = controllerCashReceived.text.trim().isNotEmpty
+        ? double.tryParse(controllerCashReceived.text)
+        : 0;
+    double bankAmount = bankAmountController.text.trim().isNotEmpty
+        ? double.parse(bankAmountController.text.trim())
+        : 0;
+    _balance = (cashReceived > 0 || bankAmount > 0)
+        ? grandTotal > 0
+            ? grandTotal - cashReceived - bankAmount
+            : ((totalCartValue) - cashReceived - bankAmount)
+        : grandTotal > 0
+            ? grandTotal
+            : totalCartValue;
   }
 }
 

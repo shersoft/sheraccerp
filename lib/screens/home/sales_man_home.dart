@@ -225,6 +225,7 @@ class _SalesManHomeState extends State<SalesManHome> {
                   var _pass = '';
                   if (companyUserData.userType.toUpperCase() == 'ADMIN' ||
                       sherSoftPassword.toString().isEmpty) {
+                    Navigator.of(context).pop();
                     Navigator.of(context).push(MaterialPageRoute(
                         builder: (BuildContext context) =>
                             const SalesManSettings()));
