@@ -205,43 +205,68 @@ class _SalesFormRegisterState extends State<SalesFormRegister> {
                     ],
                   ),
                 ),
-                ElevatedButton(
-                    onPressed: () {
-                      if (salesType != null) {
-                        salesType!.accounts = _accounts;
-                        salesType!.eInvoice = _eInv;
-                        salesType!.location = selectedLocationData.id;
-                        salesType!.name = controlName.text.trim().toUpperCase();
-                        salesType!.rateType = selectedRateType;
-                        salesType!.sColor = '-1';
-                        salesType!.stock = _stock;
-                        salesType!.tax = _tax;
-                        salesType!.type = controlType.text.trim().toUpperCase();
-                        setState(() {
-                          salesTypeList[(salesTypeList.indexWhere(
-                                  (element) => element.id == salesType!.id))] =
-                              salesType;
-                          salesType = null;
-                        });
-                      } else {
-                        SalesType dataS = SalesType(
-                            accounts: _accounts,
-                            eInvoice: _eInv,
-                            id: 0,
-                            location: selectedLocationData.id,
-                            name: controlName.text.trim().toUpperCase(),
-                            rateType: selectedRateType,
-                            sColor: '-1',
-                            stock: _stock,
-                            tax: _tax,
-                            type: controlType.text.trim().toUpperCase());
-                        setState(() {
-                          salesTypeList.add(dataS);
-                        });
-                      }
-                      var ss = '';
-                    },
-                    child: Text(salesType != null ? 'Edit' : 'Add')),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                        onPressed: () {
+                          if (controlName.text.isNotEmpty) {
+                            if (salesType != null) {
+                              salesType!.accounts = _accounts;
+                              salesType!.eInvoice = _eInv;
+                              salesType!.location = selectedLocationData.id;
+                              salesType!.name =
+                                  controlName.text.trim().toUpperCase();
+                              salesType!.rateType = selectedRateType;
+                              salesType!.sColor = '-1';
+                              salesType!.stock = _stock;
+                              salesType!.tax = _tax;
+                              salesType!.type =
+                                  controlType.text.trim().toUpperCase();
+                              setState(() {
+                                salesTypeList[(salesTypeList.indexWhere(
+                                        (element) =>
+                                            element.id == salesType!.id))] =
+                                    salesType;
+                                salesType = null;
+                              });
+                            } else {
+                              SalesType dataS = SalesType(
+                                  accounts: _accounts,
+                                  eInvoice: _eInv,
+                                  id: 0,
+                                  location: selectedLocationData.id,
+                                  name: controlName.text.trim().toUpperCase(),
+                                  rateType: selectedRateType,
+                                  sColor: '-1',
+                                  stock: _stock,
+                                  tax: _tax,
+                                  type: controlType.text.trim().toUpperCase());
+                              setState(() {
+                                salesTypeList.add(dataS);
+                              });
+                            }
+                          } else {
+                            showInSnackBar('Select Name');
+                          }
+                        },
+                        child: Text(salesType != null ? 'Edit' : 'Add')),
+                    Visibility(
+                      visible: salesType != null,
+                      child: ElevatedButton(
+                          onPressed: () {
+                            if (salesType != null) {
+                              setState(() {
+                                salesTypeList.removeAt(salesTypeList.indexWhere(
+                                    (element) => element.id == salesType!.id));
+                                clear();
+                              });
+                            }
+                          },
+                          child: const Text('Remove')),
+                    ),
+                  ],
+                ),
                 const Divider(
                   height: 1,
                 ),
@@ -397,23 +422,12 @@ class _SalesFormRegisterState extends State<SalesFormRegister> {
   String convertData(List<SalesType> salesTypeList) {
     String result =
         jsonEncode(salesTypeList.map((e) => e.toJson()).toList()).toString();
-    // for (var data in salesTypeList) {
-    //   result += json.encode({
-    //         'name': data.name,
-    //         'sType': data.type,
-    //         'rateType': data.rateType,
-    //         'stock': data.stock,
-    //         'accounts': data.accounts,
-    //         'location': data.location,
-    //         'sColor': data.sColor,
-    //         'tax': data.tax,
-    //         'eInvoice': data.eInvoice
-    //       }) +
-    //       ',';
-    // }
-    var vvv = json.encode(salesTypeList.map((e) => e.toJson()).toList());
-    var v1 = vvv;
-
     return result;
+  }
+
+  void clear() {
+    salesType = null;
+    controlName.text = '';
+    controlType.text = '';
   }
 }

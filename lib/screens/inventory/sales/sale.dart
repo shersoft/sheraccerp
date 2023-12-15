@@ -86,7 +86,8 @@ class _SaleState extends State<Sale> {
       isEnableProfitlessSalesWarning = false,
       isFreeQty = false,
       gstVerified = false,
-      gstValidation = false;
+      gstValidation = false,
+      isLedgerWiseLastSRate = false;
   final List<TextEditingController> _controllers = [];
   DateTime now = DateTime.now();
   String formattedDate;
@@ -271,6 +272,9 @@ class _SaleState extends State<Sale> {
         ComSettings.getStatus('SHOW SERIALNO IN STOCK WINDOW', settings);
     salesmanAsVehicle =
         ComSettings.getStatus('USE SALESMAN AS VEHICLE', settings);
+    isLedgerWiseLastSRate =
+        ComSettings.getStatus('ENABLE CUSTOMER WISE LAST S.RATE', settings);
+        
   }
 
   @override
@@ -983,7 +987,7 @@ class _SaleState extends State<Sale> {
             'commissionAmount': commissionAmountController.text.isEmpty
                 ? 0
                 : commissionAmountController.text,
-            'bankName': bankLedgerName ?? 0,
+            'bankName': bankLedgerName ?? '',
             'bankAmount': bankAmountController.text.isEmpty
                 ? 0
                 : bankAmountController.text
@@ -2832,29 +2836,7 @@ class _SaleState extends State<Sale> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data.length > 0) {
-              var d = snapshot.data[0];
-              StockProduct data = StockProduct(
-                  adCessPer: d['adcessper'].toDouble(),
-                  branch: d['Branch'].toDouble(),
-                  buyingPrice: d['prate'].toDouble(),
-                  buyingPriceReal: d['RealPrate'].toDouble(),
-                  cess: d['cess'].toDouble(),
-                  cessPer: d['cessper'].toDouble(),
-                  hsnCode: d['hsncode'],
-                  itemId: d['ItemId'],
-                  minimumRate: d['minimumRate'].toDouble(),
-                  name: d['itemname'],
-                  productId: d['uniquecode'],
-                  quantity: (salesTypeData.type == 'SALES-O' ||
-                          salesTypeData.type == 'SALES-Q')
-                      ? productModel.quantity
-                      : d['Qty'].toDouble(),
-                  retailPrice: d['retail'].toDouble(),
-                  sellingPrice: d['mrp'].toDouble(),
-                  spRetailPrice: d['Spretail'].toDouble(),
-                  stockValuation: d['stockvaluation'],
-                  tax: d['tax'].toDouble(),
-                  wholeSalePrice: d['WSrate'].toDouble());
+              StockProduct data = StockProduct.fromJson(snapshot.data[0]);
               return showAddMore(context, data);
             } else {
               return Center(
@@ -3264,6 +3246,93 @@ class _SaleState extends State<Sale> {
     unitValue = _conversion > 0 ? _conversion : 1;
   }
 
+  calculateText(StockProduct product) {
+    rate = _rateController.text.isNotEmpty
+        ? (double.tryParse(_rateController.text))
+        : 0;
+
+    if (enableMULTIUNIT && rate > 0 && _conversion > 0) {
+      rate = rate * _conversion;
+    pRate = product.buyingPrice * _conversion;
+    rPRate = product.buyingPriceReal * _conversion;
+    }else {
+      pRate = product.buyingPrice;
+      rPRate = product.buyingPriceReal;
+    }
+    quantity = _quantityController.text.isNotEmpty
+        ? double.tryParse(_quantityController.text)
+        : 0;
+    freeQty = _freeQuantityController.text.isNotEmpty
+        ? double.tryParse(_freeQuantityController.text)
+        : 0;
+    rRate = taxMethod == 'MINUS'
+        ? cessOnNetAmount
+            ? CommonService.getRound(4, (100 * rate) / (100 + taxP + kfcP))
+            : CommonService.getRound(
+                4, (100 * rate) / (100 + taxP + kfcP + cessPer))
+        : rate;
+    discount = _discountController.text.isNotEmpty
+        ? double.tryParse(_discountController.text)
+        : 0;
+    discount = _discountController.text.isNotEmpty
+        ? double.tryParse(_discountController.text)
+        : 0;
+    discountPercent = _discountController.text.isNotEmpty
+        ? double.tryParse(_discountPercentController.text)
+        : 0;
+    rDisc = taxMethod == 'MINUS'
+        ? CommonService.getRound(4, ((discount * 100) / (taxP + 100)))
+        : discount;
+    gross = CommonService.getRound(decimal, ((rRate * quantity)));
+    subTotal = CommonService.getRound(decimal, (gross - rDisc));
+    if (taxP > 0) {
+      tax = CommonService.getRound(4, ((subTotal * taxP) / 100));
+    }
+    if (companyTaxMode == 'INDIA') {
+      kfc = isKFC ? CommonService.getRound(4, ((subTotal * kfcP) / 100)) : 0;
+      double csPer = taxP / 2;
+      iGST = 0;
+      csGST = CommonService.getRound(4, ((subTotal * csPer) / 100));
+    } else if (companyTaxMode == 'GULF') {
+      iGST = CommonService.getRound(4, ((subTotal * taxP) / 100));
+      csGST = 0;
+      kfc = 0;
+    } else {
+      iGST = 0;
+      csGST = 0;
+      kfc = 0;
+      tax = 0;
+    }
+    if (cessOnNetAmount) {
+      cess = 0;
+      adCess = 0;
+    } else {
+      if (cessPer > 0) {
+        cess = CommonService.getRound(4, ((subTotal * cessPer) / 100));
+        adCess = CommonService.getRound(4, (quantity * adCessPer));
+      } else {
+        cess = 0;
+        adCess = 0;
+      }
+    }
+    total = CommonService.getRound(
+        2, (subTotal + csGST + csGST + iGST + cess + kfc + adCess));
+    if (enableMULTIUNIT && _conversion > 0) {
+      profitPer = pRateBasedProfitInSales
+          ? CommonService.getRound(
+              2, (total - (product.buyingPrice * _conversion * quantity)))
+          : CommonService.getRound(decimal,
+              (total - (product.buyingPriceReal * _conversion * quantity)));
+    } else {
+      profitPer = pRateBasedProfitInSales
+          ? CommonService.getRound(
+              2, (total - (product.buyingPrice * quantity)))
+          : CommonService.getRound(
+              2, (total - (product.buyingPriceReal * quantity)));
+    }
+    unitValue = _conversion > 0 ? _conversion : 1;
+  }
+
   showAddMore(BuildContext context, StockProduct product) {
     pRate = product.buyingPrice;
     rPRate = product.buyingPriceReal;
@@ -3359,7 +3428,7 @@ class _SaleState extends State<Sale> {
                           child: const Text("ADD"),
                           color: blue,
                           onPressed: () {
-                            calculate(product);
+                            calculateText(product);
                             setState(() {
                               isVariantSelected = false;
                               if (quantity > 0 || isFreeItem) {
@@ -3458,64 +3527,88 @@ class _SaleState extends State<Sale> {
                                           int united = unitListData != null
                                               ? unitListData.isNotEmpty
                                                   ? unitListData[0].sUnit
-                                                  : unitData
-                                                      .firstWhere((element) =>
-                                                          element.name == 'NOS')
-                                                      .id
+                                                  : unitData.isNotEmpty
+                                                      ? unitData
+                                                          .firstWhere(
+                                                              (element) =>
+                                                                  element
+                                                                      .name ==
+                                                                  'NOS')
+                                                          .id
+                                                      : 0
                                               : 0;
                                           _dropDownUnit = united;
                                           double unitedValue = unitListData !=
                                                   null
                                               ? unitListData.isNotEmpty
                                                   ? unitListData[0].conversion
-                                                  : unitData
-                                                      .firstWhere((element) =>
-                                                          element.name == 'NOS')
-                                                      .conversion
+                                                  : unitData.isNotEmpty
+                                                      ? unitData
+                                                          .firstWhere(
+                                                              (element) =>
+                                                                  element
+                                                                      .name ==
+                                                                  'NOS')
+                                                          .conversion
+                                                      : 1
                                               : 0;
                                           _conversion = unitedValue;
                                         }
                                         isUnit =
                                             _dropDownUnit > 0 ? true : false;
+                                        if (unitData.isEmpty && !isUnit) {
+                                          unitValue = 1;
+                                          _conversion = 0;
+                                          isUnit = true;
+                                        }
+                                      } else {
+                                        _dropDownUnit = product.unitId ?? 0;
+                                        _conversion = 0;
+                                        unitValue = 1;
                                       }
                                       if (isUnit) {
-                                        addProduct(CartItem(
-                                            id: totalItem + 1,
-                                            itemId: product.itemId,
-                                            itemName: product.name,
-                                            quantity: quantity,
-                                            rate: rate,
-                                            rRate: rRate,
-                                            uniqueCode: uniqueCode,
-                                            gross: gross,
-                                            discount: discount,
-                                            discountPercent: discountPercent,
-                                            rDiscount: rDisc,
-                                            fCess: kfc,
-                                            serialNo: _serialNoController.text,
-                                            tax: tax,
-                                            taxP: taxP,
-                                            unitId: _dropDownUnit,
-                                            unitValue: unitValue,
-                                            pRate: pRate,
-                                            rPRate: rPRate,
-                                            barcode: barcode,
-                                            expDate: expDate,
-                                            free: freeQty,
-                                            fUnitId: fUnitId,
-                                            cdPer: cdPer,
-                                            cDisc: cDisc,
-                                            net: subTotal,
-                                            cess: cess,
-                                            total: total,
-                                            profitPer: profitPer,
-                                            fUnitValue: fUnitValue,
-                                            adCess: adCess,
-                                            iGST: iGST,
-                                            cGST: csGST,
-                                            sGST: csGST,
-                                            stock: product.quantity,
-                                            minimumRate: product.minimumRate));
+                                        addProduct(
+                                            CartItem(
+                                                id: totalItem + 1,
+                                                itemId: product.itemId,
+                                                itemName: product.name,
+                                                quantity: quantity,
+                                                rate: rate,
+                                                rRate: rRate,
+                                                uniqueCode: uniqueCode,
+                                                gross: gross,
+                                                discount: discount,
+                                                discountPercent:
+                                                    discountPercent,
+                                                rDiscount: rDisc,
+                                                fCess: kfc,
+                                                serialNo:
+                                                    _serialNoController.text,
+                                                tax: tax,
+                                                taxP: taxP,
+                                                unitId: _dropDownUnit,
+                                                unitValue: unitValue ?? 1,
+                                                pRate: pRate,
+                                                rPRate: rPRate,
+                                                barcode: barcode,
+                                                expDate: expDate,
+                                                free: freeQty,
+                                                fUnitId: fUnitId,
+                                                cdPer: cdPer,
+                                                cDisc: cDisc,
+                                                net: subTotal,
+                                                cess: cess,
+                                                total: total,
+                                                profitPer: profitPer,
+                                                fUnitValue: fUnitValue,
+                                                adCess: adCess,
+                                                iGST: iGST,
+                                                cGST: csGST,
+                                                sGST: csGST,
+                                                stock: product.quantity,
+                                                minimumRate:
+                                                    product.minimumRate),
+                                            -1);
                                       } else {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(SnackBar(
@@ -4269,7 +4362,7 @@ class _SaleState extends State<Sale> {
                               child: Text(cartItem[index].itemName),
                               onDoubleTap: () {
                                 setState(() {
-                                  removeProduct(cartItem[index]);
+                                  removeProduct(index);
                                 });
                               },
                             ),
@@ -4371,7 +4464,8 @@ class _SaleState extends State<Sale> {
                                                 updateProduct(
                                                     cartItem[index],
                                                     cartItem[index].quantity +
-                                                        1);
+                                                        1,
+                                                    index);
                                               }
                                             });
                                           });
@@ -4454,8 +4548,10 @@ class _SaleState extends State<Sale> {
                                                 backgroundColor: Colors.red,
                                               ));
                                             } else {
-                                              updateProduct(cartItem[index],
-                                                  cartItem[index].quantity + 1);
+                                              updateProduct(
+                                                  cartItem[index],
+                                                  cartItem[index].quantity + 1,
+                                                  index);
                                             }
                                           });
                                         }
@@ -4485,7 +4581,7 @@ class _SaleState extends State<Sale> {
                                                             .toString())
                                                     .toString()
                                                 : '',
-                                            cartItem[index].id);
+                                            index);
                                       });
                                     } else {
                                       _displayTextInputDialog(
@@ -4497,7 +4593,7 @@ class _SaleState extends State<Sale> {
                                                       .toString())
                                                   .toString()
                                               : '',
-                                          cartItem[index].id);
+                                          index);
                                     }
                                   },
                                 ),
@@ -4514,8 +4610,10 @@ class _SaleState extends State<Sale> {
                                       ),
                                       onPressed: () {
                                         setState(() {
-                                          updateProduct(cartItem[index],
-                                              cartItem[index].quantity - 1);
+                                          updateProduct(
+                                              cartItem[index],
+                                              cartItem[index].quantity - 1,
+                                              index);
                                         });
                                       },
                                     ),
@@ -4573,7 +4671,7 @@ class _SaleState extends State<Sale> {
                                                                 .toString())
                                                         .toString()
                                                     : '',
-                                                cartItem[index].id);
+                                                index);
                                           }));
                                         } else {
                                           _displayTextInputDialog(
@@ -4586,7 +4684,7 @@ class _SaleState extends State<Sale> {
                                                               .toString())
                                                       .toString()
                                                   : '',
-                                              cartItem[index].id);
+                                              index);
                                         }
                                       } else {
                                         _displayTextInputDialog(
@@ -4599,7 +4697,7 @@ class _SaleState extends State<Sale> {
                                                             .toString())
                                                     .toString()
                                                 : '',
-                                            cartItem[index].id);
+                                            index);
                                       }
                                     }
                                   },
@@ -4620,7 +4718,7 @@ class _SaleState extends State<Sale> {
                                           fontSize: 20)),
                                   onDoubleTap: () {
                                     setState(() {
-                                      removeProduct(cartItem[index]);
+                                      removeProduct(index);
                                     });
                                   },
                                 ),
@@ -4792,25 +4890,28 @@ class _SaleState extends State<Sale> {
   TextEditingController commissionAmountController = TextEditingController();
   TextEditingController bankAmountController = TextEditingController();
 
-  void addProduct(product) {
-    int index = cartItem.indexWhere((i) => i.itemId == product.itemId);
+  void addProduct(product, int index) {
+    index = isFreeItem
+        ? index
+        : cartItem.indexWhere((i) => i.itemId == product.itemId);
 
     if (index != -1) {
-      updateProduct(product, cartItem[index].quantity + product.quantity);
+      updateProduct(
+          product, cartItem[index].quantity + product.quantity, index);
     } else {
       cartItem.add(product);
       calculateTotal();
     }
   }
 
-  void removeProduct(product) {
-    int index = cartItem.indexWhere((i) => i.itemId == product.itemId);
-    cartItem[index].quantity = 1;
-    cartItem.removeWhere((item) => item.id == product.id);
+  void removeProduct(int index) {
+    // int index = cartItem.indexWhere((i) => i.itemId == product.itemId);
+    // cartItem[index].quantity = 1;
+    cartItem.removeAt(index); //((item) => item.id == product.id);
   }
 
-  void updateProduct(product, qty) {
-    int index = cartItem.indexWhere((i) => i.itemId == product.itemId);
+  void updateProduct(product, qty, int index) {
+    // int index = cartItem.indexWhere((i) => i.itemId == product.itemId);
     cartItem[index].quantity = qty;
 
     cartItem[index].gross = CommonService.getRound(
@@ -4854,13 +4955,13 @@ class _SaleState extends State<Sale> {
         cartItem[index].total -
             cartItem[index].rPRate * cartItem[index].quantity);
 
-    if (cartItem[index].quantity == 0) removeProduct(product);
+    if (cartItem[index].quantity == 0) removeProduct(index);
 
     calculateTotal();
   }
 
-  void editProduct(String title, String value, int id) {
-    int index = cartItem.indexWhere((i) => i.id == id);
+  void editProduct(String title, String value, int index) {
+    // int index = cartItem.indexWhere((i) => i.id == id);
     if (title == 'Edit Rate') {
       bool lockRate = false;
       if (isMinimumRate) {
@@ -5588,62 +5689,73 @@ class _SaleState extends State<Sale> {
                                             allow: true,
                                             replacementString: '.')
                                       ],
-                                      onChanged: (String str) {
-                                        var cartTotal = totalCartValue;
-                                        if (str.isNotEmpty) {
-                                          otherAmountList[index]['Amount'] =
-                                              double.tryParse(str);
-                                          otherAmountList[index]['Percentage'] =
-                                              CommonService.getRound(
-                                                  decimal,
-                                                  ((double.tryParse(str) *
-                                                          100) /
-                                                      cartTotal));
-                                          var netTotal = (cartTotal -
-                                                  returnAmount) +
-                                              otherAmountList.fold(
-                                                  0.0,
-                                                  (t, e) =>
-                                                      t +
-                                                      double.parse(
-                                                          e['Symbol'] == '-'
-                                                              ? (e['Amount'] *
-                                                                      -1)
-                                                                  .toString()
-                                                              : e['Amount']
-                                                                  .toString()));
-                                          setState(() {
-                                            grandTotal = netTotal;
-                                          });
-                                        }
-                                      },
+                                      // onChanged: (String str) {
+                                      //   var cartTotal = totalCartValue;
+                                      //   try {
+                                      //     if (str.isNotEmpty &&
+                                      //         ComSettings.oKNumeric(str)) {
+                                      //       otherAmountList[index]['Amount'] =
+                                      //           double.tryParse(str);
+                                      //       otherAmountList[index]
+                                      //               ['Percentage'] =
+                                      //           CommonService.getRound(
+                                      //               decimal,
+                                      //               ((double.tryParse(str) *
+                                      //                       100) /
+                                      //                   cartTotal));
+                                      //       var netTotal = (cartTotal -
+                                      //               returnAmount) +
+                                      //           otherAmountList.fold(
+                                      //               0.0,
+                                      //               (t, e) =>
+                                      //                   t +
+                                      //                   double.parse(e[
+                                      //                               'Symbol'] ==
+                                      //                           '-'
+                                      //                       ? (e['Amount'] * -1)
+                                      //                           .toString()
+                                      //                       : e['Amount']
+                                      //                           .toString()));
+                                      //       setState(() {
+                                      //         grandTotal = netTotal;
+                                      //       });
+                                      //     }
+                                      //   } on FormatException {
+                                      //     debugPrint('ex');
+                                      //   }
+                                      // },
                                       onSubmitted: (String str) {
                                         var cartTotal = totalCartValue;
                                         if (str.isNotEmpty) {
-                                          otherAmountList[index]['Amount'] =
-                                              double.tryParse(str);
-                                          otherAmountList[index]['Percentage'] =
-                                              CommonService.getRound(
-                                                  decimal,
-                                                  ((double.tryParse(str) *
-                                                          100) /
-                                                      cartTotal));
-                                          var netTotal = (cartTotal -
-                                                  returnAmount) +
-                                              otherAmountList.fold(
-                                                  0.0,
-                                                  (t, e) =>
-                                                      t +
-                                                      double.parse(
-                                                          e['Symbol'] == '-'
-                                                              ? (e['Amount'] *
-                                                                      -1)
-                                                                  .toString()
-                                                              : e['Amount']
-                                                                  .toString()));
-                                          setState(() {
-                                            grandTotal = netTotal;
-                                          });
+                                          try {
+                                            otherAmountList[index]['Amount'] =
+                                                double.tryParse(str);
+                                            otherAmountList[index]
+                                                    ['Percentage'] =
+                                                CommonService.getRound(
+                                                    decimal,
+                                                    ((double.tryParse(str) *
+                                                            100) /
+                                                        cartTotal));
+                                            var netTotal = (cartTotal -
+                                                    returnAmount) +
+                                                otherAmountList.fold(
+                                                    0.0,
+                                                    (t, e) =>
+                                                        t +
+                                                        double.parse(e[
+                                                                    'Symbol'] ==
+                                                                '-'
+                                                            ? (e['Amount'] * -1)
+                                                                .toString()
+                                                            : e['Amount']
+                                                                .toString()));
+                                            setState(() {
+                                              grandTotal = netTotal;
+                                            });
+                                          } on FormatException {
+                                            debugPrint('ex');
+                                          }
                                         }
                                       }),
                                 )
@@ -5804,8 +5916,10 @@ class _SaleState extends State<Sale> {
                 child: const Text('OK'),
                 onPressed: () {
                   setState(() {
-                    updateProduct(cartItem[index],
-                        cartItem[index].quantity - cartItem[index].quantity);
+                    updateProduct(
+                        cartItem[index],
+                        cartItem[index].quantity - cartItem[index].quantity,
+                        index);
                     Navigator.pop(context);
                   });
                 },
@@ -5818,7 +5932,7 @@ class _SaleState extends State<Sale> {
   }
 
   Future<void> _displayTextInputDialog(
-      BuildContext context, String title, String text, int id) async {
+      BuildContext context, String title, String text, int index) async {
     TextEditingController _controller = TextEditingController();
     String valueText;
     _controller.text = ComSettings.getIfInteger(text);
@@ -5865,7 +5979,8 @@ class _SaleState extends State<Sale> {
                 child: const Text('OK'),
                 onPressed: () {
                   setState(() {
-                    editProduct(title, valueText, id);
+                    valueText = valueText ?? _controller.text;
+                    editProduct(title, valueText, index);
                     Navigator.pop(context);
                   });
                 },
@@ -6103,47 +6218,50 @@ class _SaleState extends State<Sale> {
         ledgerModel = cModel;
         ScopedModel.of<MainModel>(context).addCustomer(cModel);
         for (var product in particulars) {
-          addProduct(CartItem(
-              stock: 0,
-              minimumRate: 0,
-              id: totalItem + 1,
-              itemId: product['itemId'],
-              itemName: product['itemname'],
-              quantity: double.tryParse(product['Qty'].toString()),
-              rate: double.tryParse(product['Rate'].toString()),
-              rRate: double.tryParse(product['RealRate'].toString()),
-              uniqueCode: product['UniqueCode'],
-              gross: double.tryParse(product['GrossValue'].toString()),
-              discount: double.tryParse(product['Disc'].toString()),
-              discountPercent:
-                  double.tryParse(product['DiscPersent'].toString()),
-              rDiscount: double.tryParse(product['RDisc'].toString()),
-              fCess: double.tryParse(product['Fcess'].toString()),
-              serialNo: product['serialno'].toString(),
-              tax: double.tryParse(product['CGST'].toString()) +
-                  double.tryParse(product['SGST'].toString()) +
-                  double.tryParse(product['IGST'].toString()),
-              taxP: double.tryParse(product['igst'].toString()),
-              unitId: product['Unit'],
-              unitValue: double.tryParse(product['UnitValue'].toString()),
-              pRate: double.tryParse(product['Prate'].toString()),
-              rPRate: double.tryParse(product['Rprate'].toString()),
-              barcode: product['UniqueCode'],
-              expDate: '2020-01-01',
-              free: double.tryParse(product['freeQty'].toString()),
-              fUnitId: int.tryParse(product['Funit'].toString()),
-              cdPer: 0, //product['']cdPer,
-              cDisc: 0, //product['']cDisc,
-              net: double.tryParse(product['Net'].toString()), //subTotal,
-              cess: double.tryParse(product['cess'].toString()), //cess,
-              total: double.tryParse(product['Total'].toString()), //total,
-              profitPer: 0, //product['']profitPer,
-              fUnitValue:
-                  double.tryParse(product['FValue'].toString()), //fUnitValue,
-              adCess: double.tryParse(product['adcess'].toString()), //adCess,
-              iGST: double.tryParse(product['IGST'].toString()),
-              cGST: double.tryParse(product['CGST'].toString()),
-              sGST: double.tryParse(product['SGST'].toString())));
+          addProduct(
+              CartItem(
+                  stock: 0,
+                  minimumRate: 0,
+                  id: totalItem + 1,
+                  itemId: product['itemId'],
+                  itemName: product['itemname'],
+                  quantity: double.tryParse(product['Qty'].toString()),
+                  rate: double.tryParse(product['Rate'].toString()),
+                  rRate: double.tryParse(product['RealRate'].toString()),
+                  uniqueCode: product['UniqueCode'],
+                  gross: double.tryParse(product['GrossValue'].toString()),
+                  discount: double.tryParse(product['Disc'].toString()),
+                  discountPercent:
+                      double.tryParse(product['DiscPersent'].toString()),
+                  rDiscount: double.tryParse(product['RDisc'].toString()),
+                  fCess: double.tryParse(product['Fcess'].toString()),
+                  serialNo: product['serialno'].toString(),
+                  tax: double.tryParse(product['CGST'].toString()) +
+                      double.tryParse(product['SGST'].toString()) +
+                      double.tryParse(product['IGST'].toString()),
+                  taxP: double.tryParse(product['igst'].toString()),
+                  unitId: product['Unit'],
+                  unitValue: double.tryParse(product['UnitValue'].toString()),
+                  pRate: double.tryParse(product['Prate'].toString()),
+                  rPRate: double.tryParse(product['Rprate'].toString()),
+                  barcode: product['UniqueCode'],
+                  expDate: '2020-01-01',
+                  free: double.tryParse(product['freeQty'].toString()),
+                  fUnitId: int.tryParse(product['Funit'].toString()),
+                  cdPer: 0, //product['']cdPer,
+                  cDisc: 0, //product['']cDisc,
+                  net: double.tryParse(product['Net'].toString()), //subTotal,
+                  cess: double.tryParse(product['cess'].toString()), //cess,
+                  total: double.tryParse(product['Total'].toString()), //total,
+                  profitPer: 0, //product['']profitPer,
+                  fUnitValue: double.tryParse(
+                      product['FValue'].toString()), //fUnitValue,
+                  adCess:
+                      double.tryParse(product['adcess'].toString()), //adCess,
+                  iGST: double.tryParse(product['IGST'].toString()),
+                  cGST: double.tryParse(product['CGST'].toString()),
+                  sGST: double.tryParse(product['SGST'].toString())),
+              -1);
         }
       }
 
@@ -6429,55 +6547,61 @@ class _SaleState extends State<Sale> {
                                   expandStyle(
                                       1,
                                       TextFormField(
-                                          controller: TextEditingController
-                                              .fromValue(TextEditingValue(
-                                                  text: otherAmountList[index]
-                                                          ['Amount']
-                                                      .toString(),
-                                                  selection: TextSelection(
-                                                      baseOffset: 0,
-                                                      extentOffset:
-                                                          otherAmountList[index]
-                                                                  ['Amount']
-                                                              .toString()
-                                                              .length))),
+                                          controller:
+                                              TextEditingController.fromValue(
+                                                  TextEditingValue(
+                                            text: otherAmountList[index]
+                                                    ['Amount']
+                                                .toString(),
+                                            // selection: TextSelection(
+                                            //     baseOffset: 0,
+                                            //     extentOffset:
+                                            //         otherAmountList[index]
+                                            //                 ['Amount']
+                                            //             .toString()
+                                            //             .length)
+                                          )),
                                           keyboardType: const TextInputType
                                               .numberWithOptions(decimal: true),
                                           inputFormatters: [
                                             FilteringTextInputFormatter(
                                                 RegExp(r'[0-9]'),
-                                                allow: true,
-                                                replacementString: '.')
+                                                allow: true)
                                           ],
                                           onFieldSubmitted: (String str) {
                                             var cartTotal = totalCartValue;
                                             if (str.isNotEmpty) {
-                                              otherAmountList[index]['Amount'] =
-                                                  double.tryParse(str);
-                                              otherAmountList[index]
-                                                      ['Percentage'] =
-                                                  CommonService.getRound(
-                                                      decimal,
-                                                      ((double.tryParse(str) *
-                                                              100) /
-                                                          cartTotal));
-                                              var netTotal = (cartTotal -
-                                                      returnAmount) +
-                                                  otherAmountList.fold(
-                                                      0.0,
-                                                      (t, e) =>
-                                                          t +
-                                                          double.parse(e[
-                                                                      'Symbol'] ==
-                                                                  '-'
-                                                              ? (e['Amount'] *
-                                                                      -1)
-                                                                  .toString()
-                                                              : e['Amount']
-                                                                  .toString()));
-                                              setState(() {
-                                                grandTotal = netTotal;
-                                              });
+                                              try {
+                                                otherAmountList[index]
+                                                        ['Amount'] =
+                                                    double.tryParse(str);
+                                                otherAmountList[index]
+                                                        ['Percentage'] =
+                                                    CommonService.getRound(
+                                                        decimal,
+                                                        ((double.tryParse(str) *
+                                                                100) /
+                                                            cartTotal));
+                                                var netTotal = (cartTotal -
+                                                        returnAmount) +
+                                                    otherAmountList.fold(
+                                                        0.0,
+                                                        (t, e) =>
+                                                            t +
+                                                            double.parse(
+                                                                e['Symbol'] ==
+                                                                        '-'
+                                                                    ? (e['Amount'] *
+                                                                            -1)
+                                                                        .toString()
+                                                                    : e['Amount']
+                                                                        .toString()));
+                                                setState(() {
+                                                  grandTotal = netTotal;
+                                                });
+                                              } on FormatException {
+                                                debugPrint('ex');
+                                              }
                                             }
                                           }))
                                 ]));

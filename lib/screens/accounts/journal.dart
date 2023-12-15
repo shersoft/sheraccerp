@@ -1,5 +1,4 @@
 // @dart = 2.11
-
 import 'dart:convert';
 
 import 'package:dropdown_search/dropdown_search.dart';
@@ -48,7 +47,7 @@ class _JournalState extends State<Journal> {
   List<CompanySettings> settings;
   CompanyInformation companySettings;
   final TextEditingController _controllerAmount = TextEditingController();
-  FocusNode _focusNode = FocusNode();
+  final FocusNode _focusNode = FocusNode();
   final TextEditingController _controllerNarration = TextEditingController();
   double amount = 0;
 
@@ -371,8 +370,8 @@ class _JournalState extends State<Journal> {
 
         List tempList = [];
         var statement = 'JVList';
-        salesManId = salesManId > 0 ? salesManId : -1;
-        locationId = locationId > 0 ? locationId : -1;
+        salesManId = salesManId > 0 ? salesManId : 0;
+        locationId = locationId > 0 ? locationId : 1;
         api
             .getPaginationList(statement, page, locationId.toString(), '0',
                 DateUtil.dateYMD(formattedDate), salesManId.toString())

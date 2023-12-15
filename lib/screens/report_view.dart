@@ -2406,7 +2406,6 @@ class _ReportViewState extends State<ReportView> {
                     dataIndex < _totalData.length;
                     dataIndex++) {
                   Map _map = _totalData[dataIndex];
-                  var a = _map;
 
                   if (dataIndex == 0) {
                     Map<String, dynamic> mTotal = {
@@ -2420,7 +2419,9 @@ class _ReportViewState extends State<ReportView> {
                       double b1 = b0[_n] != null
                           ? double.tryParse(b0[_n].toString())
                           : 0;
-                      double b2 = expenseListTotal[index - 1];
+                      double b2 = expenseListTotal.isNotEmpty
+                          ? expenseListTotal[index - 1]
+                          : 0;
                       mTotal[_n] = b1 - b2;
                     }
                     totalData.add(mTotal);
@@ -2433,7 +2434,9 @@ class _ReportViewState extends State<ReportView> {
                         index++) {
                       var _n = _tempColumnTotal[index];
                       mTotal[_n] = incomeListTotal[index - 1] -
-                          expenseListTotal[index - 1];
+                          (expenseListTotal.isNotEmpty
+                              ? expenseListTotal[index - 1]
+                              : 0);
                     }
                     totalData.add(mTotal);
                   }

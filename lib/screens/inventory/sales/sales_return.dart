@@ -56,6 +56,7 @@ class _SalesReturnState extends State<SalesReturn> {
       isItemSerialNo = false,
       keyItemsVariantStock = false,
       buttonEvent = false,
+      isFreeItem = false,
       productTracking = false;
   final List<TextEditingController> _controllers = [];
   DateTime now = DateTime.now();
@@ -164,6 +165,7 @@ class _SalesReturnState extends State<SalesReturn> {
         ComSettings.getStatus('KEY LOCK SALES DISCOUNT', settings);
 
     isItemSerialNo = ComSettings.getStatus('KEY ITEM SERIAL NO', settings);
+    isFreeItem = ComSettings.getStatus('KEY FREE ITEM', settings);
     labelSerialNo =
         ComSettings.getValue('KEY ITEM SERIAL NO', settings).toString();
     labelSpRate =
@@ -551,7 +553,12 @@ class _SalesReturnState extends State<SalesReturn> {
             'billType': order.billType,
             'returnNo': 0,
             'returnAmount': 0,
-            'fyId': currentFinancialYear.id
+            'otherAmount': '0',
+            'fyId': currentFinancialYear.id,
+            'commissionAccount': 0,
+            'commissionAmount': 0,
+            'bankName': '',
+            'bankAmount': 0
           }) +
           ']';
 
@@ -1919,44 +1926,47 @@ class _SalesReturnState extends State<SalesReturn> {
                           color: blue,
                           onPressed: () {
                             setState(() {
-                              addProduct(CartItem(
-                                  id: totalItem + 1,
-                                  itemId: int.tryParse(
-                                      productModel['slno'].toString()),
-                                  itemName: productModel['itemname'].toString(),
-                                  quantity: quantity,
-                                  rate: rate,
-                                  rRate: rRate,
-                                  uniqueCode: uniqueCode,
-                                  gross: gross,
-                                  discount: discount,
-                                  discountPercent: discountPercent,
-                                  rDiscount: rDisc,
-                                  fCess: kfc,
-                                  serialNo: '',
-                                  tax: tax,
-                                  taxP: taxP,
-                                  unitId: _dropDownUnit,
-                                  unitValue: unitValue,
-                                  pRate: pRate,
-                                  rPRate: rPRate,
-                                  barcode: barcode,
-                                  expDate: expDate,
-                                  free: free,
-                                  fUnitId: fUnitId,
-                                  cdPer: cdPer,
-                                  cDisc: cDisc,
-                                  net: subTotal,
-                                  cess: cess,
-                                  total: total,
-                                  profitPer: profitPer,
-                                  fUnitValue: fUnitValue,
-                                  adCess: adCess,
-                                  iGST: iGST,
-                                  cGST: csGST,
-                                  sGST: csGST,
-                                  minimumRate: 0,
-                                  stock: 0));
+                              addProduct(
+                                  CartItem(
+                                      id: totalItem + 1,
+                                      itemId: int.tryParse(
+                                          productModel['slno'].toString()),
+                                      itemName:
+                                          productModel['itemname'].toString(),
+                                      quantity: quantity,
+                                      rate: rate,
+                                      rRate: rRate,
+                                      uniqueCode: uniqueCode,
+                                      gross: gross,
+                                      discount: discount,
+                                      discountPercent: discountPercent,
+                                      rDiscount: rDisc,
+                                      fCess: kfc,
+                                      serialNo: '',
+                                      tax: tax,
+                                      taxP: taxP,
+                                      unitId: _dropDownUnit,
+                                      unitValue: unitValue,
+                                      pRate: pRate,
+                                      rPRate: rPRate,
+                                      barcode: barcode,
+                                      expDate: expDate,
+                                      free: free,
+                                      fUnitId: fUnitId,
+                                      cdPer: cdPer,
+                                      cDisc: cDisc,
+                                      net: subTotal,
+                                      cess: cess,
+                                      total: total,
+                                      profitPer: profitPer,
+                                      fUnitValue: fUnitValue,
+                                      adCess: adCess,
+                                      iGST: iGST,
+                                      cGST: csGST,
+                                      sGST: csGST,
+                                      minimumRate: 0,
+                                      stock: 0),
+                                  -1);
                               if (totalItem > 0) {
                                 clearValue();
                                 nextWidget = 4;
@@ -2007,7 +2017,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                 onPressed: () {
                                   setState(() {
                                     updateProduct(cartItem[index],
-                                        cartItem[index].quantity + 1);
+                                        cartItem[index].quantity + 1, index);
                                   });
                                 },
                               ),
@@ -2028,7 +2038,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                               .toString())
                                           .toString()
                                       : '',
-                                  cartItem[index].id);
+                                  index);
                             },
                           ),
                           SizedBox(
@@ -2045,7 +2055,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                 onPressed: () {
                                   setState(() {
                                     updateProduct(cartItem[index],
-                                        cartItem[index].quantity - 1);
+                                        cartItem[index].quantity - 1, index);
                                   });
                                 },
                               ),
@@ -2075,7 +2085,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                               cartItem[index].rate.toString())
                                           .toString()
                                       : '',
-                                  cartItem[index].id);
+                                  index);
                             },
                           ),
                           const Text(" = ",
@@ -2105,24 +2115,26 @@ class _SalesReturnState extends State<SalesReturn> {
     );
   }
 
-  void addProduct(product) {
-    int index = cartItem.indexWhere((i) => i.id == product.id);
+  void addProduct(product, int index) {
+    index = isFreeItem
+        ? index
+        : cartItem.indexWhere((i) => i.itemId == product.itemId);
     if (index != -1) {
-      updateProduct(product, product.quantity + 1);
+      updateProduct(product, product.quantity + 1, index);
     } else {
       cartItem.add(product);
       calculateTotal();
     }
   }
 
-  void removeProduct(product) {
-    int index = cartItem.indexWhere((i) => i.id == product.id);
-    cartItem[index].quantity = 1;
-    cartItem.removeWhere((item) => item.id == product.id);
+  void removeProduct(int index) {
+    // int index = cartItem.indexWhere((i) => i.id == product.id);
+    // cartItem[index].quantity = 1;
+    cartItem.removeAt(index);
   }
 
-  void updateProduct(product, qty) {
-    int index = cartItem.indexWhere((i) => i.id == product.id);
+  void updateProduct(product, qty, int index) {
+    // int index = cartItem.indexWhere((i) => i.id == product.id);
     cartItem[index].quantity = qty;
 
     cartItem[index].gross = CommonService.getRound(
@@ -2171,8 +2183,8 @@ class _SalesReturnState extends State<SalesReturn> {
     calculateTotal();
   }
 
-  void editProduct(String title, String value, int id) {
-    int index = cartItem.indexWhere((i) => i.id == id);
+  void editProduct(String title, String value, int index) {
+    // int index = cartItem.indexWhere((i) => i.id == id);
     if (title == 'Edit Rate') {
       cartItem[index].rate = double.tryParse(value);
       // if (cart[index].rRate == 0) {
@@ -2704,43 +2716,47 @@ class _SalesReturnState extends State<SalesReturn> {
             'otherAmount': '[{}]'
           };
 
-          dio
-              .fetchSalesReturnInvoice(dataDynamic[0]['EntryNo'].toString(), 1)
-              .then((data) {
-            if (data != null) {
-              var dataAll = {
-                'Information': data['Information'][0],
-                'Particulars': data['Particulars'],
-                'otherAmount': data['otherAmount'],
-                'balance': data['BalanceAmount'].toString()
-              };
-              // var information = data['Information'][0];
-              // var particulars = data['Particulars'];
-              // var serialNO = value['SerialNO'];
-              // var deliveryNoteDetails = value['DeliveryNote'];
-              // var message = data['message'];
-              // otherAmountList = value['otherAmount'];
+          // dio
+          //     .fetchSalesReturnInvoice(dataDynamic[0]['EntryNo'].toString(), 1)
+          //     .then((data) {
+          //   if (data != null) {
+          //     var dataAll = {
+          //       'Information': data['Information'][0],
+          //       'Particulars': data['Particulars'],
+          //       'otherAmount': data['otherAmount'],
+          //       'balance': data['BalanceAmount'].toString()
+          //     };
+          // var information = data['Information'][0];
+          // var particulars = data['Particulars'];
+          // var serialNO = value['SerialNO'];
+          // var deliveryNoteDetails = value['DeliveryNote'];
+          // var message = data['message'];
+          // otherAmountList = value['otherAmount'];
 
-              if (printerType == 2) {
-                //2: 'Bluetooth',
-                if (printerDevice == 2) {
-                  //2: 'Default',
-                } else if (printerDevice == 3) {
-                  //3: 'Line',
-                } else if (printerDevice == 4) {
-                  //                4: 'Local',
-                } else if (printerDevice == 5) {
-                  //                5: 'ESC/POS',
-                  printBluetooth(context, title, companySettings, settings,
-                      dataAll, byteImage, size, form);
-                } else if (printerDevice == 6) {
-                  //                6: 'Thermal',
-                  _selectBtThermalPrint(context, title, companySettings,
-                      settings, dataAll, byteImage, "4");
-                }
-              }
-            }
-          });
+          // if (printerType == 2) {
+          //   //2: 'Bluetooth',
+          //   if (printerDevice == 2) {
+          //     //2: 'Default',
+          //   } else if (printerDevice == 3) {
+          //     //3: 'Line',
+          //   } else if (printerDevice == 4) {
+          //     //                4: 'Local',
+          //   } else if (printerDevice == 5) {
+          //     //                5: 'ESC/POS',
+          //     printBluetooth(context, title, companySettings, settings,
+          //         dataAll, byteImage, size, form);
+          //   } else if (printerDevice == 6) {
+          //     //                6: 'Thermal',
+          //     _selectBtThermalPrint(context, title, companySettings,
+          //         settings, dataAll, byteImage, "4");
+          //   }
+          // }
+
+          Navigator.of(context).pop();
+          Navigator.pushReplacementNamed(context, '/return_preview_show',
+              arguments: {'title': 'SalesReturn'});
+          //   }
+          // });
         },
         buttonTextForNo: 'No',
         buttonTextForYes: 'YES',
@@ -2827,48 +2843,51 @@ class _SalesReturnState extends State<SalesReturn> {
         ledgerModel = cModel;
         ScopedModel.of<MainModel>(context).addCustomer(cModel);
         for (var product in particulars) {
-          addProduct(CartItem(
-              id: totalItem + 1,
-              itemId: product['itemId'],
-              itemName: product['itemname'],
-              quantity: double.tryParse(product['Qty'].toString()),
-              rate: double.tryParse(product['Rate'].toString()),
-              rRate: double.tryParse(product['RealRate'].toString()),
-              uniqueCode: product['UniqueCode'],
-              gross: double.tryParse(product['GrossValue'].toString()),
-              discount: double.tryParse(product['Disc'].toString()),
-              discountPercent:
-                  double.tryParse(product['DiscPersent'].toString()),
-              rDiscount: double.tryParse(product['RDisc'].toString()),
-              fCess: double.tryParse(product['Fcess'].toString()),
-              serialNo: product['serialno'].toString(),
-              tax: double.tryParse(product['CGST'].toString()) +
-                  double.tryParse(product['SGST'].toString()) +
-                  double.tryParse(product['IGST'].toString()),
-              taxP: double.tryParse(product['igst'].toString()),
-              unitId: product['Unit'],
-              unitValue: double.tryParse(product['UnitValue'].toString()),
-              pRate: double.tryParse(product['Prate'].toString()),
-              rPRate: double.tryParse(product['Rprate'].toString()),
-              barcode: product['UniqueCode'],
-              expDate: '2020-01-01',
-              free: double.tryParse(product['freeQty'].toString()),
-              fUnitId: int.tryParse(product['Funit'].toString()),
-              cdPer: 0, //product['']cdPer,
-              cDisc: 0, //product['']cDisc,
-              net:
-                  double.tryParse(product['GrossValue'].toString()), //subTotal,
-              cess: double.tryParse(product['cess'].toString()), //cess,
-              total: double.tryParse(product['Total'].toString()), //total,
-              profitPer: 0,
-              fUnitValue:
-                  double.tryParse(product['FValue'].toString()), //fUnitValue,
-              adCess: double.tryParse(product['adcess'].toString()), //adCess,
-              iGST: double.tryParse(product['IGST'].toString()),
-              cGST: double.tryParse(product['CGST'].toString()),
-              sGST: double.tryParse(product['SGST'].toString()),
-              minimumRate: 0,
-              stock: 0));
+          addProduct(
+              CartItem(
+                  id: totalItem + 1,
+                  itemId: product['itemId'],
+                  itemName: product['itemname'],
+                  quantity: double.tryParse(product['Qty'].toString()),
+                  rate: double.tryParse(product['Rate'].toString()),
+                  rRate: double.tryParse(product['RealRate'].toString()),
+                  uniqueCode: product['UniqueCode'],
+                  gross: double.tryParse(product['GrossValue'].toString()),
+                  discount: double.tryParse(product['Disc'].toString()),
+                  discountPercent:
+                      double.tryParse(product['DiscPersent'].toString()),
+                  rDiscount: double.tryParse(product['RDisc'].toString()),
+                  fCess: double.tryParse(product['Fcess'].toString()),
+                  serialNo: product['serialno'].toString(),
+                  tax: double.tryParse(product['CGST'].toString()) +
+                      double.tryParse(product['SGST'].toString()) +
+                      double.tryParse(product['IGST'].toString()),
+                  taxP: double.tryParse(product['igst'].toString()),
+                  unitId: product['Unit'],
+                  unitValue: double.tryParse(product['UnitValue'].toString()),
+                  pRate: double.tryParse(product['Prate'].toString()),
+                  rPRate: double.tryParse(product['Rprate'].toString()),
+                  barcode: product['UniqueCode'],
+                  expDate: '2020-01-01',
+                  free: double.tryParse(product['freeQty'].toString()),
+                  fUnitId: int.tryParse(product['Funit'].toString()),
+                  cdPer: 0, //product['']cdPer,
+                  cDisc: 0, //product['']cDisc,
+                  net: double.tryParse(
+                      product['GrossValue'].toString()), //subTotal,
+                  cess: double.tryParse(product['cess'].toString()), //cess,
+                  total: double.tryParse(product['Total'].toString()), //total,
+                  profitPer: 0,
+                  fUnitValue: double.tryParse(
+                      product['FValue'].toString()), //fUnitValue,
+                  adCess:
+                      double.tryParse(product['adcess'].toString()), //adCess,
+                  iGST: double.tryParse(product['IGST'].toString()),
+                  cGST: double.tryParse(product['CGST'].toString()),
+                  sGST: double.tryParse(product['SGST'].toString()),
+                  minimumRate: 0,
+                  stock: 0),
+              -1);
         }
       }
 

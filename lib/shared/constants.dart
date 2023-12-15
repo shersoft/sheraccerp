@@ -148,110 +148,112 @@ class ComSettings {
       salesTypeList.addAll(value);
     });
     api.fetchOtherRegList().then((value) {
-      otherRegistrationList = value;
-      Map<String, dynamic> map = value[0];
-      if (map['location'].length > 0) {
-        if (map['location'][0]['Auto'] == 1) {
-          locationList.add(AppSettingsMap(key: 0, value: ''));
-        } else {
-          locationList.add(AppSettingsMap(key: 1, value: ''));
+      if (value != null && value.isNotEmpty) {
+        otherRegistrationList = value;
+        Map<String, dynamic> map = value[0];
+        if (map['location'].length > 0) {
+          if (map['location'][0]['Auto'] == 1) {
+            locationList.add(AppSettingsMap(key: 0, value: ''));
+          } else {
+            locationList.add(AppSettingsMap(key: 1, value: ''));
+          }
         }
-      }
-      for (var json in map['location']) {
-        otherRegLocationList.add(OtherRegistrationModel.fromJson(json));
-        locationList
-            .add(AppSettingsMap(key: json['auto'], value: json['Name']));
-      }
-      for (var json in map['unit']) {
-        otherRegUnitList.add(OtherRegistrationModel.fromJson(json));
-      }
-      if (map['area'].length > 0) {
-        if (map['area'][0]['Auto'] == 1) {
-          areaList.add(AppSettingsMap(key: 0, value: ''));
-        } else {
-          areaList.add(AppSettingsMap(key: 1, value: ''));
+        for (var json in map['location']) {
+          otherRegLocationList.add(OtherRegistrationModel.fromJson(json));
+          locationList
+              .add(AppSettingsMap(key: json['auto'], value: json['Name']));
         }
-      }
-      for (var json in map['area']) {
-        otherRegAreaList.add(OtherRegistrationModel.fromJson(json));
-        otherRegAreaList.sort((a, b) => a.name.compareTo(b.name));
-        areaList.add(AppSettingsMap(key: json['auto'], value: json['Name']));
-      }
-      if (map['salesMan'].length > 0) {
-        if (map['salesMan'][0]['Auto'] == 1) {
-          salesmanList.add(AppSettingsMap(key: 0, value: ''));
-        } else {
-          salesmanList.add(AppSettingsMap(key: 1, value: ''));
+        for (var json in map['unit']) {
+          otherRegUnitList.add(OtherRegistrationModel.fromJson(json));
         }
-      }
-      for (var json in map['salesMan']) {
-        otherRegSalesManList.add(json);
-        salesmanList
-            .add(AppSettingsMap(key: json['Auto'], value: json['Name']));
-      }
-      if (map['route'].length > 0) {
-        if (map['route'][0]['Auto'] == 1) {
-          routeList.add(AppSettingsMap(key: 0, value: ''));
-        } else {
-          routeList.add(AppSettingsMap(key: 1, value: ''));
+        if (map['area'].length > 0) {
+          if (map['area'][0]['Auto'] == 1) {
+            areaList.add(AppSettingsMap(key: 0, value: ''));
+          } else {
+            areaList.add(AppSettingsMap(key: 1, value: ''));
+          }
         }
-      }
-      for (var json in map['route']) {
-        otherRegRouteList.add(OtherRegistrationModel.fromJson(json));
-        otherRegRouteList.sort((a, b) => a.name.compareTo(b.name));
-        routeList.add(AppSettingsMap(key: json['auto'], value: json['Name']));
-      }
-      if (map['brand'].length > 0) {
-        if (map['brand'][0]['Auto'] == 1) {
-          brandList.add(AppSettingsMap(key: 0, value: ''));
-        } else {
-          brandList.add(AppSettingsMap(key: 1, value: ''));
+        for (var json in map['area']) {
+          otherRegAreaList.add(OtherRegistrationModel.fromJson(json));
+          otherRegAreaList.sort((a, b) => a.name.compareTo(b.name));
+          areaList.add(AppSettingsMap(key: json['auto'], value: json['Name']));
         }
-      }
-      for (var json in map['brand']) {
-        brandList.add(AppSettingsMap(key: json['auto'], value: json['Name']));
-      }
-      if (map['category'].length > 0) {
-        if (map['category'][0]['Auto'] == 1) {
-          categoryList.add(AppSettingsMap(key: 0, value: ''));
-        } else {
-          categoryList.add(AppSettingsMap(key: 1, value: ''));
+        if (map['salesMan'].length > 0) {
+          if (map['salesMan'][0]['Auto'] == 1) {
+            salesmanList.add(AppSettingsMap(key: 0, value: ''));
+          } else {
+            salesmanList.add(AppSettingsMap(key: 1, value: ''));
+          }
         }
-      }
-      for (var json in map['category']) {
-        categoryList
-            .add(AppSettingsMap(key: json['auto'], value: json['Name']));
-      }
-      if (map['mfr'].length > 0) {
-        if (map['mfr'][0]['Auto'] == 1) {
-          mfrList.add(AppSettingsMap(key: 0, value: ''));
-        } else {
-          mfrList.add(AppSettingsMap(key: 1, value: ''));
+        for (var json in map['salesMan']) {
+          otherRegSalesManList.add(json);
+          salesmanList
+              .add(AppSettingsMap(key: json['Auto'], value: json['Name']));
         }
-      }
-      for (var json in map['mfr']) {
-        mfrList.add(AppSettingsMap(key: json['auto'], value: json['Name']));
-      }
-      if (map['model'].length > 0) {
-        if (map['model'][0]['Auto'] == 1) {
-          modelList.add(AppSettingsMap(key: 0, value: ''));
-        } else {
-          modelList.add(AppSettingsMap(key: 1, value: ''));
+        if (map['route'].length > 0) {
+          if (map['route'][0]['Auto'] == 1) {
+            routeList.add(AppSettingsMap(key: 0, value: ''));
+          } else {
+            routeList.add(AppSettingsMap(key: 1, value: ''));
+          }
         }
-      }
-      for (var json in map['model']) {
-        modelList.add(AppSettingsMap(key: json['auto'], value: json['Name']));
-      }
-      if (map['sub_category'].length > 0) {
-        if (map['sub_category'][0]['Auto'] == 1) {
-          subCategoryList.add(AppSettingsMap(key: 0, value: ''));
-        } else {
-          subCategoryList.add(AppSettingsMap(key: 1, value: ''));
+        for (var json in map['route']) {
+          otherRegRouteList.add(OtherRegistrationModel.fromJson(json));
+          otherRegRouteList.sort((a, b) => a.name.compareTo(b.name));
+          routeList.add(AppSettingsMap(key: json['auto'], value: json['Name']));
         }
-      }
-      for (var json in map['sub_category']) {
-        subCategoryList
-            .add(AppSettingsMap(key: json['auto'], value: json['Name']));
+        if (map['brand'].length > 0) {
+          if (map['brand'][0]['Auto'] == 1) {
+            brandList.add(AppSettingsMap(key: 0, value: ''));
+          } else {
+            brandList.add(AppSettingsMap(key: 1, value: ''));
+          }
+        }
+        for (var json in map['brand']) {
+          brandList.add(AppSettingsMap(key: json['auto'], value: json['Name']));
+        }
+        if (map['category'].length > 0) {
+          if (map['category'][0]['Auto'] == 1) {
+            categoryList.add(AppSettingsMap(key: 0, value: ''));
+          } else {
+            categoryList.add(AppSettingsMap(key: 1, value: ''));
+          }
+        }
+        for (var json in map['category']) {
+          categoryList
+              .add(AppSettingsMap(key: json['auto'], value: json['Name']));
+        }
+        if (map['mfr'].length > 0) {
+          if (map['mfr'][0]['Auto'] == 1) {
+            mfrList.add(AppSettingsMap(key: 0, value: ''));
+          } else {
+            mfrList.add(AppSettingsMap(key: 1, value: ''));
+          }
+        }
+        for (var json in map['mfr']) {
+          mfrList.add(AppSettingsMap(key: json['auto'], value: json['Name']));
+        }
+        if (map['model'].length > 0) {
+          if (map['model'][0]['Auto'] == 1) {
+            modelList.add(AppSettingsMap(key: 0, value: ''));
+          } else {
+            modelList.add(AppSettingsMap(key: 1, value: ''));
+          }
+        }
+        for (var json in map['model']) {
+          modelList.add(AppSettingsMap(key: json['auto'], value: json['Name']));
+        }
+        if (map['sub_category'].length > 0) {
+          if (map['sub_category'][0]['Auto'] == 1) {
+            subCategoryList.add(AppSettingsMap(key: 0, value: ''));
+          } else {
+            subCategoryList.add(AppSettingsMap(key: 1, value: ''));
+          }
+        }
+        for (var json in map['sub_category']) {
+          subCategoryList
+              .add(AppSettingsMap(key: json['auto'], value: json['Name']));
+        }
       }
     });
 
@@ -344,12 +346,6 @@ class ComSettings {
       }
     }
     return status;
-  }
-
-  static isNumeric(String value) {
-    try {} catch (e) {
-      return false;
-    }
   }
 
   static oKNumeric(String result) {

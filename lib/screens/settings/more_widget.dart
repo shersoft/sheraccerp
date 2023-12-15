@@ -4,6 +4,7 @@ import 'package:sheraccerp/screens/printer_settings.dart';
 import 'package:sheraccerp/screens/profile.dart';
 import 'package:sheraccerp/screens/salesman_registration.dart';
 import 'package:sheraccerp/screens/settings/software_settings.dart';
+import 'package:sheraccerp/screens/tax_registration.dart';
 import 'package:sheraccerp/screens/ui/add_screen.dart';
 import 'package:sheraccerp/screens/user_list.dart';
 import 'package:sheraccerp/screens/user_registration.dart';
@@ -260,6 +261,33 @@ class SettingsMenu extends StatelessWidget {
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (BuildContext context) => const UserRegistration()));
+            },
+          ),
+          GestureDetector(
+            child: Card(
+              elevation: 5.0,
+              child: Container(
+                padding: const EdgeInsets.all(0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: const <Widget>[
+                    Icon(
+                      Icons.how_to_vote,
+                      color: blue,
+                      size: 90.0,
+                    ),
+                    Text(
+                      'Tax Group',
+                      style: TextStyle(
+                          color: Colors.black, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (BuildContext context) => const TaxRegistration()));
             },
           ),
         ],

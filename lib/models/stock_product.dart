@@ -19,28 +19,61 @@ class StockProduct {
   final double minimumRate;
   final String serialNo;
   final String oBarcode;
+  final int supplierId;
+  final int locationId;
+  final int categoryId;
+  final int unitId;
+  final int mfrId;
+  final int subcategoryId;
+  final int rackId;
+  final double free;
+  final String taxType;
+  final int estUniqueCode;
+  final String expDate;
+  final String locked;
+  final int brand;
+  final int company;
+  final double size;
+  final int color;
 
-  const StockProduct(
-      {this.name,
-      this.itemId,
-      this.buyingPrice,
-      this.sellingPrice,
-      this.buyingPriceReal,
-      this.retailPrice,
-      this.wholeSalePrice,
-      this.quantity,
-      this.productId,
-      this.hsnCode,
-      this.stockValuation,
-      this.tax,
-      this.cess,
-      this.cessPer,
-      this.adCessPer,
-      this.spRetailPrice,
-      this.branch,
-      this.minimumRate,
-      this.serialNo,
-      this.oBarcode});
+  const StockProduct({
+    this.name,
+    this.itemId,
+    this.buyingPrice,
+    this.sellingPrice,
+    this.buyingPriceReal,
+    this.retailPrice,
+    this.wholeSalePrice,
+    this.quantity,
+    this.productId,
+    this.hsnCode,
+    this.stockValuation,
+    this.tax,
+    this.cess,
+    this.cessPer,
+    this.adCessPer,
+    this.spRetailPrice,
+    this.branch,
+    this.minimumRate,
+    this.serialNo,
+    this.oBarcode,
+    this.supplierId,
+    this.locationId,
+    this.categoryId,
+    this.unitId,
+    this.mfrId,
+    this.subcategoryId,
+    this.rackId,
+    this.free,
+    this.taxType,
+    this.estUniqueCode,
+    this.expDate,
+    this.locked,
+    this.brand,
+    this.company,
+    this.size,
+    this.color,
+  });
 
   factory StockProduct.fromJson(Map<String, dynamic> json) {
     return StockProduct(
@@ -64,6 +97,24 @@ class StockProduct {
       minimumRate: double.tryParse(json['minimumRate'].toString()),
       serialNo: json['serialno'] ?? '',
       oBarcode: json['obarcode'] ?? '',
+      supplierId: json['supplier'] ?? 0,
+      locationId: json['location'] ?? 0,
+      categoryId: json['Catagory_id'] ?? 0,
+      unitId: json['unit_id'] ?? 0,
+      mfrId: json['Mfr_id'] ?? 0,
+      subcategoryId: json['subcatagory_id'] ?? 0,
+      rackId: json['rack_id'] ?? 0,
+      free: double.tryParse(
+        json['Free'].toString(),
+      ),
+      taxType: json['TaxType'].toString(),
+      estUniqueCode: json['EstUniQueCode'] ?? 0,
+      expDate: json['expdate'] ?? '2023-08-01T00:00:00.000Z',
+      locked: json['Locked'] ?? 'N',
+      brand: json['Brand'] ?? 0,
+      company: json['company'] ?? 0,
+      size: double.tryParse(json['Size'].toString()),
+      color: json['color'] ?? 0,
     );
   }
 }

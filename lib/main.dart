@@ -19,6 +19,7 @@ import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/accounts/bank_voucher.dart';
 import 'package:sheraccerp/screens/accounts/journal.dart';
 import 'package:sheraccerp/screens/accounts/tax_report.dart';
+import 'package:sheraccerp/screens/html_previews/sales_return_preview.dart';
 import 'package:sheraccerp/screens/inventory/delivery_note.dart';
 import 'package:sheraccerp/screens/inventory/invoice_design.dart';
 import 'package:sheraccerp/screens/inventory/serial_no_list.dart';
@@ -151,6 +152,8 @@ class MyApp extends StatelessWidget {
               '/check_out': (context) => const ConfirmOrder(),
               '/ledger': (context) => const Ledger(),
               '/preview_show': (context) => const SalesPreviewShow(),
+              '/return_preview_show': (context) =>
+                  const SalesReturnPreviewShow(),
               '/select_ledger': (context) => const LedgerSelect(),
               '/report_view': (context) => const ReportView(
                   '0',

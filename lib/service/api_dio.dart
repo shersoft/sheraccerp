@@ -4072,7 +4072,7 @@ class DioService {
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
               '/Journal/find/$dataBase',
-          queryParameters: {'id': id});
+          queryParameters: {'id': id, 'fyId': currentFinancialYear.id});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -5964,7 +5964,6 @@ class DioService {
   }
 
   Future<List<SalesType>> salesFormList() async {
-    var dd = '192.168.100.102:85/api/v20/salesForm/ListAll/SHERACCERPNEW';
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     List<SalesType> resultData;
@@ -5973,10 +5972,9 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
       final response = await dio.get(
-        // pref.getString('api' ?? '127.0.0.1:80/api/') +
-        //     apiV +
-        //     'salesForm/ListAll/$dataBase',
-        dd,
+        pref.getString('api' ?? '127.0.0.1:80/api/') +
+            apiV +
+            'salesForm/ListAll/$dataBase',
       );
 
       if (response.statusCode == 200) {
@@ -6008,9 +6006,180 @@ class DioService {
               'salesForm/add/$dataBase',
           data: json.encode(data),
           options: Options(headers: {'Content-Type': 'application/json'}));
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         var jsonResponse = response.data;
         ret = jsonResponse['returnValue'] > 0 ? true : false;
+      } else {
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
+  Future<bool> salesOtherDetailsAdd(data) async {
+    bool ret = false;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.post(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'salesForm/addOtherDetails/$dataBase',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+      if (response.statusCode == 201) {
+        // var jsonResponse = response.data;
+        ret = true;
+      } else {
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
+  Future<void> checkDomain() async {
+    try {
+      final response = await dio.get('https://www.google.com/');
+      if (response.statusCode == 201) {
+        //
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  Future<bool> updateGeneralSettingMobile(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'updateGeneralSettingMobile/$dataBase',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        return response.data > 0 ? true : false;
+      } else {
+        debugPrint('Failed to load data');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
+  }
+
+  Future<List<TaxGroupModel>> taxGroupAll() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    List<TaxGroupModel> _items = [];
+    try {
+      final response = await dio.get(
+        pref.getString('api' ?? '127.0.0.1:80/api/') +
+            apiV +
+            'taxGroup/All' +
+            '/$dataBase',
+      );
+      final data = response.data;
+      if (data != null) {
+        _items = TaxGroupModel.fromMapList(data);
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<bool> taxGroupAdd(data) async {
+    bool ret = false;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.post(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'taxGroup/add/$dataBase',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+      if (response.statusCode == 201) {
+        var jsonResponse = response.data;
+        ret = jsonResponse['returnValue'] > 0 ? true : false;
+      } else {
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
+  Future<bool> taxGroupEdit(data) async {
+    bool ret = false;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'taxGroup/edit/$dataBase',
+          data: json.encode(data),
+          options: Options(headers: {'Content-Type': 'application/json'}));
+      if (response.statusCode == 201) {
+        var jsonResponse = response.data;
+        ret = jsonResponse['returnValue'] > 0 ? true : false;
+      } else {
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
+  Future<bool> taxGroupDelete(data) async {
+    bool ret = false;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.delete(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'taxGroup/delete/$dataBase',
+          queryParameters: data,
+          options: Options(headers: {'Content-Type': 'application/json'}));
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+        ret = true;
       } else {
         debugPrint('Unexpected error occurred!');
       }

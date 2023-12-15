@@ -98,6 +98,7 @@ class _DashPageState extends State<DashPage> {
       _fetchSalesSummary(dropdownBranchId);
       _fetchPurchaseSummary(dropdownBranchId);
     } else {
+      dio.checkDomain();
       _fetchDataAll();
     }
   }
@@ -122,21 +123,23 @@ class _DashPageState extends State<DashPage> {
 
   Future _fetchTotalData(var branch) async {
     dio.fetchDashTotalData(formattedDate, branch).then((responseBodyOfTotal) {
-      setState(() {
-        _status = true;
-      });
-      totalSales = responseBodyOfTotal['Total Sales'].toString();
-      totalNoSales = responseBodyOfTotal['Total No Sales'].toString();
-      totalCashSales = responseBodyOfTotal['Total Cash Sales'].toString();
-      totalNoCashSales = responseBodyOfTotal['Total No Cash Sales'].toString();
-      totalCreditSales = responseBodyOfTotal['Total Credit Sales'].toString();
-      totalNoCreditSales =
-          responseBodyOfTotal['Total No Credit Sales'].toString();
-      totalNoCustomers = responseBodyOfTotal['No Customers'].toString();
-      totalNoOfRepeatCustomers =
-          responseBodyOfTotal['No of Repeat Customers'].toString();
-      totalExpenses = responseBodyOfTotal['Total Expenses'].abs().toString();
-
+      if (responseBodyOfTotal != null && responseBodyOfTotal.isNotEmpty) {
+        setState(() {
+          _status = true;
+        });
+        totalSales = responseBodyOfTotal['Total Sales'].toString();
+        totalNoSales = responseBodyOfTotal['Total No Sales'].toString();
+        totalCashSales = responseBodyOfTotal['Total Cash Sales'].toString();
+        totalNoCashSales =
+            responseBodyOfTotal['Total No Cash Sales'].toString();
+        totalCreditSales = responseBodyOfTotal['Total Credit Sales'].toString();
+        totalNoCreditSales =
+            responseBodyOfTotal['Total No Credit Sales'].toString();
+        totalNoCustomers = responseBodyOfTotal['No Customers'].toString();
+        totalNoOfRepeatCustomers =
+            responseBodyOfTotal['No of Repeat Customers'].toString();
+        totalExpenses = responseBodyOfTotal['Total Expenses'].abs().toString();
+      }
       return _status;
     });
   }
@@ -147,22 +150,25 @@ class _DashPageState extends State<DashPage> {
     dio
         .fetchDashSalesSummary(formattedDate, sDate, branch)
         .then((responseData) {
-      Map<dynamic, dynamic> responseBodyOfSalesSummary;
-      List<dynamic> _salesSummary = responseData.length > 0 ? responseData : [];
+      if (responseData != null) {
+        Map<dynamic, dynamic> responseBodyOfSalesSummary;
+        List<dynamic> _salesSummary =
+            responseData.length > 0 ? responseData : [];
 
-      if (mounted) {
-        setState(() {
-          _statusSalesSummary = true;
-          if (_salesSummary.isNotEmpty) {
-            responseBodyOfSalesSummary = _salesSummary[0];
-            if (responseBodyOfSalesSummary != null) {
-              _salesData.clear();
-              for (Map sales in _salesSummary) {
-                _salesData.add(ChartSales.fromJson(sales));
+        if (mounted) {
+          setState(() {
+            _statusSalesSummary = true;
+            if (_salesSummary.isNotEmpty) {
+              responseBodyOfSalesSummary = _salesSummary[0];
+              if (responseBodyOfSalesSummary != null) {
+                _salesData.clear();
+                for (Map sales in _salesSummary) {
+                  _salesData.add(ChartSales.fromJson(sales));
+                }
               }
             }
-          }
-        });
+          });
+        }
       }
       return _statusSalesSummary;
     });
@@ -174,23 +180,25 @@ class _DashPageState extends State<DashPage> {
     dio
         .fetchDashPurchaseSummary(formattedDate, sDate, branch)
         .then((responseData) {
-      Map<dynamic, dynamic> responseBodyOfPurchaseSummary;
-      List<dynamic> _purchaseSummary =
-          responseData.length > 0 ? responseData : [];
+      if (responseData != null) {
+        Map<dynamic, dynamic> responseBodyOfPurchaseSummary;
+        List<dynamic> _purchaseSummary =
+            responseData.length > 0 ? responseData : [];
 
-      if (mounted) {
-        setState(() {
-          _statusPurchaseSummary = true;
-          if (_purchaseSummary.isNotEmpty) {
-            responseBodyOfPurchaseSummary = _purchaseSummary[0];
-            if (responseBodyOfPurchaseSummary != null) {
-              _purchaseData.clear();
-              for (Map purchase in _purchaseSummary) {
-                _purchaseData.add(ChartPurchase.fromJson(purchase));
+        if (mounted) {
+          setState(() {
+            _statusPurchaseSummary = true;
+            if (_purchaseSummary.isNotEmpty) {
+              responseBodyOfPurchaseSummary = _purchaseSummary[0];
+              if (responseBodyOfPurchaseSummary != null) {
+                _purchaseData.clear();
+                for (Map purchase in _purchaseSummary) {
+                  _purchaseData.add(ChartPurchase.fromJson(purchase));
+                }
               }
             }
-          }
-        });
+          });
+        }
       }
       return _statusPurchaseSummary;
     });

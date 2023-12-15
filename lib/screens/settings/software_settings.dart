@@ -35,7 +35,10 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
       decimalPoint = '',
       boxColor = '',
       toolBarColor = '',
-      backhand = '';
+      backhand = '',
+      keySerialNoTitle = '',
+      keyEWayApi = '',
+      keyItemSPTitle = '';
   bool isLoading = false;
 
   @override
@@ -50,6 +53,7 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
     toolBarSaleId =
         ComSettings.getValue('TOOLBAR SALES', _settings).toString().trim() ??
             '1';
+    toolBarSaleId = ComSettings.oKNumeric(toolBarSaleId) ? toolBarSaleId : '1';
     cashAC =
         ComSettings.getValue('CASH A/C', _settings).toString().trim() ?? 'CASH';
     controllerCashAc.text = cashAC;
@@ -70,6 +74,18 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
         ComSettings.getValue('TOOLBARCOLOR', _settings).toString().trim() ??
             '16777215';
     toolBarColor = toolBarColor.isEmpty ? '16777215' : toolBarColor;
+    keySerialNoTitle = ComSettings.getValue('KEY ITEM SERIAL NO', _settings)
+            .toString()
+            .trim() ??
+        '';
+    keyEWayApi = ComSettings.getValue('KEY EWAYBILLAPI OWNER', _settings)
+            .toString()
+            .trim() ??
+        'SHERSOFT';
+    keyItemSPTitle = ComSettings.getValue('KEY ITEM SP RATE TITLE', _settings)
+            .toString()
+            .trim() ??
+        '';
 
     load();
   }
@@ -77,6 +93,21 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
   List<String> cashListDisplay = [];
   List<String> locationListDisplay = [];
   List<String> saleTypeListDisplay = [];
+  FocusNode focusNodeKeySerialNoTitle = FocusNode();
+  FocusNode focusNodeKeyEWayApi = FocusNode();
+  FocusNode focusNodeKeyItemSPTitle = FocusNode();
+
+  @override
+  void dispose() {
+    focusNodeKeyEWayApi.dispose();
+    focusNodeKeyItemSPTitle.dispose();
+    focusNodeKeySerialNoTitle.dispose();
+    controllerKeyEWayApi.removeListener(controllerKeyEWayApiListener);
+    controllerKeyItemSPTitle.removeListener(controllerKeyItemSPTitleListener);
+    controllerKeySerialNoTitle
+        .removeListener(controllerKeySerialNoTitleListener);
+    super.dispose();
+  }
 
   load() {
     if (_settings.isNotEmpty && _settings.first.id > 0) {
@@ -129,6 +160,10 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
         locationListDisplay.remove("");
       });
     }
+
+    controllerKeyEWayApi.addListener(controllerKeyEWayApiListener);
+    controllerKeyItemSPTitle.addListener(controllerKeyItemSPTitleListener);
+    controllerKeySerialNoTitle.addListener(controllerKeySerialNoTitleListener);
   }
 
   @override
@@ -159,6 +194,10 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
   TextEditingController controllerStockValuation = TextEditingController();
   TextEditingController controllerDefaultLocation = TextEditingController();
   TextEditingController controllerDecimalPoint = TextEditingController();
+  TextEditingController controllerKeyItemSPTitle = TextEditingController();
+  TextEditingController controllerKeyEWayApi =
+      TextEditingController(text: 'SHERSOFT');
+  TextEditingController controllerKeySerialNoTitle = TextEditingController();
   TextEditingController controllerHeadOfficeDB = TextEditingController();
   TextEditingController controllerDecimalPointOnReports =
       TextEditingController(text: "2");
@@ -350,6 +389,70 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
                                           .numberWithOptions(),
                                       decoration: const InputDecoration(
                                           labelText: 'Select Decimal',
+                                          border: OutlineInputBorder()),
+                                    ),
+                                  )),
+                                ],
+                              ),
+                            ),
+                            Card(
+                              elevation: 5,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  const Text(
+                                      'SerialNoTitle                    '),
+                                  Expanded(
+                                      child: SizedBox(
+                                    height: 40,
+                                    child: TextField(
+                                      focusNode: focusNodeKeySerialNoTitle,
+                                      controller: controllerKeySerialNoTitle,
+                                      decoration: const InputDecoration(
+                                          labelText: 'SerialNo Title',
+                                          border: OutlineInputBorder()),
+                                    ),
+                                  )),
+                                ],
+                              ),
+                            ),
+                            Card(
+                              elevation: 5,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  const Text('EWayApi Owner               '),
+                                  Expanded(
+                                      child: SizedBox(
+                                    height: 40,
+                                    child: TextField(
+                                      focusNode: focusNodeKeyEWayApi,
+                                      controller: controllerKeyEWayApi,
+                                      decoration: const InputDecoration(
+                                          labelText: 'API Owner',
+                                          border: OutlineInputBorder()),
+                                    ),
+                                  )),
+                                ],
+                              ),
+                            ),
+                            Card(
+                              elevation: 5,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  const Text('ItemSpecialRateTitle      '),
+                                  Expanded(
+                                      child: SizedBox(
+                                    height: 40,
+                                    child: TextField(
+                                      focusNode: focusNodeKeyItemSPTitle,
+                                      controller: controllerKeyItemSPTitle,
+                                      decoration: const InputDecoration(
+                                          labelText: 'SpecialRateTitle',
                                           border: OutlineInputBorder()),
                                     ),
                                   )),
@@ -792,6 +895,11 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
         showInSnackBar('Error');
       }
     });
+    dio.updateGeneralSettingMobile({
+      "keySerialNo": controllerKeySerialNoTitle.text,
+      "keyEWayApi": controllerKeyEWayApi.text.toString().toUpperCase(),
+      "keyItemSP": controllerKeyItemSPTitle.text
+    });
   }
 
   void showInSnackBar(String value) {
@@ -799,5 +907,77 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
       isLoading = false;
     });
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
+  }
+
+  void controllerKeyEWayApiListener() {
+    if (controllerKeyEWayApi.text.isNotEmpty) {
+      var key = 'KEY EWAYBILLAPI OWNER';
+      var value = controllerKeyEWayApi.text.toString();
+      var itemExist =
+          settingsData.where((element) => element.name.toUpperCase() == key);
+
+      CompanySettings item = settingsData.firstWhere(
+          (element) => element.name.toUpperCase() == key,
+          orElse: () =>
+              CompanySettings(id: 0, name: key, status: 0, value: ''));
+      item.value = value;
+      if (item.id > 0) {
+        updateItem(item);
+      } else {
+        if (itemExist.isNotEmpty) {
+          updateItem(item);
+        } else {
+          settingsData.add(item);
+        }
+      }
+    }
+  }
+
+  void controllerKeyItemSPTitleListener() {
+    if (controllerKeyItemSPTitle.text.isNotEmpty) {
+      var key = 'KEY ITEM SP RATE TITLE';
+      var value = controllerKeyEWayApi.text.toString();
+      var itemExist =
+          settingsData.where((element) => element.name.toUpperCase() == key);
+
+      CompanySettings item = settingsData.firstWhere(
+          (element) => element.name.toUpperCase() == key,
+          orElse: () =>
+              CompanySettings(id: 0, name: key, status: 0, value: ''));
+      item.value = value;
+      if (item.id > 0) {
+        updateItem(item);
+      } else {
+        if (itemExist.isNotEmpty) {
+          updateItem(item);
+        } else {
+          settingsData.add(item);
+        }
+      }
+    }
+  }
+
+  void controllerKeySerialNoTitleListener() {
+    if (controllerKeySerialNoTitle.text.isNotEmpty) {
+      var key = 'KEY ITEM SERIAL NO';
+      var value = controllerKeySerialNoTitle.text.toString();
+      var itemExist =
+          settingsData.where((element) => element.name.toUpperCase() == key);
+
+      CompanySettings item = settingsData.firstWhere(
+          (element) => element.name.toUpperCase() == key,
+          orElse: () =>
+              CompanySettings(id: 0, name: key, status: 0, value: ''));
+      item.value = value;
+      if (item.id > 0) {
+        updateItem(item);
+      } else {
+        if (itemExist.isNotEmpty) {
+          updateItem(item);
+        } else {
+          settingsData.add(item);
+        }
+      }
+    }
   }
 }

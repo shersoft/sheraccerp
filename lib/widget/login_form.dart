@@ -64,6 +64,7 @@ class _LoginFormState extends State<LoginForm> {
                         visible: kIsWeb,
                         child: DropdownButton<String>(
                           items: [
+                            'v21',
                             'v20',
                             'v19',
                             'v18',
