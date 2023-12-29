@@ -1345,6 +1345,12 @@ class _StockTransferState extends State<StockTransfer> {
                       editItem = true;
                       position = index;
                       nextWidget = 2;
+                      productModel = StockItem(
+                          code: cartItem[index].itemId.toString(),
+                          hasVariant: false,
+                          id: cartItem[index].id,
+                          name: cartItem[index].itemName,
+                          quantity: cartItem[index].quantity);
                     });
                   },
                 ),
@@ -1478,9 +1484,9 @@ class _StockTransferState extends State<StockTransfer> {
 
     api.fetchStockTransfer(data['Id'], 'Pr_Find').then((value) {
       if (value != null) {
-        var information = value['Information'][0];
-        var particulars = value['Particulars'];
-        // var serialNO = value['SerialNO'];
+        var information = value[0][0];
+        var particulars = value[1];
+        // var serialNO = value[2];
         // var deliveryNoteDetails = value['DeliveryNote'];
         formattedDate = DateUtil.dateDMY(information['DDate']);
         dataDynamic = [
@@ -1496,26 +1502,28 @@ class _StockTransferState extends State<StockTransfer> {
         locationToId = information['Toname'];
         cartItem.clear();
         for (var product in particulars) {
+          double _gross = (double.tryParse(product['Rate'].toString()) *
+              double.tryParse(product['Qty'].toString()));
           cartItem.add(CartItemST(
               barcode: barcode,
               branch: double.tryParse(product['Branch'].toString()),
-              gross: double.tryParse(product['GrossValue'].toString()),
+              gross: _gross,
               id: cartItem.length + 1,
-              itemId: product['ItemId'],
-              itemName: product['ProductName'],
-              mrp: double.tryParse(product['Mrp'].toString()),
+              itemId: int.parse(product['ItemName'].toString()),
+              itemName: product['ProductName'].toString(),
+              mrp: double.tryParse(product['MRP'].toString()),
               quantity: double.tryParse(product['Qty'].toString()),
               rRate: double.tryParse(product['RealPrate'].toString()),
-              rate: double.tryParse(product['PRate'].toString()),
+              rate: double.tryParse(product['Rate'].toString()),
               retail: double.tryParse(product['Retail'].toString()),
-              serialNo: product['serialno'],
-              spRetail: double.tryParse(product['Spretail'].toString()),
-              uniqueCode: product['UniqueCode'],
+              serialNo: '',
+              spRetail: double.tryParse(product['SpRetail'].toString()),
+              uniqueCode: product['Uniquecode'],
               unitId: product['Unit'],
               unitName: '',
-              unitValue: double.tryParse(product['UnitValue'].toString()),
-              wholesale: double.tryParse(product['WSrate'].toString()),
-              stUniqueCode: product['StockUniqueCode'],
+              unitValue: double.tryParse(product['Unitvalue'].toString()),
+              wholesale: double.tryParse(product['WsRate'].toString()),
+              stUniqueCode: product['StockUniquecode'],
               stock: 0));
         }
       }

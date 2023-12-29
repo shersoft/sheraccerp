@@ -1877,7 +1877,7 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
         var particulars = value['Particulars'];
         // var serialNO = value['SerialNO'];
         // var deliveryNoteDetails = value['DeliveryNote'];
-        otherAmountList = value['otherAmount'];
+        otherAmountList = []; //value['otherAmount'];
 
         formattedDate = DateUtil.dateDMY(information['DDate']);
 
@@ -1886,7 +1886,7 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
             'RealEntryNo': information['EntryNo'],
             'EntryNo': information['EntryNo'],
             'InvoiceNo': information['Sup_Inv'],
-            'Type': '0'
+            'Type': 0
           }
         ];
         billCash = double.tryParse(information['CashPaid'].toString());
@@ -2014,17 +2014,43 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
 }
 
 showMore(context, purchaseState) {
+  var form = 'PURCHASE RETURN';
+  var title = 'Purchase Return';
+  var size = "2";
   ConfirmAlertBox(
-      buttonColorForNo: Colors.white,
+      buttonColorForNo: Colors.red,
       buttonColorForYes: Colors.green,
       icon: Icons.check,
-      onPressedYes: () {
+      onPressedNo: () {
         Navigator.of(context).pop();
         Navigator.pushReplacementNamed(context, '/purchaseReturn');
       },
-      // buttonTextForNo: 'No',
-      buttonTextForYes: 'OK',
-      infoMessage: 'Purchase Return $purchaseState',
+      onPressedYes: () {
+        Navigator.of(context).pop();
+        rateType = '1';
+        var data = '[' +
+            json.encode({
+              'statement': 'PurchaseReturnFind',
+              'entryNo': dataDynamic[0]['EntryNo'].toString(),
+              'saleFormId': 1,
+              'fyId': currentFinancialYear.id
+            }) +
+            ']';
+        final body = {
+          'information': '[{}]',
+          'data': data,
+          'particular': '[{}]',
+          'otherAmount': '[{}]'
+        };
+
+        Navigator.of(context).pop();
+        Navigator.pushReplacementNamed(context, '/purchase_return_preview_show',
+            arguments: {'title': 'PurchaseReturn'});
+      },
+      buttonTextForNo: 'No',
+      buttonTextForYes: 'YES',
+      infoMessage:
+          'Do you want to print\nEntryNo : ${dataDynamic[0]['EntryNo']}',
       title: 'SAVED',
       context: context);
 }

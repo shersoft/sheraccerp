@@ -197,11 +197,11 @@ class _BtPrintState extends State<BtPrint> {
     if (printerSize == "2") {
       paper = PaperSize.mm58;
     } else if (printerSize == "3") {
-      PaperSize.mm80;
+      paper = PaperSize.mm80;
     } else if (printerSize == "4") {
-      PaperSize.mm112;
+      paper = PaperSize.mm112;
     } else if (printerSize == "5") {
-      PaperSize.mm58;
+      paper = PaperSize.mm58;
     }
 
     if (widget.data.isNotEmpty) {

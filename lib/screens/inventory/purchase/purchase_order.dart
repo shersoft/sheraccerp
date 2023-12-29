@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:sheraccerp/models/cart_item.dart';
 import 'package:sheraccerp/models/company.dart';
+import 'package:sheraccerp/models/product_register_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
@@ -46,8 +47,8 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
       lastRecord = false;
   List<CartItemP> cartItem = [];
   int page = 1, pageTotal = 0, totalRecords = 0;
-  List<dynamic> itemDisplay = [];
-  List<dynamic> items = [];
+  List<ProductPurchaseModel> itemDisplay = [];
+  List<ProductPurchaseModel> items = [];
   List<dynamic> ledgerDisplay = [];
   List<dynamic> _ledger = [];
   bool enableMULTIUNIT = false,
@@ -675,7 +676,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
     setState(() {
       if (items.isNotEmpty) isItemData = true;
     });
-    return FutureBuilder<List<dynamic>>(
+    return FutureBuilder<List<ProductPurchaseModel>>(
       future: dio.fetchAllProductPurchase(),
       builder: (ctx, snapshot) {
         if (snapshot.hasData) {
@@ -702,8 +703,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                                   text = text.toLowerCase();
                                   setState(() {
                                     itemDisplay = items.where((item) {
-                                      var itemName =
-                                          item['itemname'].toLowerCase();
+                                      var itemName = item.itemName;
                                       return itemName.contains(text);
                                     }).toList();
                                   });
@@ -730,7 +730,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                     : InkWell(
                         child: Card(
                           child: ListTile(
-                              title: Text(itemDisplay[index - 1]['itemname'])),
+                              title: Text(itemDisplay[index - 1].itemName)),
                         ),
                         onTap: () {
                           setState(() {

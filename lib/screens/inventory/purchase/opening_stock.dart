@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:sheraccerp/models/cart_item.dart';
 import 'package:sheraccerp/models/company.dart';
+import 'package:sheraccerp/models/product_register_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
@@ -32,7 +33,8 @@ class _OpeningStockState extends State<OpeningStock> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   DioService dio = DioService();
   Size deviceSize;
-  var ledgerModel, productModel, productModelPrize;
+  var ledgerModel, productModelPrize;
+  ProductPurchaseModel productModel;
   List<dynamic> purchaseAccountList = [];
   DateTime now = DateTime.now();
   String formattedDate, _narration = '';
@@ -46,8 +48,8 @@ class _OpeningStockState extends State<OpeningStock> {
       buttonEvent = false;
   List<CartItemOP> cartItem = [];
   int page = 1, pageTotal = 0, totalRecords = 0;
-  List<dynamic> itemDisplay = [];
-  List<dynamic> items = [];
+  List<ProductPurchaseModel> itemDisplay = [];
+  List<ProductPurchaseModel> items = [];
   List<dynamic> ledgerDisplay = [];
   List<dynamic> _ledger = [];
   bool enableMULTIUNIT = false,
@@ -706,7 +708,7 @@ class _OpeningStockState extends State<OpeningStock> {
     setState(() {
       if (items.isNotEmpty) isItemData = true;
     });
-    return FutureBuilder<List<dynamic>>(
+    return FutureBuilder<List<ProductPurchaseModel>>(
       future: dio.fetchAllProductPurchase(),
       builder: (ctx, snapshot) {
         if (snapshot.hasData) {
@@ -735,7 +737,7 @@ class _OpeningStockState extends State<OpeningStock> {
                                   setState(() {
                                     itemDisplay = items.where((item) {
                                       var itemName =
-                                          item['itemname'].toLowerCase();
+                                          item.itemName.toLowerCase();
                                       return itemName.contains(text);
                                     }).toList();
                                   });
@@ -762,7 +764,7 @@ class _OpeningStockState extends State<OpeningStock> {
                     : InkWell(
                         child: Card(
                           child: ListTile(
-                              title: Text(itemDisplay[index - 1]['itemname'])),
+                              title: Text(itemDisplay[index - 1].itemName)),
                         ),
                         onTap: () {
                           setState(() {
@@ -829,7 +831,7 @@ class _OpeningStockState extends State<OpeningStock> {
 
   bool _isPrize = false;
   itemDetails() {
-    int id = productModel['slno'];
+    int id = productModel.slNo;
     dio.fetchProductPrize(id).then((value) {
       productModelPrize = value[0];
       setState(() {
@@ -955,10 +957,10 @@ class _OpeningStockState extends State<OpeningStock> {
       }
       total = cartItem.elementAt(position).total;
     } else {
-      adCessPer = double.tryParse(productModel['adcessper'].toString());
-      cessPer = double.tryParse(productModel['cessper'].toString());
-      taxP = double.tryParse(productModel['tax'].toString());
-      kfcP = double.tryParse(productModel['KFC'].toString());
+      adCessPer = productModel.adCessPer;
+      cessPer = productModel.cessPer;
+      taxP = productModel.tax;
+      kfcP = 0; //double.tryParse(productModel['KFC'].toString());
       rate = double.tryParse(productModelPrize['prate'].toString());
       if (rate > 0 && !_focusNodeRate.hasFocus) {
         controllerRate.text = rate.toString();
@@ -1085,7 +1087,7 @@ class _OpeningStockState extends State<OpeningStock> {
             Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                    'Item : ${editItem ? cartItem.elementAt(position).itemName : productModel['itemname']}')),
+                    'Item : ${editItem ? cartItem.elementAt(position).itemName : productModel.itemName}')),
             Row(
               children: [
                 Expanded(
@@ -1211,8 +1213,8 @@ class _OpeningStockState extends State<OpeningStock> {
                             gross: subTotal,
                             iGST: iGST,
                             id: cartItem.length + 1,
-                            itemId: productModel['slno'],
-                            itemName: productModel['itemname'],
+                            itemId: productModel.slNo,
+                            itemName: productModel.itemName,
                             location: locationId,
                             mrp: mrp,
                             mrpPer: mrpPer,

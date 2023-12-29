@@ -654,6 +654,85 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
               //     .paperCut(); //some printer not supported (sometime making image not centered)
               //bluetooth.drawerPin2(); // or you can use bluetooth.drawerPin5();
               // }else{}
+            } else {
+              if (taxSale) {
+                if (isLogo) {
+                  bluetooth.printNewLine();
+                  if (file != null) {
+                    bluetooth.printImage(file.path); //path of your image/logo
+                  }
+                  bluetooth.printNewLine();
+                }
+                bluetooth.printNewLine();
+                bluetooth.printCustom(companySettings.name,
+                    Enu.Size.boldLarge.val, Enu.Align.center.val);
+                bluetooth.printNewLine();
+                line = "1";
+                if (companySettings.add1.toString().trim().isNotEmpty) {
+                  bluetooth.printCustom(companySettings.add1.toString().trim(),
+                      Enu.Size.bold.val, Enu.Align.center.val);
+                }
+                if (companySettings.add2.toString().trim().isNotEmpty) {
+                  bluetooth.printCustom(companySettings.add2.toString().trim(),
+                      Enu.Size.bold.val, Enu.Align.center.val);
+                }
+                if (companySettings.add3.toString().trim().isNotEmpty) {
+                  bluetooth.printCustom(companySettings.add3.toString().trim(),
+                      Enu.Size.bold.val, Enu.Align.center.val);
+                }
+                if (companySettings.add4.toString().trim().isNotEmpty) {
+                  bluetooth.printCustom(companySettings.add4.toString().trim(),
+                      Enu.Size.bold.val, Enu.Align.center.val);
+                }
+                if (companySettings.telephone.toString().trim().isNotEmpty ||
+                    companySettings.mobile.toString().trim().isNotEmpty) {
+                  bluetooth.printCustom(
+                      'Phone No: ${companySettings.telephone + ',' + companySettings.mobile}',
+                      Enu.Size.bold.val,
+                      Enu.Align.center.val);
+                }
+                line = "2";
+                //
+              } else {
+                if (isLogo) {
+                  bluetooth.printNewLine();
+                  if (file != null) {
+                    bluetooth.printImage(file.path); //path of your image/logo
+                  }
+                  bluetooth.printNewLine();
+                }
+                bluetooth.printNewLine();
+                bluetooth.printCustom(companySettings.name,
+                    Enu.Size.boldLarge.val, Enu.Align.center.val);
+                bluetooth.printNewLine();
+                line = "1";
+                if (companySettings.add1.toString().trim().isNotEmpty) {
+                  bluetooth.printCustom(companySettings.add1.toString().trim(),
+                      Enu.Size.bold.val, Enu.Align.center.val);
+                }
+                if (companySettings.add2.toString().trim().isNotEmpty) {
+                  bluetooth.printCustom(companySettings.add2.toString().trim(),
+                      Enu.Size.bold.val, Enu.Align.center.val);
+                }
+                if (companySettings.add3.toString().trim().isNotEmpty) {
+                  bluetooth.printCustom(companySettings.add3.toString().trim(),
+                      Enu.Size.bold.val, Enu.Align.center.val);
+                }
+                if (companySettings.add4.toString().trim().isNotEmpty) {
+                  bluetooth.printCustom(companySettings.add4.toString().trim(),
+                      Enu.Size.bold.val, Enu.Align.center.val);
+                }
+                if (companySettings.telephone.toString().trim().isNotEmpty ||
+                    companySettings.mobile.toString().trim().isNotEmpty) {
+                  bluetooth.printCustom(
+                      'Phone No: ${companySettings.telephone + ',' + companySettings.mobile}',
+                      Enu.Size.bold.val,
+                      Enu.Align.center.val);
+                }
+
+                line = "2";
+                //
+              }
             }
           } catch (e, s) {
             FirebaseCrashlytics.instance
@@ -1049,6 +1128,9 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
               //     .paperCut(); //some printer not supported (sometime making image not centered)
               //bluetooth.drawerPin2(); // or you can use bluetooth.drawerPin5();
               // }else{}
+            } else {
+              bluetooth.printNewLine();
+              //
             }
           } catch (e, s) {
             FirebaseCrashlytics.instance

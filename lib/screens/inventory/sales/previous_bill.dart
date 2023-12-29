@@ -129,18 +129,20 @@ class PreviousBill extends StatelessWidget {
                                           const Icon(Icons.check_circle,
                                               size: 14),
                                           const SizedBox(width: 5),
-                                          RichText(
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            strutStyle:
-                                                StrutStyle(fontSize: 12.0),
-                                            text: TextSpan(
-                                                text: "${item['itemname']}",
-                                                style: const TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                )),
+                                          Expanded(
+                                            child: RichText(
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              strutStyle: const StrutStyle(
+                                                  fontSize: 12.0),
+                                              text: TextSpan(
+                                                  text: "${item['itemname']}",
+                                                  style: const TextStyle(
+                                                    color: Colors.black,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.bold,
+                                                  )),
+                                            ),
                                           )
                                         ])),
                                     Flexible(
@@ -338,7 +340,7 @@ class PreviousBill extends StatelessWidget {
                                                                             information[index]['CGST'].toStringAsFixed(
                                                                                 2),
                                                                             style:
-                                                                                TextStyle(
+                                                                                const TextStyle(
                                                                               color: Colors.black,
                                                                               fontSize: 14,
                                                                             ))
@@ -362,7 +364,7 @@ class PreviousBill extends StatelessWidget {
                                                                             information[index]['SGST'].toStringAsFixed(
                                                                                 2),
                                                                             style:
-                                                                                TextStyle(
+                                                                                const TextStyle(
                                                                               color: Colors.black,
                                                                               fontSize: 14,
                                                                             ))
@@ -410,7 +412,7 @@ class PreviousBill extends StatelessWidget {
                                           fontSize: 14,
                                         )),
                                     Text(items.length.toString(),
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           color: Colors.black,
                                           fontSize: 12,
                                         ))
@@ -419,7 +421,7 @@ class PreviousBill extends StatelessWidget {
                                   flex: 0,
                                   child: Text(
                                       "\u20B9 ${information[index]['GrandTotal'].toStringAsFixed(2)}",
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         color: Colors.black,
                                         fontSize: 14,
                                       )))

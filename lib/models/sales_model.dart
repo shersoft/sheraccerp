@@ -399,47 +399,58 @@ class ParticularsModel {
 }
 
 class SerialNOModel {
-  int slno;
-  var EntryNo;
-  var itemname;
-  var SerialNo;
-  var Gid;
-  var Type;
+  int slNo;
+  int entryNo;
+  int itemName;
+  String serialNo;
+  int gId;
+  String tType;
+  int uniqueCode;
 
   SerialNOModel(
-      {this.slno,
-      this.EntryNo,
-      this.itemname,
-      this.SerialNo,
-      this.Gid,
-      this.Type});
+      {this.slNo,
+      this.entryNo,
+      this.itemName,
+      this.serialNo,
+      this.gId,
+      this.tType,
+      this.uniqueCode});
 
   SerialNOModel.fromJson(Map<String, dynamic> json) {
-    slno = json['slno'];
-    EntryNo = json['EntryNo'];
-    itemname = json['itemname'];
-    SerialNo = json['SerialNo'];
-    Gid = json['Gid'];
-    Type = json['Type'];
+    slNo = json['slno'];
+    entryNo = json['EntryNo'];
+    itemName = json['itemname'];
+    serialNo = json['SerialNo'];
+    gId = json['Gid'];
+    tType = json['Type'];
+    uniqueCode = json['Type'];
   }
 
   factory SerialNOModel.fromMap(Map<String, dynamic> json) => SerialNOModel(
-        slno: json['slno'],
-        EntryNo: json['EntryNo'],
-        itemname: json['itemname'],
-        SerialNo: json['SerialNo'],
-        Gid: json['Gid'],
-        Type: json['Type'],
+        slNo: json['slno'],
+        entryNo: json['EntryNo'],
+        itemName: json['itemname'],
+        serialNo: json['SerialNo'],
+        gId: json['Gid'],
+        tType: json['Type'],
+        uniqueCode: json['UniqueCode'],
       );
 
   Map<String, dynamic> toMap() => {
-        "slno": slno,
-        "EntryNo": EntryNo,
-        "itemname": itemname,
-        "SerialNo": SerialNo,
-        "Gid": Gid,
-        "Type": Type,
+        "slNo": slNo,
+        "entryNo": entryNo,
+        "itemName": itemName,
+        "serialNo": serialNo,
+        "gId": gId,
+        "tType": tType,
+        "uniqueCode": uniqueCode
       };
+
+  static List encodedToJson(List<SerialNOModel> list) {
+    List jsonList = [];
+    list.map((item) => jsonList.add(item.toMap())).toList();
+    return jsonList;
+  }
 
   static List<SerialNOModel> fromJsonList(List list) {
     return list.map((item) => SerialNOModel.fromJson(item)).toList();
@@ -451,6 +462,17 @@ class SerialNOModel {
 
   factory SerialNOModel.fromJsonMap(Map<String, dynamic> map) =>
       SerialNOModel.fromMap(map);
+
+  static emptyData() {
+    return SerialNOModel(
+        entryNo: 0,
+        gId: 0,
+        itemName: 0,
+        serialNo: '',
+        slNo: 0,
+        tType: '',
+        uniqueCode: 0);
+  }
 }
 
 class DeliveryNoteModel {

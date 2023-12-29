@@ -31,7 +31,7 @@ class _ProductManagementState extends State<ProductManagement> {
     api.fetchAllProductPurchase().then((value) {
       setState(() {
         for (var data in value) {
-          productList.add(DataJson(id: data['slno'], name: data['itemname']));
+          productList.add(DataJson(id: data.slNo, name: data.itemName));
         }
       });
     });

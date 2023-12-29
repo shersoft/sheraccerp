@@ -43,17 +43,17 @@ import 'package:sunmi_printer_service/sunmi_printer_service.dart' as sum_mi;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:zxing2/qrcode.dart';
 
-class SalesPreviewShow extends StatefulWidget {
-  const SalesPreviewShow({Key key}) : super(key: key);
+class PurchaseReturnPreviewShow extends StatefulWidget {
+  const PurchaseReturnPreviewShow({Key key}) : super(key: key);
 
   @override
-  State createState() => _SalesPreviewShowState();
+  State<PurchaseReturnPreviewShow> createState() =>
+      _PurchaseReturnPreviewShowState();
 }
 
-class _SalesPreviewShowState extends State<SalesPreviewShow> {
+class _PurchaseReturnPreviewShowState extends State<PurchaseReturnPreviewShow> {
   final GlobalKey _globalKey = GlobalKey();
   DioService api = DioService();
-  SalesModel salesModel;
   var totalQty = 0.0, totalRate = 0.0;
   String companyState = '', companyStateCode = '', companyTaxNo = '';
   dynamic data;
@@ -72,7 +72,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
       dataParticularsAll = [],
       dataParticulars = [],
       dataSerialNO = [],
-      dataDeliveryNote = [],
+      purchaseExpense = [],
       otherAmount = [],
       dataLedger = [],
       dataBankLedger = [];
@@ -184,7 +184,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         printSettingsModel = printSettingsList.firstWhere(
             (element) =>
                 element.model == 'INVOICE DESIGNER' &&
-                element.dTransaction == salesTypeData.type &&
+                element.dTransaction == 'PURCHASE RETURN' &&
                 element.fyId == currentFinancialYear.id,
             orElse: () => printSettingsList.isNotEmpty
                 ? printSettingsList[0]
@@ -192,87 +192,43 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
       }
     }
 
-    api.fetchSalesInvoice(eNo, type).then((value) {
-      setState(() {
-        data = value;
-        dataInformation = value['Information'][0];
-        customerBalance = dataInformation['Balance'].toString();
-        dataParticularsAll = value['Particulars'];
-        dataSerialNO = value['SerialNO'];
-        dataDeliveryNote = value['DeliveryNote'];
-        otherAmount = value['otherAmount'];
-        dataLedger = value['ledger'];
-        dataBankLedger = value['bankLedger'];
-        loadAsset();
-        _isLoading = false;
+    api.fetchPurchaseInvoice(dataDynamic[0]['EntryNo'], 'P_Find').then((value) {
+      if (value != null) {
+        setState(() {
+          data = value;
+          dataInformation = value['Information'][0];
+          dataParticularsAll = value['Particulars'];
+          dataSerialNO = value['SerialNO'];
+          purchaseExpense = data['PurchaseExpense'];
+          otherAmount = []; //value['otherAmount'];
+          customerBalance = '0'; //data['BalanceAmount'].toString();
+          dataLedger = value['ledger'];
+          dataBankLedger = value['bankLedger'];
+          loadAsset();
+          _isLoading = false;
 
-        List itemIdList = [];
-        // for (var u in dataParticularsAll) {
-        //   if (itemIdList.contains(u["itemId"].toString().trim())) {
-        //     int index = dataParticulars.indexWhere((i) =>
-        //         i['itemId'].toString().trim() == u['itemId'].toString().trim());
-        //     double qty =
-        //         double.tryParse(dataParticulars[index]['Qty'].toString()) +
-        //             double.tryParse(u['Qty'].toString());
-        //     // dataParticulars[index]['hsncode'] = hsncode;
-        //     dataParticulars[index]['Qty'] = qty;
-        //     dataParticulars[index]['Net'] = qty *
-        //         double.tryParse(dataParticulars[index]['RealRate'].toString());
-        //     dataParticulars[index]['CGST'] =
-        //         double.tryParse(dataParticulars[index]['CGST'].toString()) +
-        //             double.tryParse(u['CGST'].toString());
-        //     dataParticulars[index]['SGST'] =
-        //         double.tryParse(dataParticulars[index]['SGST'].toString()) +
-        //             double.tryParse(u['SGST'].toString());
-        //     dataParticulars[index]['IGST'] =
-        //         double.tryParse(dataParticulars[index]['IGST'].toString()) +
-        //             double.tryParse(u['IGST'].toString());
-        //     dataParticulars[index]['Total'] =
-        //         double.tryParse(dataParticulars[index]['Total'].toString()) +
-        //             double.tryParse(u['Total'].toString());
-        //     dataParticulars[index]['GrossValue'] = double.tryParse(
-        //             dataParticulars[index]['GrossValue'].toString()) +
-        //         double.tryParse(u['GrossValue'].toString());
-        //     dataParticulars[index]['cess'] =
-        //         double.tryParse(dataParticulars[index]['cess'].toString()) +
-        //             double.tryParse(u['cess'].toString());
-        //     dataParticulars[index]['adcess'] =
-        //         double.tryParse(dataParticulars[index]['adcess'].toString()) +
-        //             double.tryParse(u['adcess'].toString());
-        //     dataParticulars[index]['Disc'] =
-        //         double.tryParse(dataParticulars[index]['Disc'].toString()) +
-        //             double.tryParse(u['Disc'].toString());
-        //     dataParticulars[index]['DiscPersent'] = double.tryParse(
-        //             dataParticulars[index]['DiscPersent'].toString()) +
-        //         double.tryParse(u['DiscPersent'].toString());
-        //     dataParticulars[index]['Fcess'] =
-        //         double.tryParse(dataParticulars[index]['Fcess'].toString()) +
-        //             double.tryParse(u['Fcess'].toString());
-        //   } else {
-        //     itemIdList.add(u['itemId'].toString().trim());
-        //     dataParticulars.add(u);
-        //   }
-        // }
-        dataParticulars.addAll(dataParticularsAll);
+          List itemIdList = [];
+          dataParticulars.addAll(dataParticularsAll);
 
-        data['Particulars'] = dataParticulars;
-        if (title.isEmpty) {
-          title = (ModalRoute.of(context).settings.arguments
-              as Map<String, String>)['title'];
-        }
-        if (printerType == 9) {
-          isInvoiceDesigner = true;
-        } else {
-          _createPDF(
-                  printModel,
-                  title + '_ref_${dataInformation['RealEntryNo']}',
-                  companySettings,
-                  settings,
-                  data,
-                  customerBalance)
-              .then((value) => pdfPath = value);
-        }
-      });
+          data['Particulars'] = dataParticulars;
+          if (title.isEmpty) {
+            title = (ModalRoute.of(context).settings.arguments
+                as Map<String, String>)['title'];
+          }
+          if (printerType == 9) {
+            isInvoiceDesigner = true;
+          } else {
+            _createPDF(
+                    printModel,
+                    title + '_ref_${dataInformation['RealEntryNo']}',
+                    companySettings,
+                    settings,
+                    data,
+                    customerBalance)
+                .then((value) => pdfPath = value);
+          }
+        });
+      }
     });
   }
 
@@ -416,18 +372,20 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
   }
 
   Future<Uint8List> _qr1() async {
-    var _dataQr = SaudiConversion.getBase64(
-        companySettings.name,
-        '${ComSettings.getValue('GST-NO', settings)}',
-        DateUtil.dateTimeQrDMY(DateUtil.datedYMD(dataInformation['DDate']) +
-            ' ' +
-            DateUtil.timeHMS(dataInformation['BTime'])),
-        double.tryParse(dataInformation['GrandTotal'].toString())
-            .toStringAsFixed(decimal),
-        (double.tryParse(dataInformation['CGST'].toString()) +
-                double.tryParse(dataInformation['SGST'].toString()) +
-                double.tryParse(dataInformation['IGST'].toString()))
-            .toStringAsFixed(decimal));
+    var _dataQr = dataInformation = !null
+        ? ''
+        : SaudiConversion.getBase64(
+            companySettings.name,
+            '${ComSettings.getValue('GST-NO', settings)}',
+            DateUtil.dateTimeQrDMY(DateUtil.datedYMD(dataInformation['DDate']) +
+                ' ' +
+                DateUtil.timeHMS(dataInformation['BTime'])),
+            double.tryParse(dataInformation['GrandTotal'].toString())
+                .toStringAsFixed(decimal),
+            (double.tryParse(dataInformation['CGST'].toString()) +
+                    double.tryParse(dataInformation['SGST'].toString()) +
+                    double.tryParse(dataInformation['tax'].toString()))
+                .toStringAsFixed(decimal));
     var qrcode = Encoder.encode(_dataQr, ErrorCorrectionLevel.h);
     var matrix = qrcode.matrix;
     var scale = 4;
@@ -463,15 +421,13 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
   }
 
   webView() {
-    var taxSale = salesTypeData.tax;
-    var invoiceHead = salesTypeData.type == 'SALES-ES'
-        ? Settings.getValue<String>('key-sales-estimate-head', 'ESTIMATE')
-        : salesTypeData.type == 'SALES-Q'
-            ? Settings.getValue<String>('key-sales-quotation-head', 'QUOTATION')
-            : salesTypeData.type == 'SALES-O'
-                ? Settings.getValue<String>('key-sales-order-head', 'ORDER')
-                : Settings.getValue<String>(
-                    'key-sales-invoice-head', 'INVOICE');
+    var taxSale = dataInformation != null
+        ? dataInformation['TaxType'] == 'T'
+            ? true
+            : false
+        : false;
+    var invoiceHead = Settings.getValue<String>(
+        'key-purchase-return-head', 'PURCHASE RETURN');
 
     return _isLoading
         ? const Loading()
@@ -523,13 +479,16 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                             _itemHeader(companyTaxMode) +
                             _item(taxSale) +
                             '''<tr>
-                          <td colspan="$strLine" class="blank"><hr></hr></td>
+                          <td colspan="4" class="blank"><hr></hr></td>
                       </tr>
                             </table>
                             <table width="100%" id="line_total">
-                              <tr>''' +
-                            subTotal(taxSale) +
-                            '''</tr>
+                              <tr>
+                        <td width="64%" align="center">Total : </td>
+                        <td width="8%" align="right">${totalQty.toStringAsFixed(0)}</td>
+                        <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
+                        <td width="10%" align="right">${double.tryParse(dataInformation['Total'].toString()).toStringAsFixed(decimal)}</td>
+                              </tr>
                             </table>
                             <hr></hr>
                             <table width="100%" id="item_total">
@@ -541,7 +500,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                               <tr>
                         <td colspan="3" class="blank"> </td>
                         <td colspan="2" class="total-line" align="right">Tax :</td>
-                        <td class="total-value" align="right">${(double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString()) + double.tryParse(dataInformation['IGST'].toString())).toStringAsFixed(decimal)}</td>
+                        <td class="total-value" align="right">${(double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString()) + double.tryParse(dataInformation['tax'].toString())).toStringAsFixed(decimal)}</td>
                               </tr>
                               <tr>
                         ''' +
@@ -609,13 +568,16 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                             _itemHeader1() +
                             _item(taxSale) +
                             '''<tr>
-                          <td colspan="$strLine" class="blank"><hr></hr></td>
+                          <td colspan="4" class="blank"><hr></hr></td>
                       </tr>
                             </table>
                             <table width="100%" id="line_total">
-                              <tr> ''' +
-                            subTotal(taxSale) +
-                            ''' </tr>
+                              <tr>
+                        <td width="64%" align="center">Total : </td>
+                        <td width="8%" align="right">${totalQty.toStringAsFixed(0)}</td>
+                        <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
+                        <td width="10%" align="right">${double.tryParse(dataInformation['Total'].toString()).toStringAsFixed(decimal)}</td>
+                              </tr>
                             </table>
                             <hr></hr>
                             <table width="100%" id="item_total">
@@ -633,7 +595,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                               <tr>
                                 <td colspan="3" class="blank"></td>
                                 <td colspan="2" class="total-value1" align="right">Tax :</td>
-                                    <td class="total-value" align="right">${(double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString()) + double.tryParse(dataInformation['IGST'].toString()) + double.tryParse(dataInformation['cess'].toString()) + double.tryParse(dataInformation['TCS'].toString())).toStringAsFixed(decimal)}</td>
+                                    <td class="total-value" align="right">${(double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString()) + double.tryParse(dataInformation['tax'].toString()) + double.tryParse(dataInformation['Cess'].toString()) + double.tryParse(dataInformation['TCS'].toString())).toStringAsFixed(decimal)}</td>
                               </tr>
                               <tr>
                       <td colspan="3" class="blank"></td>
@@ -696,15 +658,9 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
 
   invoiceGenerate(context) {
     bool isLoading = false;
-    var taxSale = salesTypeData.tax;
-    var invoiceHead = salesTypeData.type == 'SALES-ES'
-        ? Settings.getValue<String>('key-sales-estimate-head', 'ESTIMATE')
-        : salesTypeData.type == 'SALES-Q'
-            ? Settings.getValue<String>('key-sales-quotation-head', 'QUOTATION')
-            : salesTypeData.type == 'SALES-O'
-                ? Settings.getValue<String>('key-sales-order-head', 'ORDER')
-                : Settings.getValue<String>(
-                    'key-sales-invoice-head', 'INVOICE');
+    var taxSale = dataInformation['TaxType'] == 'T' ? true : false;
+    var invoiceHead = Settings.getValue<String>(
+        'key-purchase-return-head', 'PURCHASE RETURN');
     var ledger = dataLedger[0];
     List<dynamic> itemData = [];
     double subTotalQty = 0,
@@ -717,7 +673,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         subTotalMrp = 0;
     for (var item in dataParticulars) {
       subTotalQty += double.tryParse(item['Qty'].toString());
-      subTotalRate += double.tryParse(item['Rate'].toString());
+      subTotalRate += double.tryParse(item['PRate'].toString());
       subTotalDiscount += double.tryParse(item['Disc'].toString());
       // subTotalMrp += 0;
       subTotalCGST += double.tryParse(item['CGST'].toString());
@@ -727,22 +683,22 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
 
       itemData.add({
         "Barcode": item['UniqueCode'].toString() ?? '0.00',
-        "ItemCode": item['itemId'].toString() ?? '0',
-        "ItemName": item['itemname'].toString() ?? ' ',
+        "ItemCode": item['ProductCode'].toString() ?? '0',
+        "ItemName": item['ProductName'].toString() ?? ' ',
         "Qty": item['Qty'].toString() ?? '0',
-        "Rate": item['Rate'].toString() ?? '0.00',
-        "RRate": item['RealRate'].toString() ?? '0.00',
+        "Rate": item['PRate'].toString() ?? '0.00',
+        "RRate": item['RealPrate'].toString() ?? '0.00',
         "Gross": item['GrossValue'].toString() ?? '0.00',
         "Disc": item['Disc'].toString() ?? '0',
         "DiscPer": item['DiscPersent'].toString() ?? '0.00',
-        "RDisc": item['RDisc'].toString() ?? '0.00',
+        "RDisc": '0.00',
         "Net": item['Net'].toString() ?? '0.00',
         "CGST": item['CGST'].toString() ?? '0.00',
-        "CGSTP": (double.tryParse(item['igst'].toString()) / 2)
+        "CGSTP": (double.tryParse(item['tax'].toString()) / 2)
                 .toStringAsFixed(decimal) ??
             '0',
         "SGST": item['SGST'].toString() ?? '0',
-        "SGSTP": (double.tryParse(item['igst'].toString()) / 2)
+        "SGSTP": (double.tryParse(item['tax'].toString()) / 2)
                 .toStringAsFixed(decimal) ??
             '0',
         "IGST": '0',
@@ -750,9 +706,9 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         "KFC": item['Fcess'].toString() ?? '0',
         "KFCPer": "0",
         "Total": item['Total'].toString() ?? '0',
-        "ItemId": item['itemId'].toString() ?? '0',
-        "SlNo": item['slno'].toString() ?? '0',
-        "Mrp": item['Rate'].toString() ?? '0',
+        "ItemId": item['ItemName'].toString() ?? '0',
+        "SlNo": item['ItemId'].toString() ?? '0',
+        "Mrp": item['PRate'].toString() ?? '0',
         "Unit": ' ',
         "CessP": item['cessper'].toString() ?? '0',
         "Cess": item['cess'].toString() ?? '0',
@@ -768,9 +724,9 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         "TotalArabic": "ف" ?? '0',
         "MinQty": '0',
         "MaxQty": '0',
-        "Branch": item['Rate'].toString() ?? '0',
+        "Branch": item['PRate'].toString() ?? '0',
         "LC": '0',
-        "TaxPer": item['igst'].toString() ?? '0',
+        "TaxPer": item['tax'].toString() ?? '0',
         "UnitCost": '0',
         "FreeQty": item['freeQty'].toString() ?? '0',
         "ScanBarcode": ' ',
@@ -780,7 +736,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         "EmpCode": ' ',
         "UnitId": ' ',
         "UnitValue": item['UnitValue'].toString() ?? '1',
-        "Remark": item['serialno'].toString() ?? ' ',
+        "Remark": item['SerialnoList'].toString() ?? ' ',
         "isRegName": false
       });
     }
@@ -822,7 +778,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
       "CompanyBank": ' ',
       "State": companyState ?? ' ',
       "StateCode": companyStateCode ?? ' ',
-      "ledName": dataInformation['ToName'].toString() ?? ' ',
+      "ledName": dataInformation['FromSup'].toString() ?? ' ',
       "ledAdd1": ledger['add1'] != null ? ledger['add1'].toString() : ' ',
       "ledAdd2": ledger['add2'] != null ? ledger['add2'].toString() : ' ',
       "ledAdd3": ledger['add3'] != null ? ledger['add3'].toString() : ' ',
@@ -852,20 +808,20 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
       "TotalCgst": subTotalCGST.toStringAsFixed(decimal) ?? '0',
       "TotalSgst": subTotalSGST.toStringAsFixed(decimal) ?? '0',
       "TotalIgst": subTotalIGST.toStringAsFixed(decimal) ?? '0',
-      "TotalCess": dataInformation['cess'].toString() ?? '0',
+      "TotalCess": dataInformation['Cess'].toString() ?? '0',
       "TotalKfc": "0.00",
       "TotalTotal": dataInformation['Total'].toString() ?? '0',
       "TotalQty": subTotalQty.toString() ?? '0',
-      "OtherCharges": dataInformation['OtherCharges'].toString() ?? '0',
-      "OtherdiscAmount": dataInformation['OtherDiscount'].toString() ?? '0',
-      "LoadingCharge": dataInformation['loadingCharge'].toString() ?? '0',
+      "OtherCharges": '0',
+      "OtherdiscAmount": '0',
+      "LoadingCharge": '0',
       "ServiceCharge": "0.00",
       "GrandTotal": dataInformation['GrandTotal'].toString() ?? '0',
-      "cashpaid": dataInformation['CashReceived'].toString() ?? '0',
+      "cashpaid": '0',
       "ledgerOpeningBalance": "0.00",
-      "Roundoff": dataInformation['Roundoff'].toString() ?? '0',
+      "Roundoff": dataInformation['ROUNDOFF'].toString() ?? '0',
       "Time":
-          DateUtil.timeHMSA(dataInformation['BTime'].toString()) ?? '00:00:000',
+          DateUtil.timeHMSA(dataInformation['DDate'].toString()) ?? '00:00:000',
       "words": ((companySettings.sCurrency.isEmpty
                   ? ' Rupees '
                   : companySettings.sCurrency) +
@@ -873,7 +829,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                   double.tryParse(dataInformation['GrandTotal'].toString())) +
               'Only') ??
           ' ',
-      "deliverynote": ' ',
+      "purchaseExpense": ' ',
       "vehicle": ' ',
       "destination": ' ',
       "waybillno": " ",
@@ -893,7 +849,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
       "pointOb": "0.00",
       "systemNo": "0",
       "CurrentUserName": userNameC ?? '0',
-      "ReturnAmount": dataInformation['ReturnAmount'].toString() ?? '0',
+      "ReturnAmount": '0',
       "tenderBalance": "0.00",
       "tenderCash": "0.00",
       "CardAc": "card ac",
@@ -1048,15 +1004,9 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
   }
 
   showData() {
-    var taxSale = salesTypeData.tax;
-    var invoiceHead = salesTypeData.type == 'SALES-ES'
-        ? Settings.getValue<String>('key-sales-estimate-head', 'ESTIMATE')
-        : salesTypeData.type == 'SALES-Q'
-            ? Settings.getValue<String>('key-sales-quotation-head', 'QUOTATION')
-            : salesTypeData.type == 'SALES-O'
-                ? Settings.getValue<String>('key-sales-order-head', 'ORDER')
-                : Settings.getValue<String>(
-                    'key-sales-invoice-head', 'INVOICE');
+    var taxSale = dataInformation['TaxType'] == 'T' ? true : false;
+    var invoiceHead = Settings.getValue<String>(
+        'key-purchase-return-head', 'PURCHASE RETURN');
     return _isLoading
         ? const Loading()
         : taxSale
@@ -1176,13 +1126,13 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 Text(
-                                    'CESS : ${double.tryParse(dataInformation['cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
+                                    'CESS : ${double.tryParse(dataInformation['Cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['Cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
                               ],
                             )
                           : Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                Text('VAT : ${dataInformation['IGST']}'),
+                                Text('VAT : ${dataInformation['tax']}'),
                               ],
                             ),
                       Row(
@@ -1388,11 +1338,12 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                   ? '''
                     </tr>
                       <tr class="item-row">
-                      <td width="50%" align="left">${dataParticulars[i]['itemname']} ${dataParticulars[i]['serialno'].toString()}</td>
+                      <td width="50%" align="left">${dataParticulars[i]['ProductName']}</td>
+                      <td width="10%" align="center">${dataParticulars[i]['serialno'].toString()}</td>
                       <td width="6%" align="left">${dataParticulars[i]['hsncode']}</td>
                       <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
-                      <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
-                      <td width="3%" align="right">${double.tryParse(dataParticulars[i]['igst'].toString()).toStringAsFixed(decimal)}</td>
+                      <td width="10%" align="right">${double.tryParse(dataParticulars[i]['PRate'].toString()).toStringAsFixed(decimal)}</td>
+                      <td width="3%" align="right">${double.tryParse(dataParticulars[i]['tax'].toString()).toStringAsFixed(decimal)}</td>
                       <td width="10%" align="right">${double.tryParse(dataParticulars[i]['CGST'].toString()).toStringAsFixed(decimal)}</td>
                       <td width="10%" align="right">${double.tryParse(dataParticulars[i]['SGST'].toString()).toStringAsFixed(decimal)}</td>
                       <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
@@ -1401,11 +1352,11 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                   : '''
                   </tr>
                     <tr class="item-row">
-                    <td width="50%" align="left">${dataParticulars[i]['itemname']}</td>
+                    <td width="50%" align="left">${dataParticulars[i]['ProductName']}</td>
                     <td width="6%" align="left">${dataParticulars[i]['hsncode']}</td>
                     <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
-                    <td width="3%" align="right">${double.tryParse(dataParticulars[i]['igst'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['PRate'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="3%" align="right">${double.tryParse(dataParticulars[i]['tax'].toString()).toStringAsFixed(decimal)}</td>
                     <td width="10%" align="right">${double.tryParse(dataParticulars[i]['CGST'].toString()).toStringAsFixed(decimal)}</td>
                     <td width="10%" align="right">${double.tryParse(dataParticulars[i]['SGST'].toString()).toStringAsFixed(decimal)}</td>
                     <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
@@ -1415,24 +1366,25 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                   ? '''
                   </tr>
                     <tr class="item-row">
-                    <td width="50%" align="left">${dataParticulars[i]['itemname']} ${dataParticulars[i]['serialno'].toString()}</td>
+                    <td width="50%" align="left">${dataParticulars[i]['ProductName']}</td>
+                    <td width="10%" align="center">${dataParticulars[i]['serialno'].toString()}</td>
                     <td width="6%" align="left">${dataParticulars[i]['hsncode']}</td>
                     <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
-                    <td width="3%" align="right">${double.tryParse(dataParticulars[i]['igst'].toString()).toStringAsFixed(decimal)}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['IGST'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['PRate'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="3%" align="right">${double.tryParse(dataParticulars[i]['tax'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['tax'].toString()).toStringAsFixed(decimal)}</td>
                     <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
                   </tr>
                   '''
                   : '''
                   </tr>
                     <tr class="item-row">
-                    <td width="50%" align="left">${dataParticulars[i]['itemname']}</td>
+                    <td width="50%" align="left">${dataParticulars[i]['ProductName']}</td>
                     <td width="6%" align="left">${dataParticulars[i]['hsncode']}</td>
                     <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
-                    <td width="3%" align="right">${double.tryParse(dataParticulars[i]['igst'].toString()).toStringAsFixed(decimal)}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['IGST'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['PRate'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="3%" align="right">${double.tryParse(dataParticulars[i]['tax'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['tax'].toString()).toStringAsFixed(decimal)}</td>
                     <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
                   </tr>
                 '''
@@ -1440,114 +1392,25 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
               ? '''
                   </tr>
                     <tr class="item-row">
-                    <td width="64%" align="left">${dataParticulars[i]['itemname']} ${dataParticulars[i]['serialno'].toString()}</td>
+                    <td width="64%" align="left">${dataParticulars[i]['ProductName']}</td>
+                    <td width="10%" align="center">${dataParticulars[i]['serialno'].toString()}</td>
                     <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
+                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['PRate'].toString()).toStringAsFixed(decimal)}</td>
                     <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
                   </tr>
                 '''
               : '''
                 </tr>
                   <tr class="item-row">
-                  <td width="64%" align="left">${dataParticulars[i]['itemname']}</td>
+                  <td width="64%" align="left">${dataParticulars[i]['ProductName']}</td>
                   <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
-                  <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
+                  <td width="10%" align="right">${double.tryParse(dataParticulars[i]['PRate'].toString()).toStringAsFixed(decimal)}</td>
                   <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
                 </tr>
                 ''';
       totalQty += double.tryParse(dataParticulars[i]['Qty'].toString());
-      totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
+      totalRate += double.tryParse(dataParticulars[i]['PRate'].toString());
     }
-    strLine = taxIn
-        ? companyTaxMode == 'INDIA'
-            ? '8'
-            : '7'
-        : '4';
-    return str;
-  }
-
-  var strLine = "4";
-
-  String subTotal(bool taxIn) {
-    // var str = '''
-    //                     <td width="64%" align="center">Total : </td>
-    //                     <td width="8%" align="right">${totalQty.toStringAsFixed(0)}</td>
-    //                     <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
-    //                     <td width="10%" align="right">${double.tryParse(dataInformation['Total'].toString()).toStringAsFixed(decimal)}</td>
-    //                     ''';
-    var str = taxIn
-        ? companyTaxMode == 'INDIA'
-            ? isItemSerialNo
-                ? '''
-                    </tr>
-                      <tr class="item-row">
-                      <td width="55%" align="center">Total : </td>
-                      <td width="6%" align="left"></td>
-                      <td width="6%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                      <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
-                      <td width="3%" align="right"></td>
-                      <td width="10%" align="right"></td>
-                      <td width="10%" align="right"></td>
-                      <td width="10%" align="right">${double.tryParse(dataInformation['Total'].toString()).toStringAsFixed(decimal)}</td>
-                    </tr>
-                    '''
-                : '''
-                  </tr>
-                    <tr class="item-row">
-                    <td width="55%" align="center">Total : </td>
-                    <td width="6%" align="left"></td>
-                    <td width="6%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                    <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
-                    <td width="3%" align="right"></td>
-                    <td width="10%" align="right"></td>
-                    <td width="10%" align="right"></td>
-                    <td width="10%" align="right">${double.tryParse(dataInformation['Total'].toString()).toStringAsFixed(decimal)}</td>
-                  </tr>
-                  '''
-            : isItemSerialNo
-                ? '''
-                  </tr>
-                    <tr class="item-row">
-                    <td width="55%" align="center">Total : </td>
-                    <td width="6%" align="left"></td>
-                    <td width="6%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                    <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
-                    <td width="3%" align="right"></td>
-                    <td width="10%" align="right"></td>
-                    <td width="10%" align="right">${double.tryParse(dataInformation['Total'].toString()).toStringAsFixed(decimal)}</td>
-                  </tr>
-                  '''
-                : '''
-                  </tr>
-                    <tr class="item-row">
-                    <td width="55%" align="center">Total : </td>
-                    <td width="6%" align="left"></td>
-                    <td width="6%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                    <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
-                    <td width="3%" align="right"></td>
-                    <td width="10%" align="right"></td>
-                    <td width="10%" align="right">${double.tryParse(dataInformation['Total'].toString()).toStringAsFixed(decimal)}</td>
-                  </tr>
-                '''
-        : isItemSerialNo
-            ? '''
-                  </tr>
-                    <tr class="item-row">
-                    <td width="68%" align="center">Total : </td>
-                    <td width="6%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                    <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
-                    <td width="10%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                  </tr>
-                '''
-            : '''
-                </tr>
-                    <tr class="item-row">
-                    <td width="68%" align="center">Total : </td>
-                    <td width="6%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                    <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
-                    <td width="10%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                  </tr>
-                ''';
     return str;
   }
 
@@ -1888,20 +1751,20 @@ Future<dynamic> printBluetooth(
 //   var dataInformation = data['Information'][0];
 //   var dataParticulars = data['Particulars'];
 //   var dataSerialNO = data['SerialNO'];
-//   var dataDeliveryNote = data['DeliveryNote'];
+//   var PurchaseExpense = data['PurchaseExpense'];
 //
-//   var taxSale = salesTypeData.type == 'SALES-ES'
+//   var taxSale = salesTypeX.type == 'SALES-ES'
 //       ? false
-//       : salesTypeData.type == 'SALES-Q'
+//       : salesTypeX.type == 'SALES-Q'
 //           ? false
-//           : salesTypeData.type == 'SALES-O'
+//           : salesTypeX.type == 'SALES-O'
 //               ? false
 //               : true;
-// var invoiceHead = salesTypeData.type == 'SALES-ES'
+// var invoiceHead = salesTypeX.type == 'SALES-ES'
 //         ? Settings.getValue<String>('key-sales-estimate-head', 'ESTIMATE')
-//         : salesTypeData.type == 'SALES-Q'
+//         : salesTypeX.type == 'SALES-Q'
 //             ? Settings.getValue<String>('key-sales-quotation-head', 'QUOTATION')
-//             : salesTypeData.type == 'SALES-O'
+//             : salesTypeX.type == 'SALES-O'
 //                 ? Settings.getValue<String>('key-sales-order-head', 'ORDER')
 //                 : Settings.getValue<String>(
 //                     'key-sales-invoice-head', 'INVOICE');
@@ -1963,17 +1826,17 @@ Future<dynamic> printBluetooth(
 //     // dataParticulars
 //     bytes += generator.row([
 //       PosColumn(
-//         text: '${dataParticulars[i]['slno']}',
+//         text: '${dataParticulars[i]['ItemId']}',
 //         width: 1,
 //         styles: PosStyles(align: PosAlign.right),
 //       ),
 //       PosColumn(
-//         text: dataParticulars[i]['itemname'],
+//         text: dataParticulars[i]['ProductName'],
 //         width: 6,
 //         styles: PosStyles(align: PosAlign.center),
 //       ),
 //       PosColumn(
-//         text: '${dataParticulars[i]['RealRate']}',
+//         text: '${dataParticulars[i]['RealPrate']}',
 //         width: 1,
 //         styles: PosStyles(align: PosAlign.right),
 //       ),
@@ -1997,7 +1860,7 @@ Future<dynamic> printBluetooth(
 //   bytes += generator.text('------------------------------');
 //   bytes += generator.text('SUB TOTAL : ${dataInformation['GrossValue']}',
 //       styles: PosStyles(align: PosAlign.right));
-//   bytes += generator.text('VAT : ${dataInformation['IGST']}',
+//   bytes += generator.text('VAT : ${dataInformation['tax']}',
 //       styles: PosStyles(align: PosAlign.right));
 //   bytes += generator.text('TOTAL : ${dataInformation['GrandTotal']}',
 //       styles: PosStyles(align: PosAlign.right));
@@ -2021,17 +1884,12 @@ void printSunmiV1(dataAll) async {
   var inf = bill['Information'][0];
   var det = bill['Particulars'];
   var serialNo = bill['SerialNO'];
-  var deliveryNote = bill['DeliveryNote'];
+  var PurchaseExpense = bill['PurchaseExpense'];
   var otherAmount = bill['otherAmount'];
 
-  var taxSale = salesTypeData.tax;
-  var invoiceHead = salesTypeData.type == 'SALES-ES'
-      ? Settings.getValue<String>('key-sales-estimate-head', 'ESTIMATE')
-      : salesTypeData.type == 'SALES-Q'
-          ? Settings.getValue<String>('key-sales-quotation-head', 'QUOTATION')
-          : salesTypeData.type == 'SALES-O'
-              ? Settings.getValue<String>('key-sales-order-head', 'ORDER')
-              : Settings.getValue<String>('key-sales-invoice-head', 'INVOICE');
+  var taxSale = inf['TaxType'] == 'T' ? true : false;
+  var invoiceHead =
+      Settings.getValue<String>('key-purchase-return-head', 'PURCHASE RETURN');
   bool isQrCodeKSA = ComSettings.getStatus('KEY QRCODE KSA', settings);
   bool isEsQrCodeKSA = ComSettings.getStatus('KEY QRCODE KSA ON ES', settings);
   int printCopy = Settings.getValue<int>('key-dropdown-print-copy-view', 0);
@@ -2086,9 +1944,9 @@ void printSunmiV1(dataAll) async {
       await SPrinter.setFontSize(20);
       for (var i = 0; i < det.length; i++) {
         await SPrinter.columnsText([
-          det[i]['itemname'],
+          det[i]['ProductName'],
           det[i]['Qty'].toString(),
-          det[i]['Rate'].toString(),
+          det[i]['PRate'].toString(),
           det[i]['Total'].toString()
         ], width: [
           12,
@@ -2165,9 +2023,9 @@ void printSunmiV1(dataAll) async {
       await SPrinter.setFontSize(20);
       for (var i = 0; i < det.length; i++) {
         await SPrinter.columnsText([
-          det[i]['itemname'],
+          det[i]['ProductName'],
           det[i]['Qty'].toString(),
-          det[i]['Rate'].toString(),
+          det[i]['PRate'].toString(),
           det[i]['Total'].toString()
         ], width: [
           12,
@@ -2231,7 +2089,7 @@ void printSunmiV1(dataAll) async {
             double.tryParse(inf['GrandTotal'].toString()).toStringAsFixed(2),
             (double.tryParse(inf['CGST'].toString()) +
                     double.tryParse(inf['SGST'].toString()) +
-                    double.tryParse(inf['IGST'].toString()))
+                    double.tryParse(inf['tax'].toString()))
                 .toStringAsFixed(2)));
       }
     } else if (isEsQrCodeKSA) {
@@ -2244,7 +2102,7 @@ void printSunmiV1(dataAll) async {
           double.tryParse(inf['GrandTotal'].toString()).toStringAsFixed(2),
           (double.tryParse(inf['CGST'].toString()) +
                   double.tryParse(inf['SGST'].toString()) +
-                  double.tryParse(inf['IGST'].toString()))
+                  double.tryParse(inf['tax'].toString()))
               .toStringAsFixed(2)));
     }
     await SPrinter.lineWrap(3);
@@ -2258,7 +2116,7 @@ void printSunmiV2(dataAll) async {
   var inf = bill['Information'][0];
   var det = bill['Particulars'];
   var serialNo = bill['SerialNO'];
-  var deliveryNote = bill['DeliveryNote'];
+  var PurchaseExpense = bill['PurchaseExpense'];
   var otherAmount = bill['otherAmount'];
 
   SunmiPrinter.hr();
@@ -2309,9 +2167,9 @@ void printSunmiV2(dataAll) async {
   await SPrinter.setFontSize(20);
   for (var i = 0; i < det.length; i++) {
     await SPrinter.columnsText([
-      det[i]['itemname'],
+      det[i]['ProductName'],
       det[i]['Qty'].toString(),
-      det[i]['Rate'].toString(),
+      det[i]['PRate'].toString(),
       det[i]['Total'].toString()
     ], width: [
       12,
@@ -2367,17 +2225,12 @@ void printUrovo(dataAll) async {
   var inf = bill['Information'][0];
   var det = bill['Particulars'];
   var serialNo = bill['SerialNO'];
-  var deliveryNote = bill['DeliveryNote'];
+  var PurchaseExpense = bill['PurchaseExpense'];
   var otherAmount = bill['otherAmount'];
 
-  bool taxSale = salesTypeData.tax;
-  var invoiceHead = salesTypeData.type == 'SALES-ES'
-      ? Settings.getValue<String>('key-sales-estimate-head', 'ESTIMATE')
-      : salesTypeData.type == 'SALES-Q'
-          ? Settings.getValue<String>('key-sales-quotation-head', 'QUOTATION')
-          : salesTypeData.type == 'SALES-O'
-              ? Settings.getValue<String>('key-sales-order-head', 'ORDER')
-              : Settings.getValue<String>('key-sales-invoice-head', 'INVOICE');
+  bool taxSale = inf['TaxType'] == 'T' ? true : false;
+  var invoiceHead =
+      Settings.getValue<String>('key-purchase-return-head', 'PURCHASE RETURN');
   bool isQrCodeKSA = ComSettings.getStatus('KEY QRCODE KSA', settings);
   bool isEsQrCodeKSA = ComSettings.getStatus('KEY QRCODE KSA ON ES', settings);
   int printCopy = Settings.getValue<int>('key-dropdown-print-copy-view', 0);
@@ -2409,7 +2262,7 @@ void printUrovo(dataAll) async {
                     .toStringAsFixed(2),
                 (double.tryParse(inf['CGST'].toString()) +
                         double.tryParse(inf['SGST'].toString()) +
-                        double.tryParse(inf['IGST'].toString()))
+                        double.tryParse(inf['tax'].toString()))
                     .toStringAsFixed(2))
             : ''
         : isEsQrCodeKSA
@@ -2423,7 +2276,7 @@ void printUrovo(dataAll) async {
                     .toStringAsFixed(2),
                 (double.tryParse(inf['CGST'].toString()) +
                         double.tryParse(inf['SGST'].toString()) +
-                        double.tryParse(inf['IGST'].toString()))
+                        double.tryParse(inf['tax'].toString()))
                     .toStringAsFixed(2))
             : '';
     // var contentx = {
@@ -2439,7 +2292,7 @@ void printUrovo(dataAll) async {
     //   'information': json.encode(inf),
     //   'particulars': json.encode(det),
     //   'serialNo': json.encode(serialNo),
-    //   'deliveryNote': json.encode(deliveryNote),
+    //   'PurchaseExpense': json.encode(PurchaseExpense),
     //   'otherAmount': json.encode(otherAmount),
     //   'printHeaderInEs':
     //       ComSettings.appSettings('bool', 'key-print-header-es', false),
@@ -2447,86 +2300,86 @@ void printUrovo(dataAll) async {
     //   'message': bill['message'],
     //   'qrCode': qrCode,
     // };
-    var content = SalesBillData(
-        taxSale: taxSale,
-        invoiceHead: invoiceHead,
-        isQrCodeKsa: isQrCodeKSA,
-        isEsQrCodeKsa: isEsQrCodeKSA,
-        printCopy: printCopy,
-        printerModel: printerModel,
-        companyTaxMode: companyTaxMode,
-        taxNo: ComSettings.getValue('GST-NO', settings),
-        companyInfo: [
-          CompanyInfo(
-              name: firm.name,
-              add1: firm.add1,
-              add2: firm.add2,
-              add3: firm.add3,
-              add4: firm.add4,
-              add5: firm.add5,
-              sName: firm.sName,
-              telephone: firm.telephone,
-              email: firm.email,
-              mobile: firm.mobile,
-              tin: firm.tin,
-              pin: firm.pin,
-              taxCalculation: firm.taxCalculation,
-              sCurrency: firm.sCurrency,
-              sDate: firm.sDate,
-              eDate: firm.eDate,
-              customerCode: firm.customerCode,
-              runningDate: firm.runningDate)
-        ],
-        information: [
-          BillInformation(
-              dDate: inf['DDate'],
-              bTime: inf["BTime"],
-              invoiceNo: inf["InvoiceNo"],
-              entryNo: inf["EntryNo"],
-              realEntryNo: inf["RealEntryNo"],
-              customer: inf["Customer"],
-              toName: inf["ToName"],
-              add1: inf["Add1"],
-              add2: inf["Add2"],
-              add3: inf["Add3"],
-              add4: inf["Add4"],
-              grossValue: double.tryParse(inf["GrossValue"].toString()) ?? 0,
-              discount: double.tryParse(inf["Discount"].toString()) ?? 0,
-              netAmount: double.tryParse(inf["NetAmount"].toString()) ?? 0,
-              cess: double.tryParse(inf["cess"].toString()) ?? 0,
-              total: double.tryParse(inf["Total"].toString()) ?? 0,
-              loadingCharge:
-                  double.tryParse(inf["loadingCharge"].toString()) ?? 0,
-              otherCharges:
-                  double.tryParse(inf["OtherCharges"].toString()) ?? 0,
-              otherDiscount:
-                  double.tryParse(inf["OtherDiscount"].toString()) ?? 0,
-              roundoff: double.tryParse(inf["Roundoff"].toString()) ?? 0,
-              grandTotal: double.tryParse(inf["GrandTotal"].toString()) ?? 0,
-              narration: inf["Narration"],
-              profit: double.tryParse(inf["Profit"].toString()) ?? 0,
-              cashReceived:
-                  double.tryParse(inf["CashReceived"].toString()) ?? 0,
-              cgst: double.tryParse(inf["CGST"].toString()) ?? 0,
-              sgst: double.tryParse(inf["SGST"].toString()) ?? 0,
-              igst: double.tryParse(inf["IGST"].toString()) ?? 0,
-              returnAmount:
-                  double.tryParse(inf["ReturnAmount"].toString()) ?? 0,
-              returnNo: inf["ReturnNo"],
-              balanceAmount:
-                  double.tryParse(inf["BalanceAmount"].toString()) ?? 0,
-              balance: double.tryParse(inf["Balance"].toString()) ?? 0,
-              gstno: inf["gstno"])
-        ],
-        particulars: Particular.fromJsonListDynamic(det),
-        serialNo: SerialNOModel.fromJsonListDynamic(serialNo),
-        deliveryNote: DeliveryNoteModel.fromJsonListDynamic(deliveryNote),
-        otherAmount: BillOtherAmount.fromJsonListDynamic(otherAmount),
-        printHeaderInEs:
-            ComSettings.appSettings('bool', 'key-print-header-es', false),
-        balance: balance,
-        message: bill['message'],
-        qrCode: qrCode);
+    // var content = SalesBillData(
+    //     taxSale: taxSale,
+    //     invoiceHead: invoiceHead,
+    //     isQrCodeKsa: isQrCodeKSA,
+    //     isEsQrCodeKsa: isEsQrCodeKSA,
+    //     printCopy: printCopy,
+    //     printerModel: printerModel,
+    //     companyTaxMode: companyTaxMode,
+    //     taxNo: ComSettings.getValue('GST-NO', settings),
+    //     companyInfo: [
+    //       CompanyInfo(
+    //           name: firm.name,
+    //           add1: firm.add1,
+    //           add2: firm.add2,
+    //           add3: firm.add3,
+    //           add4: firm.add4,
+    //           add5: firm.add5,
+    //           sName: firm.sName,
+    //           telephone: firm.telephone,
+    //           email: firm.email,
+    //           mobile: firm.mobile,
+    //           tin: firm.tin,
+    //           pin: firm.pin,
+    //           taxCalculation: firm.taxCalculation,
+    //           sCurrency: firm.sCurrency,
+    //           sDate: firm.sDate,
+    //           eDate: firm.eDate,
+    //           customerCode: firm.customerCode,
+    //           runningDate: firm.runningDate)
+    //     ],
+    //     information: [
+    //       BillInformation(
+    //           dDate: inf['DDate'],
+    //           bTime: inf["BTime"],
+    //           invoiceNo: inf["InvoiceNo"],
+    //           entryNo: inf["EntryNo"],
+    //           realEntryNo: inf["RealEntryNo"],
+    //           customer: inf["Customer"],
+    //           toName: inf["ToName"],
+    //           add1: inf["Add1"],
+    //           add2: inf["Add2"],
+    //           add3: inf["Add3"],
+    //           add4: inf["Add4"],
+    //           grossValue: double.tryParse(inf["GrossValue"].toString()) ?? 0,
+    //           discount: double.tryParse(inf["Discount"].toString()) ?? 0,
+    //           netAmount: double.tryParse(inf["NetAmount"].toString()) ?? 0,
+    //           cess: double.tryParse(inf["cess"].toString()) ?? 0,
+    //           total: double.tryParse(inf["Total"].toString()) ?? 0,
+    //           loadingCharge:
+    //               double.tryParse(inf["loadingCharge"].toString()) ?? 0,
+    //           otherCharges:
+    //               double.tryParse(inf["OtherCharges"].toString()) ?? 0,
+    //           otherDiscount:
+    //               double.tryParse(inf["OtherDiscount"].toString()) ?? 0,
+    //           roundoff: double.tryParse(inf["Roundoff"].toString()) ?? 0,
+    //           grandTotal: double.tryParse(inf["GrandTotal"].toString()) ?? 0,
+    //           narration: inf["Narration"],
+    //           profit: double.tryParse(inf["Profit"].toString()) ?? 0,
+    //           cashReceived:
+    //               double.tryParse(inf["CashReceived"].toString()) ?? 0,
+    //           cgst: double.tryParse(inf["CGST"].toString()) ?? 0,
+    //           sgst: double.tryParse(inf["SGST"].toString()) ?? 0,
+    //           igst: double.tryParse(inf["IGST"].toString()) ?? 0,
+    //           returnAmount:
+    //               double.tryParse(inf["ReturnAmount"].toString()) ?? 0,
+    //           returnNo: inf["ReturnNo"],
+    //           balanceAmount:
+    //               double.tryParse(inf["BalanceAmount"].toString()) ?? 0,
+    //           balance: double.tryParse(inf["Balance"].toString()) ?? 0,
+    //           gstno: inf["gstno"])
+    //     ],
+    //     particulars: Particular.fromJsonListDynamic(det),
+    //     serialNo: SerialNOModel.fromJsonListDynamic(serialNo),
+    //     purchaseExpense: PurchaseExpenseModel.fromJsonListDynamic(deliveryNote),
+    //     otherAmount: BillOtherAmount.fromJsonListDynamic(otherAmount),
+    //     printHeaderInEs:
+    //         ComSettings.appSettings('bool', 'key-print-header-es', false),
+    //     balance: balance,
+    //     message: bill['message'],
+    //     qrCode: qrCode);
 
     // if (taxSale) {
     //   await printText(firm['name'], 18, true, false, posPrinter);
@@ -2574,9 +2427,9 @@ void printUrovo(dataAll) async {
     //   for (var i = 0; i < det.length; i++) {
     //     await printColumnsText(
     //         sprintf("%s %f %f %f", {
-    //           det[i]['itemname'],
+    //           det[i]['ProductName'],
     //           det[i]['Qty'].toString(),
-    //           det[i]['Rate'].toString(),
+    //           det[i]['PRate'].toString(),
     //           det[i]['Total'].toString()
     //         }),
     //         14,
@@ -2639,9 +2492,9 @@ void printUrovo(dataAll) async {
     //   for (var i = 0; i < det.length; i++) {
     //     await printColumnsText(
     //         sprintf("%s %f %f %f", {
-    //           det[i]['itemname'],
+    //           det[i]['ProductName'],
     //           det[i]['Qty'].toString(),
-    //           det[i]['Rate'].toString(),
+    //           det[i]['PRate'].toString(),
     //           det[i]['Total'].toString()
     //         }),
     //         14,
@@ -2700,7 +2553,7 @@ void printUrovo(dataAll) async {
     //         double.tryParse(inf['GrandTotal'].toString()).toStringAsFixed(2),
     //         (double.tryParse(inf['CGST'].toString()) +
     //                 double.tryParse(inf['SGST'].toString()) +
-    //                 double.tryParse(inf['IGST'].toString()))
+    //                 double.tryParse(inf['tax'].toString()))
     //             .toStringAsFixed(2)));
     //   }
     // } else if (isEsQrCodeKSA) {
@@ -2713,7 +2566,7 @@ void printUrovo(dataAll) async {
     //       double.tryParse(inf['GrandTotal'].toString()).toStringAsFixed(2),
     //       (double.tryParse(inf['CGST'].toString()) +
     //               double.tryParse(inf['SGST'].toString()) +
-    //               double.tryParse(inf['IGST'].toString()))
+    //               double.tryParse(inf['tax'].toString()))
     //           .toStringAsFixed(2)));
     // }
     // await lineWrap(32, posPrinter);
@@ -2722,11 +2575,11 @@ void printUrovo(dataAll) async {
     // await lineWrap(32, posPrinter);
 
     try {
-      var b = salesBillDataToMap([content]);
-      var c = content.toJson();
-      var status = await channel
-          .invokeMethod('sentPrintUrovo', <String, String>{'content': c});
-      debugPrint('Print finished' + status.ToString());
+      // var b = salesBillDataToMap([content]);
+      // var c = content.toJson();
+      // var status = await channel
+      //     .invokeMethod('sentPrintUrovo', <String, String>{'content': c});
+      // debugPrint('Print finished' + status.ToString());
     } catch (ex) {
       debugPrint('errrr:' + ex.ToString());
     }
@@ -2740,7 +2593,7 @@ void printSunmiV2Test(dataAll) async {
   var dataInformation = bill['Information'][0];
   var dataParticulars = bill['Particulars'];
   var dataSerialNO = bill['SerialNO'];
-  var dataDeliveryNote = bill['DeliveryNote'];
+  var PurchaseExpense = bill['PurchaseExpense'];
   var otherAmount = bill['otherAmount'];
   // Test regular text
   SunmiPrinter.hr();
@@ -2843,21 +2696,16 @@ Future<pw.Document> makePDF(
   var dataInformation = data['Information'][0];
   var dataParticulars = data['Particulars'];
   // var dataSerialNO = data['SerialNO'];
-  var dataDeliveryNote = data['DeliveryNote'];
+  var PurchaseExpense = data['PurchaseExpense'];
   var otherAmount = data['otherAmount'];
   var dataLedger = data['ledger'][0];
   var dataBankLedger = data['bankLedger'][0];
 
   bool printHeaderOnES =
       ComSettings.appSettings('bool', 'key-print-header-es', false);
-  var taxSale = salesTypeData.tax;
-  var invoiceHead = salesTypeData.type == 'SALES-ES'
-      ? Settings.getValue<String>('key-sales-estimate-head', 'ESTIMATE')
-      : salesTypeData.type == 'SALES-Q'
-          ? Settings.getValue<String>('key-sales-quotation-head', 'QUOTATION')
-          : salesTypeData.type == 'SALES-O'
-              ? Settings.getValue<String>('key-sales-order-head', 'ORDER')
-              : Settings.getValue<String>('key-sales-invoice-head', 'INVOICE');
+  var taxSale = dataInformation['TaxType'] == 'T' ? true : false;
+  var invoiceHead =
+      Settings.getValue<String>('key-purchase-return-head', 'PURCHASE RETURN');
   int decimal = ComSettings.getValue('DECIMAL', settings).toString().isNotEmpty
       ? int.tryParse(ComSettings.getValue('DECIMAL', settings).toString())
       : 2;
@@ -3420,7 +3268,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['slno']}',
+                                            '${dataParticulars[i]['ItemId']}',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -3435,7 +3283,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            dataParticulars[i]['itemname'],
+                                            dataParticulars[i]['ProductName'],
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -3466,7 +3314,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['RealRate']
+                                                        ['RealPrate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -3534,7 +3382,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['Rate']
+                                                        ['PRate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -3569,7 +3417,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['igst']} %',
+                                            '${dataParticulars[i]['tax']} %',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -3640,7 +3488,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['slno']}',
+                                            '${dataParticulars[i]['ItemId']}',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -3655,7 +3503,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            dataParticulars[i]['itemname'],
+                                            dataParticulars[i]['ProductName'],
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -3686,7 +3534,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['RealRate']
+                                                        ['RealPrate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -3754,7 +3602,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['Rate']
+                                                        ['PRate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -3789,7 +3637,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['igst']} %',
+                                            '${dataParticulars[i]['tax']} %',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -3805,7 +3653,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['IGST']
+                                                        ['tax']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -3851,14 +3699,14 @@ Future<pw.Document> makePDF(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               children: [
                                 pw.Text(
-                                    'CESS : ${double.tryParse(dataInformation['cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
+                                    'CESS : ${double.tryParse(dataInformation['Cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['Cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
                               ],
                             )
                           : pw.Row(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               children: [
                                 pw.Text(
-                                    'VAT : ${double.tryParse(dataInformation['IGST'].toString()).toStringAsFixed(decimal)}'),
+                                    'VAT : ${double.tryParse(dataInformation['tax'].toString()).toStringAsFixed(decimal)}'),
                               ],
                             ),
                       /**other amount**/
@@ -4151,7 +3999,7 @@ Future<pw.Document> makePDF(
                                     pw.Padding(
                                       padding: const pw.EdgeInsets.all(2.0),
                                       child: pw.Text(
-                                          '${dataParticulars[i]['slno']}',
+                                          '${dataParticulars[i]['ItemId']}',
                                           style:
                                               const pw.TextStyle(fontSize: 9)),
                                       // pw.Divider(thickness: 1)
@@ -4166,7 +4014,7 @@ Future<pw.Document> makePDF(
                                     pw.Padding(
                                       padding: const pw.EdgeInsets.all(2.0),
                                       child: pw.Text(
-                                          dataParticulars[i]['itemname'],
+                                          dataParticulars[i]['ProductName'],
                                           style:
                                               const pw.TextStyle(fontSize: 9)),
                                       // pw.Divider(thickness: 1)
@@ -4181,7 +4029,7 @@ Future<pw.Document> makePDF(
                                       padding: const pw.EdgeInsets.all(2.0),
                                       child: pw.Text(
                                           double.tryParse(dataParticulars[i]
-                                                      ['Rate']
+                                                      ['PRate']
                                                   .toString())
                                               .toStringAsFixed(decimal),
                                           style:
@@ -4502,7 +4350,7 @@ Future<pw.Document> makePDF(
                                     pw.Padding(
                                       padding: const pw.EdgeInsets.all(2.0),
                                       child: pw.Text(
-                                          '${dataParticulars[i]['slno']}',
+                                          '${dataParticulars[i]['ItemId']}',
                                           style:
                                               const pw.TextStyle(fontSize: 9)),
                                       // pw.Divider(thickness: 1)
@@ -4517,7 +4365,7 @@ Future<pw.Document> makePDF(
                                     pw.Padding(
                                       padding: const pw.EdgeInsets.all(2.0),
                                       child: pw.Text(
-                                          dataParticulars[i]['itemname'],
+                                          dataParticulars[i]['ProductName'],
                                           style:
                                               const pw.TextStyle(fontSize: 9)),
                                       // pw.Divider(thickness: 1)
@@ -4532,7 +4380,7 @@ Future<pw.Document> makePDF(
                                       padding: const pw.EdgeInsets.all(2.0),
                                       child: pw.Text(
                                           double.tryParse(dataParticulars[i]
-                                                      ['Rate']
+                                                      ['PRate']
                                                   .toString())
                                               .toStringAsFixed(decimal),
                                           style:
@@ -5177,7 +5025,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['slno']}',
+                                            '${dataParticulars[i]['ItemId']}',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -5192,7 +5040,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            dataParticulars[i]['itemname'],
+                                            dataParticulars[i]['ProductName'],
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -5223,7 +5071,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['RealRate']
+                                                        ['RealPrate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -5291,7 +5139,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['Rate']
+                                                        ['PRate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -5326,7 +5174,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['igst']} %',
+                                            '${dataParticulars[i]['tax']} %',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -5397,7 +5245,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['slno']}',
+                                            '${dataParticulars[i]['ItemId']}',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -5412,7 +5260,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            dataParticulars[i]['itemname'],
+                                            dataParticulars[i]['ProductName'],
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -5443,7 +5291,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['RealRate']
+                                                        ['RealPrate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -5511,7 +5359,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['Rate']
+                                                        ['PRate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -5546,7 +5394,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['igst']} %',
+                                            '${dataParticulars[i]['tax']} %',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -5562,7 +5410,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['IGST']
+                                                        ['tax']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -5608,14 +5456,14 @@ Future<pw.Document> makePDF(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               children: [
                                 pw.Text(
-                                    'CESS : ${double.tryParse(dataInformation['cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
+                                    'CESS : ${double.tryParse(dataInformation['Cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['Cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
                               ],
                             )
                           : pw.Row(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               children: [
                                 pw.Text(
-                                    'VAT : ${double.tryParse(dataInformation['IGST'].toString()).toStringAsFixed(decimal)}'),
+                                    'VAT : ${double.tryParse(dataInformation['tax'].toString()).toStringAsFixed(decimal)}'),
                               ],
                             ),
                       /**other amount**/
@@ -5833,7 +5681,7 @@ Future<pw.Document> makePDF(
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(2.0),
                                   child: pw.Text(
-                                      '${dataParticulars[i]['slno']}',
+                                      '${dataParticulars[i]['ItemId']}',
                                       style: const pw.TextStyle(fontSize: 9)),
                                   // pw.Divider(thickness: 1)
                                 ),
@@ -5844,7 +5692,8 @@ Future<pw.Document> makePDF(
                               children: [
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(2.0),
-                                  child: pw.Text(dataParticulars[i]['itemname'],
+                                  child: pw.Text(
+                                      dataParticulars[i]['ProductName'],
                                       style: const pw.TextStyle(fontSize: 9)),
                                   // pw.Divider(thickness: 1)
                                 ),
@@ -5856,7 +5705,8 @@ Future<pw.Document> makePDF(
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(2.0),
                                   child: pw.Text(
-                                      double.tryParse(dataParticulars[i]['Rate']
+                                      double.tryParse(dataParticulars[i]
+                                                  ['PRate']
                                               .toString())
                                           .toStringAsFixed(decimal),
                                       style: const pw.TextStyle(fontSize: 9)),
@@ -6412,7 +6262,7 @@ Future<pw.Document> makePDF(
                       crossAxisAlignment: pw.CrossAxisAlignment.center,
                       mainAxisAlignment: pw.MainAxisAlignment.center,
                       children: [
-                        pw.Text('IGST',
+                        pw.Text('tax',
                             style: pw.TextStyle(
                                 fontSize: 8, fontWeight: pw.FontWeight.bold)),
                         // pw.Divider(thickness: 1)
@@ -6436,7 +6286,7 @@ Future<pw.Document> makePDF(
                 //     children: [
                 pw.Padding(
                   padding: const pw.EdgeInsets.all(2.0),
-                  child: pw.Text('${dataParticulars[i]['slno']}',
+                  child: pw.Text('${dataParticulars[i]['ItemId']}',
                       textAlign: pw.TextAlign.right,
                       style: const pw.TextStyle(fontSize: 8)),
                   // pw.Divider(thickness: 1)
@@ -6450,7 +6300,7 @@ Future<pw.Document> makePDF(
                   padding: const pw.EdgeInsets.all(2.0),
                   child: pw.SizedBox(
                       width: 100,
-                      child: pw.Text(dataParticulars[i]['itemname'],
+                      child: pw.Text(dataParticulars[i]['ProductName'],
                           softWrap: true,
                           overflow: pw.TextOverflow.clip,
                           style: const pw.TextStyle(fontSize: 8))),
@@ -6498,7 +6348,8 @@ Future<pw.Document> makePDF(
                 pw.Padding(
                   padding: const pw.EdgeInsets.all(2.0),
                   child: pw.Text(
-                      double.tryParse(dataParticulars[i]['RealRate'].toString())
+                      double.tryParse(
+                              dataParticulars[i]['RealPrate'].toString())
                           .toStringAsFixed(decimal),
                       textAlign: pw.TextAlign.right,
                       style: const pw.TextStyle(fontSize: 8)),
@@ -6541,7 +6392,7 @@ Future<pw.Document> makePDF(
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(2.0),
                           child: pw.Text(
-                              '${ComSettings.removeZero(int.parse(dataParticulars[i]['igst'].toString()) / 2)}%',
+                              '${ComSettings.removeZero(int.parse(dataParticulars[i]['tax'].toString()) / 2)}%',
                               style: const pw.TextStyle(fontSize: 7)),
                         ),
                         pw.Padding(
@@ -6576,7 +6427,7 @@ Future<pw.Document> makePDF(
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(2.0),
                           child: pw.Text(
-                              '${ComSettings.removeZero(int.parse(dataParticulars[i]['igst'].toString()) / 2)}%',
+                              '${ComSettings.removeZero(int.parse(dataParticulars[i]['tax'].toString()) / 2)}%',
                               style: const pw.TextStyle(fontSize: 7)),
                         ),
                         pw.Padding(
@@ -6611,13 +6462,13 @@ Future<pw.Document> makePDF(
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(2.0),
                           child: pw.Text(
-                              '${ComSettings.removeZero(dataParticulars[i]['igst'].toDouble())}%',
+                              '${ComSettings.removeZero(dataParticulars[i]['tax'].toDouble())}%',
                               style: const pw.TextStyle(fontSize: 7)),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(2.0),
                           child: pw.Text(
-                              dataParticulars[i]['IGST']
+                              dataParticulars[i]['tax']
                                   .toStringAsFixed(decimal),
                               textAlign: pw.TextAlign.right,
                               style: const pw.TextStyle(fontSize: 8)),
@@ -6789,7 +6640,7 @@ Future<pw.Document> makePDF(
                                   0.0,
                                   (a, b) =>
                                       a +
-                                      double.parse(b['RealRate'].toString()))
+                                      double.parse(b['RealPrate'].toString()))
                               .toStringAsFixed(2),
                           style: pw.TextStyle(
                               fontSize: 9, fontWeight: pw.FontWeight.bold)),
@@ -6863,7 +6714,7 @@ Future<pw.Document> makePDF(
                               .fold(
                                   0.0,
                                   (a, b) =>
-                                      a + double.parse(b['IGST'].toString()))
+                                      a + double.parse(b['tax'].toString()))
                               .toStringAsFixed(2),
                           style: pw.TextStyle(
                               fontSize: 9, fontWeight: pw.FontWeight.bold)),
@@ -7038,7 +6889,7 @@ Future<pw.Document> makePDF(
                                     ),
                                   ),
                                   pw.Text(
-                                    double.tryParse(dataInformation['Roundoff']
+                                    double.tryParse(dataInformation['ROUNDOFF']
                                             .toString())
                                         .toStringAsFixed(decimal),
                                     textAlign: pw.TextAlign.center,
@@ -7583,7 +7434,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['slno']}',
+                                            '${dataParticulars[i]['ItemId']}',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -7598,7 +7449,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            dataParticulars[i]['itemname'],
+                                            dataParticulars[i]['ProductName'],
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -7629,7 +7480,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['RealRate']
+                                                        ['RealPrate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -7697,7 +7548,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['Rate']
+                                                        ['PRate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -7732,7 +7583,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['igst']} %',
+                                            '${dataParticulars[i]['tax']} %',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -7803,7 +7654,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['slno']}',
+                                            '${dataParticulars[i]['ItemId']}',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -7818,7 +7669,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            dataParticulars[i]['itemname'],
+                                            dataParticulars[i]['ProductName'],
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -7849,7 +7700,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['RealRate']
+                                                        ['RealPrate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -7917,7 +7768,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['Rate']
+                                                        ['PRate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -7952,7 +7803,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['igst']} %',
+                                            '${dataParticulars[i]['tax']} %',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -7968,7 +7819,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['IGST']
+                                                        ['tax']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -8014,14 +7865,14 @@ Future<pw.Document> makePDF(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               children: [
                                 pw.Text(
-                                    'CESS : ${double.tryParse(dataInformation['cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
+                                    'CESS : ${double.tryParse(dataInformation['Cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['Cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
                               ],
                             )
                           : pw.Row(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               children: [
                                 pw.Text(
-                                    'VAT : ${double.tryParse(dataInformation['IGST'].toString()).toStringAsFixed(decimal)}'),
+                                    'VAT : ${double.tryParse(dataInformation['tax'].toString()).toStringAsFixed(decimal)}'),
                               ],
                             ),
                       /**other amount**/
@@ -8239,7 +8090,7 @@ Future<pw.Document> makePDF(
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(2.0),
                                   child: pw.Text(
-                                      '${dataParticulars[i]['slno']}',
+                                      '${dataParticulars[i]['ItemId']}',
                                       style: const pw.TextStyle(fontSize: 9)),
                                   // pw.Divider(thickness: 1)
                                 ),
@@ -8250,7 +8101,8 @@ Future<pw.Document> makePDF(
                               children: [
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(2.0),
-                                  child: pw.Text(dataParticulars[i]['itemname'],
+                                  child: pw.Text(
+                                      dataParticulars[i]['ProductName'],
                                       style: const pw.TextStyle(fontSize: 9)),
                                   // pw.Divider(thickness: 1)
                                 ),
@@ -8262,7 +8114,8 @@ Future<pw.Document> makePDF(
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(2.0),
                                   child: pw.Text(
-                                      double.tryParse(dataParticulars[i]['Rate']
+                                      double.tryParse(dataParticulars[i]
+                                                  ['PRate']
                                               .toString())
                                           .toStringAsFixed(decimal),
                                       style: const pw.TextStyle(fontSize: 9)),
@@ -8900,7 +8753,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['slno']}',
+                                            '${dataParticulars[i]['ItemId']}',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -8915,7 +8768,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            dataParticulars[i]['itemname'],
+                                            dataParticulars[i]['ProductName'],
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -8946,7 +8799,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['RealRate']
+                                                        ['RealPrate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -9014,7 +8867,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['Rate']
+                                                        ['PRate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -9049,7 +8902,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['igst']} %',
+                                            '${dataParticulars[i]['tax']} %',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -9120,7 +8973,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['slno']}',
+                                            '${dataParticulars[i]['ItemId']}',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -9135,7 +8988,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            dataParticulars[i]['itemname'],
+                                            dataParticulars[i]['ProductName'],
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -9166,7 +9019,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['RealRate']
+                                                        ['RealPrate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -9234,7 +9087,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['Rate']
+                                                        ['PRate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -9269,7 +9122,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['igst']} %',
+                                            '${dataParticulars[i]['tax']} %',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -9285,7 +9138,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['IGST']
+                                                        ['tax']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -9331,14 +9184,14 @@ Future<pw.Document> makePDF(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               children: [
                                 pw.Text(
-                                    'CESS : ${double.tryParse(dataInformation['cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
+                                    'CESS : ${double.tryParse(dataInformation['Cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['Cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
                               ],
                             )
                           : pw.Row(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               children: [
                                 pw.Text(
-                                    'VAT : ${double.tryParse(dataInformation['IGST'].toString()).toStringAsFixed(decimal)}'),
+                                    'VAT : ${double.tryParse(dataInformation['tax'].toString()).toStringAsFixed(decimal)}'),
                               ],
                             ),
                       /**other amount**/
@@ -9556,7 +9409,7 @@ Future<pw.Document> makePDF(
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(2.0),
                                   child: pw.Text(
-                                      '${dataParticulars[i]['slno']}',
+                                      '${dataParticulars[i]['ItemId']}',
                                       style: const pw.TextStyle(fontSize: 9)),
                                   // pw.Divider(thickness: 1)
                                 ),
@@ -9567,7 +9420,8 @@ Future<pw.Document> makePDF(
                               children: [
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(2.0),
-                                  child: pw.Text(dataParticulars[i]['itemname'],
+                                  child: pw.Text(
+                                      dataParticulars[i]['ProductName'],
                                       style: const pw.TextStyle(fontSize: 9)),
                                   // pw.Divider(thickness: 1)
                                 ),
@@ -9579,7 +9433,8 @@ Future<pw.Document> makePDF(
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(2.0),
                                   child: pw.Text(
-                                      double.tryParse(dataParticulars[i]['Rate']
+                                      double.tryParse(dataParticulars[i]
+                                                  ['PRate']
                                               .toString())
                                           .toStringAsFixed(decimal),
                                       style: const pw.TextStyle(fontSize: 9)),
@@ -10217,7 +10072,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['slno']}',
+                                            '${dataParticulars[i]['ItemId']}',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -10232,7 +10087,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            dataParticulars[i]['itemname'],
+                                            dataParticulars[i]['ProductName'],
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -10263,7 +10118,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['RealRate']
+                                                        ['RealPrate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -10331,7 +10186,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['Rate']
+                                                        ['PRate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -10366,7 +10221,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['igst']} %',
+                                            '${dataParticulars[i]['tax']} %',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -10437,7 +10292,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['slno']}',
+                                            '${dataParticulars[i]['ItemId']}',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -10452,7 +10307,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            dataParticulars[i]['itemname'],
+                                            dataParticulars[i]['ProductName'],
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -10483,7 +10338,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['RealRate']
+                                                        ['RealPrate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -10551,7 +10406,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['Rate']
+                                                        ['PRate']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -10586,7 +10441,7 @@ Future<pw.Document> makePDF(
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
-                                            '${dataParticulars[i]['igst']} %',
+                                            '${dataParticulars[i]['tax']} %',
                                             style: const pw.TextStyle(
                                                 fontSize: 9)),
                                         // pw.Divider(thickness: 1)
@@ -10602,7 +10457,7 @@ Future<pw.Document> makePDF(
                                         padding: const pw.EdgeInsets.all(2.0),
                                         child: pw.Text(
                                             double.tryParse(dataParticulars[i]
-                                                        ['IGST']
+                                                        ['tax']
                                                     .toString())
                                                 .toStringAsFixed(decimal),
                                             style: const pw.TextStyle(
@@ -10648,14 +10503,14 @@ Future<pw.Document> makePDF(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               children: [
                                 pw.Text(
-                                    'CESS : ${double.tryParse(dataInformation['cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
+                                    'CESS : ${double.tryParse(dataInformation['Cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['Cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
                               ],
                             )
                           : pw.Row(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               children: [
                                 pw.Text(
-                                    'VAT : ${double.tryParse(dataInformation['IGST'].toString()).toStringAsFixed(decimal)}'),
+                                    'VAT : ${double.tryParse(dataInformation['tax'].toString()).toStringAsFixed(decimal)}'),
                               ],
                             ),
                       /**other amount**/
@@ -10947,7 +10802,7 @@ Future<pw.Document> makePDF(
                                     pw.Padding(
                                       padding: const pw.EdgeInsets.all(2.0),
                                       child: pw.Text(
-                                          '${dataParticulars[i]['slno']}',
+                                          '${dataParticulars[i]['ItemId']}',
                                           style:
                                               const pw.TextStyle(fontSize: 9)),
                                       // pw.Divider(thickness: 1)
@@ -10962,7 +10817,7 @@ Future<pw.Document> makePDF(
                                     pw.Padding(
                                       padding: const pw.EdgeInsets.all(2.0),
                                       child: pw.Text(
-                                          dataParticulars[i]['itemname'],
+                                          dataParticulars[i]['ProductName'],
                                           style:
                                               const pw.TextStyle(fontSize: 9)),
                                       // pw.Divider(thickness: 1)
@@ -10977,7 +10832,7 @@ Future<pw.Document> makePDF(
                                       padding: const pw.EdgeInsets.all(2.0),
                                       child: pw.Text(
                                           double.tryParse(dataParticulars[i]
-                                                      ['Rate']
+                                                      ['PRate']
                                                   .toString())
                                               .toStringAsFixed(decimal),
                                           style:
@@ -11298,7 +11153,7 @@ Future<pw.Document> makePDF(
                                     pw.Padding(
                                       padding: const pw.EdgeInsets.all(2.0),
                                       child: pw.Text(
-                                          '${dataParticulars[i]['slno']}',
+                                          '${dataParticulars[i]['ItemId']}',
                                           style:
                                               const pw.TextStyle(fontSize: 9)),
                                       // pw.Divider(thickness: 1)
@@ -11313,7 +11168,7 @@ Future<pw.Document> makePDF(
                                     pw.Padding(
                                       padding: const pw.EdgeInsets.all(2.0),
                                       child: pw.Text(
-                                          dataParticulars[i]['itemname'],
+                                          dataParticulars[i]['ProductName'],
                                           style:
                                               const pw.TextStyle(fontSize: 9)),
                                       // pw.Divider(thickness: 1)
@@ -11328,7 +11183,7 @@ Future<pw.Document> makePDF(
                                       padding: const pw.EdgeInsets.all(2.0),
                                       child: pw.Text(
                                           double.tryParse(dataParticulars[i]
-                                                      ['Rate']
+                                                      ['PRate']
                                                   .toString())
                                               .toStringAsFixed(decimal),
                                           style:

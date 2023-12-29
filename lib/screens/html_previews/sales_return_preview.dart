@@ -20,7 +20,6 @@ import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/print_settings_model.dart';
 import 'package:sheraccerp/models/sales_bill.dart';
 import 'package:sheraccerp/models/sales_model.dart';
-import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/blue_thermal.dart';
@@ -53,7 +52,6 @@ class SalesReturnPreviewShow extends StatefulWidget {
 class _SalesReturnPreviewShowState extends State<SalesReturnPreviewShow> {
   final GlobalKey _globalKey = GlobalKey();
   DioService api = DioService();
-  SalesModel salesModel;
   var totalQty = 0.0, totalRate = 0.0;
   String companyState = '', companyStateCode = '', companyTaxNo = '';
   dynamic data;

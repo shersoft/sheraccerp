@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:sheraccerp/models/cart_item.dart';
 import 'package:sheraccerp/models/company.dart';
+import 'package:sheraccerp/models/product_register_model.dart';
+import 'package:sheraccerp/models/sales_model.dart';
 import 'package:sheraccerp/models/unit_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
@@ -29,7 +31,8 @@ class Purchase extends StatefulWidget {
 class _PurchaseState extends State<Purchase> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   DioService dio = DioService();
-  var ledgerModel, productModel, cartModel;
+  var ledgerModel, cartModel;
+  ProductPurchaseModel productModel;
   List<dynamic> purchaseAccountList = [];
   DateTime now = DateTime.now();
   String formattedDate, invDate = '';
@@ -45,12 +48,14 @@ class _PurchaseState extends State<Purchase> {
       lastRecord = false,
       isItemSerialNo = false,
       isFreeQty = false,
-      realPRateBasedProfitPercentage = false;
+      realPRateBasedProfitPercentage = false,
+      isQuantityBasedSerialNo = false;
   List<CartItemP> cartItem = [];
   int page = 1, pageTotal = 0, totalRecords = 0, _dropDownUnit = 0;
-  List<dynamic> itemDisplay = [];
-  List<dynamic> items = [];
+  List<ProductPurchaseModel> itemDisplay = [];
+  List<ProductPurchaseModel> items = [];
   final List<dynamic> _ledger = [];
+  List<SerialNOModel> serialNoData = [];
   bool enableMULTIUNIT = false,
       cessOnNetAmount = false,
       enableKeralaFloodCess = false,
@@ -108,6 +113,8 @@ class _PurchaseState extends State<Purchase> {
         : 2;
 
     isFreeQty = ComSettings.getStatus('KEY FREE QTY IN PURCHASE', settings);
+    isQuantityBasedSerialNo =
+        ComSettings.getStatus('ENABLE QUANTITY BASED SERIAL NO', settings);
   }
 
   setCursorPosition() {
@@ -208,81 +215,94 @@ class _PurchaseState extends State<Purchase> {
                   color: green,
                   iconSize: 40,
                   onPressed: () async {
-                    if (buttonEvent) {
-                      return;
-                    } else {
-                      setState(() {
-                        _isLoading = true;
-                        buttonEvent = true;
-                      });
-                      var inf = '[' +
-                          json.encode({
-                            'id': ledgerModel.id,
-                            'name': ledgerModel.name,
-                            'invNo': invNoController.text.isNotEmpty
-                                ? invNoController.text
-                                : '0',
-                            'invDate': DateUtil.dateYMD(invDate)
-                          }) +
-                          ']';
-                      var jsonItem = CartItemP.encodeCartToJson(cartItem);
-                      var items = json.encode(jsonItem);
-                      var stType = 'P_Update';
-                      var data = '[' +
-                          json.encode({
-                            'entryNo': dataDynamic[0]['EntryNo'],
-                            'date': DateUtil.dateYMD(formattedDate),
-                            'grossValue': totalGrossValue,
-                            'discount': totalDiscount,
-                            'net': totalNet,
-                            'cess': totalCess,
-                            'total': totalCartTotal,
-                            'otherCharges':
-                                _otherChargesController.text.isNotEmpty
-                                    ? _otherChargesController.text
-                                    : '0',
-                            'otherDiscount':
-                                _otherDiscountController.text.isNotEmpty
-                                    ? _otherDiscountController.text
-                                    : '0',
-                            'grandTotal': calculateGrandTotal(),
-                            'taxType': isTax ? 'T' : 'N.T',
-                            'purchaseAccount': purchaseAccountList[0]['id'],
-                            'narration': _narrationController.text,
-                            'type': 'P',
-                            'cashPaid': cashPaidController.text.isNotEmpty
-                                ? cashPaidController.text
-                                : '0',
-                            'igst': totalIgST,
-                            'cgst': totalCgST,
-                            'sgst': totalSgST,
-                            'fCess': totalFCess,
-                            'adCess': totalAdCess,
-                            'Salesman': salesManId,
-                            'location': locationId,
-                            'statementtype': stType,
-                            'fyId': currentFinancialYear.id,
-                          }) +
-                          ']';
-
-                      final body = {
-                        'information': inf,
-                        'data': data,
-                        'particular': items
-                      };
-                      bool _state = await dio.addPurchase(body);
-                      setState(() {
-                        _isLoading = false;
-                      });
-                      if (_state) {
-                        cartItem.clear();
-                        showMore(context, 'Edited');
+                    if (cartItem.isNotEmpty) {
+                      if (buttonEvent) {
+                        return;
                       } else {
-                        showInSnackBar('Error enter data correctly');
-                        setState(() {
-                          buttonEvent = false;
-                        });
+                        if (companyUserData.updateData) {
+                          setState(() {
+                            _isLoading = true;
+                            buttonEvent = true;
+                          });
+                          var inf = '[' +
+                              json.encode({
+                                'id': ledgerModel.id,
+                                'name': ledgerModel.name,
+                                'invNo': invNoController.text.isNotEmpty
+                                    ? invNoController.text
+                                    : '0',
+                                'invDate': DateUtil.dateYMD(invDate)
+                              }) +
+                              ']';
+                          var jsonItem = CartItemP.encodeCartToJson(cartItem);
+                          var items = json.encode(jsonItem);
+                          var stType = 'P_Update';
+                          var data = '[' +
+                              json.encode({
+                                'entryNo': dataDynamic[0]['EntryNo'],
+                                'date': DateUtil.dateYMD(formattedDate),
+                                'grossValue': totalGrossValue,
+                                'discount': totalDiscount,
+                                'net': totalNet,
+                                'cess': totalCess,
+                                'total': totalCartTotal,
+                                'otherCharges':
+                                    _otherChargesController.text.isNotEmpty
+                                        ? _otherChargesController.text
+                                        : '0',
+                                'otherDiscount':
+                                    _otherDiscountController.text.isNotEmpty
+                                        ? _otherDiscountController.text
+                                        : '0',
+                                'grandTotal': calculateGrandTotal(),
+                                'taxType': isTax ? 'T' : 'N.T',
+                                'purchaseAccount': purchaseAccountList[0]['id'],
+                                'narration': _narrationController.text,
+                                'type': 'P',
+                                'cashPaid': cashPaidController.text.isNotEmpty
+                                    ? cashPaidController.text
+                                    : '0',
+                                'igst': totalIgST,
+                                'cgst': totalCgST,
+                                'sgst': totalSgST,
+                                'fCess': totalFCess,
+                                'adCess': totalAdCess,
+                                'Salesman': salesManId,
+                                'location': locationId,
+                                'statementtype': stType,
+                                'fyId': currentFinancialYear.id,
+                              }) +
+                              ']';
+
+                          final body = {
+                            'information': inf,
+                            'data': data,
+                            'particular': items,
+                            'serialNoData': json.encode(
+                                SerialNOModel.encodedToJson(serialNoData)),
+                          };
+                          bool _state = await dio.addPurchase(body);
+                          setState(() {
+                            _isLoading = false;
+                          });
+                          if (_state) {
+                            cartItem.clear();
+                            showMore(context, 'Edited');
+                          } else {
+                            showInSnackBar('Error enter data correctly');
+                            setState(() {
+                              buttonEvent = false;
+                            });
+                          }
+                        } else {
+                          showInSnackBar('Permission denied\ncan`t edit');
+                          setState(() {
+                            buttonEvent = false;
+                          });
+                        }
                       }
+                    } else {
+                      showInSnackBar('Please add at least one item');
                     }
                   },
                   icon: const Icon(Icons.edit))
@@ -290,80 +310,93 @@ class _PurchaseState extends State<Purchase> {
                   color: blue,
                   iconSize: 40,
                   onPressed: () async {
-                    if (buttonEvent) {
-                      return;
-                    } else {
-                      setState(() {
-                        _isLoading = true;
-                        buttonEvent = true;
-                      });
-                      var inf = '[' +
-                          json.encode({
-                            'id': ledgerModel.id,
-                            'name': ledgerModel.name,
-                            'invNo': invNoController.text.isNotEmpty
-                                ? invNoController.text
-                                : '0',
-                            'invDate': DateUtil.dateYMD(invDate)
-                          }) +
-                          ']';
-                      var jsonItem = CartItemP.encodeCartToJson(cartItem);
-                      var items = json.encode(jsonItem);
-                      var stType = 'P_Insert';
-                      var data = '[' +
-                          json.encode({
-                            'date': DateUtil.dateYMD(formattedDate),
-                            'grossValue': totalGrossValue,
-                            'discount': totalDiscount,
-                            'net': totalNet,
-                            'cess': totalCess,
-                            'total': totalCartTotal,
-                            'otherCharges':
-                                _otherChargesController.text.isNotEmpty
-                                    ? _otherChargesController.text
-                                    : '0',
-                            'otherDiscount':
-                                _otherDiscountController.text.isNotEmpty
-                                    ? _otherDiscountController.text
-                                    : '0',
-                            'grandTotal': calculateGrandTotal(),
-                            'taxType': isTax ? 'T' : 'N.T',
-                            'purchaseAccount': purchaseAccountList[0]['id'],
-                            'narration': _narrationController.text,
-                            'type': 'P',
-                            'cashPaid': cashPaidController.text.isNotEmpty
-                                ? cashPaidController.text
-                                : '0',
-                            'igst': totalIgST,
-                            'cgst': totalCgST,
-                            'sgst': totalSgST,
-                            'fCess': totalFCess,
-                            'adCess': totalAdCess,
-                            'Salesman': salesManId,
-                            'location': locationId,
-                            'statementtype': stType,
-                            'fyId': currentFinancialYear.id,
-                          }) +
-                          ']';
-
-                      final body = {
-                        'information': inf,
-                        'data': data,
-                        'particular': items
-                      };
-                      bool _state = await dio.addPurchase(body);
-                      setState(() {
-                        _isLoading = false;
-                      });
-                      if (_state) {
-                        cartItem.clear();
-                        showMore(context, 'Saved');
+                    if (cartItem.isNotEmpty) {
+                      if (buttonEvent) {
+                        return;
                       } else {
-                        showInSnackBar('Error enter data correctly');
-                        setState(() {
-                          buttonEvent = false;
-                        });
+                        if (companyUserData.insertData) {
+                          setState(() {
+                            _isLoading = true;
+                            buttonEvent = true;
+                          });
+                          var inf = '[' +
+                              json.encode({
+                                'id': ledgerModel.id,
+                                'name': ledgerModel.name,
+                                'invNo': invNoController.text.isNotEmpty
+                                    ? invNoController.text
+                                    : '0',
+                                'invDate': DateUtil.dateYMD(invDate)
+                              }) +
+                              ']';
+                          var jsonItem = CartItemP.encodeCartToJson(cartItem);
+                          var items = json.encode(jsonItem);
+                          var stType = 'P_Insert';
+                          var data = '[' +
+                              json.encode({
+                                'date': DateUtil.dateYMD(formattedDate),
+                                'grossValue': totalGrossValue,
+                                'discount': totalDiscount,
+                                'net': totalNet,
+                                'cess': totalCess,
+                                'total': totalCartTotal,
+                                'otherCharges':
+                                    _otherChargesController.text.isNotEmpty
+                                        ? _otherChargesController.text
+                                        : '0',
+                                'otherDiscount':
+                                    _otherDiscountController.text.isNotEmpty
+                                        ? _otherDiscountController.text
+                                        : '0',
+                                'grandTotal': calculateGrandTotal(),
+                                'taxType': isTax ? 'T' : 'N.T',
+                                'purchaseAccount': purchaseAccountList[0]['id'],
+                                'narration': _narrationController.text,
+                                'type': 'P',
+                                'cashPaid': cashPaidController.text.isNotEmpty
+                                    ? cashPaidController.text
+                                    : '0',
+                                'igst': totalIgST,
+                                'cgst': totalCgST,
+                                'sgst': totalSgST,
+                                'fCess': totalFCess,
+                                'adCess': totalAdCess,
+                                'Salesman': salesManId,
+                                'location': locationId,
+                                'statementtype': stType,
+                                'fyId': currentFinancialYear.id,
+                              }) +
+                              ']';
+
+                          final body = {
+                            'information': inf,
+                            'data': data,
+                            'particular': items,
+                            'serialNoData': json.encode(
+                                SerialNOModel.encodedToJson(serialNoData)),
+                          };
+                          bool _state = await dio.addPurchase(body);
+                          setState(() {
+                            _isLoading = false;
+                          });
+                          if (_state) {
+                            cartItem.clear();
+                            showMore(context, 'Saved');
+                          } else {
+                            showInSnackBar('Error enter data correctly');
+                            setState(() {
+                              buttonEvent = false;
+                            });
+                          }
+                        } else {
+                          showInSnackBar('Permission denied\ncan`t save');
+                          setState(() {
+                            buttonEvent = false;
+                          });
+                        }
                       }
+                    } else {
+                      showInSnackBar('Please add at least one item');
                     }
                   },
                   icon: const Icon(Icons.save)),
@@ -471,6 +504,7 @@ class _PurchaseState extends State<Purchase> {
     controllerWholeSale.dispose();
     cashPaidController.dispose();
     invNoController.dispose();
+    newSerialNoController.dispose();
 
     super.dispose();
   }
@@ -487,10 +521,12 @@ class _PurchaseState extends State<Purchase> {
                     ? itemDetails()
                     : nextWidget == 4
                         ? cartProduct()
-                        : Container(
-                            padding: const EdgeInsets.all(2.0),
-                            child: const Text('No Widget'),
-                          );
+                        : nextWidget == 10
+                            ? serialNoWidget()
+                            : Container(
+                                padding: const EdgeInsets.all(2.0),
+                                child: const Text('No Widget'),
+                              );
   }
 
   previousBill() {
@@ -931,7 +967,7 @@ class _PurchaseState extends State<Purchase> {
     setState(() {
       if (items.isNotEmpty) isItemData = true;
     });
-    return FutureBuilder<List<dynamic>>(
+    return FutureBuilder<List<ProductPurchaseModel>>(
       future: dio.fetchAllProductPurchase(),
       builder: (ctx, snapshot) {
         if (snapshot.hasData) {
@@ -960,7 +996,7 @@ class _PurchaseState extends State<Purchase> {
                                   setState(() {
                                     itemDisplay = items.where((item) {
                                       var itemName =
-                                          item['itemname'].toLowerCase();
+                                          item.itemName.toLowerCase();
                                       return itemName.contains(text);
                                     }).toList();
                                   });
@@ -987,7 +1023,7 @@ class _PurchaseState extends State<Purchase> {
                     : InkWell(
                         child: Card(
                           child: ListTile(
-                              title: Text(itemDisplay[index - 1]['itemname'])),
+                              title: Text(itemDisplay[index - 1].itemName)),
                         ),
                         onTap: () {
                           setState(() {
@@ -1166,8 +1202,9 @@ class _PurchaseState extends State<Purchase> {
   // }
 
   itemDetails() {
-    int id = editItem ? cartModel.itemId : productModel['slno'];
-    return id > 0 ? itemFetchPrice(id) : itemFetchPrice(id);
+    int id = editItem ? cartModel.itemId : productModel.slNo;
+    return itemFetchPrice(id);
+    // return id > 0 ? itemFetchPrice(id) : itemFetchPrice(id);
   }
 
   bool lockItemDetails = false;
@@ -1395,11 +1432,11 @@ class _PurchaseState extends State<Purchase> {
         controllerSerialNo.text = serialNo.toString();
       }
     } else {
-      adCessPer =
-          isTax ? double.tryParse(productModel['adcessper'].toString()) : 0;
-      cessPer = isTax ? double.tryParse(productModel['cessper'].toString()) : 0;
-      taxP = isTax ? double.tryParse(productModel['tax'].toString()) : 0;
-      kfcP = isTax ? double.tryParse(productModel['KFC'].toString()) : 0;
+      adCessPer = isTax ? productModel.adCessPer : 0;
+      cessPer = isTax ? productModel.cessPer : 0;
+      taxP = isTax ? productModel.tax : 0;
+      kfcP =
+          isTax ? 0 : 0; //double.tryParse(productModel['KFC'].toString()) : 0;
       rate = double.tryParse(productModelPrize['prate'].toString());
       if (rate > 0 && !editableRate) {
         controllerRate.text = rate.toString();
@@ -1535,7 +1572,7 @@ class _PurchaseState extends State<Purchase> {
             Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                    'Item : ${editItem ? cartItem.elementAt(position).itemName : productModel['itemname']}',
+                    'Item : ${editItem ? cartItem.elementAt(position).itemName : productModel.itemName}',
                     style: const TextStyle(color: Colors.red))),
             Row(
               children: [
@@ -1663,8 +1700,8 @@ class _PurchaseState extends State<Purchase> {
                               gross: subTotal,
                               iGST: iGST,
                               id: cartItem.length + 1,
-                              itemId: productModel['slno'],
-                              itemName: productModel['itemname'],
+                              itemId: productModel.slNo,
+                              itemName: productModel.itemName,
                               location: locationId,
                               mrp: mrp,
                               mrpPer: mrpPer,
@@ -1740,6 +1777,18 @@ class _PurchaseState extends State<Purchase> {
                   ),
                 ),
                 Visibility(
+                    visible: (isQuantityBasedSerialNo && productModel.serialNo),
+                    child: ElevatedButton(
+                      child: const Text('Add SerialNo'),
+                      onPressed: () {
+                        if (controllerQuantity.text.isNotEmpty) {
+                          setState(() {
+                            nextWidget = 10;
+                          });
+                        }
+                      },
+                    )),
+                Visibility(
                   visible: isFreeQty,
                   child: Expanded(
                     child: TextField(
@@ -1811,7 +1860,7 @@ class _PurchaseState extends State<Purchase> {
                     child: FutureBuilder(
                       future: dio.fetchUnitOf(editItem
                           ? cartItem[position].itemId
-                          : productModel['slno']),
+                          : productModel.slNo),
                       builder: (BuildContext context, AsyncSnapshot snapshot) {
                         if (snapshot.hasData) {
                           unitListData.clear();
@@ -2251,6 +2300,7 @@ class _PurchaseState extends State<Purchase> {
 
   TextEditingController cashPaidController = TextEditingController();
   TextEditingController invNoController = TextEditingController();
+  TextEditingController newSerialNoController = TextEditingController();
   final TextEditingController _otherDiscountController =
       TextEditingController();
   final TextEditingController _otherChargesController = TextEditingController();
@@ -2669,6 +2719,114 @@ class _PurchaseState extends State<Purchase> {
     grandTotal = ((double.parse(grandTotal) + otherCharges) - otherDiscount)
         .toStringAsFixed(2);
     return grandTotal;
+  }
+
+  serialNoWidget() {
+    return Container(
+      padding: const EdgeInsets.all(5.0),
+      child: Column(children: [
+        Row(
+          children: [
+            const Text(
+              'SerialNo',
+              style: TextStyle(fontSize: 25),
+            ),
+            Expanded(
+                child: MaterialButton(
+              onPressed: () {
+                int qtyTotal = int.parse(controllerQuantity.text);
+
+                if (qtyTotal == serialNoData.length) {
+                  setState(() {
+                    nextWidget = 3;
+                  });
+                } else {
+                  showInSnackBar('Quantity not equal\nAdd more serialNo');
+                }
+              },
+              child: const Text("OK"),
+              color: blue[400],
+            )),
+          ],
+        ),
+        const Divider(),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                  controller: newSerialNoController,
+                  decoration: const InputDecoration(
+                    label: Text('Type SerialNo'),
+                    border: OutlineInputBorder(),
+                  )),
+            ),
+            IconButton(
+                onPressed: () {
+                  int qtyTotal = int.parse(controllerQuantity.text);
+                  if (qtyTotal == serialNoData.length) {
+                    showInSnackBar('qty already full');
+                  } else {
+                    if (newSerialNoController.text.isNotEmpty) {
+                      bool serialNoIn = false;
+                      serialNoIn = serialNoData
+                              .firstWhere(
+                                (element) =>
+                                    element.serialNo
+                                        .toString()
+                                        .trim()
+                                        .toLowerCase() ==
+                                    newSerialNoController.text
+                                        .trim()
+                                        .toLowerCase(),
+                                orElse: () => SerialNOModel.emptyData(),
+                              )
+                              .serialNo
+                              .isNotEmpty
+                          ? true
+                          : false;
+                      if (!serialNoIn) {
+                        setState(() {
+                          serialNoData.add(SerialNOModel(
+                              entryNo: 0,
+                              gId: serialNoData.length + 1,
+                              itemName: productModel.slNo,
+                              serialNo: newSerialNoController.text,
+                              slNo: 0,
+                              tType: 'P',
+                              uniqueCode: 0));
+                        });
+                      } else {
+                        showInSnackBar('already exists');
+                      }
+                    }
+                  }
+                },
+                icon: const Icon(Icons.add))
+          ],
+        ),
+        const Divider(),
+        Expanded(
+            child: ListView.builder(
+                itemCount: serialNoData.length,
+                itemBuilder: (context, index) {
+                  return InkWell(
+                    onDoubleTap: () {
+                      setState(() {
+                        serialNoData.removeAt(index);
+                      });
+                    },
+                    child: Card(
+                      elevation: 5,
+                      child: Padding(
+                        padding: const EdgeInsets.all(5.0),
+                        child:
+                            Center(child: Text(serialNoData[index].serialNo)),
+                      ),
+                    ),
+                  );
+                }))
+      ]),
+    );
   }
 }
 

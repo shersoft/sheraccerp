@@ -87,7 +87,8 @@ class _SaleState extends State<Sale> {
       isFreeQty = false,
       gstVerified = false,
       gstValidation = false,
-      isLedgerWiseLastSRate = false;
+      isLedgerWiseLastSRate = false,
+      isQuantityBasedSerialNo = false;
   final List<TextEditingController> _controllers = [];
   DateTime now = DateTime.now();
   String formattedDate;
@@ -274,7 +275,8 @@ class _SaleState extends State<Sale> {
         ComSettings.getStatus('USE SALESMAN AS VEHICLE', settings);
     isLedgerWiseLastSRate =
         ComSettings.getStatus('ENABLE CUSTOMER WISE LAST S.RATE', settings);
-        
+    isQuantityBasedSerialNo =
+        ComSettings.getStatus('ENABLE QUANTITY BASED SERIAL NO', settings);
   }
 
   @override
@@ -3253,9 +3255,9 @@ class _SaleState extends State<Sale> {
 
     if (enableMULTIUNIT && rate > 0 && _conversion > 0) {
       rate = rate * _conversion;
-    pRate = product.buyingPrice * _conversion;
-    rPRate = product.buyingPriceReal * _conversion;
-    }else {
+      pRate = product.buyingPrice * _conversion;
+      rPRate = product.buyingPriceReal * _conversion;
+    } else {
       pRate = product.buyingPrice;
       rPRate = product.buyingPriceReal;
     }
@@ -3380,6 +3382,9 @@ class _SaleState extends State<Sale> {
       _serialNoController.text = product.serialNo;
     }
     List<UnitModel> unitListData = [];
+    if (isLedgerWiseLastSRate) {
+      lastRateOfLedger(product);
+    }
 
     return Container(
       padding: const EdgeInsets.all(8.0),
@@ -4863,6 +4868,27 @@ class _SaleState extends State<Sale> {
     //     );
     //   },
     // );
+  }
+
+  lastRateOfLedger(StockProduct product) {
+    var ledId =
+        ledgerModel.id.toString().isNotEmpty ? ledgerModel.id.toString() : '0';
+    api.getProductTracking(product.itemId, ledId).then((value) {
+      List<dynamic> data = value;
+      Map item = data.firstWhere(
+          (element) =>
+              element['Supplier'].toString().toLowerCase() ==
+              ledgerModel.name.toString().toLowerCase(),
+          orElse: () => {});
+      if (item != null && item.isNotEmpty) {
+        setState(() {
+          rate = item['Rate'].toDouble();
+          saleRate = item['Rate'].toDouble();
+          _rateController.text = saleRate.toStringAsFixed(2);
+          calculate(product);
+        });
+      }
+    });
   }
 
   salesReturnForm() {

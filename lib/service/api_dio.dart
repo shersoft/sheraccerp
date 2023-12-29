@@ -1713,7 +1713,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'Product/getById/$dataBase/$id');
+              'Product/getById/$dataBase',
+          queryParameters: {'id': id});
 
       if (response.statusCode == 200) {
         var data = response.data;
@@ -3345,7 +3346,9 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              '/product/getProductPurchase/$dataBase/$id');
+              '/product/getProductPurchase/$dataBase',
+          queryParameters: {'id': id});
+      //v20 '/product/getProductPurchase/$dataBase/$id');
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {
@@ -3374,7 +3377,9 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'Product/getMultiUnit/$dataBase/$id');
+              'Product/getMultiUnit/$dataBase',
+          queryParameters: {'id': id});
+      //v20 'Product/getMultiUnit/$dataBase/$id');
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var data in jsonResponse) {
@@ -3748,13 +3753,13 @@ class DioService {
     return _items;
   }
 
-  Future<List<dynamic>> fetchAllProductPurchase() async {
+  Future<List<ProductPurchaseModel>> fetchAllProductPurchase() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
-    List<dynamic> _items = [];
+    List<ProductPurchaseModel> _items = [];
     try {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
@@ -3763,7 +3768,8 @@ class DioService {
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
-        _items = jsonResponse;
+        _items = List<ProductPurchaseModel>.from(
+            jsonResponse.map((x) => ProductPurchaseModel.fromMap(x)));
       } else {
         debugPrint('Unexpected error Occurred!');
       }
@@ -3812,7 +3818,10 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'Product/getProductPurchaseById/$dataBase/$id');
+              //v20 'Product/getProductPurchaseById/$dataBase/$id');
+              'Product/getProductPurchaseById/$dataBase',
+          queryParameters: {'id': id});
+
       if (response.statusCode == 200) {
         dynamic jsonResponse = response.data;
         _items = jsonResponse;
@@ -3837,7 +3846,8 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'Product/getProductPurchaseByStock/$dataBase/$id/$location');
+              'Product/getProductPurchaseByStock/$dataBase',
+          queryParameters: {'id': id, 'location': location});
       if (response.statusCode == 200) {
         dynamic jsonResponse = response.data;
         _items = jsonResponse;
@@ -3982,6 +3992,37 @@ class DioService {
           queryParameters: {
             'id': id,
             'statement': type,
+            'fyId': currentFinancialYear.id
+          });
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+
+        _items = jsonResponse;
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<dynamic> fetchPurchaseReturnInvoice(int id, String type) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    dynamic _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              '/purchaseReturn/find/$dataBase',
+          queryParameters: {
+            'id': id,
+            'type': type,
             'fyId': currentFinancialYear.id
           });
       if (response.statusCode == 200) {

@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 class ProductRegisterModel {
   ProductRegisterModel({
     required this.slno,
@@ -237,4 +239,68 @@ class EnumValues<T> {
     reverseMap = map.map((k, v) => MapEntry(v, k));
     return reverseMap;
   }
+}
+
+class ProductPurchaseModel {
+  int slNo;
+  String itemCode;
+  String itemName;
+  double tax;
+  double cess;
+  double cessPer;
+  double adCessPer;
+  String stockValuation;
+  String typeOfSupply;
+  String internationalBarcode;
+  bool serialNo;
+  ProductPurchaseModel({
+    required this.slNo,
+    required this.itemCode,
+    required this.itemName,
+    required this.tax,
+    required this.cess,
+    required this.cessPer,
+    required this.adCessPer,
+    required this.stockValuation,
+    required this.typeOfSupply,
+    required this.internationalBarcode,
+    required this.serialNo,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'slno': slNo,
+      'itemcode': itemCode,
+      'itemname': itemName,
+      'tax': tax,
+      'cess': cess,
+      'cessper': cessPer,
+      'adcessper': adCessPer,
+      'stockvaluation': stockValuation,
+      'typeofsupply': typeOfSupply,
+      'Internationalbarcode': internationalBarcode,
+      'serialno': serialNo,
+    };
+  }
+
+  factory ProductPurchaseModel.fromMap(Map<String, dynamic> map) {
+    return ProductPurchaseModel(
+      slNo: map['slno']?.toInt() ?? 0,
+      itemCode: map['itemcode'] ?? '',
+      itemName: map['itemname'] ?? '',
+      tax: map['tax']?.toDouble() ?? 0.0,
+      cess: map['cess']?.toDouble() ?? 0.0,
+      cessPer: map['cessper']?.toDouble() ?? 0.0,
+      adCessPer: map['adcessper']?.toDouble() ?? 0.0,
+      stockValuation: map['stockvaluation'] ?? '',
+      typeOfSupply: map['typeofsupply'] ?? '',
+      internationalBarcode: map['Internationalbarcode'] ?? '',
+      serialNo: (map['serialno']?.toInt() ?? 0) > 0 ? true : false,
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory ProductPurchaseModel.fromJson(String source) =>
+      ProductPurchaseModel.fromMap(json.decode(source));
 }

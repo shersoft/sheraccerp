@@ -11,6 +11,7 @@ import 'package:sheraccerp/models/cart_item.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/customer_model.dart';
 import 'package:sheraccerp/models/order.dart';
+import 'package:sheraccerp/models/product_register_model.dart';
 import 'package:sheraccerp/models/stock_item.dart';
 import 'package:sheraccerp/models/stock_product.dart';
 import 'package:sheraccerp/models/unit_model.dart';
@@ -66,8 +67,8 @@ class _SalesReturnState extends State<SalesReturn> {
   int page = 1, pageTotal = 0, totalRecords = 0, decimal = 2;
   List<dynamic> ledgerDisplay = [];
   List<dynamic> _ledger = [];
-  List<dynamic> itemDisplay = [];
-  List<dynamic> items = [];
+  List<ProductPurchaseModel> itemDisplay = [];
+  List<ProductPurchaseModel> items = [];
   int saleAccount = 0;
   int lId = 0, groupId = 0, acId = 0;
   var salesManId = 0;
@@ -117,7 +118,6 @@ class _SalesReturnState extends State<SalesReturn> {
         ledgerModel = widget.data[0]['ledger'];
         int refId = widget.data[0]['id'];
         if (refId > 0) {
-          var dataS = {'Id': refId};
           fetchSaleReturn(context, refId);
         } else {
           nextWidget = 2;
@@ -1152,7 +1152,7 @@ class _SalesReturnState extends State<SalesReturn> {
     setState(() {
       if (items.isNotEmpty) isItemData = true;
     });
-    return FutureBuilder<List<dynamic>>(
+    return FutureBuilder<List<ProductPurchaseModel>>(
       future: dio.fetchAllProductPurchase(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
@@ -1176,7 +1176,7 @@ class _SalesReturnState extends State<SalesReturn> {
                             text = text.toLowerCase();
                             setState(() {
                               itemDisplay = items.where((item) {
-                                var itemName = item['itemname'].toLowerCase();
+                                var itemName = item.itemName.toLowerCase();
                                 return itemName.contains(text);
                               }).toList();
                             });
@@ -1187,7 +1187,7 @@ class _SalesReturnState extends State<SalesReturn> {
                         child: Card(
                           child: ListTile(
                             title: Text(
-                                'Name : ${itemDisplay[index - 1]['itemname']}'),
+                                'Name : ${itemDisplay[index - 1].itemName}'),
                           ),
                         ),
                         onTap: () {
@@ -2686,7 +2686,6 @@ class _SalesReturnState extends State<SalesReturn> {
 
   showMore(context) {
     var form = 'SALES RETURN';
-    "RECEIPT";
     var title = 'Sales Return';
     var size = "2";
     ConfirmAlertBox(
