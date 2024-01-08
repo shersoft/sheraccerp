@@ -1777,9 +1777,11 @@ class _PurchaseState extends State<Purchase> {
                   ),
                 ),
                 Visibility(
-                    visible: (isQuantityBasedSerialNo && productModel.serialNo),
+                    visible: editItem
+                        ? (isQuantityBasedSerialNo)
+                        : (isQuantityBasedSerialNo && productModel.serialNo),
                     child: ElevatedButton(
-                      child: const Text('Add SerialNo'),
+                      child: Text(editItem ? 'Edit SerialNo' : 'Add SerialNo'),
                       onPressed: () {
                         if (controllerQuantity.text.isNotEmpty) {
                           setState(() {
@@ -2501,13 +2503,17 @@ class _PurchaseState extends State<Purchase> {
     double billTotal = 0, billCash = 0;
     String narration = ' ';
 
-    api.fetchPurchaseInvoice(data['Id'], 'P_Find').then((value) {
+    api.fetchPurchaseInvoiceSp(data['Id'], 'P_Find').then((value) {
       if (value != null) {
         var information = value['Information'][0];
         var particulars = value['Particulars'];
-        // var serialNO = value['SerialNO'];
+        if (value['SerialNO'] != null) {
+          serialNoData = SerialNOModel.fromJsonList(value['SerialNO']);
+        }
         // var deliveryNoteDetails = value['DeliveryNote'];
-        otherAmountList = value['otherAmount'];
+        if (value['otherAmount'] != null) {
+          otherAmountList = value['otherAmount'];
+        }
 
         formattedDate = DateUtil.dateDMY(information['DDate']);
         invDate = DateUtil.dateDMY(information['InvDate']);
@@ -2722,6 +2728,12 @@ class _PurchaseState extends State<Purchase> {
   }
 
   serialNoWidget() {
+    int gId = 0;
+    if (editItem) {
+      gId = cartItem[position].id;
+    } else {
+      gId = cartItem.length + 1;
+    }
     return Container(
       padding: const EdgeInsets.all(5.0),
       child: Column(children: [
@@ -2734,7 +2746,7 @@ class _PurchaseState extends State<Purchase> {
             Expanded(
                 child: MaterialButton(
               onPressed: () {
-                int qtyTotal = int.parse(controllerQuantity.text);
+                int qtyTotal = int.parse(controllerQuantity.text.split('.')[0]);
 
                 if (qtyTotal == serialNoData.length) {
                   setState(() {
@@ -2762,7 +2774,8 @@ class _PurchaseState extends State<Purchase> {
             ),
             IconButton(
                 onPressed: () {
-                  int qtyTotal = int.parse(controllerQuantity.text);
+                  int qtyTotal =
+                      int.parse(controllerQuantity.text.split('.')[0]);
                   if (qtyTotal == serialNoData.length) {
                     showInSnackBar('qty already full');
                   } else {
@@ -2788,12 +2801,16 @@ class _PurchaseState extends State<Purchase> {
                         setState(() {
                           serialNoData.add(SerialNOModel(
                               entryNo: 0,
-                              gId: serialNoData.length + 1,
-                              itemName: productModel.slNo,
+                              gId: gId,
+                              itemName: editItem
+                                  ? cartItem[position].itemId
+                                  : productModel.slNo,
                               serialNo: newSerialNoController.text,
-                              slNo: 0,
+                              slNo: serialNoData.length + 1,
                               tType: 'P',
-                              uniqueCode: 0));
+                              uniqueCode: editItem
+                                  ? cartItem[position].uniqueCode
+                                  : 0));
                         });
                       } else {
                         showInSnackBar('already exists');

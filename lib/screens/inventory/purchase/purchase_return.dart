@@ -20,6 +20,8 @@ import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/popup_menu_action.dart';
 import 'package:sheraccerp/widget/progress_hud.dart';
 
+import '../../../models/sales_model.dart';
+
 class PurchaseReturn extends StatefulWidget {
   const PurchaseReturn({Key key}) : super(key: key);
 
@@ -54,6 +56,7 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
   List<dynamic> items = [];
   List<dynamic> ledgerDisplay = [];
   List<dynamic> _ledger = [];
+  List<SerialNOModel> serialNoData = [];
   bool enableMULTIUNIT = false,
       cessOnNetAmount = false,
       enableKeralaFloodCess = false,
@@ -212,7 +215,9 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                     final body = {
                       'information': inf,
                       'data': data,
-                      'particular': items
+                      'particular': items,
+                      'serialNoData': json
+                          .encode(SerialNOModel.encodedToJson(serialNoData)),
                     };
                     bool _state = await dio.addPurchase(body);
                     setState(() {
@@ -277,7 +282,9 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                     final body = {
                       'information': inf,
                       'data': data,
-                      'particular': items
+                      'particular': items,
+                      'serialNoData': json
+                          .encode(SerialNOModel.encodedToJson(serialNoData)),
                     };
                     bool _state = await dio.addPurchase(body);
                     setState(() {
@@ -1871,7 +1878,7 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
     double billTotal = 0, billCash = 0;
     String narration = ' ';
 
-    api.fetchPurchaseInvoice(data['Id'], 'Pr_Find').then((value) {
+    api.fetchPurchaseInvoiceSp(data['Id'], 'Pr_Find').then((value) {
       if (value != null) {
         var information = value['Information'][0];
         var particulars = value['Particulars'];

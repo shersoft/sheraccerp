@@ -420,10 +420,10 @@ class SerialNOModel {
     slNo = json['slno'];
     entryNo = json['EntryNo'];
     itemName = json['itemname'];
-    serialNo = json['SerialNo'];
+    serialNo = json['SerialNO'];
     gId = json['Gid'];
     tType = json['Type'];
-    uniqueCode = json['Type'];
+    uniqueCode = json['Uniquecode'];
   }
 
   factory SerialNOModel.fromMap(Map<String, dynamic> json) => SerialNOModel(

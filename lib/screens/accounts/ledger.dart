@@ -47,6 +47,7 @@ class _LedgerState extends State<Ledger> {
   DioService api = DioService();
   bool _isLoading = false,
       valueActive = true,
+      isUnderSelected = false,
       valueCostCenter = false,
       valueFranchisee = false,
       valueBillWise = false,
@@ -116,14 +117,23 @@ class _LedgerState extends State<Ledger> {
   Widget build(BuildContext context) {
     final routes =
         ModalRoute.of(context).settings.arguments as Map<String, String>;
-    if (routes != null) {
-      var parentName = routes['parent'] ?? '';
-      _dropDownValue = parentName.isNotEmpty
-          ? ledgerGroupList
-              .firstWhere((element) => element.name == parentName,
-                  orElse: () => LedgerModel(id: 0, name: ''))
-              .id
-          : _dropDownValue;
+    if (!isUnderSelected) {
+      if (routes != null) {
+        var parentName = routes['parent'] ?? '';
+        _dropDownValue = parentName.isNotEmpty
+            ? ledgerGroupList
+                .firstWhere((element) => element.name == parentName,
+                    orElse: () => LedgerModel(id: 0, name: ''))
+                .id
+            : _dropDownValue;
+      }
+      int groupId = 0;
+      groupId =
+          ComSettings.appSettings('int', 'key-dropdown-default-group-view', 0) -
+              1;
+      if (groupId > 1) {
+        _dropDownValue = groupId;
+      }
     }
     return Scaffold(
       key: _scaffoldKey,
@@ -532,6 +542,7 @@ class _LedgerState extends State<Ledger> {
                             }).toList(),
                             onChanged: (value) {
                               setState(() {
+                                isUnderSelected = true;
                                 _dropDownValue = int.parse(value);
                               });
                             },

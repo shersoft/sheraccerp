@@ -1757,7 +1757,7 @@ class _OpeningStockState extends State<OpeningStock> {
     double billTotal = 0, billCash = 0;
     String narration = ' ';
 
-    api.fetchPurchaseInvoice(data['Id'], 'OP_Find').then((value) {
+    api.fetchPurchaseInvoiceSp(data['Id'], 'OP_Find').then((value) {
       if (value != null) {
         var information = value['Information'][0];
         var particulars = value['Particulars'];

@@ -3554,6 +3554,7 @@ class _BtPrintState extends State<BtPrint> {
     var dataParticulars = bill['Particulars'];
     // var dataSerialNO = bill['SerialNO'];
     // var dataDeliveryNote = bill['DeliveryNote'];
+    var dataBankLedger = bill['bankLedger'];
     var otherAmount = bill['otherAmount'];
     var ledgerName = mainAccount
         .firstWhere(
@@ -4087,6 +4088,18 @@ class _BtPrintState extends State<BtPrint> {
             ]);
           }
         }
+        if (Settings.getValue<bool>('key-print-bank-details', false)) {
+          bytes += ticket.hr();
+          bytes += ticket.text('${dataBankLedger['name']}',
+              styles: const PosStyles(align: PosAlign.left));
+          bytes += ticket.text('ACC NO : ${dataBankLedger['account']}',
+              styles: const PosStyles(align: PosAlign.left));
+          bytes += ticket.text('IFSC CODE : ${dataBankLedger['ifsc']}',
+              styles: const PosStyles(align: PosAlign.left));
+          bytes += ticket.text('Branch : ${dataBankLedger['branch']}',
+              styles: const PosStyles(align: PosAlign.left));
+          bytes += ticket.hr();
+        }
 
         // ticket.feed(1);
         bytes += ticket.text('${bill['message']}',
@@ -4423,6 +4436,18 @@ class _BtPrintState extends State<BtPrint> {
                 width: 6,
                 styles: const PosStyles(align: PosAlign.center)),
           ]);
+        }
+        if (Settings.getValue<bool>('key-print-bank-details', false)) {
+          bytes += ticket.hr();
+          bytes += ticket.text('${dataBankLedger['name']}',
+              styles: const PosStyles(align: PosAlign.left));
+          bytes += ticket.text('ACC NO : ${dataBankLedger['account']}',
+              styles: const PosStyles(align: PosAlign.left));
+          bytes += ticket.text('IFSC CODE : ${dataBankLedger['ifsc']}',
+              styles: const PosStyles(align: PosAlign.left));
+          bytes += ticket.text('Branch : ${dataBankLedger['branch']}',
+              styles: const PosStyles(align: PosAlign.left));
+          bytes += ticket.hr();
         }
 
         // ticket.feed(1);

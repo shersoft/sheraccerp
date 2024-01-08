@@ -3977,7 +3977,69 @@ class DioService {
     return data;
   }
 
+  Future<dynamic> fetchPurchaseInvoiceSp(int id, String type) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    dynamic _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              '/purchaseSP/find/$dataBase',
+          queryParameters: {
+            'id': id,
+            'statement': type,
+            'fyId': currentFinancialYear.id
+          });
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+
+        _items = jsonResponse;
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
   Future<dynamic> fetchPurchaseInvoice(int id, String type) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    dynamic _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              '/purchaseFind/$dataBase',
+          queryParameters: {
+            'id': id,
+            'type': type,
+            'fyId': currentFinancialYear.id
+          });
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+
+        _items = jsonResponse;
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<dynamic> fetchPurchaseInvoiceOld(int id, String type) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
@@ -3991,7 +4053,7 @@ class DioService {
               '/purchase/find/$dataBase',
           queryParameters: {
             'id': id,
-            'statement': type,
+            'type': type,
             'fyId': currentFinancialYear.id
           });
       if (response.statusCode == 200) {

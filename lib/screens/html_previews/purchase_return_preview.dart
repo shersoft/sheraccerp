@@ -192,7 +192,9 @@ class _PurchaseReturnPreviewShowState extends State<PurchaseReturnPreviewShow> {
       }
     }
 
-    api.fetchPurchaseInvoice(dataDynamic[0]['EntryNo'], 'P_Find').then((value) {
+    api
+        .fetchPurchaseReturnInvoice(dataDynamic[0]['EntryNo'], '1')
+        .then((value) {
       if (value != null) {
         setState(() {
           data = value;

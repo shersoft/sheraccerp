@@ -340,6 +340,18 @@ class AppSettings extends StatelessWidget {
                     },
                   ),
                   SwitchSettingsTile(
+                    settingKey: 'key-print-bank-details',
+                    title: 'Enable Bank Details Printing',
+                    subtitle:
+                        'Bank Details Printing. Print bank details on invoice',
+                    enabledLabel: 'Enabled',
+                    disabledLabel: 'Disabled',
+                    // leading: Icon(Icons.receipt_long),
+                    onChange: (value) {
+                      debugPrint('key-print-bank-details: $value');
+                    },
+                  ),
+                  SwitchSettingsTile(
                     settingKey: 'key-customer-scan',
                     title: 'Show Customer Scanner',
                     subtitle: 'Show Customer QrCode Scanner',

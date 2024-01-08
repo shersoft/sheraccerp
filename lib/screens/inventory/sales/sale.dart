@@ -16,6 +16,7 @@ import 'package:sheraccerp/models/customer_model.dart';
 import 'package:sheraccerp/models/ledger_name_model.dart';
 import 'package:sheraccerp/models/option_rate_type.dart';
 import 'package:sheraccerp/models/order.dart';
+import 'package:sheraccerp/models/sales_model.dart';
 import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/models/stock_item.dart';
 import 'package:sheraccerp/models/stock_product.dart';
@@ -104,6 +105,7 @@ class _SaleState extends State<Sale> {
   List<dynamic> itemDisplay = [];
   List<dynamic> items = [];
   List<LedgerModel> cashBankACList = [];
+  List<SerialNOModel> serialNoData = [];
   int lId = 0, groupId = 0, areaId = 0, routeId = 0;
   var salesManId = 0;
   String labelSerialNo = 'SerialNo';
@@ -996,7 +998,12 @@ class _SaleState extends State<Sale> {
           }) +
           ']';
 
-      final body = {'information': ledger, 'data': data, 'particular': items};
+      final body = {
+        'information': ledger,
+        'data': data,
+        'particular': items,
+        'serialNoData': json.encode(SerialNOModel.encodedToJson(serialNoData)),
+      };
 
       api.addSale(body).then((result) {
         if (CommonService().isNumeric(result) && int.tryParse(result) > 0) {
@@ -1314,7 +1321,12 @@ class _SaleState extends State<Sale> {
           }) +
           ']';
 
-      final body = {'information': ledger, 'data': data, 'particular': items};
+      final body = {
+        'information': ledger,
+        'data': data,
+        'particular': items,
+        'serialNoData': json.encode(SerialNOModel.encodedToJson(serialNoData)),
+      };
       api.editSale(body).then((result) {
         if (CommonService().isNumeric(result) && int.tryParse(result) > 0) {
           final bodyJsonAmount = {
