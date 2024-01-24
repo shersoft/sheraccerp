@@ -753,6 +753,30 @@ class _SalesManHomeState extends State<SalesManHome> {
                           ),
                         ),
                         Visibility(
+                          visible: ComSettings.userControl('SALES REPORT'),
+                          child: Card(
+                            elevation: 2,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('Sales List',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      fontFamily: 'Poppins')),
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/SalesList',
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        Visibility(
                           visible: ComSettings.userControl('PAYMENT INVOICE'),
                           child: Card(
                             elevation: 2,

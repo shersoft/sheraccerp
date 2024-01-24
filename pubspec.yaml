@@ -83,6 +83,11 @@ dependencies:
   permission_handler: ^10.2.0
   firebase_core_platform_interface: 4.5.1
   image_picker:
+  # thermal_printer_plus:
+  #   git:
+  #     url: https://github.com/safvanp/thermal_printer_plus.git
+  ping_discover_network:
+  wifi:
 
 dev_dependencies:
   flutter_test:

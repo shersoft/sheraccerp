@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sheraccerp/download_app.dart';
 import 'package:sheraccerp/models/api_error.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/screens/dash_report/dashboard_screen.dart';
@@ -197,6 +198,21 @@ class _LoginFormState extends State<LoginForm> {
                           ),
                         ),
                       ),
+                    ),
+                  ),
+                ),
+                Visibility(
+                  visible: kIsWeb,
+                  child: Card(
+                    child: InkWell(
+                      child: const Text(
+                        'Download android apk',
+                      ),
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (BuildContext context) =>
+                                const DownloadApp()));
+                      },
                     ),
                   ),
                 ),

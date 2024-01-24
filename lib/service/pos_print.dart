@@ -1,272 +1,448 @@
 // @dart = 2.11
-import 'dart:typed_data';
-import 'package:blue_thermal_printer/blue_thermal_printer.dart';
-import 'package:esc_pos_utils_x/esc_pos_utils_x.dart';
-import 'package:flutter_bluetooth_basic/flutter_bluetooth_basic.dart' as pos;
-// import 'package:blue_print_pos/blue_print_pos.dart';
-// import 'package:blue_print_pos/models/blue_device.dart';
 import 'package:esc_pos_bluetooth/esc_pos_bluetooth.dart';
-
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/material.dart';
-
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
-import 'package:image/image.dart' as img;
+import 'package:intl/intl.dart';
+import 'package:sheraccerp/util/dateUtil.dart';
+// import 'package:qr_flutter/qr_flutter.dart';
+import 'package:flutter/material.dart' hide Image;
+// import 'package:esc_pos_printer/esc_pos_printer.dart';
+import 'package:flutter/services.dart';
+import 'package:ping_discover_network/ping_discover_network.dart';
+import 'package:esc_pos_utils/esc_pos_utils.dart';
+import 'package:image/image.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/sales_type.dart';
+import 'package:sheraccerp/service/network_printer.dart';
 import 'package:sheraccerp/shared/constants.dart';
-import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/util/number_to_word.dart';
+import 'package:wifi/wifi.dart';
 
-class BtPrint extends StatefulWidget {
+class TCPPrinter extends StatefulWidget {
   final data;
   final Uint8List byteImage;
 
-  const BtPrint(this.data, this.byteImage, {Key key}) : super(key: key);
+  const TCPPrinter(this.data, this.byteImage, {Key key}) : super(key: key);
 
   @override
-  _BtPrintState createState() => _BtPrintState();
+  State<TCPPrinter> createState() => _TCPPrinterState();
 }
 
-class _BtPrintState extends State<BtPrint> {
-  PrinterBluetoothManager printerManager = PrinterBluetoothManager();
-  List<PrinterBluetooth> _devices = [];
-  bool _connected = false;
-  bool _isLoading = false;
-  BluetoothDevice _device;
-  String tips = 'no device connect';
-  List<BluetoothDevice> _blueDevices = [];
+class _TCPPrinterState extends State<TCPPrinter> {
+  String localIp = '';
+  List<String> devices = [];
+  bool isDiscovering = false;
+  int found = -1;
+  TextEditingController portController = TextEditingController(text: '9100');
   var companyTaxMode = '';
   int printModel = 2;
 
-  // BluetoothManager bluetoothManager = BluetoothManager.instance;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _onScanPressed());
-  }
-
-  final BlueThermalPrinter _bluePrintPos = BlueThermalPrinter.instance;
-
-  Future<void> _onScanPressed() async {
-    setState(() => _isLoading = true);
-    _bluePrintPos.getBondedDevices().then((List<BluetoothDevice> devices) {
-      debugPrint(devices.toString());
-      if (devices.isNotEmpty) {
-        var map = devices.map((e) {
-          var _dat = pos.BluetoothDevice()
-            ..name = e.name
-            ..address = e.address
-            ..connected = e.connected
-            ..type = e.type;
-
-          return PrinterBluetooth(_dat);
-        }).toList();
-        setState(() {
-          _devices = map;
-          _blueDevices = devices;
-          _isLoading = false;
-        });
-      } else {
-        setState(() => _isLoading = false);
-      }
-    });
-  }
-
-  void _onConnect() async {
-    if (_device != null && _device.address != null) {
-      var _dat = pos.BluetoothDevice()
-        ..name = _device.name
-        ..connected = _device.connected
-        ..type = _device.type;
-
-      PrinterBluetooth(_dat);
-      await _bluePrintPos.connect(_device);
-    } else {
-      setState(() {
-        tips = 'please select device';
-      });
-      debugPrint('please select device');
-    }
-  }
-
-  // @override
-  // void initState() {
-  //   super.initState();
-  //
-  //   printerManager.scanResults.listen((devices) async {
-  //     // debugPrint('UI: Devices found ${devices.length}');
-  //     setState(() {
-  //       _devices = devices;
-  //     });
-  //   });
-  //   if (_devices.isEmpty) {
-  //     _startScanDevices();
-  //   }
-  // }
-
-  void _startScanDevices() {
+  void discover(BuildContext ctx) async {
     setState(() {
-      _devices = [];
+      isDiscovering = true;
+      devices.clear();
+      found = -1;
     });
-    printerManager.startScan(const Duration(seconds: 2));
-  }
 
-  void _stopScanDevices() {
-    printerManager.stopScan();
+    String ip;
+    try {
+      ip = await Wifi.ip;
+      debugPrint('local ip:\t$ip');
+    } catch (e) {
+      final snackBar = const SnackBar(
+          content: Text('WiFi is not connected', textAlign: TextAlign.center));
+      ScaffoldMessenger.of(ctx).showSnackBar(snackBar);
+      return;
+    }
+    setState(() {
+      localIp = ip;
+    });
+
+    final String subnet = ip.substring(0, ip.lastIndexOf('.'));
+    int port = 9100;
+    try {
+      port = int.parse(portController.text);
+    } catch (e) {
+      portController.text = port.toString();
+    }
+    debugPrint('subnet:\t$subnet, port:\t$port');
+
+    final stream = NetworkAnalyzer.discover2(subnet, port);
+
+    stream.listen((NetworkAddress addr) {
+      if (addr.exists) {
+        debugPrint('Found device: ${addr.ip}');
+        setState(() {
+          devices.add(addr.ip);
+          found = devices.length;
+        });
+      }
+    })
+      ..onDone(() {
+        setState(() {
+          isDiscovering = false;
+          found = devices.length;
+        });
+      })
+      ..onError((dynamic e) {
+        final snackBar = const SnackBar(
+            content: Text('Unexpected exception', textAlign: TextAlign.center));
+        ScaffoldMessenger.of(ctx).showSnackBar(snackBar);
+      });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Print'),
+        title: const Text('Discover Printers'),
       ),
-      body: ListView.builder(
-          itemCount: _devices.length,
-          itemBuilder: (BuildContext context, int index) {
-            return InkWell(
-              onTap: () => _setPrinter(_devices[index]),
-              child: Column(
-                children: <Widget>[
-                  Container(
-                    height: 60,
-                    padding: const EdgeInsets.only(left: 10),
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      children: <Widget>[
-                        const Icon(Icons.print),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Text(_devices[index].name ?? ''),
-                              Text(_devices[index].address ?? ''),
-                              Text(
-                                'Click to print receipt',
-                                style: TextStyle(color: Colors.grey[700]),
-                              ),
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
+      body: Builder(
+        builder: (BuildContext context) {
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                TextField(
+                  controller: portController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Port',
+                    hintText: 'Port',
                   ),
-                  const Divider(),
-                ],
-              ),
-            );
-          }),
-      floatingActionButton: FutureBuilder(
-        future: getResult(),
-        initialData: const [],
-        builder: (c, snapshot) {
-          if (snapshot.hasData) {
-            return FloatingActionButton(
-              child: const Icon(Icons.stop),
-              onPressed: _stopScanDevices,
-              backgroundColor: Colors.red,
-            );
-          } else {
-            return FloatingActionButton(
-              child: const Icon(Icons.search),
-              onPressed: _onScanPressed,
-            );
-          }
+                ),
+                const SizedBox(height: 10),
+                Text('Local ip: $localIp',
+                    style: const TextStyle(fontSize: 16)),
+                const SizedBox(height: 15),
+                ElevatedButton(
+                    child: Text(isDiscovering ? 'Discovering...' : 'Discover'),
+                    onPressed: isDiscovering ? null : () => discover(context)),
+                const SizedBox(height: 15),
+                found >= 0
+                    ? Text('Found: $found device(s)',
+                        style: const TextStyle(fontSize: 16))
+                    : Container(),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: devices.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return InkWell(
+                        onTap: () => setPrint(devices[index], context),
+                        child: Column(
+                          children: <Widget>[
+                            Container(
+                              height: 60,
+                              padding: const EdgeInsets.only(left: 10),
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                children: <Widget>[
+                                  const Icon(Icons.print),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: <Widget>[
+                                        Text(
+                                          '${devices[index]}:${portController.text}',
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                        Text(
+                                          'Click to print a test receipt',
+                                          style: TextStyle(
+                                              color: Colors.grey[700]),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.chevron_right),
+                                ],
+                              ),
+                            ),
+                            const Divider(),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                )
+              ],
+            ),
+          );
         },
       ),
     );
   }
 
-  getResult() {
-    setState(() {
-      _blueDevices;
-    });
-    return Future.value(_blueDevices);
+  Future<void> printDemoReceipt(NetworkPrinter printer) async {
+    // Print image
+    final ByteData data = await rootBundle.load('assets/logo1.png');
+    final Uint8List bytes = data.buffer.asUint8List();
+    final Image image = decodeImage(bytes);
+    printer.image(image);
+
+    printer.text('GROCERYLY',
+        styles: const PosStyles(
+          align: PosAlign.center,
+          height: PosTextSize.size2,
+          width: PosTextSize.size2,
+        ),
+        linesAfter: 1);
+
+    printer.text('889  Watson Lane',
+        styles: const PosStyles(align: PosAlign.center));
+    printer.text('New Braunfels, TX',
+        styles: const PosStyles(align: PosAlign.center));
+    printer.text('Tel: 830-221-1234',
+        styles: const PosStyles(align: PosAlign.center));
+    printer.text('Web: www.example.com',
+        styles: const PosStyles(align: PosAlign.center), linesAfter: 1);
+
+    printer.hr();
+    printer.row([
+      PosColumn(text: 'Qty', width: 1),
+      PosColumn(text: 'Item', width: 7),
+      PosColumn(
+          text: 'Price',
+          width: 2,
+          styles: const PosStyles(align: PosAlign.right)),
+      PosColumn(
+          text: 'Total',
+          width: 2,
+          styles: const PosStyles(align: PosAlign.right)),
+    ]);
+
+    printer.row([
+      PosColumn(text: '2', width: 1),
+      PosColumn(text: 'ONION RINGS', width: 7),
+      PosColumn(
+          text: '0.99',
+          width: 2,
+          styles: const PosStyles(align: PosAlign.right)),
+      PosColumn(
+          text: '1.98',
+          width: 2,
+          styles: const PosStyles(align: PosAlign.right)),
+    ]);
+    printer.row([
+      PosColumn(text: '1', width: 1),
+      PosColumn(text: 'PIZZA', width: 7),
+      PosColumn(
+          text: '3.45',
+          width: 2,
+          styles: const PosStyles(align: PosAlign.right)),
+      PosColumn(
+          text: '3.45',
+          width: 2,
+          styles: const PosStyles(align: PosAlign.right)),
+    ]);
+    printer.row([
+      PosColumn(text: '1', width: 1),
+      PosColumn(text: 'SPRING ROLLS', width: 7),
+      PosColumn(
+          text: '2.99',
+          width: 2,
+          styles: const PosStyles(align: PosAlign.right)),
+      PosColumn(
+          text: '2.99',
+          width: 2,
+          styles: const PosStyles(align: PosAlign.right)),
+    ]);
+    printer.row([
+      PosColumn(text: '3', width: 1),
+      PosColumn(text: 'CRUNCHY STICKS', width: 7),
+      PosColumn(
+          text: '0.85',
+          width: 2,
+          styles: const PosStyles(align: PosAlign.right)),
+      PosColumn(
+          text: '2.55',
+          width: 2,
+          styles: const PosStyles(align: PosAlign.right)),
+    ]);
+    printer.hr();
+
+    printer.row([
+      PosColumn(
+          text: 'TOTAL',
+          width: 6,
+          styles: const PosStyles(
+            height: PosTextSize.size2,
+            width: PosTextSize.size2,
+          )),
+      PosColumn(
+          text: '\$10.97',
+          width: 6,
+          styles: const PosStyles(
+            align: PosAlign.right,
+            height: PosTextSize.size2,
+            width: PosTextSize.size2,
+          )),
+    ]);
+
+    printer.hr(ch: '=', linesAfter: 1);
+
+    printer.row([
+      PosColumn(
+          text: 'Cash',
+          width: 8,
+          styles:
+              const PosStyles(align: PosAlign.right, width: PosTextSize.size2)),
+      PosColumn(
+          text: '\$15.00',
+          width: 4,
+          styles:
+              const PosStyles(align: PosAlign.right, width: PosTextSize.size2)),
+    ]);
+    printer.row([
+      PosColumn(
+          text: 'Change',
+          width: 8,
+          styles:
+              const PosStyles(align: PosAlign.right, width: PosTextSize.size2)),
+      PosColumn(
+          text: '\$4.03',
+          width: 4,
+          styles:
+              const PosStyles(align: PosAlign.right, width: PosTextSize.size2)),
+    ]);
+
+    printer.feed(2);
+    printer.text('Thank you!',
+        styles: const PosStyles(align: PosAlign.center, bold: true));
+
+    final now = DateTime.now();
+    final formatter = DateFormat('MM/dd/yyyy H:m');
+    final String timestamp = formatter.format(now);
+    printer.text(timestamp,
+        styles: const PosStyles(align: PosAlign.center), linesAfter: 2);
+
+    // Print QR Code from image
+    // try {
+    //   const String qrData = 'example.com';
+    //   const double qrSize = 200;
+    //   final uiImg = await QrPainter(
+    //     data: qrData,
+    //     version: QrVersions.auto,
+    //     gapless: false,
+    //   ).toImageData(qrSize);
+    //   final dir = await getTemporaryDirectory();
+    //   final pathName = '${dir.path}/qr_tmp.png';
+    //   final qrFile = File(pathName);
+    //   final imgFile = await qrFile.writeAsBytes(uiImg.buffer.asUint8List());
+    //   final img = decodeImage(imgFile.readAsBytesSync());
+
+    //   printer.image(img);
+    // } catch (e) {
+    //   debugPrint(e);
+    // }
+
+    // Print QR Code using native function
+    // printer.qrcode('example.com');
+
+    printer.feed(1);
+    printer.cut();
   }
 
-  void _setPrinter(PrinterBluetooth printer) async {
-    debugPrint(printer.name);
-    printerManager.selectPrinter(printer);
+  void testPrint(String printerIp, BuildContext ctx) async {
+    // TODO Don't forget to choose printer's paper size
+    const PaperSize paper = PaperSize.mm80;
+    final profile = await CapabilityProfile.load();
+    final printer = NetworkPrinter(paper, profile);
+
+    final PosPrintResult res = await printer.connect(printerIp, port: 9100);
+
+    if (res == PosPrintResult.success) {
+      // DEMO RECEIPT
+      await printDemoReceipt(printer);
+      // TEST PRINT
+      // await testReceipt(printer);
+      printer.disconnect();
+    }
+
+    final snackBar =
+        SnackBar(content: Text(res.msg, textAlign: TextAlign.center));
+    ScaffoldMessenger.of(ctx).showSnackBar(snackBar);
+  }
+
+  void setPrint(String printerIp, BuildContext context) async {
+    debugPrint(printerIp);
 
     var printerSize = widget.data[3];
     PaperSize paper = PaperSize.mm80;
-    if (printerSize == "2") {
-      paper = PaperSize.mm58;
-    } else if (printerSize == "3") {
-      paper = PaperSize.mm80;
-    } else if (printerSize == "4") {
-      paper = PaperSize.mm112;
-    } else if (printerSize == "5") {
-      paper = PaperSize.mm58;
-    }
+    // if (printerSize == "3") {
+    //   paper = PaperSize.mm58;
+    // } else if (printerSize == "4") {
+    //   paper = PaperSize.mm80;
+    // } else {
+    //   paper = PaperSize.mm58;
+    // }
 
-    if (widget.data.isNotEmpty) {
-      printModel =
-          ComSettings.appSettings('int', "key-dropdown-printer-model-view", 2);
-      if (widget.data[4] == 'SALE') {
-        final PosPrintResult res =
-            await printerManager.printTicket(await (printModel == 3
-                ? salesVatData(paper)
-                : printModel == 4
-                    ? salesGSTData(paper)
-                    : printModel == 5
-                        ? salesVat1Data(paper)
-                        : salesDefaultData(paper)));
-        showDialog(
-            context: context,
-            builder: (context) => AlertDialog(content: Text(res.msg)));
-      } else if (widget.data[4] == 'SALES RETURN') {
-        final PosPrintResult res =
-            await printerManager.printTicket(await salesReturnData(paper));
-        showDialog(
-            context: context,
-            builder: (context) => AlertDialog(content: Text(res.msg)));
-      } else if (widget.data[4] == 'RECEIPT') {
-        final PosPrintResult res =
-            await printerManager.printTicket(await receiptData(paper));
-        showDialog(
-            context: context,
-            builder: (context) => AlertDialog(content: Text(res.msg)));
-      } else if (widget.data[4] == 'PAYMENT') {
-        final PosPrintResult res =
-            await printerManager.printTicket(await paymentData(paper));
+    final profile = await CapabilityProfile.load();
+    final printer = NetworkPrinter(paper, profile);
+
+    final PosPrintResult res = await printer.connect(printerIp, port: 9100);
+
+    if (res == PosPrintResult.success) {
+      if (widget.data.isNotEmpty) {
+        printModel = ComSettings.appSettings(
+            'int', "key-dropdown-printer-model-view", 2);
+        if (widget.data[4] == 'SALE') {
+          await (printModel == 3
+              ? salesVatData(printer, paper)
+              : printModel == 4
+                  ? salesGSTData(printer, paper)
+                  : printModel == 5
+                      ? salesVat1Data(printer, paper)
+                      : salesDefaultData(printer, paper));
+          showDialog(
+              context: context,
+              builder: (context) => AlertDialog(content: Text(res.msg)));
+        } else if (widget.data[4] == 'SALES RETURN') {
+          await salesReturnData(printer, paper);
+          showDialog(
+              context: context,
+              builder: (context) => AlertDialog(content: Text(res.msg)));
+        } else if (widget.data[4] == 'RECEIPT') {
+          await receiptData(printer, paper);
+          showDialog(
+              context: context,
+              builder: (context) => AlertDialog(content: Text(res.msg)));
+        } else if (widget.data[4] == 'PAYMENT') {
+          showDialog(
+              context: context,
+              builder: (context) => AlertDialog(content: Text(res.msg)));
+        }
+      } else {
+        await testData(printer, paper);
         showDialog(
             context: context,
             builder: (context) => AlertDialog(content: Text(res.msg)));
       }
-    } else {
-      final PosPrintResult res =
-          await printerManager.printTicket(await testData(paper));
-      showDialog(
-          context: context,
-          builder: (context) => AlertDialog(content: Text(res.msg)));
+
+      printer.disconnect();
     }
+
+    final snackBar =
+        SnackBar(content: Text(res.msg, textAlign: TextAlign.center));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-  Future<List<int>> printImage(PaperSize paper) async {
-    var profile = await CapabilityProfile.load();
-    final Generator ticket = Generator(paper, profile);
-    List<int> bytes = [];
+  Future<void> printImage(NetworkPrinter printer) async {
     // Print image
     final Uint8List bytess = widget.byteImage;
-    final img.Image image = img.decodeImage(bytess);
-    bytes += ticket.image(image);
-    bytes += ticket.feed(2);
-    bytes += ticket.cut();
-    return bytes;
+    final Image image = decodeImage(bytess);
+    printer.image(image);
   }
 
   var taxPercentages = '';
   List<dynamic> taxableData = [];
 
-  Future<List<int>> salesVatData(PaperSize paper) async {
-    var profile = await CapabilityProfile.load();
-    final Generator ticket = Generator(paper, profile);
-    List<int> bytes = [];
+  Future<void> salesVatData(NetworkPrinter printer, PaperSize paper) async {
     var bill = widget.data[2];
     var printerSize = widget.data[3];
     CompanyInformation companySettings = widget.data[0];
@@ -310,7 +486,7 @@ class _BtPrintState extends State<BtPrint> {
     if (printerSize == "2") {
       try {
         if (taxSale) {
-          bytes += ticket.text(
+          printer.text(
             companySettings.name,
             styles: const PosStyles(
               align: PosAlign.center,
@@ -319,25 +495,23 @@ class _BtPrintState extends State<BtPrint> {
               // width: PosTextSize.size2,
             ),
           );
-          var text2 = ticket.text(companySettings.add1,
-              styles: const PosStyles(align: PosAlign.center, bold: true));
-          companySettings.add1.toString().trim().isNotEmpty ?? (bytes += text2);
-          var text3 = ticket.text(companySettings.add2,
-              styles: const PosStyles(align: PosAlign.center, bold: true));
-          companySettings.add2.toString().trim().isNotEmpty ?? (bytes += text3);
-          bytes += ticket.text(
+          companySettings.add1.toString().trim().isNotEmpty ??
+              (printer.text(companySettings.add1,
+                  styles: const PosStyles(align: PosAlign.center, bold: true)));
+          companySettings.add2.toString().trim().isNotEmpty ??
+              (printer.text(companySettings.add2,
+                  styles: const PosStyles(align: PosAlign.center, bold: true)));
+          printer.text(
               'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
               styles: const PosStyles(align: PosAlign.center, bold: true));
-          bytes += ticket.text(
+          printer.text(
               companyTaxMode == 'INDIA'
                   ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                   : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
               styles: const PosStyles(align: PosAlign.center, bold: true));
-          bytes += ticket.text(invoiceHead,
+          printer.text(invoiceHead,
               styles: const PosStyles(align: PosAlign.center, bold: true));
-          // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
-          //     styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                 width: 6,
@@ -348,23 +522,23 @@ class _BtPrintState extends State<BtPrint> {
                 width: 6,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.text('Bill To : ',
+          printer.text('Bill To : ',
               styles: const PosStyles(align: PosAlign.left, bold: true));
-          bytes += ticket.text('${dataInformation['ToName']}',
+          printer.text('${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left, bold: true));
           if (isEsQrCodeKSA) {
             if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-              bytes += ticket.text(
+              printer.text(
                   companyTaxMode == 'INDIA'
                       ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
                       : 'TRN : ${dataInformation['gstno'].toString().trim()}',
                   styles: const PosStyles(align: PosAlign.left, bold: true));
             }
           }
-          bytes += ticket.hr();
-          bytes += ticket.text('Description',
+          printer.hr();
+          printer.text('Description',
               styles: const PosStyles(align: PosAlign.left, bold: true));
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: '   ',
                 width: 2,
@@ -393,10 +567,10 @@ class _BtPrintState extends State<BtPrint> {
               }
             }
             var itemName = dataParticulars[i]['itemname'].toString();
-            bytes += ticket.text(itemName,
+            printer.text(itemName,
                 styles: const PosStyles(align: PosAlign.left, bold: true));
 
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: '', width: 2),
               PosColumn(
                   text:
@@ -414,12 +588,16 @@ class _BtPrintState extends State<BtPrint> {
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
-                text: 'Total : ', width: 5, styles: PosStyles(bold: true)),
+                text: 'Total : ',
+                width: 5,
+                styles: const PosStyles(bold: true)),
             PosColumn(
-                text: '$totalQty', width: 2, styles: PosStyles(bold: true)),
+                text: '$totalQty',
+                width: 2,
+                styles: const PosStyles(bold: true)),
             PosColumn(
                 text: totalRate.toStringAsFixed(2),
                 width: 2,
@@ -429,8 +607,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 3,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -447,8 +625,8 @@ class _BtPrintState extends State<BtPrint> {
                     // width: PosTextSize.size2,
                     )),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Tax : ' + taxPercentages,
                 width: 6,
@@ -470,7 +648,7 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         } else {
           if (ComSettings.appSettings('bool', 'key-print-header-es', false)) {
-            bytes += ticket.text(
+            printer.text(
               companySettings.name,
               styles: const PosStyles(
                 align: PosAlign.center,
@@ -479,7 +657,7 @@ class _BtPrintState extends State<BtPrint> {
                 // width: PosTextSize.size2,
               ),
             );
-            bytes += ticket.text(
+            printer.text(
               '',
               styles: const PosStyles(
                 align: PosAlign.center,
@@ -499,33 +677,33 @@ class _BtPrintState extends State<BtPrint> {
             // linesAfter: 1);
             // header1
             companySettings.add1.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add1,
+                (printer.text(companySettings.add1,
                     styles:
                         const PosStyles(align: PosAlign.center, bold: true)));
             companySettings.add2.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add2,
+                (printer.text(companySettings.add2,
                     styles:
                         const PosStyles(align: PosAlign.center, bold: true)));
-            bytes += ticket.text(
+            printer.text(
                 'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
                 styles: const PosStyles(align: PosAlign.center, bold: true));
-            bytes += ticket.text(
+            printer.text(
                 companyTaxMode == 'INDIA'
                     ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                     : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
                 styles: const PosStyles(align: PosAlign.center, bold: true));
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
             // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
             //     styles: const PosStyles(align: PosAlign.left));
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                   width: 12,
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text:
                       'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
@@ -533,17 +711,17 @@ class _BtPrintState extends State<BtPrint> {
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
           } else {
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
             // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
             //     styles: const PosStyles(align: PosAlign.left));DateUtil.dateDMY
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                   width: 12,
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text:
                       'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
@@ -551,30 +729,31 @@ class _BtPrintState extends State<BtPrint> {
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
           }
-          bytes += ticket.hr();
+          printer.hr();
 
-          bytes += ticket.text('Bill To :',
+          printer.text('Bill To :',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
-          bytes += ticket.text('${dataInformation['ToName']}',
+          printer.text('${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
           if (isEsQrCodeKSA) {
             if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-              bytes += ticket.text(
+              printer.text(
                   companyTaxMode == 'INDIA'
                       ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
                       : 'TRN : ${dataInformation['gstno'].toString().trim()}',
                   styles: const PosStyles(align: PosAlign.left, bold: true));
             }
           }
-          bytes += ticket.hr();
-          bytes += ticket.text('Description',
+          printer.hr();
+          printer.text('Description',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
-          bytes += ticket.row([
+          printer.row([
             PosColumn(text: ' ', width: 1),
-            PosColumn(text: 'Qty', width: 3, styles: PosStyles(bold: true)),
+            PosColumn(
+                text: 'Qty', width: 3, styles: const PosStyles(bold: true)),
             PosColumn(
                 text: 'Price',
                 width: 4,
@@ -584,14 +763,14 @@ class _BtPrintState extends State<BtPrint> {
                 width: 4,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.hr();
+          printer.hr();
           double totalQty = 0, totalRate = 0;
           for (var i = 0; i < dataParticulars.length; i++) {
             var itemName = dataParticulars[i]['itemname'].toString();
-            bytes += ticket.text(itemName,
+            printer.text(itemName,
                 styles: const PosStyles(align: PosAlign.left, bold: true));
 
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: '', width: 1),
               PosColumn(
                   text:
@@ -612,8 +791,8 @@ class _BtPrintState extends State<BtPrint> {
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Sub =',
                 width: 3,
@@ -632,8 +811,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 4,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -654,8 +833,8 @@ class _BtPrintState extends State<BtPrint> {
         }
         for (var i = 0; i < otherAmount.length; i++) {
           if (otherAmount[i]['Amount'].toDouble() > 0) {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: '${otherAmount[i]['LedName']} :',
                   width: 6,
@@ -675,13 +854,13 @@ class _BtPrintState extends State<BtPrint> {
             ]);
           }
         }
-        // bytes += ticket.hr();
-        // bytes += ticket.text(
+        // printer.hr();
+        // printer.text(
         //     'Amount in Words: ${NumberToWord().convertToDouble('en', double.tryParse(dataInformation['GrandTotal'].toString()))}',
         //     linesAfter: 1);
         if (Settings.getValue<bool>('key-print-balance', false)) {
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Net Amount :',
                 width: 6,
@@ -701,8 +880,8 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         } else {
           if (ledgerName != 'CASH') {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Old Balance :',
                   width: 6,
@@ -719,8 +898,8 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Net Amount :',
                   width: 6,
@@ -739,8 +918,8 @@ class _BtPrintState extends State<BtPrint> {
                       // width: PosTextSize.size2,
                       bold: true)),
             ]);
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Cash Received :',
                   width: 6,
@@ -758,8 +937,8 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Balance :',
                   width: 6,
@@ -783,8 +962,8 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true)),
             ]);
           } else {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Net Amount :',
                   width: 6,
@@ -807,14 +986,14 @@ class _BtPrintState extends State<BtPrint> {
         }
 
         // ticket.feed(1);
-        bytes += ticket.text('${bill['message']}',
+        printer.text('${bill['message']}',
             styles: const PosStyles(align: PosAlign.center));
 
         if (isQrCodeKSA) {
           // Print QR Code using native function
-          // bytes += ticket.qrcode('example.com');
+          // printer.qrcode('example.com');
           if (taxSale) {
-            bytes += ticket.qrcode(SaudiConversion.getBase64(
+            printer.qrcode(SaudiConversion.getBase64(
                 companySettings.name,
                 ComSettings.getValue('GST-NO', settings),
                 DateUtil.dateTimeQrDMY(
@@ -827,10 +1006,10 @@ class _BtPrintState extends State<BtPrint> {
                         double.tryParse(dataInformation['SGST'].toString()) +
                         double.tryParse(dataInformation['IGST'].toString()))
                     .toStringAsFixed(2)));
-            bytes += ticket.feed(
+            printer.feed(
                 ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
           } else if (isEsQrCodeKSA) {
-            bytes += ticket.qrcode(SaudiConversion.getBase64(
+            printer.qrcode(SaudiConversion.getBase64(
                 companySettings.name,
                 ComSettings.getValue('GST-NO', settings),
                 DateUtil.dateTimeQrDMY(
@@ -843,37 +1022,34 @@ class _BtPrintState extends State<BtPrint> {
                         double.tryParse(dataInformation['SGST'].toString()) +
                         double.tryParse(dataInformation['IGST'].toString()))
                     .toStringAsFixed(2)));
-            bytes += ticket.feed(
+            printer.feed(
                 ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
           }
         } else {
-          bytes += ticket.feed(
+          printer.feed(
               ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
         }
         // ticket.cut();
         // FirebaseCrashlytics.instance
         //     .setCustomKey('str_key', 'bt print complited');
-        bytes += ticket.feed(2);
-        return bytes;
+        printer.feed(2);
+        printer.cut();
       } catch (e, s) {
-        FirebaseCrashlytics.instance
-            .recordError(e, s, reason: 'bt print:' + ticket.toString());
-        bytes += ticket.feed(2);
-        return bytes;
+        FirebaseCrashlytics.instance.recordError(e, s, reason: 'tcp print:');
+        printer.feed(2);
+        printer.cut();
       }
     } else {
       try {
         if (taxSale) {
-          bytes += ticket.text(
-            companySettings.name,
-            styles: const PosStyles(
-              align: PosAlign.center,
-              bold: true,
-              // height: PosTextSize.size2,
-              // width: PosTextSize.size2,
-            ),
-          );
-          bytes += ticket.text('');
+          printer.text(companySettings.name,
+              styles: const PosStyles(
+                align: PosAlign.center,
+                bold: true,
+                height: PosTextSize.size2,
+                width: PosTextSize.size2,
+              ),
+              linesAfter: 1);
 
           // if(printCopy==2){
           //   Uint8List encArabic = await CharsetConverter.encode("windows-1256", "اهلا");charset.178
@@ -885,52 +1061,52 @@ class _BtPrintState extends State<BtPrint> {
           // }
           // linesAfter: 1);
           // header1
-          var text2 = ticket.text(companySettings.add1,
-              styles: const PosStyles(align: PosAlign.center));
-          companySettings.add1.toString().trim().isNotEmpty ?? (bytes += text2);
-          var text3 = ticket.text(companySettings.add2,
-              styles: const PosStyles(align: PosAlign.center));
-          companySettings.add2.toString().trim().isNotEmpty ?? (bytes += text3);
-          bytes += ticket.text(
+          companySettings.add1.toString().trim().isNotEmpty ??
+              (printer.text(companySettings.add1,
+                  styles: const PosStyles(align: PosAlign.center)));
+          companySettings.add2.toString().trim().isNotEmpty ??
+              (printer.text(companySettings.add2,
+                  styles: const PosStyles(align: PosAlign.center)));
+          printer.text(
               'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
               styles: const PosStyles(align: PosAlign.center));
-          bytes += ticket.text(
+          printer.text(
               companyTaxMode == 'INDIA'
                   ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                   : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
               styles: const PosStyles(align: PosAlign.center));
-          bytes += ticket.text(invoiceHead,
+          printer.text(invoiceHead,
               styles: const PosStyles(align: PosAlign.center, bold: true));
           // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
           //     styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                 width: 12,
                 styles: const PosStyles(align: PosAlign.left)),
           ]);
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text:
                     'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
                 width: 12,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.text('Bill To : ${dataInformation['ToName']}',
+          printer.hr();
+          printer.text('Bill To : ${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left));
           if (isEsQrCodeKSA) {
             if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-              bytes += ticket.text(
+              printer.text(
                   companyTaxMode == 'INDIA'
                       ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
                       : 'TRN : ${dataInformation['gstno'].toString().trim()}',
                   styles: const PosStyles(align: PosAlign.left));
             }
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(text: 'Description', width: 7),
             PosColumn(text: 'Qty', width: 1),
             PosColumn(
@@ -969,7 +1145,7 @@ class _BtPrintState extends State<BtPrint> {
                         .take(12)
                         .toString()
                     : dataParticulars[i]['itemname'].toString();
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: itemName, width: 7),
               PosColumn(
                   text:
@@ -987,8 +1163,8 @@ class _BtPrintState extends State<BtPrint> {
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(text: 'Total : ', width: 7),
             PosColumn(text: '$totalQty', width: 1),
             PosColumn(
@@ -1000,8 +1176,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 2,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -1019,8 +1195,8 @@ class _BtPrintState extends State<BtPrint> {
                   // width: PosTextSize.size2,
                 )),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Tax : ' + taxPercentages,
                 width: 6,
@@ -1043,15 +1219,14 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         } else {
           if (ComSettings.appSettings('bool', 'key-print-header-es', false)) {
-            bytes += ticket.text(
-              companySettings.name,
-              styles: const PosStyles(
-                align: PosAlign.center,
-                bold: true,
-                // height: PosTextSize.size2,
-                // width: PosTextSize.size2,
-              ),
-            );
+            printer.text(companySettings.name,
+                styles: const PosStyles(
+                  align: PosAlign.center,
+                  bold: true,
+                  height: PosTextSize.size2,
+                  width: PosTextSize.size2,
+                ),
+                linesAfter: 1);
             // if (printCopy == 2) {
             //   //   Uint8List encArabic = await CharsetConverter.encode("windows-1256", "اهلا");charset.178
             //   //   ticket.textEncoded(encArabic, styles: PosStyles(codeTable: PosCodeTable.arabic));
@@ -1063,24 +1238,24 @@ class _BtPrintState extends State<BtPrint> {
             // linesAfter: 1);
             // header1
             companySettings.add1.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add1,
+                (printer.text(companySettings.add1,
                     styles: const PosStyles(align: PosAlign.center)));
             companySettings.add2.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add2,
+                (printer.text(companySettings.add2,
                     styles: const PosStyles(align: PosAlign.center)));
-            bytes += ticket.text(
+            printer.text(
                 'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
                 styles: const PosStyles(align: PosAlign.center));
-            bytes += ticket.text(
+            printer.text(
                 companyTaxMode == 'INDIA'
                     ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                     : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
                 styles: const PosStyles(align: PosAlign.center));
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
             // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
             //     styles: const PosStyles(align: PosAlign.left));
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                   width: 6,
@@ -1092,11 +1267,11 @@ class _BtPrintState extends State<BtPrint> {
                   styles: const PosStyles(align: PosAlign.right)),
             ]);
           } else {
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
             // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
             //     styles: const PosStyles(align: PosAlign.left));DateUtil.dateDMY
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                   width: 6,
@@ -1108,20 +1283,20 @@ class _BtPrintState extends State<BtPrint> {
                   styles: const PosStyles(align: PosAlign.right)),
             ]);
           }
-          bytes += ticket.text('Bill To : ${dataInformation['ToName']}',
+          printer.text('Bill To : ${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left));
 
           if (isEsQrCodeKSA) {
             if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-              bytes += ticket.text(
+              printer.text(
                   companyTaxMode == 'INDIA'
                       ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
                       : 'TRN : ${dataInformation['gstno'].toString().trim()}',
                   styles: const PosStyles(align: PosAlign.left));
             }
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(text: 'Description', width: 7),
             PosColumn(text: 'Qty', width: 1),
             PosColumn(
@@ -1133,7 +1308,7 @@ class _BtPrintState extends State<BtPrint> {
                 width: 2,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.hr();
+          printer.hr();
           double totalQty = 0, totalRate = 0;
           for (var i = 0; i < dataParticulars.length; i++) {
             var itemName = paper.width == PaperSize.mm80.width
@@ -1153,7 +1328,7 @@ class _BtPrintState extends State<BtPrint> {
                         .take(12)
                         .toString()
                     : dataParticulars[i]['itemname'].toString();
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: itemName, width: 7),
               PosColumn(
                   text:
@@ -1174,8 +1349,8 @@ class _BtPrintState extends State<BtPrint> {
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Sub =',
                 width: 2,
@@ -1194,8 +1369,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 4,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -1217,8 +1392,8 @@ class _BtPrintState extends State<BtPrint> {
         }
         for (var i = 0; i < otherAmount.length; i++) {
           if (otherAmount[i]['Amount'].toDouble() > 0) {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: '${otherAmount[i]['LedName']} :',
                   width: 6,
@@ -1238,8 +1413,8 @@ class _BtPrintState extends State<BtPrint> {
             ]);
           }
         }
-        bytes += ticket.hr();
-        bytes += ticket.row([
+        printer.hr();
+        printer.row([
           PosColumn(
               text: 'Net Amount :',
               width: 6,
@@ -1257,20 +1432,20 @@ class _BtPrintState extends State<BtPrint> {
                   // width: PosTextSize.size2,
                   bold: true)),
         ]);
-        bytes += ticket.hr();
-        bytes += ticket.text(
+        printer.hr();
+        printer.text(
             'Amount in Words: ${NumberToWord().convertDouble('en', double.tryParse(dataInformation['GrandTotal'].toString()))}',
             linesAfter: 1);
 
         // ticket.feed(1);
-        bytes += ticket.text('${bill['message']}',
+        printer.text('${bill['message']}',
             styles: const PosStyles(align: PosAlign.center));
 
         if (isQrCodeKSA) {
           // Print QR Code using native function
-          // bytes += ticket.qrcode('example.com');
+          // printer.qrcode('example.com');
           if (taxSale) {
-            bytes += ticket.qrcode(SaudiConversion.getBase64(
+            printer.qrcode(SaudiConversion.getBase64(
                 companySettings.name,
                 ComSettings.getValue('GST-NO', settings),
                 DateUtil.dateTimeQrDMY(
@@ -1283,10 +1458,10 @@ class _BtPrintState extends State<BtPrint> {
                         double.tryParse(dataInformation['SGST'].toString()) +
                         double.tryParse(dataInformation['IGST'].toString()))
                     .toStringAsFixed(2)));
-            bytes += ticket.feed(
+            printer.feed(
                 ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
           } else if (isEsQrCodeKSA) {
-            bytes += ticket.qrcode(SaudiConversion.getBase64(
+            printer.qrcode(SaudiConversion.getBase64(
                 companySettings.name,
                 ComSettings.getValue('GST-NO', settings),
                 DateUtil.dateTimeQrDMY(
@@ -1299,47 +1474,27 @@ class _BtPrintState extends State<BtPrint> {
                         double.tryParse(dataInformation['SGST'].toString()) +
                         double.tryParse(dataInformation['IGST'].toString()))
                     .toStringAsFixed(2)));
-            bytes += ticket.feed(
+            printer.feed(
                 ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
           }
         } else {
-          bytes += ticket.feed(
+          printer.feed(
               ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
         }
         // ticket.cut();
         // FirebaseCrashlytics.instance
         //     .setCustomKey('str_key', 'bt print complited');
-        bytes += ticket.feed(2);
-        return bytes;
+        printer.feed(2);
+        printer.cut();
       } catch (e, s) {
-        FirebaseCrashlytics.instance
-            .recordError(e, s, reason: 'bt print:' + ticket.toString());
-        bytes += ticket.feed(2);
-        return bytes;
+        FirebaseCrashlytics.instance.recordError(e, s, reason: 'tcp print:');
+        printer.feed(2);
+        printer.cut();
       }
     }
-    // } else if (printerModel == 6) {
-    //   try {
-    //     // Print image
-    //     final Uint8List bytes = widget.byteImage;
-    //     final img.Image image = img.decodeImage(bytes);
-    //     ticket.image(image);
-    //     ticket.feed(2);
-    //     ticket.cut();
-    //     return ticket;
-    //   } catch (e, s) {
-    //     FirebaseCrashlytics.instance
-    //         .recordError(e, s, reason: 'bt print:' + ticket.toString());
-    //     return ticket;
-    //   }
-    // }
-    // }
   }
 
-  Future<List<int>> salesVat1Data(PaperSize paper) async {
-    var profile = await CapabilityProfile.load();
-    final Generator ticket = Generator(paper, profile);
-    List<int> bytes = [];
+  Future<void> salesVat1Data(NetworkPrinter printer, PaperSize paper) async {
     var bill = widget.data[2];
     var printerSize = widget.data[3];
     CompanyInformation companySettings = widget.data[0];
@@ -1383,34 +1538,33 @@ class _BtPrintState extends State<BtPrint> {
     if (printerSize == "2") {
       try {
         if (taxSale) {
-          bytes += ticket.text(
-            companySettings.name,
-            styles: const PosStyles(
-              align: PosAlign.center,
-              bold: true,
-              // height: PosTextSize.size2,
-              // width: PosTextSize.size2,
-            ),
-          );
-          var text2 = ticket.text(companySettings.add1,
-              styles: const PosStyles(align: PosAlign.center, bold: true));
-          companySettings.add1.toString().trim().isNotEmpty ?? (bytes += text2);
-          var text3 = ticket.text(companySettings.add2,
-              styles: const PosStyles(align: PosAlign.center, bold: true));
-          companySettings.add2.toString().trim().isNotEmpty ?? (bytes += text3);
-          bytes += ticket.text(
+          printer.text(companySettings.name,
+              styles: const PosStyles(
+                align: PosAlign.center,
+                bold: true,
+                height: PosTextSize.size2,
+                width: PosTextSize.size2,
+              ),
+              linesAfter: 1);
+          companySettings.add1.toString().trim().isNotEmpty ??
+              (printer.text(companySettings.add1,
+                  styles: const PosStyles(align: PosAlign.center, bold: true)));
+          companySettings.add2.toString().trim().isNotEmpty ??
+              (printer.text(companySettings.add2,
+                  styles: const PosStyles(align: PosAlign.center, bold: true)));
+          printer.text(
               'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
               styles: const PosStyles(align: PosAlign.center, bold: true));
-          bytes += ticket.text(
+          printer.text(
               companyTaxMode == 'INDIA'
                   ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                   : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
               styles: const PosStyles(align: PosAlign.center, bold: true));
-          bytes += ticket.text(invoiceHead,
+          printer.text(invoiceHead,
               styles: const PosStyles(align: PosAlign.center, bold: true));
           // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
           //     styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                 width: 6,
@@ -1421,23 +1575,23 @@ class _BtPrintState extends State<BtPrint> {
                 width: 6,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.text('Bill To : ',
+          printer.text('Bill To : ',
               styles: const PosStyles(align: PosAlign.left, bold: true));
-          bytes += ticket.text('${dataInformation['ToName']}',
+          printer.text('${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left, bold: true));
           if (isEsQrCodeKSA) {
             if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-              bytes += ticket.text(
+              printer.text(
                   companyTaxMode == 'INDIA'
                       ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
                       : 'TRN : ${dataInformation['gstno'].toString().trim()}',
                   styles: const PosStyles(align: PosAlign.left, bold: true));
             }
           }
-          bytes += ticket.hr();
-          bytes += ticket.text('Description',
+          printer.hr();
+          printer.text('Description',
               styles: const PosStyles(align: PosAlign.left, bold: true));
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: '   ',
                 width: 2,
@@ -1466,10 +1620,10 @@ class _BtPrintState extends State<BtPrint> {
               }
             }
             var itemName = dataParticulars[i]['itemname'].toString();
-            bytes += ticket.text(itemName,
+            printer.text(itemName,
                 styles: const PosStyles(align: PosAlign.left, bold: true));
 
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: '', width: 2),
               PosColumn(
                   text:
@@ -1487,12 +1641,16 @@ class _BtPrintState extends State<BtPrint> {
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
-                text: 'Total : ', width: 5, styles: PosStyles(bold: true)),
+                text: 'Total : ',
+                width: 5,
+                styles: const PosStyles(bold: true)),
             PosColumn(
-                text: '$totalQty', width: 2, styles: PosStyles(bold: true)),
+                text: '$totalQty',
+                width: 2,
+                styles: const PosStyles(bold: true)),
             PosColumn(
                 text: totalRate.toStringAsFixed(2),
                 width: 2,
@@ -1502,8 +1660,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 3,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -1520,8 +1678,8 @@ class _BtPrintState extends State<BtPrint> {
                     // width: PosTextSize.size2,
                     )),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Tax : ' + taxPercentages,
                 width: 6,
@@ -1543,16 +1701,15 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         } else {
           if (ComSettings.appSettings('bool', 'key-print-header-es', false)) {
-            bytes += ticket.text(
-              companySettings.name,
-              styles: const PosStyles(
-                align: PosAlign.center,
-                bold: true,
-                // height: PosTextSize.size2,
-                // width: PosTextSize.size2,
-              ),
-            );
-            bytes += ticket.text(
+            printer.text(companySettings.name,
+                styles: const PosStyles(
+                  align: PosAlign.center,
+                  bold: true,
+                  height: PosTextSize.size2,
+                  width: PosTextSize.size2,
+                ),
+                linesAfter: 1);
+            printer.text(
               '',
               styles: const PosStyles(
                 align: PosAlign.center,
@@ -1572,33 +1729,33 @@ class _BtPrintState extends State<BtPrint> {
             // linesAfter: 1);
             // header1
             companySettings.add1.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add1,
+                (printer.text(companySettings.add1,
                     styles:
                         const PosStyles(align: PosAlign.center, bold: true)));
             companySettings.add2.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add2,
+                (printer.text(companySettings.add2,
                     styles:
                         const PosStyles(align: PosAlign.center, bold: true)));
-            bytes += ticket.text(
+            printer.text(
                 'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
                 styles: const PosStyles(align: PosAlign.center, bold: true));
-            bytes += ticket.text(
+            printer.text(
                 companyTaxMode == 'INDIA'
                     ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                     : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
                 styles: const PosStyles(align: PosAlign.center, bold: true));
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
             // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
             //     styles: const PosStyles(align: PosAlign.left));
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                   width: 12,
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text:
                       'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
@@ -1606,17 +1763,17 @@ class _BtPrintState extends State<BtPrint> {
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
           } else {
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
             // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
             //     styles: const PosStyles(align: PosAlign.left));DateUtil.dateDMY
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                   width: 12,
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text:
                       'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
@@ -1624,30 +1781,31 @@ class _BtPrintState extends State<BtPrint> {
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
           }
-          bytes += ticket.hr();
+          printer.hr();
 
-          bytes += ticket.text('Bill To :',
+          printer.text('Bill To :',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
-          bytes += ticket.text('${dataInformation['ToName']}',
+          printer.text('${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
           if (isEsQrCodeKSA) {
             if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-              bytes += ticket.text(
+              printer.text(
                   companyTaxMode == 'INDIA'
                       ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
                       : 'TRN : ${dataInformation['gstno'].toString().trim()}',
                   styles: const PosStyles(align: PosAlign.left, bold: true));
             }
           }
-          bytes += ticket.hr();
-          bytes += ticket.text('Description',
+          printer.hr();
+          printer.text('Description',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
-          bytes += ticket.row([
+          printer.row([
             PosColumn(text: ' ', width: 1),
-            PosColumn(text: 'Qty', width: 3, styles: PosStyles(bold: true)),
+            PosColumn(
+                text: 'Qty', width: 3, styles: const PosStyles(bold: true)),
             PosColumn(
                 text: 'Price',
                 width: 4,
@@ -1657,14 +1815,14 @@ class _BtPrintState extends State<BtPrint> {
                 width: 4,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.hr();
+          printer.hr();
           double totalQty = 0, totalRate = 0;
           for (var i = 0; i < dataParticulars.length; i++) {
             var itemName = dataParticulars[i]['itemname'].toString();
-            bytes += ticket.text(itemName,
+            printer.text(itemName,
                 styles: const PosStyles(align: PosAlign.left, bold: true));
 
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: '', width: 1),
               PosColumn(
                   text:
@@ -1685,8 +1843,8 @@ class _BtPrintState extends State<BtPrint> {
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Sub =',
                 width: 3,
@@ -1705,8 +1863,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 4,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -1727,8 +1885,8 @@ class _BtPrintState extends State<BtPrint> {
         }
         for (var i = 0; i < otherAmount.length; i++) {
           if (otherAmount[i]['Amount'].toDouble() > 0) {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: '${otherAmount[i]['LedName']} :',
                   width: 6,
@@ -1748,13 +1906,13 @@ class _BtPrintState extends State<BtPrint> {
             ]);
           }
         }
-        // bytes += ticket.hr();
-        // bytes += ticket.text(
+        // printer.hr();
+        // printer.text(
         //     'Amount in Words: ${NumberToWord().convert('en', double.tryParse(dataInformation['GrandTotal'].toString()).round())}',
         //     linesAfter: 1);
         if (Settings.getValue<bool>('key-print-balance', false)) {
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Net Amount :',
                 width: 6,
@@ -1774,8 +1932,8 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         } else {
           if (ledgerName != 'CASH') {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Old Balance :',
                   width: 6,
@@ -1792,8 +1950,8 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Net Amount :',
                   width: 6,
@@ -1812,8 +1970,8 @@ class _BtPrintState extends State<BtPrint> {
                       // width: PosTextSize.size2,
                       bold: true)),
             ]);
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Cash Received :',
                   width: 6,
@@ -1831,8 +1989,8 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Balance :',
                   width: 6,
@@ -1856,8 +2014,8 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true)),
             ]);
           } else {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Net Amount :',
                   width: 6,
@@ -1880,54 +2038,51 @@ class _BtPrintState extends State<BtPrint> {
         }
 
         // ticket.feed(1);
-        bytes += ticket.text('${bill['message']}',
+        printer.text('${bill['message']}',
             styles: const PosStyles(align: PosAlign.center));
 
         // ticket.cut();
         // FirebaseCrashlytics.instance
         //     .setCustomKey('str_key', 'bt print complited');
-        bytes += ticket.feed(2);
-        return bytes;
+        printer.feed(2);
+        printer.cut();
       } catch (e, s) {
-        FirebaseCrashlytics.instance
-            .recordError(e, s, reason: 'bt print:' + ticket.toString());
-        bytes += ticket.feed(2);
-        return bytes;
+        FirebaseCrashlytics.instance.recordError(e, s, reason: 'tcp print:');
+        printer.feed(2);
+        printer.cut();
       }
     } else {
       try {
         if (taxSale) {
-          bytes += ticket.text(
-            companySettings.name,
-            styles: const PosStyles(
-              align: PosAlign.center,
-              bold: true,
-              // height: PosTextSize.size2,
-              // width: PosTextSize.size2,
-            ),
-          );
-          bytes += ticket.text('');
+          printer.text(companySettings.name,
+              styles: const PosStyles(
+                align: PosAlign.center,
+                bold: true,
+                height: PosTextSize.size2,
+                width: PosTextSize.size2,
+              ),
+              linesAfter: 1);
 
-          var text2 = ticket.text(companySettings.add1,
-              styles: const PosStyles(align: PosAlign.center));
-          companySettings.add1.toString().trim().isNotEmpty ?? (bytes += text2);
-          var text3 = ticket.text(companySettings.add2,
-              styles: const PosStyles(align: PosAlign.center));
-          companySettings.add2.toString().trim().isNotEmpty ?? (bytes += text3);
-          bytes += ticket.text(
+          companySettings.add1.toString().trim().isNotEmpty ??
+              (printer.text(companySettings.add1,
+                  styles: const PosStyles(align: PosAlign.center)));
+          companySettings.add2.toString().trim().isNotEmpty ??
+              (printer.text(companySettings.add2,
+                  styles: const PosStyles(align: PosAlign.center)));
+          printer.text(
               'Phone No: ${companySettings.telephone + ',' + companySettings.mobile}',
               styles: const PosStyles(align: PosAlign.center));
-          bytes += ticket.text(
+          printer.text(
               companyTaxMode == 'INDIA'
                   ? 'GSTNO: ${ComSettings.getValue('GST-NO', settings)}'
                   : 'TRN NO: ${ComSettings.getValue('GST-NO', settings)}',
               styles: const PosStyles(align: PosAlign.center));
-          bytes += ticket.text(invoiceHead,
+          printer.text(invoiceHead,
               styles: const PosStyles(align: PosAlign.center, bold: true));
           // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
           //     styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Voucher No:${dataInformation['InvoiceNo']}',
                 width: 6,
@@ -1937,7 +2092,7 @@ class _BtPrintState extends State<BtPrint> {
                 width: 6,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text:
                     'Ordering Date:${DateUtil.dateDMY(dataInformation['DDate'])}',
@@ -1948,7 +2103,7 @@ class _BtPrintState extends State<BtPrint> {
                 width: 6,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'Party Name:${dataInformation['ToName']}',
                 width: 6,
@@ -1959,13 +2114,13 @@ class _BtPrintState extends State<BtPrint> {
                 width: 6,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.text(
+          printer.text(
               companyTaxMode == 'INDIA'
                   ? 'GSTNO:${dataInformation['gstno'].toString().trim()}'
                   : 'Party TRNNO:${dataInformation['gstno'].toString().trim()}',
               styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(text: 'Slno', width: 1),
             PosColumn(text: 'Item Des', width: 2),
             PosColumn(text: 'Qty(UOM)', width: 2),
@@ -1988,7 +2143,7 @@ class _BtPrintState extends State<BtPrint> {
           ]);
           for (var i = 0; i < dataParticulars.length; i++) {
             var itemName = dataParticulars[i]['itemname'].toString();
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: '${i + 1}',
                   width: 1,
@@ -1998,7 +2153,7 @@ class _BtPrintState extends State<BtPrint> {
                   width: 11,
                   styles: const PosStyles(align: PosAlign.left)),
             ]);
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: '', width: 1),
               PosColumn(text: '', width: 1),
               PosColumn(
@@ -2023,8 +2178,8 @@ class _BtPrintState extends State<BtPrint> {
                   styles: const PosStyles(align: PosAlign.right)),
             ]);
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Gross Total:',
                 width: 6,
@@ -2038,7 +2193,7 @@ class _BtPrintState extends State<BtPrint> {
                   align: PosAlign.right,
                 )),
           ]);
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'VAT:',
                 width: 6,
@@ -2055,7 +2210,7 @@ class _BtPrintState extends State<BtPrint> {
                   align: PosAlign.right,
                 )),
           ]);
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'Discount:',
                 width: 6,
@@ -2069,7 +2224,7 @@ class _BtPrintState extends State<BtPrint> {
                   align: PosAlign.right,
                 )),
           ]);
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'NET TOTAL:',
                 width: 6,
@@ -2085,39 +2240,36 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         } else {
           if (ComSettings.appSettings('bool', 'key-print-header-es', false)) {
-            bytes += ticket.text(
-              companySettings.name,
-              styles: const PosStyles(
-                align: PosAlign.center,
-                bold: true,
-                // height: PosTextSize.size2,
-                // width: PosTextSize.size2,
-              ),
-            );
+            printer.text(companySettings.name,
+                styles: const PosStyles(
+                  align: PosAlign.center,
+                  bold: true,
+                  height: PosTextSize.size2,
+                  width: PosTextSize.size2,
+                ),
+                linesAfter: 1);
 
-            var text2 = ticket.text(companySettings.add1,
-                styles: const PosStyles(align: PosAlign.center));
             companySettings.add1.toString().trim().isNotEmpty ??
-                (bytes += text2);
-            var text3 = ticket.text(companySettings.add2,
-                styles: const PosStyles(align: PosAlign.center));
+                (printer.text(companySettings.add1,
+                    styles: const PosStyles(align: PosAlign.center)));
             companySettings.add2.toString().trim().isNotEmpty ??
-                (bytes += text3);
-            bytes += ticket.text(
+                (printer.text(companySettings.add2,
+                    styles: const PosStyles(align: PosAlign.center)));
+            printer.text(
                 'Phone No: ${companySettings.telephone + ',' + companySettings.mobile}',
                 styles: const PosStyles(align: PosAlign.center));
-            bytes += ticket.text(
+            printer.text(
                 companyTaxMode == 'INDIA'
                     ? 'GSTNO: ${ComSettings.getValue('GST-NO', settings)}'
                     : 'TRN NO: ${ComSettings.getValue('GST-NO', settings)}',
                 styles: const PosStyles(align: PosAlign.center));
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
           } else {
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
           }
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'Voucher No:${dataInformation['InvoiceNo']}',
                 width: 6,
@@ -2127,7 +2279,7 @@ class _BtPrintState extends State<BtPrint> {
                 width: 6,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text:
                     'Ordering Date:${DateUtil.dateDMY(dataInformation['DDate'])}',
@@ -2138,7 +2290,7 @@ class _BtPrintState extends State<BtPrint> {
                 width: 6,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'Party Name:${dataInformation['ToName']}',
                 width: 6,
@@ -2149,13 +2301,13 @@ class _BtPrintState extends State<BtPrint> {
                 width: 6,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.text(
+          printer.text(
               companyTaxMode == 'INDIA'
                   ? 'GSTNO:${dataInformation['gstno'].toString().trim()}'
                   : 'Party TRNNO:${dataInformation['gstno'].toString().trim()}',
               styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(text: 'Slno', width: 1),
             PosColumn(text: 'Item Des', width: 2),
             PosColumn(text: 'Qty(UOM)', width: 2),
@@ -2178,7 +2330,7 @@ class _BtPrintState extends State<BtPrint> {
           ]);
           for (var i = 0; i < dataParticulars.length; i++) {
             var itemName = dataParticulars[i]['itemname'].toString();
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: '${i + 1}',
                   width: 1,
@@ -2188,7 +2340,7 @@ class _BtPrintState extends State<BtPrint> {
                   width: 11,
                   styles: const PosStyles(align: PosAlign.left)),
             ]);
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: '', width: 1),
               PosColumn(text: '', width: 1),
               PosColumn(
@@ -2213,8 +2365,8 @@ class _BtPrintState extends State<BtPrint> {
                   styles: const PosStyles(align: PosAlign.right)),
             ]);
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Gross Total:',
                 width: 6,
@@ -2228,7 +2380,7 @@ class _BtPrintState extends State<BtPrint> {
                   align: PosAlign.right,
                 )),
           ]);
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'VAT:',
                 width: 6,
@@ -2245,7 +2397,7 @@ class _BtPrintState extends State<BtPrint> {
                   align: PosAlign.right,
                 )),
           ]);
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'Discount:',
                 width: 6,
@@ -2259,7 +2411,7 @@ class _BtPrintState extends State<BtPrint> {
                   align: PosAlign.right,
                 )),
           ]);
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'NET TOTAL:',
                 width: 6,
@@ -2275,28 +2427,24 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         }
 
-        bytes += ticket.hr();
-        bytes += ticket.text('${bill['message']}',
+        printer.hr();
+        printer.text('${bill['message']}',
             styles: const PosStyles(align: PosAlign.center));
 
-        bytes += ticket
+        printer
             .feed(ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
 
-        bytes += ticket.feed(2);
-        return bytes;
+        printer.feed(2);
+        printer.cut();
       } catch (e, s) {
-        FirebaseCrashlytics.instance
-            .recordError(e, s, reason: 'bt print:' + ticket.toString());
-        bytes += ticket.feed(2);
-        return bytes;
+        FirebaseCrashlytics.instance.recordError(e, s, reason: 'tcp print:');
+        printer.feed(2);
+        printer.cut();
       }
     }
   }
 
-  Future<List<int>> salesGSTData(PaperSize paper) async {
-    var profile = await CapabilityProfile.load();
-    final Generator ticket = Generator(paper, profile);
-    List<int> bytes = [];
+  Future<void> salesGSTData(NetworkPrinter printer, PaperSize paper) async {
     var bill = widget.data[2];
     var printerSize = widget.data[3];
     CompanyInformation companySettings = widget.data[0];
@@ -2340,47 +2488,46 @@ class _BtPrintState extends State<BtPrint> {
     if (printerSize == "2") {
       try {
         if (taxSale) {
-          bytes += ticket.text(
-            companySettings.name,
-            styles: const PosStyles(
-              align: PosAlign.center,
-              bold: true,
-              // height: PosTextSize.size2,
-              // width: PosTextSize.size2,
-            ),
-          );
+          printer.text(companySettings.name,
+              styles: const PosStyles(
+                align: PosAlign.center,
+                bold: true,
+                height: PosTextSize.size2,
+                width: PosTextSize.size2,
+              ),
+              linesAfter: 1);
           if (companySettings.add1.toString().trim().isNotEmpty) {
-            bytes += ticket.text(companySettings.add1,
+            printer.text(companySettings.add1,
                 styles: const PosStyles(align: PosAlign.center));
           }
           if (companySettings.add2.toString().trim().isNotEmpty) {
-            bytes += ticket.text(companySettings.add2,
+            printer.text(companySettings.add2,
                 styles: const PosStyles(align: PosAlign.center));
           }
           if (companySettings.add3.toString().trim().isNotEmpty) {
-            bytes += ticket.text(companySettings.add3,
+            printer.text(companySettings.add3,
                 styles: const PosStyles(align: PosAlign.center));
           }
           if (companySettings.add4.toString().trim().isNotEmpty) {
-            bytes += ticket.text(companySettings.add4,
+            printer.text(companySettings.add4,
                 styles: const PosStyles(align: PosAlign.center));
           }
           if (companySettings.telephone.toString().trim().isNotEmpty ||
               companySettings.mobile.toString().trim().isNotEmpty) {
-            bytes += ticket.text(
+            printer.text(
                 'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
                 styles: const PosStyles(align: PosAlign.center));
           }
-          bytes += ticket.text(
+          printer.text(
               companyTaxMode == 'INDIA'
                   ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                   : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
               styles: const PosStyles(align: PosAlign.center, bold: true));
-          bytes += ticket.text(invoiceHead,
+          printer.text(invoiceHead,
               styles: const PosStyles(align: PosAlign.center, bold: true));
           // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
           //     styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                 width: 6,
@@ -2391,23 +2538,23 @@ class _BtPrintState extends State<BtPrint> {
                 width: 6,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.text('Bill To : ',
+          printer.text('Bill To : ',
               styles: const PosStyles(align: PosAlign.left, bold: true));
-          bytes += ticket.text('${dataInformation['ToName']}',
+          printer.text('${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left, bold: true));
           //not acceptable if (isEsQrCodeKSA) {
           if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-            bytes += ticket.text(
+            printer.text(
                 companyTaxMode == 'INDIA'
                     ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
                     : 'TRN : ${dataInformation['gstno'].toString().trim()}',
                 styles: const PosStyles(align: PosAlign.left, bold: true));
           }
           // }
-          bytes += ticket.hr();
-          bytes += ticket.text('Description',
+          printer.hr();
+          printer.text('Description',
               styles: const PosStyles(align: PosAlign.left, bold: true));
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: '   ',
                 width: 2,
@@ -2436,10 +2583,10 @@ class _BtPrintState extends State<BtPrint> {
             }
             // }
             var itemName = dataParticulars[i]['itemname'].toString();
-            bytes += ticket.text(itemName,
+            printer.text(itemName,
                 styles: const PosStyles(align: PosAlign.left, bold: true));
 
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: '', width: 2),
               PosColumn(
                   text:
@@ -2457,12 +2604,16 @@ class _BtPrintState extends State<BtPrint> {
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
-                text: 'Total : ', width: 5, styles: PosStyles(bold: true)),
+                text: 'Total : ',
+                width: 5,
+                styles: const PosStyles(bold: true)),
             PosColumn(
-                text: '$totalQty', width: 2, styles: PosStyles(bold: true)),
+                text: '$totalQty',
+                width: 2,
+                styles: const PosStyles(bold: true)),
             PosColumn(
                 text: totalRate.toStringAsFixed(2),
                 width: 2,
@@ -2472,8 +2623,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 3,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -2490,8 +2641,8 @@ class _BtPrintState extends State<BtPrint> {
                     // width: PosTextSize.size2,
                     )),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Tax : ' + taxPercentages,
                 width: 6,
@@ -2513,16 +2664,15 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         } else {
           if (ComSettings.appSettings('bool', 'key-print-header-es', false)) {
-            bytes += ticket.text(
-              companySettings.name,
-              styles: const PosStyles(
-                align: PosAlign.center,
-                bold: true,
-                // height: PosTextSize.size2,
-                // width: PosTextSize.size2,
-              ),
-            );
-            bytes += ticket.text(
+            printer.text(companySettings.name,
+                styles: const PosStyles(
+                  align: PosAlign.center,
+                  bold: true,
+                  height: PosTextSize.size2,
+                  width: PosTextSize.size2,
+                ),
+                linesAfter: 1);
+            printer.text(
               '',
               styles: const PosStyles(
                 align: PosAlign.center,
@@ -2542,33 +2692,33 @@ class _BtPrintState extends State<BtPrint> {
             // linesAfter: 1);
             // header1
             companySettings.add1.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add1,
+                (printer.text(companySettings.add1,
                     styles:
                         const PosStyles(align: PosAlign.center, bold: true)));
             companySettings.add2.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add2,
+                (printer.text(companySettings.add2,
                     styles:
                         const PosStyles(align: PosAlign.center, bold: true)));
-            bytes += ticket.text(
+            printer.text(
                 'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
                 styles: const PosStyles(align: PosAlign.center, bold: true));
-            bytes += ticket.text(
+            printer.text(
                 companyTaxMode == 'INDIA'
                     ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                     : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
                 styles: const PosStyles(align: PosAlign.center, bold: true));
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
             // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
             //     styles: const PosStyles(align: PosAlign.left));
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                   width: 12,
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text:
                       'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
@@ -2576,17 +2726,17 @@ class _BtPrintState extends State<BtPrint> {
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
           } else {
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
             // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
             //     styles: const PosStyles(align: PosAlign.left));DateUtil.dateDMY
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                   width: 12,
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text:
                       'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
@@ -2594,30 +2744,31 @@ class _BtPrintState extends State<BtPrint> {
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
           }
-          bytes += ticket.hr();
+          printer.hr();
 
-          bytes += ticket.text('Bill To :',
+          printer.text('Bill To :',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
-          bytes += ticket.text('${dataInformation['ToName']}',
+          printer.text('${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
           if (isEsQrCodeKSA) {
             if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-              bytes += ticket.text(
+              printer.text(
                   companyTaxMode == 'INDIA'
                       ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
                       : 'TRN : ${dataInformation['gstno'].toString().trim()}',
                   styles: const PosStyles(align: PosAlign.left, bold: true));
             }
           }
-          bytes += ticket.hr();
-          bytes += ticket.text('Description',
+          printer.hr();
+          printer.text('Description',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
-          bytes += ticket.row([
+          printer.row([
             PosColumn(text: ' ', width: 1),
-            PosColumn(text: 'Qty', width: 3, styles: PosStyles(bold: true)),
+            PosColumn(
+                text: 'Qty', width: 3, styles: const PosStyles(bold: true)),
             PosColumn(
                 text: 'Price',
                 width: 4,
@@ -2627,14 +2778,14 @@ class _BtPrintState extends State<BtPrint> {
                 width: 4,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.hr();
+          printer.hr();
           double totalQty = 0, totalRate = 0;
           for (var i = 0; i < dataParticulars.length; i++) {
             var itemName = dataParticulars[i]['itemname'].toString();
-            bytes += ticket.text(itemName,
+            printer.text(itemName,
                 styles: const PosStyles(align: PosAlign.left, bold: true));
 
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: '', width: 1),
               PosColumn(
                   text:
@@ -2655,8 +2806,8 @@ class _BtPrintState extends State<BtPrint> {
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Sub =',
                 width: 3,
@@ -2675,8 +2826,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 4,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -2697,8 +2848,8 @@ class _BtPrintState extends State<BtPrint> {
         }
         for (var i = 0; i < otherAmount.length; i++) {
           if (otherAmount[i]['Amount'].toDouble() > 0) {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: '${otherAmount[i]['LedName']} :',
                   width: 6,
@@ -2718,13 +2869,13 @@ class _BtPrintState extends State<BtPrint> {
             ]);
           }
         }
-        // bytes += ticket.hr();
-        // bytes += ticket.text(
+        // printer.hr();
+        // printer.text(
         //     'Amount in Words: ${NumberToWord().convert('en', double.tryParse(dataInformation['GrandTotal'].toString()).round())}',
         //     linesAfter: 1);
         if (Settings.getValue<bool>('key-print-balance', false)) {
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Net Amount :',
                 width: 6,
@@ -2744,8 +2895,8 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         } else {
           if (ledgerName != 'CASH') {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Old Balance :',
                   width: 6,
@@ -2762,8 +2913,8 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Net Amount :',
                   width: 6,
@@ -2782,8 +2933,8 @@ class _BtPrintState extends State<BtPrint> {
                       // width: PosTextSize.size2,
                       bold: true)),
             ]);
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Cash Received :',
                   width: 6,
@@ -2801,8 +2952,8 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Balance :',
                   width: 6,
@@ -2826,8 +2977,8 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true)),
             ]);
           } else {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Net Amount :',
                   width: 6,
@@ -2850,14 +3001,14 @@ class _BtPrintState extends State<BtPrint> {
         }
 
         // ticket.feed(1);
-        bytes += ticket.text('${bill['message']}',
+        printer.text('${bill['message']}',
             styles: const PosStyles(align: PosAlign.center));
 
         if (isQrCodeKSA) {
           // Print QR Code using native function
-          // bytes += ticket.qrcode('example.com');
+          // printer.qrcode('example.com');
           if (taxSale) {
-            bytes += ticket.qrcode(SaudiConversion.getBase64(
+            printer.qrcode(SaudiConversion.getBase64(
                 companySettings.name,
                 ComSettings.getValue('GST-NO', settings),
                 DateUtil.dateTimeQrDMY(
@@ -2870,10 +3021,10 @@ class _BtPrintState extends State<BtPrint> {
                         double.tryParse(dataInformation['SGST'].toString()) +
                         double.tryParse(dataInformation['IGST'].toString()))
                     .toStringAsFixed(2)));
-            bytes += ticket.feed(
+            printer.feed(
                 ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
           } else if (isEsQrCodeKSA) {
-            bytes += ticket.qrcode(SaudiConversion.getBase64(
+            printer.qrcode(SaudiConversion.getBase64(
                 companySettings.name,
                 ComSettings.getValue('GST-NO', settings),
                 DateUtil.dateTimeQrDMY(
@@ -2886,37 +3037,34 @@ class _BtPrintState extends State<BtPrint> {
                         double.tryParse(dataInformation['SGST'].toString()) +
                         double.tryParse(dataInformation['IGST'].toString()))
                     .toStringAsFixed(2)));
-            bytes += ticket.feed(
+            printer.feed(
                 ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
           }
         } else {
-          bytes += ticket.feed(
+          printer.feed(
               ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
         }
         // ticket.cut();
         // FirebaseCrashlytics.instance
         //     .setCustomKey('str_key', 'bt print complited');
-        bytes += ticket.feed(2);
-        return bytes;
+        printer.feed(2);
+        printer.cut();
       } catch (e, s) {
-        FirebaseCrashlytics.instance
-            .recordError(e, s, reason: 'bt print:' + ticket.toString());
-        bytes += ticket.feed(2);
-        return bytes;
+        FirebaseCrashlytics.instance.recordError(e, s, reason: 'tcp print:');
+        printer.feed(2);
+        printer.cut();
       }
     } else {
       try {
         if (taxSale) {
-          bytes += ticket.text(
-            companySettings.name,
-            styles: const PosStyles(
-              align: PosAlign.center,
-              bold: true,
-              // height: PosTextSize.size2,
-              // width: PosTextSize.size2,
-            ),
-          );
-          bytes += ticket.text('');
+          printer.text(companySettings.name,
+              styles: const PosStyles(
+                align: PosAlign.center,
+                bold: true,
+                height: PosTextSize.size2,
+                width: PosTextSize.size2,
+              ),
+              linesAfter: 1);
 
           // if(printCopy==2){
           //   Uint8List encArabic = await CharsetConverter.encode("windows-1256", "اهلا");charset.178
@@ -2929,64 +3077,64 @@ class _BtPrintState extends State<BtPrint> {
           // linesAfter: 1);
           // header1
           if (companySettings.add1.toString().trim().isNotEmpty) {
-            bytes += ticket.text(companySettings.add1,
+            printer.text(companySettings.add1,
                 styles: const PosStyles(align: PosAlign.center));
           }
           if (companySettings.add2.toString().trim().isNotEmpty) {
-            bytes += ticket.text(companySettings.add2,
+            printer.text(companySettings.add2,
                 styles: const PosStyles(align: PosAlign.center));
           }
           if (companySettings.add3.toString().trim().isNotEmpty) {
-            bytes += ticket.text(companySettings.add3,
+            printer.text(companySettings.add3,
                 styles: const PosStyles(align: PosAlign.center));
           }
           if (companySettings.add4.toString().trim().isNotEmpty) {
-            bytes += ticket.text(companySettings.add4,
+            printer.text(companySettings.add4,
                 styles: const PosStyles(align: PosAlign.center));
           }
           if (companySettings.telephone.toString().trim().isNotEmpty ||
               companySettings.mobile.toString().trim().isNotEmpty) {
-            bytes += ticket.text(
+            printer.text(
                 'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
                 styles: const PosStyles(align: PosAlign.center));
           }
-          bytes += ticket.text(
+          printer.text(
               companyTaxMode == 'INDIA'
                   ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                   : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
               styles: const PosStyles(align: PosAlign.center));
-          bytes += ticket.text(invoiceHead,
+          printer.text(invoiceHead,
               styles: const PosStyles(align: PosAlign.center, bold: true));
           // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
           //     styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                 width: 12,
                 styles: const PosStyles(align: PosAlign.left)),
           ]);
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text:
                     'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
                 width: 12,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.text('Bill To : ${dataInformation['ToName']}',
+          printer.hr();
+          printer.text('Bill To : ${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left));
           //don't use it if (isEsQrCodeKSA) {
           if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-            bytes += ticket.text(
+            printer.text(
                 companyTaxMode == 'INDIA'
                     ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
                     : 'TRN : ${dataInformation['gstno'].toString().trim()}',
                 styles: const PosStyles(align: PosAlign.left));
           }
           // }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(text: 'Description', width: 7),
             PosColumn(text: 'Qty', width: 1),
             PosColumn(
@@ -2998,7 +3146,7 @@ class _BtPrintState extends State<BtPrint> {
                 width: 2,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.hr();
+          printer.hr();
           double totalQty = 0, totalRate = 0;
           for (var i = 0; i < dataParticulars.length; i++) {
             if (double.tryParse(dataParticulars[i]['igst'].toString()) > 0) {
@@ -3029,7 +3177,7 @@ class _BtPrintState extends State<BtPrint> {
                         .take(12)
                         .toString()
                     : dataParticulars[i]['itemname'].toString();
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: itemName,
                   width: 7,
@@ -3059,12 +3207,12 @@ class _BtPrintState extends State<BtPrint> {
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
             //hsn gst o vat
-            // bytes += ticket.hr();
-            bytes += ticket.row(companyTaxMode == 'INDIA'
+            // printer.hr();
+            printer.row(companyTaxMode == 'INDIA'
                 ? [
                     PosColumn(
                         text: '${dataParticulars[i]['hsncode']}', width: 4),
-                    PosColumn(text: '$taxPercentages', width: 4),
+                    PosColumn(text: taxPercentages, width: 4),
                     PosColumn(
                         text: double.tryParse(
                                     dataParticulars[i]['cess'].toString()) >
@@ -3093,8 +3241,8 @@ class _BtPrintState extends State<BtPrint> {
                     //     styles: const PosStyles(align: PosAlign.right)),
                   ]);
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(text: 'Total ', width: 3),
             PosColumn(text: '$totalQty', width: 3),
             PosColumn(
@@ -3106,8 +3254,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 3,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.hr();
-          // bytes += ticket.row([
+          printer.hr();
+          // printer.row([
           //   PosColumn(
           //       text: 'Total :',
           //       width: 6,
@@ -3125,8 +3273,8 @@ class _BtPrintState extends State<BtPrint> {
           //         // width: PosTextSize.size2,
           //       )),
           // ]);
-          // bytes += ticket.hr();
-          // bytes += ticket.row([
+          // printer.hr();
+          // printer.row([
           //   PosColumn(
           //       text: 'Tax : ' + taxPercentages,
           //       width: 6,
@@ -3150,15 +3298,14 @@ class _BtPrintState extends State<BtPrint> {
           // ]);
         } else {
           if (ComSettings.appSettings('bool', 'key-print-header-es', false)) {
-            bytes += ticket.text(
-              companySettings.name,
-              styles: const PosStyles(
-                align: PosAlign.center,
-                bold: true,
-                // height: PosTextSize.size2,
-                // width: PosTextSize.size2,
-              ),
-            );
+            printer.text(companySettings.name,
+                styles: const PosStyles(
+                  align: PosAlign.center,
+                  bold: true,
+                  height: PosTextSize.size2,
+                  width: PosTextSize.size2,
+                ),
+                linesAfter: 1);
             // if (printCopy == 2) {
             //   //   Uint8List encArabic = await CharsetConverter.encode("windows-1256", "اهلا");charset.178
             //   //   ticket.textEncoded(encArabic, styles: PosStyles(codeTable: PosCodeTable.arabic));
@@ -3170,24 +3317,24 @@ class _BtPrintState extends State<BtPrint> {
             // linesAfter: 1);
             // header1
             companySettings.add1.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add1,
+                (printer.text(companySettings.add1,
                     styles: const PosStyles(align: PosAlign.center)));
             companySettings.add2.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add2,
+                (printer.text(companySettings.add2,
                     styles: const PosStyles(align: PosAlign.center)));
-            bytes += ticket.text(
+            printer.text(
                 'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
                 styles: const PosStyles(align: PosAlign.center));
-            bytes += ticket.text(
+            printer.text(
                 companyTaxMode == 'INDIA'
                     ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                     : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
                 styles: const PosStyles(align: PosAlign.center));
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
             // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
             //     styles: const PosStyles(align: PosAlign.left));
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                   width: 6,
@@ -3199,11 +3346,11 @@ class _BtPrintState extends State<BtPrint> {
                   styles: const PosStyles(align: PosAlign.right)),
             ]);
           } else {
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
             // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
             //     styles: const PosStyles(align: PosAlign.left));DateUtil.dateDMY
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                   width: 6,
@@ -3215,20 +3362,20 @@ class _BtPrintState extends State<BtPrint> {
                   styles: const PosStyles(align: PosAlign.right)),
             ]);
           }
-          bytes += ticket.text('Bill To : ${dataInformation['ToName']}',
+          printer.text('Bill To : ${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left));
 
           if (isEsQrCodeKSA) {
             if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-              bytes += ticket.text(
+              printer.text(
                   companyTaxMode == 'INDIA'
                       ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
                       : 'TRN : ${dataInformation['gstno'].toString().trim()}',
                   styles: const PosStyles(align: PosAlign.left));
             }
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(text: 'Description', width: 7),
             PosColumn(text: 'Qty', width: 1),
             PosColumn(
@@ -3240,7 +3387,7 @@ class _BtPrintState extends State<BtPrint> {
                 width: 2,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.hr();
+          printer.hr();
           double totalQty = 0, totalRate = 0;
           for (var i = 0; i < dataParticulars.length; i++) {
             var itemName = paper.width == PaperSize.mm80.width
@@ -3260,7 +3407,7 @@ class _BtPrintState extends State<BtPrint> {
                         .take(12)
                         .toString()
                     : dataParticulars[i]['itemname'].toString();
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: itemName, width: 7),
               PosColumn(
                   text:
@@ -3281,8 +3428,8 @@ class _BtPrintState extends State<BtPrint> {
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Sub =',
                 width: 2,
@@ -3301,8 +3448,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 4,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -3324,8 +3471,8 @@ class _BtPrintState extends State<BtPrint> {
         }
         for (var i = 0; i < otherAmount.length; i++) {
           if (otherAmount[i]['Amount'].toDouble() > 0) {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: '${otherAmount[i]['LedName']} :',
                   width: 6,
@@ -3345,8 +3492,8 @@ class _BtPrintState extends State<BtPrint> {
             ]);
           }
         }
-        bytes += ticket.hr();
-        bytes += ticket.row([
+        printer.hr();
+        printer.row([
           PosColumn(
               text: 'Net Amount :',
               width: 6,
@@ -3364,15 +3511,15 @@ class _BtPrintState extends State<BtPrint> {
                   // width: PosTextSize.size2,
                   bold: true)),
         ]);
-        bytes += ticket.hr();
-        bytes += ticket.text(
+        printer.hr();
+        printer.text(
             'Amount in Words: ${NumberToWord().convertDouble('en', double.tryParse(dataInformation['GrandTotal'].toString()))}',
             linesAfter: 1);
 
         if (taxSale) {
-          bytes += ticket.hr();
-          bytes += companyTaxMode == 'INDIA'
-              ? ticket.row([
+          printer.hr();
+          companyTaxMode == 'INDIA'
+              ? printer.row([
                   PosColumn(
                       text: 'GST %',
                       width: 3,
@@ -3390,7 +3537,7 @@ class _BtPrintState extends State<BtPrint> {
                       width: 3,
                       styles: const PosStyles(align: PosAlign.center)),
                 ])
-              : ticket.row([
+              : printer.row([
                   PosColumn(
                       text: 'VAT %',
                       width: 4,
@@ -3404,10 +3551,10 @@ class _BtPrintState extends State<BtPrint> {
                       width: 4,
                       styles: const PosStyles(align: PosAlign.center)),
                 ]);
-          bytes += ticket.hr();
+          printer.hr();
           for (var i = 0; i < taxableData.length; i++) {
-            bytes += companyTaxMode == 'INDIA'
-                ? ticket.row([
+            companyTaxMode == 'INDIA'
+                ? printer.row([
                     PosColumn(
                         text: '${taxableData[i]['tax'].toString()} %',
                         width: 3,
@@ -3425,7 +3572,7 @@ class _BtPrintState extends State<BtPrint> {
                         width: 3,
                         styles: const PosStyles(align: PosAlign.right)),
                   ])
-                : ticket.row([
+                : printer.row([
                     PosColumn(
                         text: '${taxableData[i]['tax'].toString()} %',
                         width: 4,
@@ -3439,13 +3586,13 @@ class _BtPrintState extends State<BtPrint> {
                         width: 4,
                         styles: const PosStyles(align: PosAlign.right)),
                   ]);
-            bytes += ticket.hr();
+            printer.hr();
           }
         }
         if (Settings.getValue<bool>('key-print-balance', false)) {
           //
         } else {
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'CashReceived : ',
                 width: 6,
@@ -3455,7 +3602,7 @@ class _BtPrintState extends State<BtPrint> {
                 width: 6,
                 styles: const PosStyles(align: PosAlign.center)),
           ]);
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'Old Balance : ${dataInformation['Balance']}',
                 width: 6,
@@ -3469,14 +3616,14 @@ class _BtPrintState extends State<BtPrint> {
         }
 
         // ticket.feed(1);
-        bytes += ticket.text('${bill['message']}',
+        printer.text('${bill['message']}',
             styles: const PosStyles(align: PosAlign.center));
 
         if (isQrCodeKSA) {
           // Print QR Code using native function
-          // bytes += ticket.qrcode('example.com');
+          // printer.qrcode('example.com');
           if (taxSale) {
-            bytes += ticket.qrcode(SaudiConversion.getBase64(
+            printer.qrcode(SaudiConversion.getBase64(
                 companySettings.name,
                 ComSettings.getValue('GST-NO', settings),
                 DateUtil.dateTimeQrDMY(
@@ -3489,10 +3636,10 @@ class _BtPrintState extends State<BtPrint> {
                         double.tryParse(dataInformation['SGST'].toString()) +
                         double.tryParse(dataInformation['IGST'].toString()))
                     .toStringAsFixed(2)));
-            bytes += ticket.feed(
+            printer.feed(
                 ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
           } else if (isEsQrCodeKSA) {
-            bytes += ticket.qrcode(SaudiConversion.getBase64(
+            printer.qrcode(SaudiConversion.getBase64(
                 companySettings.name,
                 ComSettings.getValue('GST-NO', settings),
                 DateUtil.dateTimeQrDMY(
@@ -3505,23 +3652,22 @@ class _BtPrintState extends State<BtPrint> {
                         double.tryParse(dataInformation['SGST'].toString()) +
                         double.tryParse(dataInformation['IGST'].toString()))
                     .toStringAsFixed(2)));
-            bytes += ticket.feed(
+            printer.feed(
                 ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
           }
         } else {
-          bytes += ticket.feed(
+          printer.feed(
               ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
         }
         // ticket.cut();
         // FirebaseCrashlytics.instance
         //     .setCustomKey('str_key', 'bt print complited');
-        bytes += ticket.feed(2);
-        return bytes;
+        printer.feed(2);
+        printer.cut();
       } catch (e, s) {
-        FirebaseCrashlytics.instance
-            .recordError(e, s, reason: 'bt print:' + ticket.toString());
-        bytes += ticket.feed(2);
-        return bytes;
+        FirebaseCrashlytics.instance.recordError(e, s, reason: 'tcp print:');
+        printer.feed(2);
+        printer.cut();
       }
     }
     // } else if (printerModel == 6) {
@@ -3535,17 +3681,14 @@ class _BtPrintState extends State<BtPrint> {
     //     return ticket;
     //   } catch (e, s) {
     //     FirebaseCrashlytics.instance
-    //         .recordError(e, s, reason: 'bt print:' + ticket.toString());
+    //         .recordError(e, s, reason: 'tcp print:' + ticket.toString());
     //     return ticket;
     //   }
     // }
     // }
   }
 
-  Future<List<int>> salesDefaultData(PaperSize paper) async {
-    var profile = await CapabilityProfile.load();
-    final Generator ticket = Generator(paper, profile);
-    List<int> bytes = [];
+  Future<void> salesDefaultData(NetworkPrinter printer, PaperSize paper) async {
     var bill = widget.data[2];
     var printerSize = widget.data[3];
     CompanyInformation companySettings = widget.data[0];
@@ -3590,47 +3733,46 @@ class _BtPrintState extends State<BtPrint> {
     if (printerSize == "2") {
       try {
         if (taxSale) {
-          bytes += ticket.text(
-            companySettings.name,
-            styles: const PosStyles(
-              align: PosAlign.center,
-              bold: true,
-              // height: PosTextSize.size2,
-              // width: PosTextSize.size2,
-            ),
-          );
+          printer.text(companySettings.name,
+              styles: const PosStyles(
+                align: PosAlign.center,
+                bold: true,
+                height: PosTextSize.size2,
+                width: PosTextSize.size2,
+              ),
+              linesAfter: 1);
           if (companySettings.add1.toString().trim().isNotEmpty) {
-            bytes += ticket.text(companySettings.add1,
+            printer.text(companySettings.add1,
                 styles: const PosStyles(align: PosAlign.center));
           }
           if (companySettings.add2.toString().trim().isNotEmpty) {
-            bytes += ticket.text(companySettings.add2,
+            printer.text(companySettings.add2,
                 styles: const PosStyles(align: PosAlign.center));
           }
           if (companySettings.add3.toString().trim().isNotEmpty) {
-            bytes += ticket.text(companySettings.add3,
+            printer.text(companySettings.add3,
                 styles: const PosStyles(align: PosAlign.center));
           }
           if (companySettings.add4.toString().trim().isNotEmpty) {
-            bytes += ticket.text(companySettings.add4,
+            printer.text(companySettings.add4,
                 styles: const PosStyles(align: PosAlign.center));
           }
           if (companySettings.telephone.toString().trim().isNotEmpty ||
               companySettings.mobile.toString().trim().isNotEmpty) {
-            bytes += ticket.text(
+            printer.text(
                 'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
                 styles: const PosStyles(align: PosAlign.center));
           }
-          // bytes += ticket.text(
+          // printer.text(
           //     companyTaxMode == 'INDIA'
           //         ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
           //         : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
           //     styles: const PosStyles(align: PosAlign.center, bold: true));
-          bytes += ticket.text(invoiceHead,
+          printer.text(invoiceHead,
               styles: const PosStyles(align: PosAlign.center, bold: true));
           // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
           //     styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                 width: 6,
@@ -3641,23 +3783,23 @@ class _BtPrintState extends State<BtPrint> {
                 width: 6,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.text('Bill To : ',
+          printer.text('Bill To : ',
               styles: const PosStyles(align: PosAlign.left, bold: true));
-          bytes += ticket.text('${dataInformation['ToName']}',
+          printer.text('${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left, bold: true));
           //not acceptable if (isEsQrCodeKSA) {
           // if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-          //   bytes += ticket.text(
+          //   printer.text(
           //       companyTaxMode == 'INDIA'
           //           ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
           //           : 'TRN : ${dataInformation['gstno'].toString().trim()}',
           //       styles: const PosStyles(align: PosAlign.left, bold: true));
           // }
           // }
-          bytes += ticket.hr();
-          bytes += ticket.text('Description',
+          printer.hr();
+          printer.text('Description',
               styles: const PosStyles(align: PosAlign.left, bold: true));
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: '   ',
                 width: 2,
@@ -3676,43 +3818,47 @@ class _BtPrintState extends State<BtPrint> {
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
           double totalQty = 0, totalRate = 0;
-          // for (var i = 0; i < dataParticulars.length; i++) {
-          //   if (double.tryParse(dataParticulars[i]['igst'].toString()) > 0) {
-          //     taxPercentages = dataParticulars[i]['igst'].toString() + ' %';
-          //     // if (taxPercentages.contains(
-          //     //     '@' + dataParticulars[i]['igst'].toString() + ' %')) {
-          //   } else {
-          //     taxPercentages = '0 %';
-          //   }
-          //   // }
-          //   var itemName = dataParticulars[i]['itemname'].toString();
-          //   bytes += ticket.text(itemName,
-          //       styles: const PosStyles(align: PosAlign.left, bold: true));
+          for (var i = 0; i < dataParticulars.length; i++) {
+            if (double.tryParse(dataParticulars[i]['igst'].toString()) > 0) {
+              taxPercentages = dataParticulars[i]['igst'].toString() + ' %';
+              // if (taxPercentages.contains(
+              //     '@' + dataParticulars[i]['igst'].toString() + ' %')) {
+            } else {
+              taxPercentages = '0 %';
+            }
+            // }
+            var itemName = dataParticulars[i]['itemname'].toString();
+            printer.text(itemName,
+                styles: const PosStyles(align: PosAlign.left, bold: true));
 
-          //   bytes += ticket.row([
-          //     PosColumn(text: '', width: 2),
-          //     PosColumn(
-          //         text:
-          //             '${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}',
-          //         width: 1),
-          //     PosColumn(
-          //         text: '${dataParticulars[i]['Rate']}',
-          //         width: 2,
-          //         styles: const PosStyles(align: PosAlign.right, bold: true)),
-          //     PosColumn(
-          //         text: '${dataParticulars[i]['Total']}',
-          //         width: 2,
-          //         styles: const PosStyles(align: PosAlign.right, bold: true)),
-          //   ]);
-          //   totalQty += dataParticulars[i]['Qty'];
-          //   totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
-          // }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+            printer.row([
+              PosColumn(text: '', width: 2),
+              PosColumn(
+                  text:
+                      '${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}',
+                  width: 1),
+              PosColumn(
+                  text: '${dataParticulars[i]['Rate']}',
+                  width: 2,
+                  styles: const PosStyles(align: PosAlign.right, bold: true)),
+              PosColumn(
+                  text: '${dataParticulars[i]['Total']}',
+                  width: 2,
+                  styles: const PosStyles(align: PosAlign.right, bold: true)),
+            ]);
+            totalQty += dataParticulars[i]['Qty'];
+            totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
+          }
+          printer.hr();
+          printer.row([
             PosColumn(
-                text: 'Total : ', width: 5, styles: PosStyles(bold: true)),
+                text: 'Total : ',
+                width: 5,
+                styles: const PosStyles(bold: true)),
             PosColumn(
-                text: '$totalQty', width: 2, styles: PosStyles(bold: true)),
+                text: '$totalQty',
+                width: 2,
+                styles: const PosStyles(bold: true)),
             PosColumn(
                 text: totalRate.toStringAsFixed(2),
                 width: 2,
@@ -3722,8 +3868,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 3,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -3740,8 +3886,8 @@ class _BtPrintState extends State<BtPrint> {
                     // width: PosTextSize.size2,
                     )),
           ]);
-          bytes += ticket.hr();
-          // bytes += ticket.row([
+          printer.hr();
+          // printer.row([
           //   PosColumn(
           //       text: 'Tax : ' + taxPercentages,
           //       width: 6,
@@ -3763,16 +3909,15 @@ class _BtPrintState extends State<BtPrint> {
           // ]);
         } else {
           if (ComSettings.appSettings('bool', 'key-print-header-es', false)) {
-            bytes += ticket.text(
-              companySettings.name,
-              styles: const PosStyles(
-                align: PosAlign.center,
-                bold: true,
-                // height: PosTextSize.size2,
-                // width: PosTextSize.size2,
-              ),
-            );
-            bytes += ticket.text(
+            printer.text(companySettings.name,
+                styles: const PosStyles(
+                  align: PosAlign.center,
+                  bold: true,
+                  height: PosTextSize.size2,
+                  width: PosTextSize.size2,
+                ),
+                linesAfter: 1);
+            printer.text(
               '',
               styles: const PosStyles(
                 align: PosAlign.center,
@@ -3782,33 +3927,33 @@ class _BtPrintState extends State<BtPrint> {
               ),
             );
             companySettings.add1.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add1,
+                (printer.text(companySettings.add1,
                     styles:
                         const PosStyles(align: PosAlign.center, bold: true)));
             companySettings.add2.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add2,
+                (printer.text(companySettings.add2,
                     styles:
                         const PosStyles(align: PosAlign.center, bold: true)));
-            bytes += ticket.text(
+            printer.text(
                 'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
                 styles: const PosStyles(align: PosAlign.center, bold: true));
-            // bytes += ticket.text(
+            // printer.text(
             //     companyTaxMode == 'INDIA'
             //         ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
             //         : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
             //     styles: const PosStyles(align: PosAlign.center, bold: true));
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
             // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
             //     styles: const PosStyles(align: PosAlign.left));
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                   width: 12,
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text:
                       'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
@@ -3816,17 +3961,17 @@ class _BtPrintState extends State<BtPrint> {
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
           } else {
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
             // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
             //     styles: const PosStyles(align: PosAlign.left));DateUtil.dateDMY
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                   width: 12,
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text:
                       'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
@@ -3834,30 +3979,31 @@ class _BtPrintState extends State<BtPrint> {
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
           }
-          bytes += ticket.hr();
+          printer.hr();
 
-          bytes += ticket.text('Bill To :',
+          printer.text('Bill To :',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
-          bytes += ticket.text('${dataInformation['ToName']}',
+          printer.text('${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
           // if (isEsQrCodeKSA) {
           //   if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-          //     bytes += ticket.text(
+          //     printer.text(
           //         companyTaxMode == 'INDIA'
           //             ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
           //             : 'TRN : ${dataInformation['gstno'].toString().trim()}',
           //         styles: const PosStyles(align: PosAlign.left, bold: true));
           //   }
           // }
-          bytes += ticket.hr();
-          bytes += ticket.text('Description',
+          printer.hr();
+          printer.text('Description',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
-          bytes += ticket.row([
+          printer.row([
             PosColumn(text: ' ', width: 1),
-            PosColumn(text: 'Qty', width: 3, styles: PosStyles(bold: true)),
+            PosColumn(
+                text: 'Qty', width: 3, styles: const PosStyles(bold: true)),
             PosColumn(
                 text: 'Price',
                 width: 4,
@@ -3867,14 +4013,14 @@ class _BtPrintState extends State<BtPrint> {
                 width: 4,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.hr();
+          printer.hr();
           double totalQty = 0, totalRate = 0;
           for (var i = 0; i < dataParticulars.length; i++) {
             var itemName = dataParticulars[i]['itemname'].toString();
-            bytes += ticket.text(itemName,
+            printer.text(itemName,
                 styles: const PosStyles(align: PosAlign.left, bold: true));
 
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: '', width: 1),
               PosColumn(
                   text:
@@ -3895,8 +4041,8 @@ class _BtPrintState extends State<BtPrint> {
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Sub =',
                 width: 3,
@@ -3915,8 +4061,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 4,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -3937,8 +4083,8 @@ class _BtPrintState extends State<BtPrint> {
         }
         for (var i = 0; i < otherAmount.length; i++) {
           if (otherAmount[i]['Amount'].toDouble() > 0) {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: '${otherAmount[i]['LedName']} :',
                   width: 6,
@@ -3958,13 +4104,13 @@ class _BtPrintState extends State<BtPrint> {
             ]);
           }
         }
-        // bytes += ticket.hr();
-        // bytes += ticket.text(
+        // printer.hr();
+        // printer.text(
         //     'Amount in Words: ${NumberToWord().convert('en', double.tryParse(dataInformation['GrandTotal'].toString()).round())}',
         //     linesAfter: 1);
         if (Settings.getValue<bool>('key-print-balance', false)) {
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Net Amount :',
                 width: 6,
@@ -3984,8 +4130,8 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         } else {
           if (ledgerName != 'CASH') {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Old Balance :',
                   width: 6,
@@ -4002,8 +4148,8 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Net Amount :',
                   width: 6,
@@ -4022,8 +4168,8 @@ class _BtPrintState extends State<BtPrint> {
                       // width: PosTextSize.size2,
                       bold: true)),
             ]);
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Cash Received :',
                   width: 6,
@@ -4041,8 +4187,8 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Balance :',
                   width: 6,
@@ -4066,8 +4212,8 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true)),
             ]);
           } else {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Net Amount :',
                   width: 6,
@@ -4089,102 +4235,98 @@ class _BtPrintState extends State<BtPrint> {
           }
         }
         if (Settings.getValue<bool>('key-print-bank-details', false)) {
-          bytes += ticket.hr();
-          bytes += ticket.text('${dataBankLedger['name']}',
+          printer.hr();
+          printer.text('${dataBankLedger['name']}',
               styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.text('ACC NO : ${dataBankLedger['account']}',
+          printer.text('ACC NO : ${dataBankLedger['account']}',
               styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.text('IFSC CODE : ${dataBankLedger['ifsc']}',
+          printer.text('IFSC CODE : ${dataBankLedger['ifsc']}',
               styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.text('Branch : ${dataBankLedger['branch']}',
+          printer.text('Branch : ${dataBankLedger['branch']}',
               styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.hr();
+          printer.hr();
         }
 
         // ticket.feed(1);
-        bytes += ticket.text('${bill['message']}',
+        printer.text('${bill['message']}',
             styles: const PosStyles(align: PosAlign.center));
-        bytes += ticket.feed(2);
-        return bytes;
+        printer.feed(2);
+        printer.cut();
       } catch (e, s) {
-        FirebaseCrashlytics.instance
-            .recordError(e, s, reason: 'bt print:' + ticket.toString());
-        bytes += ticket.feed(2);
-        return bytes;
+        FirebaseCrashlytics.instance.recordError(e, s, reason: 'tcp print:');
+        printer.feed(2);
+        printer.cut();
       }
     } else {
       try {
         if (taxSale) {
-          bytes += ticket.text(
-            companySettings.name,
-            styles: const PosStyles(
-              align: PosAlign.center,
-              bold: true,
-              // height: PosTextSize.size2,
-              // width: PosTextSize.size2,
-            ),
-          );
-          bytes += ticket.text('');
+          printer.text(companySettings.name,
+              styles: const PosStyles(
+                align: PosAlign.center,
+                bold: true,
+                height: PosTextSize.size2,
+                width: PosTextSize.size2,
+              ),
+              linesAfter: 1);
 
           if (companySettings.add1.toString().trim().isNotEmpty) {
-            bytes += ticket.text(companySettings.add1,
+            printer.text(companySettings.add1,
                 styles: const PosStyles(align: PosAlign.center));
           }
           if (companySettings.add2.toString().trim().isNotEmpty) {
-            bytes += ticket.text(companySettings.add2,
+            printer.text(companySettings.add2,
                 styles: const PosStyles(align: PosAlign.center));
           }
           if (companySettings.add3.toString().trim().isNotEmpty) {
-            bytes += ticket.text(companySettings.add3,
+            printer.text(companySettings.add3,
                 styles: const PosStyles(align: PosAlign.center));
           }
           if (companySettings.add4.toString().trim().isNotEmpty) {
-            bytes += ticket.text(companySettings.add4,
+            printer.text(companySettings.add4,
                 styles: const PosStyles(align: PosAlign.center));
           }
           if (companySettings.telephone.toString().trim().isNotEmpty ||
               companySettings.mobile.toString().trim().isNotEmpty) {
-            bytes += ticket.text(
+            printer.text(
                 'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
                 styles: const PosStyles(align: PosAlign.center));
           }
-          // bytes += ticket.text(
-          //     companyTaxMode == 'INDIA'
-          //         ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
-          //         : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
-          //     styles: const PosStyles(align: PosAlign.center));
-          bytes += ticket.text(invoiceHead,
+          String taxNo = ComSettings.getValue('GST-NO', settings);
+          if (taxNo.isNotEmpty) {
+            printer.text(
+                companyTaxMode == 'INDIA' ? 'GSTNO : $taxNo' : 'TRN : $taxNo',
+                styles: const PosStyles(align: PosAlign.center));
+          }
+          printer.text(invoiceHead,
               styles: const PosStyles(align: PosAlign.center, bold: true));
-          // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
-          //     styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Invoice No : ${dataInformation['InvoiceNo']}',
-                width: 12,
+                width: 5,
                 styles: const PosStyles(align: PosAlign.left)),
-          ]);
-          bytes += ticket.row([
+            // ]);
+            // printer.row([
             PosColumn(
                 text:
                     'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
-                width: 12,
+                width: 7,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.text('Bill To : ${dataInformation['ToName']}',
+          printer.hr();
+          printer.text('Bill To : ${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left));
           //don't use it if (isEsQrCodeKSA) {
           // if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-          //   bytes += ticket.text(
+          //   printer.text(
           //       companyTaxMode == 'INDIA'
           //           ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
           //           : 'TRN : ${dataInformation['gstno'].toString().trim()}',
           //       styles: const PosStyles(align: PosAlign.left));
           // }
           // }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(text: 'Description', width: 7),
             PosColumn(text: 'Qty', width: 1),
             PosColumn(
@@ -4196,98 +4338,7 @@ class _BtPrintState extends State<BtPrint> {
                 width: 2,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.hr();
-          double totalQty = 0, totalRate = 0;
-
-          // bytes += ticket.hr();
-          bytes += ticket.row([
-            PosColumn(text: 'Total ', width: 3),
-            PosColumn(text: '$totalQty', width: 3),
-            PosColumn(
-                text: totalRate.toStringAsFixed(2),
-                width: 3,
-                styles: const PosStyles(align: PosAlign.right)),
-            PosColumn(
-                text: '${dataInformation['Total']}',
-                width: 3,
-                styles: const PosStyles(align: PosAlign.right)),
-          ]);
-          bytes += ticket.hr();
-        } else {
-          if (ComSettings.appSettings('bool', 'key-print-header-es', false)) {
-            bytes += ticket.text(
-              companySettings.name,
-              styles: const PosStyles(
-                align: PosAlign.center,
-                bold: true,
-                // height: PosTextSize.size2,
-                // width: PosTextSize.size2,
-              ),
-            );
-            companySettings.add1.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add1,
-                    styles: const PosStyles(align: PosAlign.center)));
-            companySettings.add2.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add2,
-                    styles: const PosStyles(align: PosAlign.center)));
-            bytes += ticket.text(
-                'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
-                styles: const PosStyles(align: PosAlign.center));
-
-            bytes += ticket.text(invoiceHead,
-                styles: const PosStyles(align: PosAlign.center, bold: true));
-            bytes += ticket.row([
-              PosColumn(
-                  text: 'Invoice No : ${dataInformation['InvoiceNo']}',
-                  width: 6,
-                  styles: const PosStyles(align: PosAlign.left)),
-              PosColumn(
-                  text:
-                      'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
-                  width: 6,
-                  styles: const PosStyles(align: PosAlign.right)),
-            ]);
-          } else {
-            bytes += ticket.text(invoiceHead,
-                styles: const PosStyles(align: PosAlign.center, bold: true));
-            bytes += ticket.row([
-              PosColumn(
-                  text: 'Invoice No : ${dataInformation['InvoiceNo']}',
-                  width: 6,
-                  styles: const PosStyles(align: PosAlign.left)),
-              PosColumn(
-                  text:
-                      'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
-                  width: 6,
-                  styles: const PosStyles(align: PosAlign.right)),
-            ]);
-          }
-          bytes += ticket.text('Bill To : ${dataInformation['ToName']}',
-              styles: const PosStyles(align: PosAlign.left));
-
-          if (isEsQrCodeKSA) {
-            if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-              bytes += ticket.text(
-                  companyTaxMode == 'INDIA'
-                      ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
-                      : 'TRN : ${dataInformation['gstno'].toString().trim()}',
-                  styles: const PosStyles(align: PosAlign.left));
-            }
-          }
-          bytes += ticket.hr();
-          bytes += ticket.row([
-            PosColumn(text: 'Description', width: 7),
-            PosColumn(text: 'Qty', width: 1),
-            PosColumn(
-                text: 'Price',
-                width: 2,
-                styles: const PosStyles(align: PosAlign.right)),
-            PosColumn(
-                text: 'Total',
-                width: 2,
-                styles: const PosStyles(align: PosAlign.right)),
-          ]);
-          bytes += ticket.hr();
+          printer.hr();
           double totalQty = 0, totalRate = 0;
           for (var i = 0; i < dataParticulars.length; i++) {
             var itemName = paper.width == PaperSize.mm80.width
@@ -4307,7 +4358,7 @@ class _BtPrintState extends State<BtPrint> {
                         .take(12)
                         .toString()
                     : dataParticulars[i]['itemname'].toString();
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: itemName, width: 7),
               PosColumn(
                   text:
@@ -4328,8 +4379,136 @@ class _BtPrintState extends State<BtPrint> {
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
+            PosColumn(text: 'Total ', width: 3),
+            PosColumn(text: '$totalQty', width: 3),
+            PosColumn(
+                text: totalRate.toStringAsFixed(2),
+                width: 3,
+                styles: const PosStyles(align: PosAlign.right)),
+            PosColumn(
+                text: '${dataInformation['Total']}',
+                width: 3,
+                styles: const PosStyles(align: PosAlign.right)),
+          ]);
+          printer.hr();
+        } else {
+          if (ComSettings.appSettings('bool', 'key-print-header-es', false)) {
+            printer.text(companySettings.name,
+                styles: const PosStyles(
+                  align: PosAlign.center,
+                  bold: true,
+                  height: PosTextSize.size2,
+                  width: PosTextSize.size2,
+                ),
+                linesAfter: 1);
+            companySettings.add1.toString().trim().isNotEmpty ??
+                (printer.text(companySettings.add1,
+                    styles: const PosStyles(align: PosAlign.center)));
+            companySettings.add2.toString().trim().isNotEmpty ??
+                (printer.text(companySettings.add2,
+                    styles: const PosStyles(align: PosAlign.center)));
+            printer.text(
+                'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
+                styles: const PosStyles(align: PosAlign.center));
+
+            printer.text(invoiceHead,
+                styles: const PosStyles(align: PosAlign.center, bold: true));
+            printer.row([
+              PosColumn(
+                  text: 'Invoice No : ${dataInformation['InvoiceNo']}',
+                  width: 6,
+                  styles: const PosStyles(align: PosAlign.left)),
+              PosColumn(
+                  text:
+                      'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
+                  width: 6,
+                  styles: const PosStyles(align: PosAlign.right)),
+            ]);
+          } else {
+            printer.text(invoiceHead,
+                styles: const PosStyles(align: PosAlign.center, bold: true));
+            printer.row([
+              PosColumn(
+                  text: 'Invoice No : ${dataInformation['InvoiceNo']}',
+                  width: 6,
+                  styles: const PosStyles(align: PosAlign.left)),
+              PosColumn(
+                  text:
+                      'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
+                  width: 6,
+                  styles: const PosStyles(align: PosAlign.right)),
+            ]);
+          }
+          printer.text('Bill To : ${dataInformation['ToName']}',
+              styles: const PosStyles(align: PosAlign.left));
+
+          if (isEsQrCodeKSA) {
+            if (dataInformation['gstno'].toString().trim().isNotEmpty) {
+              printer.text(
+                  companyTaxMode == 'INDIA'
+                      ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
+                      : 'TRN : ${dataInformation['gstno'].toString().trim()}',
+                  styles: const PosStyles(align: PosAlign.left));
+            }
+          }
+          printer.hr();
+          printer.row([
+            PosColumn(text: 'Description', width: 7),
+            PosColumn(text: 'Qty', width: 1),
+            PosColumn(
+                text: 'Price',
+                width: 2,
+                styles: const PosStyles(align: PosAlign.right)),
+            PosColumn(
+                text: 'Total',
+                width: 2,
+                styles: const PosStyles(align: PosAlign.right)),
+          ]);
+          printer.hr();
+          double totalQty = 0, totalRate = 0;
+          for (var i = 0; i < dataParticulars.length; i++) {
+            var itemName = paper.width == PaperSize.mm80.width
+                ? dataParticulars[i]['itemname'].toString().trim().length > 26
+                    ? dataParticulars[i]['itemname']
+                        .toString()
+                        .trim()
+                        .characters
+                        .take(26)
+                        .toString()
+                    : dataParticulars[i]['itemname'].toString()
+                : dataParticulars[i]['itemname'].toString().trim().length > 12
+                    ? dataParticulars[i]['itemname']
+                        .toString()
+                        .trim()
+                        .characters
+                        .take(12)
+                        .toString()
+                    : dataParticulars[i]['itemname'].toString();
+            printer.row([
+              PosColumn(text: itemName, width: 7),
+              PosColumn(
+                  text:
+                      '${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + '' + dataParticulars[i]['unitName'] + '' : dataParticulars[i]['Qty']}',
+                  width: 1,
+                  styles: const PosStyles(align: PosAlign.right)),
+              PosColumn(
+                  text: double.tryParse(dataParticulars[i]['Rate'].toString())
+                      .toStringAsFixed(2),
+                  width: 2,
+                  styles: const PosStyles(align: PosAlign.right)),
+              PosColumn(
+                  text: double.tryParse(dataParticulars[i]['Total'].toString())
+                      .toStringAsFixed(2),
+                  width: 2,
+                  styles: const PosStyles(align: PosAlign.right)),
+            ]);
+            totalQty += dataParticulars[i]['Qty'];
+            totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
+          }
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Sub =',
                 width: 2,
@@ -4348,8 +4527,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 4,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -4367,8 +4546,8 @@ class _BtPrintState extends State<BtPrint> {
         }
         for (var i = 0; i < otherAmount.length; i++) {
           if (otherAmount[i]['Amount'].toDouble() > 0) {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: '${otherAmount[i]['LedName']} :',
                   width: 6,
@@ -4388,8 +4567,10 @@ class _BtPrintState extends State<BtPrint> {
             ]);
           }
         }
-        bytes += ticket.hr();
-        bytes += ticket.row([
+        if (otherAmount.length > 0) {
+          printer.hr();
+        }
+        printer.row([
           PosColumn(
               text: 'Net Amount :',
               width: 6,
@@ -4407,58 +4588,44 @@ class _BtPrintState extends State<BtPrint> {
                   // width: PosTextSize.size2,
                   bold: true)),
         ]);
-        bytes += ticket.hr();
-        bytes += ticket.text(
+        printer.hr();
+        printer.text(
             'Amount in Words: ${NumberToWord().convertDouble('en', double.tryParse(dataInformation['GrandTotal'].toString()))}',
             linesAfter: 1);
 
         if (Settings.getValue<bool>('key-print-balance', false)) {
           //
         } else {
-          bytes += ticket.row([
-            PosColumn(
-                text: 'CashReceived : ',
-                width: 6,
-                styles: const PosStyles(align: PosAlign.center)),
-            PosColumn(
-                text: '${dataInformation['CashReceived']}',
-                width: 6,
-                styles: const PosStyles(align: PosAlign.center)),
-          ]);
-          bytes += ticket.row([
-            PosColumn(
-                text: 'Old Balance : ${dataInformation['Balance']}',
-                width: 6,
-                styles: const PosStyles(align: PosAlign.center)),
-            PosColumn(
-                text:
-                    'Balance : ${(double.tryParse(dataInformation['Balance'].toString())) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))}',
-                width: 6,
-                styles: const PosStyles(align: PosAlign.center)),
-          ]);
+          printer.text('CashReceived : ${dataInformation['CashReceived']}',
+              styles: const PosStyles(align: PosAlign.left));
+          printer.text('Old Balance : ${dataInformation['Balance']}',
+              styles: const PosStyles(align: PosAlign.left));
+          printer.text(
+              'Balance : ${(double.tryParse(dataInformation['Balance'].toString())) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))}',
+              styles: const PosStyles(align: PosAlign.left));
         }
         if (Settings.getValue<bool>('key-print-bank-details', false)) {
-          bytes += ticket.hr();
-          bytes += ticket.text('${dataBankLedger['name']}',
+          printer.hr();
+          printer.text('${dataBankLedger['name']}',
               styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.text('ACC NO : ${dataBankLedger['account']}',
+          printer.text('ACC NO : ${dataBankLedger['account']}',
               styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.text('IFSC CODE : ${dataBankLedger['ifsc']}',
+          printer.text('IFSC CODE : ${dataBankLedger['ifsc']}',
               styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.text('Branch : ${dataBankLedger['branch']}',
+          printer.text('Branch : ${dataBankLedger['branch']}',
               styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.hr();
+          printer.hr();
         }
 
         // ticket.feed(1);
-        bytes += ticket.text('${bill['message']}',
+        printer.text('${bill['message']}',
             styles: const PosStyles(align: PosAlign.center));
 
         if (isQrCodeKSA) {
           // Print QR Code using native function
-          // bytes += ticket.qrcode('example.com');
+          // printer.qrcode('example.com');
           if (taxSale) {
-            bytes += ticket.qrcode(SaudiConversion.getBase64(
+            printer.qrcode(SaudiConversion.getBase64(
                 companySettings.name,
                 ComSettings.getValue('GST-NO', settings),
                 DateUtil.dateTimeQrDMY(
@@ -4471,10 +4638,10 @@ class _BtPrintState extends State<BtPrint> {
                         double.tryParse(dataInformation['SGST'].toString()) +
                         double.tryParse(dataInformation['IGST'].toString()))
                     .toStringAsFixed(2)));
-            bytes += ticket.feed(
+            printer.feed(
                 ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
           } else if (isEsQrCodeKSA) {
-            bytes += ticket.qrcode(SaudiConversion.getBase64(
+            printer.qrcode(SaudiConversion.getBase64(
                 companySettings.name,
                 ComSettings.getValue('GST-NO', settings),
                 DateUtil.dateTimeQrDMY(
@@ -4487,21 +4654,20 @@ class _BtPrintState extends State<BtPrint> {
                         double.tryParse(dataInformation['SGST'].toString()) +
                         double.tryParse(dataInformation['IGST'].toString()))
                     .toStringAsFixed(2)));
-            bytes += ticket.feed(
+            printer.feed(
                 ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
           }
         } else {
-          bytes += ticket.feed(
+          printer.feed(
               ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
         }
 
-        bytes += ticket.feed(2);
-        return bytes;
+        printer.feed(2);
+        printer.cut();
       } catch (e, s) {
-        FirebaseCrashlytics.instance
-            .recordError(e, s, reason: 'bt print:' + ticket.toString());
-        bytes += ticket.feed(2);
-        return bytes;
+        FirebaseCrashlytics.instance.recordError(e, s, reason: 'tcp print:');
+        printer.feed(2);
+        printer.cut();
       }
     }
   }
@@ -4544,10 +4710,7 @@ class _BtPrintState extends State<BtPrint> {
     };
   }
 
-  Future<List<int>> salesReturnData(PaperSize paper) async {
-    var profile = await CapabilityProfile.load();
-    final Generator ticket = Generator(paper, profile);
-    List<int> bytes = [];
+  Future<void> salesReturnData(NetworkPrinter printer, PaperSize paper) async {
     var bill = widget.data[2];
     var printerSize = widget.data[3];
     CompanyInformation companySettings = widget.data[0];
@@ -4589,34 +4752,33 @@ class _BtPrintState extends State<BtPrint> {
     if (printerSize == "2") {
       try {
         if (taxSale) {
-          bytes += ticket.text(
-            companySettings.name,
-            styles: const PosStyles(
-              align: PosAlign.center,
-              bold: true,
-              // height: PosTextSize.size2,
-              // width: PosTextSize.size2,
-            ),
-          );
-          var text2 = ticket.text(companySettings.add1,
-              styles: const PosStyles(align: PosAlign.center, bold: true));
-          companySettings.add1.toString().trim().isNotEmpty ?? (bytes += text2);
-          var text3 = ticket.text(companySettings.add2,
-              styles: const PosStyles(align: PosAlign.center, bold: true));
-          companySettings.add2.toString().trim().isNotEmpty ?? (bytes += text3);
-          bytes += ticket.text(
+          printer.text(companySettings.name,
+              styles: const PosStyles(
+                align: PosAlign.center,
+                bold: true,
+                height: PosTextSize.size2,
+                width: PosTextSize.size2,
+              ),
+              linesAfter: 1);
+          companySettings.add1.toString().trim().isNotEmpty ??
+              (printer.text(companySettings.add1,
+                  styles: const PosStyles(align: PosAlign.center, bold: true)));
+          companySettings.add2.toString().trim().isNotEmpty ??
+              (printer.text(companySettings.add2,
+                  styles: const PosStyles(align: PosAlign.center, bold: true)));
+          printer.text(
               'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
               styles: const PosStyles(align: PosAlign.center, bold: true));
-          bytes += ticket.text(
+          printer.text(
               companyTaxMode == 'INDIA'
                   ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                   : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
               styles: const PosStyles(align: PosAlign.center, bold: true));
-          bytes += ticket.text(invoiceHead,
+          printer.text(invoiceHead,
               styles: const PosStyles(align: PosAlign.center, bold: true));
           // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
           //     styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                 width: 6,
@@ -4626,23 +4788,23 @@ class _BtPrintState extends State<BtPrint> {
                 width: 6,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.text('Bill To : ',
+          printer.text('Bill To : ',
               styles: const PosStyles(align: PosAlign.left, bold: true));
-          bytes += ticket.text('${dataInformation['Toname']}',
+          printer.text('${dataInformation['Toname']}',
               styles: const PosStyles(align: PosAlign.left, bold: true));
           // if (isEsQrCodeKSA) {
           //   if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-          //     bytes += ticket.text(
+          //     printer.text(
           //         companyTaxMode == 'INDIA'
           //             ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
           //             : 'TRN : ${dataInformation['gstno'].toString().trim()}',
           //         styles: const PosStyles(align: PosAlign.left, bold: true));
           //   }
           // }
-          bytes += ticket.hr();
-          bytes += ticket.text('Description',
+          printer.hr();
+          printer.text('Description',
               styles: const PosStyles(align: PosAlign.left, bold: true));
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: '   ',
                 width: 2,
@@ -4671,10 +4833,10 @@ class _BtPrintState extends State<BtPrint> {
               }
             }
             var itemName = dataParticulars[i]['ProductName'].toString();
-            bytes += ticket.text(itemName,
+            printer.text(itemName,
                 styles: const PosStyles(align: PosAlign.left, bold: true));
 
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: '', width: 2),
               PosColumn(text: dataParticulars[i]['Qty'].toString(), width: 2),
               PosColumn(
@@ -4689,12 +4851,16 @@ class _BtPrintState extends State<BtPrint> {
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
-                text: 'Total : ', width: 5, styles: PosStyles(bold: true)),
+                text: 'Total : ',
+                width: 5,
+                styles: const PosStyles(bold: true)),
             PosColumn(
-                text: '$totalQty', width: 2, styles: PosStyles(bold: true)),
+                text: '$totalQty',
+                width: 2,
+                styles: const PosStyles(bold: true)),
             PosColumn(
                 text: totalRate.toStringAsFixed(2),
                 width: 2,
@@ -4704,8 +4870,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 3,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -4722,8 +4888,8 @@ class _BtPrintState extends State<BtPrint> {
                     // width: PosTextSize.size2,
                     )),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Tax : ' + taxPercentages,
                 width: 6,
@@ -4745,16 +4911,15 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         } else {
           if (ComSettings.appSettings('bool', 'key-print-header-es', false)) {
-            bytes += ticket.text(
-              companySettings.name,
-              styles: const PosStyles(
-                align: PosAlign.center,
-                bold: true,
-                // height: PosTextSize.size2,
-                // width: PosTextSize.size2,
-              ),
-            );
-            bytes += ticket.text(
+            printer.text(companySettings.name,
+                styles: const PosStyles(
+                  align: PosAlign.center,
+                  bold: true,
+                  height: PosTextSize.size2,
+                  width: PosTextSize.size2,
+                ),
+                linesAfter: 1);
+            printer.text(
               '',
               styles: const PosStyles(
                 align: PosAlign.center,
@@ -4774,80 +4939,81 @@ class _BtPrintState extends State<BtPrint> {
             // linesAfter: 1);
             // header1
             companySettings.add1.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add1,
+                (printer.text(companySettings.add1,
                     styles:
                         const PosStyles(align: PosAlign.center, bold: true)));
             companySettings.add2.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add2,
+                (printer.text(companySettings.add2,
                     styles:
                         const PosStyles(align: PosAlign.center, bold: true)));
-            bytes += ticket.text(
+            printer.text(
                 'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
                 styles: const PosStyles(align: PosAlign.center, bold: true));
-            bytes += ticket.text(
+            printer.text(
                 companyTaxMode == 'INDIA'
                     ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                     : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
                 styles: const PosStyles(align: PosAlign.center, bold: true));
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
             // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
             //     styles: const PosStyles(align: PosAlign.left));
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                   width: 12,
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Date : ${DateUtil.dateDMY(dataInformation['DDate'])}',
                   width: 12,
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
           } else {
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
             // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
             //     styles: const PosStyles(align: PosAlign.left));DateUtil.dateDMY
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                   width: 12,
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Date : ${DateUtil.dateDMY(dataInformation['DDate'])}',
                   width: 12,
                   styles: const PosStyles(align: PosAlign.left, bold: true)),
             ]);
           }
-          bytes += ticket.hr();
+          printer.hr();
 
-          bytes += ticket.text('Bill To :',
+          printer.text('Bill To :',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
-          bytes += ticket.text('${dataInformation['ToName']}',
+          printer.text('${dataInformation['ToName']}',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
           // if (isEsQrCodeKSA) {
           //   if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-          //     bytes += ticket.text(
+          //     printer.text(
           //         companyTaxMode == 'INDIA'
           //             ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
           //             : 'TRN : ${dataInformation['gstno'].toString().trim()}',
           //         styles: const PosStyles(align: PosAlign.left, bold: true));
           //   }
           // }
-          bytes += ticket.hr();
-          bytes += ticket.text('Description',
+          printer.hr();
+          printer.text('Description',
               styles: const PosStyles(align: PosAlign.left, bold: true));
 
-          bytes += ticket.row([
+          printer.row([
             PosColumn(text: ' ', width: 1),
-            PosColumn(text: 'Qty', width: 3, styles: PosStyles(bold: true)),
+            PosColumn(
+                text: 'Qty', width: 3, styles: const PosStyles(bold: true)),
             PosColumn(
                 text: 'Price',
                 width: 4,
@@ -4857,14 +5023,14 @@ class _BtPrintState extends State<BtPrint> {
                 width: 4,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.hr();
+          printer.hr();
           double totalQty = 0, totalRate = 0;
           for (var i = 0; i < dataParticulars.length; i++) {
             var itemName = dataParticulars[i]['itemname'].toString();
-            bytes += ticket.text(itemName,
+            printer.text(itemName,
                 styles: const PosStyles(align: PosAlign.left, bold: true));
 
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: '', width: 1),
               PosColumn(
                   text: '${dataParticulars[i]['Qty']}',
@@ -4884,8 +5050,8 @@ class _BtPrintState extends State<BtPrint> {
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Sub =',
                 width: 3,
@@ -4904,8 +5070,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 4,
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -4926,8 +5092,8 @@ class _BtPrintState extends State<BtPrint> {
         }
         // for (var i = 0; i < otherAmount.length; i++) {
         //   if (otherAmount[i]['Amount'].toDouble() > 0) {
-        //     bytes += ticket.hr();
-        //     bytes += ticket.row([
+        //     printer.hr();
+        //     printer.row([
         //       PosColumn(
         //           text: '${otherAmount[i]['LedName']} :',
         //           width: 6,
@@ -4947,13 +5113,13 @@ class _BtPrintState extends State<BtPrint> {
         //     ]);
         //   }
         // }
-        // bytes += ticket.hr();
-        // bytes += ticket.text(
+        // printer.hr();
+        // printer.text(
         //     'Amount in Words: ${NumberToWord().convert('en', double.tryParse(dataInformation['GrandTotal'].toString()).round())}',
         //     linesAfter: 1);
         if (Settings.getValue<bool>('key-print-balance', false)) {
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Net Amount :',
                 width: 6,
@@ -4973,8 +5139,8 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         } else {
           if (ledgerName != 'CASH') {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Old Balance :',
                   width: 6,
@@ -4991,8 +5157,8 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Net Amount :',
                   width: 6,
@@ -5011,8 +5177,8 @@ class _BtPrintState extends State<BtPrint> {
                       // width: PosTextSize.size2,
                       bold: true)),
             ]);
-            bytes += ticket.hr();
-            // bytes += ticket.row([
+            printer.hr();
+            // printer.row([
             //   PosColumn(
             //       text: 'Balance :',
             //       width: 6,
@@ -5033,8 +5199,8 @@ class _BtPrintState extends State<BtPrint> {
             //           bold: true)),
             // ]);
           } else {
-            bytes += ticket.hr();
-            bytes += ticket.row([
+            printer.hr();
+            printer.row([
               PosColumn(
                   text: 'Net Amount :',
                   width: 6,
@@ -5057,14 +5223,14 @@ class _BtPrintState extends State<BtPrint> {
         }
 
         // ticket.feed(1);
-        bytes += ticket.text('Have a nice day',
+        printer.text('Have a nice day',
             styles: const PosStyles(align: PosAlign.center));
 
         // if (isQrCodeKSA) {
         //   // Print QR Code using native function
-        //   // bytes += ticket.qrcode('example.com');
+        //   // printer.qrcode('example.com');
         //   if (taxSale) {
-        //     bytes += ticket.qrcode(SaudiConversion.getBase64(
+        //     printer.qrcode(SaudiConversion.getBase64(
         //         companySettings.name,
         //         ComSettings.getValue('GST-NO', settings),
         //         DateUtil.dateTimeQrDMY(
@@ -5077,10 +5243,10 @@ class _BtPrintState extends State<BtPrint> {
         //                 double.tryParse(dataInformation['SGST'].toString()) +
         //                 double.tryParse(dataInformation['IGST'].toString()))
         //             .toStringAsFixed(2)));
-        //     bytes += ticket.feed(
+        //     printer.feed(
         //         ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
         //   } else if (isEsQrCodeKSA) {
-        //     bytes += ticket.qrcode(SaudiConversion.getBase64(
+        //     printer.qrcode(SaudiConversion.getBase64(
         //         companySettings.name,
         //         ComSettings.getValue('GST-NO', settings),
         //         DateUtil.dateTimeQrDMY(
@@ -5093,37 +5259,34 @@ class _BtPrintState extends State<BtPrint> {
         //                 double.tryParse(dataInformation['SGST'].toString()) +
         //                 double.tryParse(dataInformation['IGST'].toString()))
         //             .toStringAsFixed(2)));
-        //     bytes += ticket.feed(
+        //     printer.feed(
         //         ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
         //   }
         // } else {
-        //   bytes += ticket.feed(
+        //   printer.feed(
         //       ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
         // }
         // ticket.cut();
         // FirebaseCrashlytics.instance
         //     .setCustomKey('str_key', 'bt print complited');
-        bytes += ticket.feed(2);
-        return bytes;
+        printer.feed(2);
+        printer.cut();
       } catch (e, s) {
-        FirebaseCrashlytics.instance
-            .recordError(e, s, reason: 'bt print:' + ticket.toString());
-        bytes += ticket.feed(2);
-        return bytes;
+        FirebaseCrashlytics.instance.recordError(e, s, reason: 'tcp print:');
+        printer.feed(2);
+        printer.cut();
       }
     } else {
       try {
         if (taxSale) {
-          bytes += ticket.text(
-            companySettings.name,
-            styles: const PosStyles(
-              align: PosAlign.center,
-              bold: true,
-              // height: PosTextSize.size2,
-              // width: PosTextSize.size2,
-            ),
-          );
-          bytes += ticket.text('');
+          printer.text(companySettings.name,
+              styles: const PosStyles(
+                align: PosAlign.center,
+                bold: true,
+                height: PosTextSize.size2,
+                width: PosTextSize.size2,
+              ),
+              linesAfter: 1);
 
           // if(printCopy==2){
           //   Uint8List encArabic = await CharsetConverter.encode("windows-1256", "اهلا");charset.178
@@ -5135,51 +5298,51 @@ class _BtPrintState extends State<BtPrint> {
           // }
           // linesAfter: 1);
           // header1
-          var text2 = ticket.text(companySettings.add1,
-              styles: const PosStyles(align: PosAlign.center));
-          companySettings.add1.toString().trim().isNotEmpty ?? (bytes += text2);
-          var text3 = ticket.text(companySettings.add2,
-              styles: const PosStyles(align: PosAlign.center));
-          companySettings.add2.toString().trim().isNotEmpty ?? (bytes += text3);
-          bytes += ticket.text(
+          companySettings.add1.toString().trim().isNotEmpty ??
+              (printer.text(companySettings.add1,
+                  styles: const PosStyles(align: PosAlign.center)));
+          companySettings.add2.toString().trim().isNotEmpty ??
+              (printer.text(companySettings.add2,
+                  styles: const PosStyles(align: PosAlign.center)));
+          printer.text(
               'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
               styles: const PosStyles(align: PosAlign.center));
-          bytes += ticket.text(
+          printer.text(
               companyTaxMode == 'INDIA'
                   ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                   : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
               styles: const PosStyles(align: PosAlign.center));
-          bytes += ticket.text(invoiceHead,
+          printer.text(invoiceHead,
               styles: const PosStyles(align: PosAlign.center, bold: true));
           // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
           //     styles: const PosStyles(align: PosAlign.left));
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                 width: 12,
                 styles: const PosStyles(align: PosAlign.left)),
           ]);
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'Date : ${DateUtil.dateDMY(dataInformation['DDate'])}',
                 width: 12,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.text('Bill To : ${dataInformation['Toname']}',
+          printer.hr();
+          printer.text('Bill To : ${dataInformation['Toname']}',
               styles: const PosStyles(align: PosAlign.left));
           // if (isEsQrCodeKSA) {
           //   if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-          //     bytes += ticket.text(
+          //     printer.text(
           //         companyTaxMode == 'INDIA'
           //             ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
           //             : 'TRN : ${dataInformation['gstno'].toString().trim()}',
           //         styles: const PosStyles(align: PosAlign.left));
           //   }
           // }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(text: 'Description', width: 7),
             PosColumn(text: 'Qty', width: 1),
             PosColumn(
@@ -5220,7 +5383,7 @@ class _BtPrintState extends State<BtPrint> {
                         .take(12)
                         .toString()
                     : dataParticulars[i]['ProductName'].toString();
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: itemName, width: 7),
               PosColumn(text: '${dataParticulars[i]['Qty']}', width: 1),
               PosColumn(
@@ -5235,8 +5398,8 @@ class _BtPrintState extends State<BtPrint> {
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(text: 'Total : ', width: 7),
             PosColumn(text: '$totalQty', width: 1),
             PosColumn(
@@ -5248,8 +5411,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 2,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -5267,8 +5430,8 @@ class _BtPrintState extends State<BtPrint> {
                   // width: PosTextSize.size2,
                 )),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Tax : ' + taxPercentages,
                 width: 6,
@@ -5291,15 +5454,14 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         } else {
           if (ComSettings.appSettings('bool', 'key-print-header-es', false)) {
-            bytes += ticket.text(
-              companySettings.name,
-              styles: const PosStyles(
-                align: PosAlign.center,
-                bold: true,
-                // height: PosTextSize.size2,
-                // width: PosTextSize.size2,
-              ),
-            );
+            printer.text(companySettings.name,
+                styles: const PosStyles(
+                  align: PosAlign.center,
+                  bold: true,
+                  height: PosTextSize.size2,
+                  width: PosTextSize.size2,
+                ),
+                linesAfter: 1);
             // if (printCopy == 2) {
             //   //   Uint8List encArabic = await CharsetConverter.encode("windows-1256", "اهلا");charset.178
             //   //   ticket.textEncoded(encArabic, styles: PosStyles(codeTable: PosCodeTable.arabic));
@@ -5311,24 +5473,24 @@ class _BtPrintState extends State<BtPrint> {
             // linesAfter: 1);
             // header1
             companySettings.add1.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add1,
+                (printer.text(companySettings.add1,
                     styles: const PosStyles(align: PosAlign.center)));
             companySettings.add2.toString().trim().isNotEmpty ??
-                (bytes += ticket.text(companySettings.add2,
+                (printer.text(companySettings.add2,
                     styles: const PosStyles(align: PosAlign.center)));
-            bytes += ticket.text(
+            printer.text(
                 'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
                 styles: const PosStyles(align: PosAlign.center));
-            bytes += ticket.text(
+            printer.text(
                 companyTaxMode == 'INDIA'
                     ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                     : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
                 styles: const PosStyles(align: PosAlign.center));
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
             // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
             //     styles: const PosStyles(align: PosAlign.left));
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                   width: 6,
@@ -5339,11 +5501,11 @@ class _BtPrintState extends State<BtPrint> {
                   styles: const PosStyles(align: PosAlign.right)),
             ]);
           } else {
-            bytes += ticket.text(invoiceHead,
+            printer.text(invoiceHead,
                 styles: const PosStyles(align: PosAlign.center, bold: true));
             // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
             //     styles: const PosStyles(align: PosAlign.left));DateUtil.dateDMY
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Invoice No : ${dataInformation['InvoiceNo']}',
                   width: 6,
@@ -5354,20 +5516,20 @@ class _BtPrintState extends State<BtPrint> {
                   styles: const PosStyles(align: PosAlign.right)),
             ]);
           }
-          bytes += ticket.text('Bill To : ${dataInformation['Toname']}',
+          printer.text('Bill To : ${dataInformation['Toname']}',
               styles: const PosStyles(align: PosAlign.left));
 
           // if (isEsQrCodeKSA) {
           //   if (dataInformation['gstno'].toString().trim().isNotEmpty) {
-          //     bytes += ticket.text(
+          //     printer.text(
           //         companyTaxMode == 'INDIA'
           //             ? 'GSTNO : ${dataInformation['gstno'].toString().trim()}'
           //             : 'TRN : ${dataInformation['gstno'].toString().trim()}',
           //         styles: const PosStyles(align: PosAlign.left));
           //   }
           // }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(text: 'Description', width: 7),
             PosColumn(text: 'Qty', width: 1),
             PosColumn(
@@ -5379,7 +5541,7 @@ class _BtPrintState extends State<BtPrint> {
                 width: 2,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.hr();
+          printer.hr();
           double totalQty = 0, totalRate = 0;
           for (var i = 0; i < dataParticulars.length; i++) {
             var itemName = paper.width == PaperSize.mm80.width
@@ -5401,7 +5563,7 @@ class _BtPrintState extends State<BtPrint> {
                         .take(12)
                         .toString()
                     : dataParticulars[i]['ProductName'].toString();
-            bytes += ticket.row([
+            printer.row([
               PosColumn(text: itemName, width: 7),
               PosColumn(
                   text: '${dataParticulars[i]['Qty']}',
@@ -5421,8 +5583,8 @@ class _BtPrintState extends State<BtPrint> {
             totalQty += dataParticulars[i]['Qty'];
             totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
           }
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Sub =',
                 width: 2,
@@ -5441,8 +5603,8 @@ class _BtPrintState extends State<BtPrint> {
                 width: 4,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
-          bytes += ticket.hr();
-          bytes += ticket.row([
+          printer.hr();
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -5463,8 +5625,8 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         }
 
-        bytes += ticket.hr();
-        bytes += ticket.row([
+        printer.hr();
+        printer.row([
           PosColumn(
               text: 'Net Amount :',
               width: 6,
@@ -5482,20 +5644,20 @@ class _BtPrintState extends State<BtPrint> {
                   // width: PosTextSize.size2,
                   bold: true)),
         ]);
-        bytes += ticket.hr();
-        bytes += ticket.text(
+        printer.hr();
+        printer.text(
             'Amount in Words: ${NumberToWord().convertDouble('en', double.tryParse(dataInformation['GrandTotal'].toString()))}',
             linesAfter: 1);
 
         // ticket.feed(1);
-        bytes += ticket.text('Have a nice day',
+        printer.text('Have a nice day',
             styles: const PosStyles(align: PosAlign.center));
 
         // if (isQrCodeKSA) {
         //   // Print QR Code using native function
-        //   // bytes += ticket.qrcode('example.com');
+        //   // printer.qrcode('example.com');
         //   if (taxSale) {
-        //     bytes += ticket.qrcode(SaudiConversion.getBase64(
+        //     printer.qrcode(SaudiConversion.getBase64(
         //         companySettings.name,
         //         ComSettings.getValue('GST-NO', settings),
         //         DateUtil.dateTimeQrDMY(
@@ -5508,10 +5670,10 @@ class _BtPrintState extends State<BtPrint> {
         //                 double.tryParse(dataInformation['SGST'].toString()) +
         //                 double.tryParse(dataInformation['IGST'].toString()))
         //             .toStringAsFixed(2)));
-        //     bytes += ticket.feed(
+        //     printer.feed(
         //         ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
         //   } else if (isEsQrCodeKSA) {
-        //     bytes += ticket.qrcode(SaudiConversion.getBase64(
+        //     printer.qrcode(SaudiConversion.getBase64(
         //         companySettings.name,
         //         ComSettings.getValue('GST-NO', settings),
         //         DateUtil.dateTimeQrDMY(
@@ -5524,29 +5686,25 @@ class _BtPrintState extends State<BtPrint> {
         //                 double.tryParse(dataInformation['SGST'].toString()) +
         //                 double.tryParse(dataInformation['IGST'].toString()))
         //             .toStringAsFixed(2)));
-        //     bytes += ticket.feed(
+        //     printer.feed(
         //         ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
         //   }
         // } else {
-        bytes += ticket
+        printer
             .feed(ComSettings.appSettings('int', 'key-dropdown-print-line', 1));
         // }
 
-        bytes += ticket.feed(2);
-        return bytes;
+        printer.feed(2);
+        printer.cut();
       } catch (e, s) {
-        FirebaseCrashlytics.instance
-            .recordError(e, s, reason: 'bt print:' + ticket.toString());
-        bytes += ticket.feed(2);
-        return bytes;
+        FirebaseCrashlytics.instance.recordError(e, s, reason: 'tcp print:');
+        printer.feed(2);
+        printer.cut();
       }
     }
   }
 
-  Future<List<int>> receiptData(PaperSize paper) async {
-    var profile = await CapabilityProfile.load();
-    final Generator ticket = Generator(paper, profile);
-    List<int> bytes = [];
+  Future<void> receiptData(NetworkPrinter printer, PaperSize paper) async {
     var bill = widget.data[2][0][0];
     var printerSize = widget.data[3];
     CompanyInformation companySettings = widget.data[0];
@@ -5561,14 +5719,15 @@ class _BtPrintState extends State<BtPrint> {
 
     if (printerSize == "2") {
       try {
-        bytes += ticket.text(
-          companySettings.name,
-          styles: const PosStyles(
-            align: PosAlign.center,
-            bold: true,
-          ),
-        );
-        bytes += ticket.text(
+        printer.text(companySettings.name,
+            styles: const PosStyles(
+              align: PosAlign.center,
+              bold: true,
+              height: PosTextSize.size2,
+              width: PosTextSize.size2,
+            ),
+            linesAfter: 1);
+        printer.text(
           '',
           styles: const PosStyles(
             align: PosAlign.center,
@@ -5576,42 +5735,42 @@ class _BtPrintState extends State<BtPrint> {
           ),
         );
         companySettings.add1.toString().trim().isNotEmpty ??
-            (bytes += ticket.text(companySettings.add1,
+            (printer.text(companySettings.add1,
                 styles: const PosStyles(align: PosAlign.center, bold: true)));
         companySettings.add2.toString().trim().isNotEmpty ??
-            (bytes += ticket.text(companySettings.add2,
+            (printer.text(companySettings.add2,
                 styles: const PosStyles(align: PosAlign.center, bold: true)));
-        bytes += ticket.text(
+        printer.text(
             'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
             styles: const PosStyles(align: PosAlign.center, bold: true));
-        bytes += ticket.text(
+        printer.text(
             companyTaxMode == 'INDIA'
                 ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                 : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
             styles: const PosStyles(align: PosAlign.center, bold: true));
-        bytes += ticket.text(invoiceHead,
+        printer.text(invoiceHead,
             styles: const PosStyles(align: PosAlign.center, bold: true));
         // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
         //     styles: const PosStyles(align: PosAlign.left));
-        bytes += ticket.hr();
-        bytes += ticket.row([
+        printer.hr();
+        printer.row([
           PosColumn(
               text: 'Invoice No : ${bill['entryNo']}',
               width: 12,
               styles: const PosStyles(align: PosAlign.left, bold: true)),
         ]);
-        bytes += ticket.row([
+        printer.row([
           PosColumn(
               text: 'Date : ${DateUtil.dateDMY(bill['date'])}',
               width: 12,
               styles: const PosStyles(align: PosAlign.left, bold: true)),
         ]);
-        bytes += ticket.text('From : ',
+        printer.text('From : ',
             styles: const PosStyles(align: PosAlign.left, bold: true));
-        bytes += ticket.text('${bill['name']}',
+        printer.text('${bill['name']}',
             styles: const PosStyles(align: PosAlign.left, bold: true));
 
-        bytes += ticket.row([
+        printer.row([
           PosColumn(
               text: 'Amount :',
               width: 6,
@@ -5629,7 +5788,7 @@ class _BtPrintState extends State<BtPrint> {
                   // width: PosTextSize.size2,
                   bold: true)),
         ]);
-        bytes += ticket.row([
+        printer.row([
           PosColumn(
               text: 'Discount :',
               width: 6,
@@ -5648,7 +5807,7 @@ class _BtPrintState extends State<BtPrint> {
                   bold: true)),
         ]);
         if (Settings.getValue<bool>('key-print-balance', false)) {
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -5670,7 +5829,7 @@ class _BtPrintState extends State<BtPrint> {
           if (ledgerName != 'CASH') {
             var bal = bill['oldBalance'].toString().split(' ')[0];
             double oldBalance = double.tryParse(bal.toString());
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Total :',
                   width: 6,
@@ -5686,7 +5845,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Old Balance :',
                   width: 6,
@@ -5702,7 +5861,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.text(
+            printer.text(
               '',
               styles: const PosStyles(
                 align: PosAlign.center,
@@ -5711,7 +5870,7 @@ class _BtPrintState extends State<BtPrint> {
             );
             double balance =
                 oldBalance - double.tryParse(bill['total'].toString());
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Balance :',
                   width: 6,
@@ -5729,7 +5888,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true)),
             ]);
           } else {
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Total :',
                   width: 6,
@@ -5751,27 +5910,27 @@ class _BtPrintState extends State<BtPrint> {
         }
 
         // ticket.feed(1);
-        bytes += ticket.text('${bill['message']}',
+        printer.text('${bill['message']}',
             styles: const PosStyles(align: PosAlign.center));
 
-        bytes += ticket.feed(2);
-        return bytes;
+        printer.feed(2);
+        printer.cut();
       } catch (e, s) {
-        FirebaseCrashlytics.instance
-            .recordError(e, s, reason: 'bt print:' + ticket.toString());
-        bytes += ticket.feed(2);
-        return bytes;
+        FirebaseCrashlytics.instance.recordError(e, s, reason: 'tcp print:');
+        printer.feed(2);
+        printer.cut();
       }
     } else {
       try {
-        bytes += ticket.text(
-          companySettings.name,
-          styles: const PosStyles(
-            align: PosAlign.center,
-            bold: true,
-          ),
-        );
-        bytes += ticket.text(
+        printer.text(companySettings.name,
+            styles: const PosStyles(
+              align: PosAlign.center,
+              bold: true,
+              height: PosTextSize.size2,
+              width: PosTextSize.size2,
+            ),
+            linesAfter: 1);
+        printer.text(
           '',
           styles: const PosStyles(
             align: PosAlign.center,
@@ -5779,25 +5938,25 @@ class _BtPrintState extends State<BtPrint> {
           ),
         );
         companySettings.add1.toString().trim().isNotEmpty ??
-            (bytes += ticket.text(companySettings.add1,
+            (printer.text(companySettings.add1,
                 styles: const PosStyles(align: PosAlign.center, bold: true)));
         companySettings.add2.toString().trim().isNotEmpty ??
-            (bytes += ticket.text(companySettings.add2,
+            (printer.text(companySettings.add2,
                 styles: const PosStyles(align: PosAlign.center, bold: true)));
-        bytes += ticket.text(
+        printer.text(
             'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
             styles: const PosStyles(align: PosAlign.center, bold: true));
-        bytes += ticket.text(
+        printer.text(
             companyTaxMode == 'INDIA'
                 ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                 : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
             styles: const PosStyles(align: PosAlign.center, bold: true));
-        bytes += ticket.text(invoiceHead,
+        printer.text(invoiceHead,
             styles: const PosStyles(align: PosAlign.center, bold: true));
         // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
         //     styles: const PosStyles(align: PosAlign.left));
-        bytes += ticket.hr();
-        bytes += ticket.row([
+        printer.hr();
+        printer.row([
           PosColumn(
               text: 'Invoice No : ${bill['entryNo']}',
               width: 6,
@@ -5807,13 +5966,13 @@ class _BtPrintState extends State<BtPrint> {
               width: 6,
               styles: const PosStyles(align: PosAlign.left, bold: true)),
         ]);
-        bytes += ticket.row([
+        printer.row([
           PosColumn(
               text: 'From : ${bill['name']}',
               width: 12,
               styles: const PosStyles(align: PosAlign.left, bold: true)),
         ]);
-        bytes += ticket.row([
+        printer.row([
           PosColumn(
               text: 'Amount :',
               width: 6,
@@ -5831,7 +5990,7 @@ class _BtPrintState extends State<BtPrint> {
                   // width: PosTextSize.size2,
                   bold: true)),
         ]);
-        bytes += ticket.row([
+        printer.row([
           PosColumn(
               text: 'Discount :',
               width: 6,
@@ -5850,7 +6009,7 @@ class _BtPrintState extends State<BtPrint> {
                   bold: true)),
         ]);
         if (Settings.getValue<bool>('key-print-balance', false)) {
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -5872,7 +6031,7 @@ class _BtPrintState extends State<BtPrint> {
           if (bill['name'] != 'CASH') {
             var bal = bill['oldBalance'].toString().split(' ')[0];
             double oldBalance = double.tryParse(bal.toString());
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Total :',
                   width: 6,
@@ -5888,7 +6047,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Old Balance :',
                   width: 6,
@@ -5904,7 +6063,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.text(
+            printer.text(
               '',
               styles: const PosStyles(
                 align: PosAlign.center,
@@ -5916,7 +6075,7 @@ class _BtPrintState extends State<BtPrint> {
                     ? (oldBalance - double.tryParse(bill['total'].toString()))
                     : double.tryParse(bill['total'].toString()) - oldBalance
                 : double.tryParse(bill['total'].toString());
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Balance :',
                   width: 6,
@@ -5934,7 +6093,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true)),
             ]);
           } else {
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Total :',
                   width: 6,
@@ -5956,24 +6115,20 @@ class _BtPrintState extends State<BtPrint> {
         }
 
         // ticket.feed(1);
-        bytes += ticket.text('${bill['message']}',
+        printer.text('${bill['message']}',
             styles: const PosStyles(align: PosAlign.center));
 
-        bytes += ticket.feed(2);
-        return bytes;
+        printer.feed(2);
+        printer.cut();
       } catch (e, s) {
-        FirebaseCrashlytics.instance
-            .recordError(e, s, reason: 'bt print:' + ticket.toString());
-        bytes += ticket.feed(2);
-        return bytes;
+        FirebaseCrashlytics.instance.recordError(e, s, reason: 'tcp print:');
+        printer.feed(2);
+        printer.cut();
       }
     }
   }
 
-  Future<List<int>> paymentData(PaperSize paper) async {
-    var profile = await CapabilityProfile.load();
-    final Generator ticket = Generator(paper, profile);
-    List<int> bytes = [];
+  Future<void> paymentData(NetworkPrinter printer, PaperSize paper) async {
     var bill = widget.data[2][0][0];
     var printerSize = widget.data[3];
     CompanyInformation companySettings = widget.data[0];
@@ -5989,14 +6144,15 @@ class _BtPrintState extends State<BtPrint> {
 
     if (printerSize == "2") {
       try {
-        bytes += ticket.text(
-          companySettings.name,
-          styles: const PosStyles(
-            align: PosAlign.center,
-            bold: true,
-          ),
-        );
-        bytes += ticket.text(
+        printer.text(companySettings.name,
+            styles: const PosStyles(
+              align: PosAlign.center,
+              bold: true,
+              height: PosTextSize.size2,
+              width: PosTextSize.size2,
+            ),
+            linesAfter: 1);
+        printer.text(
           '',
           styles: const PosStyles(
             align: PosAlign.center,
@@ -6004,42 +6160,42 @@ class _BtPrintState extends State<BtPrint> {
           ),
         );
         companySettings.add1.toString().trim().isNotEmpty ??
-            (bytes += ticket.text(companySettings.add1,
+            (printer.text(companySettings.add1,
                 styles: const PosStyles(align: PosAlign.center, bold: true)));
         companySettings.add2.toString().trim().isNotEmpty ??
-            (bytes += ticket.text(companySettings.add2,
+            (printer.text(companySettings.add2,
                 styles: const PosStyles(align: PosAlign.center, bold: true)));
-        bytes += ticket.text(
+        printer.text(
             'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
             styles: const PosStyles(align: PosAlign.center, bold: true));
-        bytes += ticket.text(
+        printer.text(
             companyTaxMode == 'INDIA'
                 ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                 : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
             styles: const PosStyles(align: PosAlign.center, bold: true));
-        bytes += ticket.text(invoiceHead,
+        printer.text(invoiceHead,
             styles: const PosStyles(align: PosAlign.center, bold: true));
         // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
         //     styles: const PosStyles(align: PosAlign.left));
-        bytes += ticket.hr();
-        bytes += ticket.row([
+        printer.hr();
+        printer.row([
           PosColumn(
               text: 'Invoice No : ${bill['entryNo']}',
               width: 12,
               styles: const PosStyles(align: PosAlign.left, bold: true)),
         ]);
-        bytes += ticket.row([
+        printer.row([
           PosColumn(
               text: 'Date : ${DateUtil.dateDMY(bill['date'])}',
               width: 12,
               styles: const PosStyles(align: PosAlign.left, bold: true)),
         ]);
-        bytes += ticket.text('From : ',
+        printer.text('From : ',
             styles: const PosStyles(align: PosAlign.left, bold: true));
-        bytes += ticket.text('${bill['name']}',
+        printer.text('${bill['name']}',
             styles: const PosStyles(align: PosAlign.left, bold: true));
 
-        bytes += ticket.row([
+        printer.row([
           PosColumn(
               text: 'Amount :',
               width: 6,
@@ -6057,7 +6213,7 @@ class _BtPrintState extends State<BtPrint> {
                   // width: PosTextSize.size2,
                   bold: true)),
         ]);
-        bytes += ticket.row([
+        printer.row([
           PosColumn(
               text: 'Discount :',
               width: 6,
@@ -6076,7 +6232,7 @@ class _BtPrintState extends State<BtPrint> {
                   bold: true)),
         ]);
         if (Settings.getValue<bool>('key-print-balance', false)) {
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -6098,7 +6254,7 @@ class _BtPrintState extends State<BtPrint> {
           if (ledgerName != 'CASH') {
             var bal = bill['oldBalance'].toString().split(' ')[0];
             double oldBalance = double.tryParse(bal.toString());
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Total :',
                   width: 6,
@@ -6114,7 +6270,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Old Balance :',
                   width: 6,
@@ -6130,7 +6286,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.text(
+            printer.text(
               '',
               styles: const PosStyles(
                 align: PosAlign.center,
@@ -6141,7 +6297,7 @@ class _BtPrintState extends State<BtPrint> {
                 oldBalance > double.tryParse(bill['total'].toString())
                     ? (oldBalance - double.tryParse(bill['total'].toString()))
                     : double.tryParse(bill['total'].toString());
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Balance :',
                   width: 6,
@@ -6159,7 +6315,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true)),
             ]);
           } else {
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Total :',
                   width: 6,
@@ -6181,27 +6337,27 @@ class _BtPrintState extends State<BtPrint> {
         }
 
         // ticket.feed(1);
-        bytes += ticket.text('${bill['message']}',
+        printer.text('${bill['message']}',
             styles: const PosStyles(align: PosAlign.center));
 
-        bytes += ticket.feed(2);
-        return bytes;
+        printer.feed(2);
+        printer.cut();
       } catch (e, s) {
-        FirebaseCrashlytics.instance
-            .recordError(e, s, reason: 'bt print:' + ticket.toString());
-        bytes += ticket.feed(2);
-        return bytes;
+        FirebaseCrashlytics.instance.recordError(e, s, reason: 'tcp print:');
+        printer.feed(2);
+        printer.cut();
       }
     } else {
       try {
-        bytes += ticket.text(
-          companySettings.name,
-          styles: const PosStyles(
-            align: PosAlign.center,
-            bold: true,
-          ),
-        );
-        bytes += ticket.text(
+        printer.text(companySettings.name,
+            styles: PosStyles(
+              align: PosAlign.center,
+              bold: true,
+              height: PosTextSize.size2,
+              width: PosTextSize.size2,
+            ),
+            linesAfter: 1);
+        printer.text(
           '',
           styles: const PosStyles(
             align: PosAlign.center,
@@ -6209,25 +6365,25 @@ class _BtPrintState extends State<BtPrint> {
           ),
         );
         companySettings.add1.toString().trim().isNotEmpty ??
-            (bytes += ticket.text(companySettings.add1,
+            (printer.text(companySettings.add1,
                 styles: const PosStyles(align: PosAlign.center, bold: true)));
         companySettings.add2.toString().trim().isNotEmpty ??
-            (bytes += ticket.text(companySettings.add2,
+            (printer.text(companySettings.add2,
                 styles: const PosStyles(align: PosAlign.center, bold: true)));
-        bytes += ticket.text(
+        printer.text(
             'Tel : ${companySettings.telephone + ',' + companySettings.mobile}',
             styles: const PosStyles(align: PosAlign.center, bold: true));
-        bytes += ticket.text(
+        printer.text(
             companyTaxMode == 'INDIA'
                 ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                 : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
             styles: const PosStyles(align: PosAlign.center, bold: true));
-        bytes += ticket.text(invoiceHead,
+        printer.text(invoiceHead,
             styles: const PosStyles(align: PosAlign.center, bold: true));
         // ticket.text('Invoice No : ${dataInformation['InvoiceNo']}',
         //     styles: const PosStyles(align: PosAlign.left));
-        bytes += ticket.hr();
-        bytes += ticket.row([
+        printer.hr();
+        printer.row([
           PosColumn(
               text: 'Invoice No : ${bill['entryNo']}',
               width: 6,
@@ -6237,13 +6393,13 @@ class _BtPrintState extends State<BtPrint> {
               width: 6,
               styles: const PosStyles(align: PosAlign.left, bold: true)),
         ]);
-        bytes += ticket.row([
+        printer.row([
           PosColumn(
               text: 'From : ${bill['name']}',
               width: 12,
               styles: const PosStyles(align: PosAlign.left, bold: true)),
         ]);
-        bytes += ticket.row([
+        printer.row([
           PosColumn(
               text: 'Amount :',
               width: 6,
@@ -6261,7 +6417,7 @@ class _BtPrintState extends State<BtPrint> {
                   // width: PosTextSize.size2,
                   bold: true)),
         ]);
-        bytes += ticket.row([
+        printer.row([
           PosColumn(
               text: 'Discount :',
               width: 6,
@@ -6280,7 +6436,7 @@ class _BtPrintState extends State<BtPrint> {
                   bold: true)),
         ]);
         if (Settings.getValue<bool>('key-print-balance', false)) {
-          bytes += ticket.row([
+          printer.row([
             PosColumn(
                 text: 'Total :',
                 width: 6,
@@ -6302,7 +6458,7 @@ class _BtPrintState extends State<BtPrint> {
           if (bill['name'] != 'CASH') {
             var bal = bill['oldBalance'].toString().split(' ')[0];
             double oldBalance = double.tryParse(bal.toString());
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Total :',
                   width: 6,
@@ -6318,7 +6474,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Old Balance :',
                   width: 6,
@@ -6334,7 +6490,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
             ]);
-            bytes += ticket.text(
+            printer.text(
               '',
               styles: const PosStyles(
                 align: PosAlign.center,
@@ -6345,7 +6501,7 @@ class _BtPrintState extends State<BtPrint> {
                 oldBalance > double.tryParse(bill['total'].toString())
                     ? (oldBalance - double.tryParse(bill['total'].toString()))
                     : double.tryParse(bill['total'].toString());
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Balance :',
                   width: 6,
@@ -6363,7 +6519,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true)),
             ]);
           } else {
-            bytes += ticket.row([
+            printer.row([
               PosColumn(
                   text: 'Total :',
                   width: 6,
@@ -6385,26 +6541,22 @@ class _BtPrintState extends State<BtPrint> {
         }
 
         // ticket.feed(1);
-        bytes += ticket.text('${bill['message']}',
+        printer.text('${bill['message']}',
             styles: const PosStyles(align: PosAlign.center));
 
-        bytes += ticket.feed(2);
-        return bytes;
+        printer.feed(2);
+        printer.cut();
       } catch (e, s) {
-        FirebaseCrashlytics.instance
-            .recordError(e, s, reason: 'bt print:' + ticket.toString());
-        bytes += ticket.feed(2);
-        return bytes;
+        FirebaseCrashlytics.instance.recordError(e, s, reason: 'tcp print:');
+        printer.feed(2);
+        printer.cut();
       }
     }
   }
 
-  Future<List<int>> testData(PaperSize paper) async {
-    var profile = await CapabilityProfile.load();
-    final Generator ticket = Generator(paper, profile);
-    List<int> bytes = [];
+  Future<void> testData(NetworkPrinter printer, PaperSize paper) async {
     try {
-      bytes += ticket.text(
+      printer.text(
         'Form with no Data',
         styles: const PosStyles(
           align: PosAlign.center,
@@ -6413,7 +6565,7 @@ class _BtPrintState extends State<BtPrint> {
           // width: PosTextSize.size2,
         ),
       );
-      bytes += ticket.text(
+      printer.text(
         'This is not a model',
         styles: const PosStyles(
           align: PosAlign.center,
@@ -6422,14 +6574,13 @@ class _BtPrintState extends State<BtPrint> {
           // width: PosTextSize.size2,
         ),
       );
-      bytes += ticket.feed(2);
-      bytes += ticket.cut();
-      return bytes;
+      printer.feed(2);
+      printer.cut();
+      printer.cut();
     } catch (e, s) {
-      FirebaseCrashlytics.instance
-          .recordError(e, s, reason: 'bt print:' + ticket.toString());
-      bytes += ticket.feed(2);
-      return bytes;
+      FirebaseCrashlytics.instance.recordError(e, s, reason: 'tcp print:');
+      printer.feed(2);
+      printer.cut();
     }
   }
 }

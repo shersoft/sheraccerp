@@ -769,7 +769,7 @@ class AppSettings extends StatelessWidget {
                     3: 'Cloud',
                     4: 'Document',
                     5: 'POS',
-                    6: 'TCP',
+                    6: 'TCP Network',
                     7: 'WiFi',
                     8: 'USB',
                     9: 'Invoice Designer',

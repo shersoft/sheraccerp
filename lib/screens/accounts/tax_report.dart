@@ -750,12 +750,17 @@ class _TaxReportState extends State<TaxReport> {
     title = title.replaceAll(RegExp(r'[^\w\s]+'), '');
     if (kIsWeb) {
       try {
-        // html.AnchorElement()
-        //   ..href =
-        //       '${Uri.dataFromString(csv, mimeType: 'text/csv', encoding: utf8)}'
-        //   ..download = title
+        // final bytes = utf8.encode(csv);
+        // final blob = html.Blob([bytes], 'application/csv');
+        // final url = html.Url.createObjectUrlFromBlob(blob);
+        // final anchor = html.AnchorElement()
+        //   ..href = url
         //   ..style.display = 'none'
-        //   ..click();
+        //   ..download = '$title.csv';
+        // html.document.body.children.add(anchor);
+        // anchor.click();
+        // html.document.body.children.remove(anchor);
+        // html.Url.revokeObjectUrl(url);
         return '';
       } catch (ex) {
         ex.toString();

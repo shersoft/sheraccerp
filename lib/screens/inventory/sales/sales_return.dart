@@ -1258,7 +1258,7 @@ class _SalesReturnState extends State<SalesReturn> {
 
   dynamic productModelPrize;
   itemDetailWidget() {
-    int id = productModel['slno'];
+    int id = productModel.slNo;
     int locationId = lId.toString().trim().isNotEmpty ? lId : 1;
     return FutureBuilder(
         future: dio.fetchProductPrizeStock(id, locationId),
@@ -1421,11 +1421,10 @@ class _SalesReturnState extends State<SalesReturn> {
     pRate = double.tryParse(productModelPrize['prate'].toString());
     rPRate = double.tryParse(productModelPrize['realprate'].toString());
     isTax = taxable;
-    taxP = isTax ? double.tryParse(productModel['tax'].toString()) : 0;
-    cess = isTax ? double.tryParse(productModel['cessper'].toString()) : 0;
-    cessPer = isTax ? double.tryParse(productModel['cessper'].toString()) : 0;
-    adCessPer =
-        isTax ? double.tryParse(productModel['adcessper'].toString()) : 0;
+    taxP = isTax ? double.tryParse(productModel.tax.toString()) : 0;
+    cess = isTax ? double.tryParse(productModel.cess.toString()) : 0;
+    cessPer = isTax ? double.tryParse(productModel.cessPer.toString()) : 0;
+    adCessPer = isTax ? double.tryParse(productModel.adCessPer.toString()) : 0;
     kfcP = isTax
         ? enableKeralaFloodCess
             ? kfcPer
@@ -1553,7 +1552,7 @@ class _SalesReturnState extends State<SalesReturn> {
       padding: const EdgeInsets.all(8.0),
       child: ListView(
         children: [
-          Text(productModel['itemname']),
+          Text(productModel.itemName),
           SingleChildScrollView(
             child: Form(
               key: _resetKey,
@@ -1594,7 +1593,7 @@ class _SalesReturnState extends State<SalesReturn> {
                             padding: const EdgeInsets.all(2.0),
                             child: FutureBuilder(
                               future: dio.fetchUnitOf(int.tryParse(
-                                  productModel['itemcode'].toString())),
+                                  productModel.itemCode.toString())),
                               builder: (BuildContext context,
                                   AsyncSnapshot snapshot) {
                                 if (snapshot.hasData) {
@@ -1824,7 +1823,7 @@ class _SalesReturnState extends State<SalesReturn> {
                               ),
                               onTap: () {
                                 productTrackingList(
-                                    productModel['slno'].toString());
+                                    productModel.slNo.toString());
                               },
                             )),
                       ]),
@@ -1930,9 +1929,9 @@ class _SalesReturnState extends State<SalesReturn> {
                                   CartItem(
                                       id: totalItem + 1,
                                       itemId: int.tryParse(
-                                          productModel['slno'].toString()),
+                                          productModel.slNo.toString()),
                                       itemName:
-                                          productModel['itemname'].toString(),
+                                          productModel.itemName.toString(),
                                       quantity: quantity,
                                       rate: rate,
                                       rRate: rRate,
