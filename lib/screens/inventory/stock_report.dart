@@ -10,6 +10,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:scoped_model/scoped_model.dart';
+import 'package:sheraccerp/models/company.dart';
+import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
@@ -32,7 +35,7 @@ class _StockReportState extends State<StockReport> {
   String toDate;
   var _data;
   int menuId = 0;
-  bool loadReport = false;
+  bool loadReport = false, lockItemOptions = false;
   bool stockValuation = false;
   DateTime now = DateTime.now();
   DioService api = DioService();
@@ -54,6 +57,8 @@ class _StockReportState extends State<StockReport> {
   DataJson dropdownValueLedgerReportType;
   String title = '';
   List<String> tableColumn = [];
+  List<CompanySettings> settings;
+  List<ReportDesign> reportDesign;
 
   @override
   void initState() {
@@ -64,6 +69,19 @@ class _StockReportState extends State<StockReport> {
     dropdownValueReportType = reportTypeList.first;
     dropdownValueLedgerReportType = reportTypeLedgerList.first;
     location = DataJson(id: 1, name: defaultLocation);
+    settings = ScopedModel.of<MainModel>(context).getSettings();
+    reportDesign = ScopedModel.of<MainModel>(context).getReportDesign();
+
+    lockItemOptions =
+        ComSettings.getStatus('KEY LOCK STOCK REPORT ITEM ONLY', settings);
+
+    lockItemOptions = companyUserData.userType.toUpperCase() == 'SALESMAN'
+        ? lockItemOptions
+        : false;
+
+    api
+        .getReportDesignByName('StockItemSummery')
+        .then((value) => reportDesign = value);
   }
 
   @override
@@ -172,18 +190,232 @@ class _StockReportState extends State<StockReport> {
                           Tab(text: "Stock Ledger"),
                         ],
                       ),
-                      Expanded(
-                        child: TabBarView(
-                          children: [
-                            selectStock(),
-                            selectStockLedger(),
-                          ],
-                        ),
-                      ),
+                      lockItemOptions
+                          ? Expanded(
+                              child: TabBarView(
+                              children: [selectStockItemOnly(), Text('')],
+                            ))
+                          : Expanded(
+                              child: TabBarView(
+                                children: [
+                                  selectStock(),
+                                  selectStockLedger(),
+                                ],
+                              ),
+                            ),
                     ],
                   ),
                 )),
           );
+  }
+
+  selectStockItemOnly() {
+    isPageMode = false;
+    return ListView(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              Card(
+                elevation: 0.5,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    const Text(
+                      'Date : ',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                    InkWell(
+                      child: Text(
+                        fromDate,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 25),
+                      ),
+                      onTap: () => _selectDate('f'),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              // dropDownReportType(),
+              const Divider(),
+              // DropdownSearch<dynamic>(
+              //   maxHeight: 300,
+              //   onFind: (String filter) =>
+              //       api.getSalesListData(filter, 'sales_list/location'),
+              //   dropdownSearchDecoration: const InputDecoration(
+              //       border: OutlineInputBorder(), label: Text('Select Branch')),
+              //   onChanged: (dynamic data) {
+              //     location = data;
+              //   },
+              //   showSearchBox: true,
+              // ),
+              const Divider(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      if (lockItemOptions) {
+                        if (itemId != null || itemName != null) {
+                          setState(() {
+                            title = 'Stock';
+                            loadReport = true;
+                          });
+                        }
+                      } else {
+                        setState(() {
+                          title = 'Stock';
+                          loadReport = true;
+                        });
+                      }
+                    },
+                    child: const Text('Show'),
+                    style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(kPrimaryColor),
+                      foregroundColor:
+                          MaterialStateProperty.all<Color>(Colors.white),
+                    ),
+                  ),
+                  // const Text('Page'),
+                  // Checkbox(
+                  //   value: isPageMode,
+                  //   onChanged: (value) {
+                  //     setState(() {
+                  //       isPageMode = value;
+                  //     });
+                  //   },
+                  // )
+                ],
+              ),
+              // const Divider(),
+              // stockMethod(),
+              // const Divider(),
+              // dropDownStockMinus(),
+              const Divider(),
+              DropdownSearch<dynamic>(
+                maxHeight: 300,
+                onFind: (String filter) =>
+                    api.getSalesListData(filter, 'sales_list/ItemCode'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select Item Code')),
+                onChanged: (dynamic data) {
+                  itemId = data;
+                },
+                showSearchBox: true,
+              ),
+              const Divider(),
+              DropdownSearch<dynamic>(
+                maxHeight: 300,
+                onFind: (String filter) =>
+                    api.getSalesListData(filter, 'sales_list/itemName'),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    label: Text('Select Item Name')),
+                onChanged: (dynamic data) {
+                  itemName = data;
+                },
+                showSearchBox: true,
+              ),
+              const Divider(),
+              // DropdownSearch<dynamic>(
+              //   maxHeight: 300,
+              //   onFind: (String filter) =>
+              //       api.getSalesListData(filter, 'sales_list/manufacture'),
+              //   dropdownSearchDecoration: const InputDecoration(
+              //       border: OutlineInputBorder(),
+              //       label: Text('Select Item MFR')),
+              //   onChanged: (dynamic data) {
+              //     mfr = data;
+              //   },
+              //   showSearchBox: true,
+              // ),
+              // const Divider(),
+              // DropdownSearch<dynamic>(
+              //   maxHeight: 300,
+              //   onFind: (String filter) =>
+              //       api.getSalesListData(filter, 'sales_list/category'),
+              //   dropdownSearchDecoration: const InputDecoration(
+              //       border: OutlineInputBorder(),
+              //       label: Text('Select Category')),
+              //   onChanged: (dynamic data) {
+              //     category = data;
+              //   },
+              //   showSearchBox: true,
+              // ),
+              // const Divider(),
+              // DropdownSearch<dynamic>(
+              //   maxHeight: 300,
+              //   onFind: (String filter) =>
+              //       api.getSalesListData(filter, 'sales_list/subCategory'),
+              //   dropdownSearchDecoration: const InputDecoration(
+              //       border: OutlineInputBorder(),
+              //       label: Text('Select SubCategory')),
+              //   onChanged: (dynamic data) {
+              //     subCategory = data;
+              //   },
+              //   showSearchBox: true,
+              // ),
+              // const Divider(),
+              // DropdownSearch<dynamic>(
+              //   maxHeight: 300,
+              //   onFind: (String filter) =>
+              //       api.getSalesListData(filter, 'sales_list/rack'),
+              //   dropdownSearchDecoration: const InputDecoration(
+              //       border: OutlineInputBorder(), label: Text("Select Rack")),
+              //   onChanged: (dynamic data) {
+              //     rack = data;
+              //   },
+              //   showSearchBox: true,
+              // ),
+              // const Divider(),
+              // DropdownSearch<dynamic>(
+              //   maxHeight: 300,
+              //   onFind: (String filter) =>
+              //       api.getSalesListData(filter, 'sales_list/taxGroup'),
+              //   dropdownSearchDecoration: const InputDecoration(
+              //       border: OutlineInputBorder(),
+              //       label: Text("Select TaxGroup")),
+              //   onChanged: (dynamic data) {
+              //     taxGroup = data;
+              //   },
+              //   showSearchBox: true,
+              // ),
+              // const Divider(),
+              // DropdownSearch<dynamic>(
+              //   maxHeight: 300,
+              //   onFind: (String filter) =>
+              //       api.getSalesListData(filter, 'sales_list/supplier'),
+              //   dropdownSearchDecoration: const InputDecoration(
+              //       border: OutlineInputBorder(),
+              //       label: Text("Select Supplier")),
+              //   onChanged: (dynamic data) {
+              //     supplier = data;
+              //   },
+              //   showSearchBox: true,
+              // ),
+              // const Divider(),
+              // DropdownSearch<dynamic>(
+              //   maxHeight: 300,
+              //   onFind: (String filter) =>
+              //       api.getSalesListData(filter, 'sales_list/unit'),
+              //   dropdownSearchDecoration: const InputDecoration(
+              //       border: OutlineInputBorder(), label: Text("Select Unit")),
+              //   onChanged: (dynamic data) {
+              //     unit = data;
+              //   },
+              //   showSearchBox: true,
+              // ),
+              const Divider(),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   reportView(title) {
@@ -233,7 +465,7 @@ class _StockReportState extends State<StockReport> {
       _location = location.id.toString() ?? '0';
     }
     if (itemId != null) {
-      _itemCode = itemId.id.toString() ?? '';
+      _itemCode = itemId.name.toString() ?? '';
     }
     if (itemName != null) {
       _itemName = itemName.name.toString() ?? '';
@@ -323,6 +555,17 @@ class _StockReportState extends State<StockReport> {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
             var data = snapshot.data;
+            var filterItems = data;
+            if (lockItemOptions) {
+              for (ReportDesign design in reportDesign) {
+                if (!design.visibility) {
+                  for (var item in filterItems) {
+                    item.remove(design.caption.trim());
+                  }
+                }
+              }
+              data = filterItems;
+            }
             tableColumn = data[0].keys.toList();
             var col = tableColumn;
             Map<String, dynamic> totalData = {};

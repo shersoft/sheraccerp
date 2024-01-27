@@ -42,7 +42,7 @@
   
 
    <application
-        android:label="SherAccERP"
+        android:label="SherAcc ERP"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"

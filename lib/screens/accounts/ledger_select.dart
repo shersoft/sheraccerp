@@ -31,7 +31,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
   var mode = '';
   DateTime now = DateTime.now();
   String radioButtonItem = 'All';
-  int rdId = 1;
+  int rdId = 1, groupId = 0;
   String selectedGroupValues = '', selectedStockValue = '';
   dynamic selectedItem;
 
@@ -49,12 +49,17 @@ class _LedgerSelectState extends State<LedgerSelect> {
           .first;
     }
 
+    groupId =
+        ComSettings.appSettings('int', 'key-dropdown-default-group-view', 0) -
+            1;
+
     if (arguments != null) {
       mode = arguments['mode'];
       if (mode == "ledger") {
         _loading = true;
         statement = 'Ledger_Report';
-        api.getLedgerAll().then((value) {
+        (groupId > 1 ? api.getLedgerByGroup(groupId) : api.getLedgerAll())
+            .then((value) {
           setState(() {
             items.addAll(value);
             itemDisplay = items;

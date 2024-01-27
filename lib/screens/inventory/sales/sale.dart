@@ -524,6 +524,9 @@ class _SaleState extends State<Sale> {
             Visibility(
               visible: previewData,
               child: TextButton(
+                  onLongPress: () {
+                    searchBill(context, salesTypeData.id);
+                  },
                   child: Text(
                     previewData ? "New " + salesTypeData.name : 'Sales',
                     style: const TextStyle(
@@ -779,6 +782,11 @@ class _SaleState extends State<Sale> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text("No items in " + salesTypeData.name),
+              IconButton(
+                  onPressed: () {
+                    searchBill(context, salesTypeData.id);
+                  },
+                  icon: Icon(Icons.search)),
               TextButton.icon(
                   style: ButtonStyle(
                     backgroundColor:
@@ -6741,6 +6749,130 @@ class _SaleState extends State<Sale> {
         : grandTotal > 0
             ? grandTotal
             : totalCartValue;
+  }
+
+  Future<void> searchBill(BuildContext context, int type) async {
+    TextEditingController _controller = TextEditingController();
+    String valueText;
+    _controller.text = '';
+    // return showDialog(
+    //   context: context,
+    //   builder: (context) {
+    //     return (StatefulBuilder(builder: (context, setState) {
+    //       return AlertDialog(
+    //         title: const Text('Type entryNo'),
+    //         content: TextField(
+    //           onChanged: (value) {
+    //             setState(() {
+    //               valueText = value;
+    //             });
+    //           },
+    //           controller: _controller,
+    //           decoration: const InputDecoration(
+    //               border: OutlineInputBorder(), labelText: "EntryNo"),
+    //           keyboardType: const TextInputType.numberWithOptions(),
+    //           inputFormatters: [
+    //             FilteringTextInputFormatter(RegExp(r'[0-9]'),
+    //                 allow: true, replacementString: '.')
+    //           ],
+    //         ),
+    //         actions: <Widget>[
+    //           TextButton(
+    //             style: TextButton.styleFrom(
+    //               foregroundColor: Colors.white,
+    //               backgroundColor: Colors.red,
+    //             ),
+    //             child: const Text('CANCEL'),
+    //             onPressed: () {
+    //               setState(() {
+    //                 Navigator.pop(context);
+    //               });
+    //             },
+    //           ),
+    //           TextButton(
+    //             style: TextButton.styleFrom(
+    //               foregroundColor: Colors.white,
+    //               backgroundColor: Colors.green,
+    //             ),
+    //             child: const Text('OK'),
+    //             onPressed: () {
+    //               // setState(() {
+    //               Navigator.pop(context);
+    //               if (_controller.text.isNotEmpty) {
+    //                 dataDisplay.addAll([
+    //                   {
+    //                     'Type': type,
+    //                     'InvoiceNo': _controller.text,
+    //                     'EntryNo': int.tryParse(_controller.text) ?? 0,
+    //                     'Id': int.tryParse(_controller.text) ?? 0
+    //                   }
+    //                 ]);
+    //                 fetchSale(context, dataDisplay[0]);
+    //               }
+    //               // });
+    //             },
+    //           ),
+    //         ],
+    //       );
+    //     }));
+    //   },
+    // );
+
+    return showDialog(
+        context: context,
+        builder: (BuildContext cx) {
+          return AlertDialog(
+            title: const Text('Type entryNo'),
+            content: TextField(
+              onChanged: (value) {
+                valueText = value;
+              },
+              controller: _controller,
+              decoration: const InputDecoration(
+                  border: OutlineInputBorder(), labelText: "EntryNo"),
+              keyboardType: const TextInputType.numberWithOptions(),
+              inputFormatters: [
+                FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                    allow: true, replacementString: '.')
+              ],
+            ),
+            actions: [
+              TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.red,
+                ),
+                child: const Text('CANCEL'),
+                onPressed: () {
+                  setState(() {
+                    Navigator.pop(cx);
+                  });
+                },
+              ),
+              TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.green,
+                ),
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.pop(cx);
+                  if (_controller.text.isNotEmpty) {
+                    dataDisplay.addAll([
+                      {
+                        'Type': type,
+                        'InvoiceNo': _controller.text,
+                        'EntryNo': int.tryParse(_controller.text) ?? 0,
+                        'Id': int.tryParse(_controller.text) ?? 0
+                      }
+                    ]);
+                    fetchSale(context, dataDisplay[0]);
+                  }
+                },
+              ),
+            ],
+          );
+        });
   }
 }
 

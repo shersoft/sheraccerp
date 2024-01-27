@@ -820,6 +820,27 @@ class _SalesManHomeState extends State<SalesManHome> {
                             ),
                           ),
                         ),
+                        Visibility(
+                          visible: ComSettings.userControl('STOCK REPORT'),
+                          child: Card(
+                            elevation: 2,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('Stock Report',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      fontFamily: 'Poppins')),
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/StockReport');
+                              },
+                            ),
+                          ),
+                        ),
                         Card(
                           elevation: 2,
                           shape: const StadiumBorder(

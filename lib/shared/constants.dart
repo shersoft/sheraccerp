@@ -454,9 +454,10 @@ class ComSettings {
       result = -1;
     }
     return result < 0
-        ? name == 'RECEIPT' || name == 'PAYMENT'
-            ? true
-            : false
+        ? false
+        // ? name == 'RECEIPTX' || name == 'PAYMENTX'
+        //     ? true
+        //     : false
         : result == 1
             ? true
             : false;
