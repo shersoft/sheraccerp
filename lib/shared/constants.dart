@@ -128,6 +128,15 @@ const List<String> rateTypeData = [
   'BRANCH'
 ];
 
+List<DataJson> rateTypeModelData = [
+  DataJson(id: 0, name: ''),
+  DataJson(id: 1, name: 'MRP'),
+  DataJson(id: 2, name: 'RETAIL'),
+  DataJson(id: 3, name: 'SPRETAIL'),
+  DataJson(id: 4, name: 'WHOLESALE'),
+  DataJson(id: 5, name: 'BRANCH')
+];
+
 class ComSettings {
   fetchOtherData() {
     DioService api = DioService();
@@ -279,6 +288,13 @@ class ComSettings {
       for (var element in value) {
         groupList.add(
             AppSettingsMap(key: element['ledCode'], value: element['LedName']));
+      }
+    });
+
+    api.getRateTypeList().then((value) {
+      if (value.isNotEmpty) {
+        optionRateTypeList = [];
+        optionRateTypeList.addAll(value);
       }
     });
 
@@ -434,6 +450,16 @@ class ComSettings {
       }
     }
     return sTypeList;
+  }
+
+  static salesRateTypeList(cacheKey, defaultValue) {
+    List<OptionRateType> rateTypeList = [];
+    for (var option in optionRateTypeList) {
+      if (appSettings('bool', cacheKey + option.id.toString(), defaultValue)) {
+        rateTypeList.add(option);
+      }
+    }
+    return rateTypeList;
   }
 
   static userControl(String name) {

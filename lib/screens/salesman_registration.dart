@@ -293,6 +293,9 @@ class _SalesmanRegistrationState extends State<SalesmanRegistration> {
                     Tab(
                         text: "Payroll App",
                         icon: Icon(Icons.supervised_user_circle)),
+                    // Tab(
+                    //     text: "Rate Type",
+                    //     icon: Icon(Icons.format_list_numbered)),
                   ],
                 ),
               ),
@@ -605,7 +608,7 @@ class _SalesmanRegistrationState extends State<SalesmanRegistration> {
                         ),
                       ],
                     ),
-                  )
+                  ),
                 ],
               ),
             ),

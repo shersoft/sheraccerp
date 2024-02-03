@@ -645,6 +645,44 @@ class AppSettings extends StatelessWidget {
                   },
                 ),
                 ExpandableSettingsTile(
+                    title: 'Item Rate Type',
+                    subtitle: 'show columns for rate slot of item',
+                    children: [
+                      SwitchSettingsTile(
+                        title: 'Select item rate type option',
+                        settingKey: 'key-switch-sales-rate-type-set',
+                        onChange: (value) {
+                          debugPrint('key-switch-sales-rate-type-set: $value');
+                        },
+                        childrenIfEnabled: [
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: optionRateTypeList.length,
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                title: CheckboxSettingsTile(
+                                  settingKey: 'key-item-rate-type-control-' +
+                                      optionRateTypeList[index].id.toString(),
+                                  title:
+                                      'Show ' + optionRateTypeList[index].name,
+                                  enabledLabel: 'Enabled',
+                                  disabledLabel: 'Disabled',
+                                  onChange: (value) {
+                                    debugPrint('key-item-rate-type-control-' +
+                                        optionRateTypeList[index]
+                                            .id
+                                            .toString() +
+                                        ': $value');
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ]),
+                ExpandableSettingsTile(
                   title: 'Item Batch Details',
                   subtitle: 'show columns for batch of item',
                   children: [
@@ -826,6 +864,7 @@ class AppSettings extends StatelessWidget {
                     5: 'VAT1',
                     6: 'Other',
                     7: 'VAT2',
+                    8: 'VAT3',
                   },
                   selected: 2,
                   onChange: (value) {

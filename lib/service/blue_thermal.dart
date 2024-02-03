@@ -654,6 +654,168 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
               //     .paperCut(); //some printer not supported (sometime making image not centered)
               //bluetooth.drawerPin2(); // or you can use bluetooth.drawerPin5();
               // }else{}
+            } else if (printerModel == 8) {
+              var bal = double.tryParse(dataInformation['Balance'].toString()) +
+                  (double.tryParse(dataInformation['GrandTotal'].toString()) -
+                      double.tryParse(
+                          dataInformation['CashReceived'].toString()));
+              if (isLogo) {
+                bluetooth.printNewLine();
+                if (file != null) {
+                  bluetooth.printImage(file.path); //path of your image/logo
+                }
+                bluetooth.printNewLine();
+              }
+              bluetooth.printNewLine();
+              bluetooth.printCustom(companySettings.name,
+                  Enu.Size.boldLarge.val, Enu.Align.center.val);
+              bluetooth.printNewLine();
+              line = "1";
+              if (companySettings.add1.toString().trim().isNotEmpty) {
+                bluetooth.printCustom(companySettings.add1.toString().trim(),
+                    Enu.Size.bold.val, Enu.Align.center.val);
+              }
+              if (companySettings.add2.toString().trim().isNotEmpty) {
+                bluetooth.printCustom(companySettings.add2.toString().trim(),
+                    Enu.Size.bold.val, Enu.Align.center.val);
+              }
+              bluetooth.printCustom(
+                  'Phone No: ${companySettings.telephone + ',' + companySettings.mobile}',
+                  Enu.Size.bold.val,
+                  Enu.Align.center.val);
+              line = "2";
+              bluetooth.printCustom(
+                  companyTaxMode == 'INDIA'
+                      ? 'GSTNO: ${ComSettings.getValue('GST-NO', settings)}'
+                      : 'TRN NO: ${ComSettings.getValue('GST-NO', settings)}',
+                  Enu.Size.bold.val,
+                  Enu.Align.center.val);
+              line = "3";
+              bluetooth.printCustom(
+                  invoiceHead, Enu.Size.boldMedium.val, Enu.Align.center.val);
+              // bluetooth.printLeftRight("LEFT", "RIGHT", Size.medium.val);
+              // bluetooth.printLeftRight("LEFT", "RIGHT", Size.bold.val);
+              line = "4";
+              bluetooth.print3Column(
+                  "Invoice No:${dataInformation['InvoiceNo']}",
+                  " ",
+                  'Date:${DateUtil.dateDMY(dataInformation['DDate'])}',
+                  Enu.Size.bold.val,
+                  format: "%-10s %-4s %-18s %n");
+              line = "5";
+              bluetooth.printCustom(
+                  '----------------------------------------------------------',
+                  Enu.Size.medium.val,
+                  Enu.Align.center.val);
+              line = "6";
+              bluetooth.printCustom('${dataInformation['ToName']}',
+                  Enu.Size.bold.val, Enu.Align.left.val);
+              line = "7";
+              bluetooth.printCustom(
+                  companyTaxMode == 'INDIA'
+                      ? 'GSTNO:${dataInformation['gstno'].toString().trim()}'
+                      : 'TRN:${dataInformation['gstno'].toString().trim()}',
+                  Enu.Size.bold.val,
+                  Enu.Align.left.val);
+              line = "8";
+              // bluetooth.printNewLine();
+              bluetooth.printCustom(
+                  '----------------------------------------------------------',
+                  Enu.Size.medium.val,
+                  Enu.Align.center.val);
+              line = "9";
+              bluetooth.print5Column("Description", "Qty", "Price", "Vat",
+                  "Total", Enu.Size.bold.val,
+                  format: "%-20s %-4s %-4s %-4s %-6s %n");
+              bluetooth.printCustom(
+                  '----------------------------------------------------------',
+                  Enu.Size.medium.val,
+                  Enu.Align.center.val);
+              line = "10";
+              for (var i = 0; i < dataParticulars.length; i++) {
+                var itemName = dataParticulars[i]['itemname'].toString();
+                bluetooth.printCustom(
+                    itemName, Enu.Size.bold.val, Enu.Align.left.val);
+                // bluetooth.print4Column(itemName, "", "", "", Enu.Size.bold.val,
+                //     format: "%35s %-1s %1s %1s %n");
+                bluetooth.print5Column(
+                    "",
+                    '${dataParticulars[i]['Qty']}',
+                    '${dataParticulars[i]['RealRate'].toStringAsFixed(2)}',
+                    (double.tryParse(dataInformation['CGST'].toString()) +
+                            double.tryParse(
+                                dataInformation['SGST'].toString()) +
+                            double.tryParse(dataInformation['IGST'].toString()))
+                        .toStringAsFixed(2),
+                    '${dataParticulars[i]['Total'].toStringAsFixed(2)}',
+                    Enu.Size.bold.val,
+                    format: "%-20s %4s %4s %4s %6s %n");
+              }
+              line = "11";
+              // bluetooth.printNewLine();
+              bluetooth.printCustom(
+                  '----------------------------------------------------------',
+                  Enu.Size.medium.val,
+                  Enu.Align.center.val);
+              bluetooth.printCustom(
+                  'Gross Total:${dataInformation['NetAmount'].toStringAsFixed(2)}',
+                  Enu.Size.bold.val,
+                  Enu.Align.right.val);
+              line = "12";
+              bluetooth.printCustom(
+                  'VAT:' +
+                      (double.tryParse(dataInformation['CGST'].toString()) +
+                              double.tryParse(
+                                  dataInformation['SGST'].toString()) +
+                              double.tryParse(
+                                  dataInformation['IGST'].toString()))
+                          .toStringAsFixed(2),
+                  Enu.Size.bold.val,
+                  Enu.Align.right.val);
+              line = "13";
+              bluetooth.printCustom(
+                  'Discount:${dataInformation['OtherDiscount'].toStringAsFixed(2)}',
+                  Enu.Size.bold.val,
+                  Enu.Align.right.val);
+              line = "14";
+              bluetooth.printCustom(
+                  'NET TOTAL:${dataInformation['GrandTotal'].toStringAsFixed(2)}',
+                  Enu.Size.bold.val,
+                  Enu.Align.right.val);
+              // bluetooth.printNewLine();
+              line = "15";
+              bluetooth.printCustom('${bill['message']}', Enu.Size.bold.val,
+                  Enu.Align.center.val);
+              line = "16";
+              bluetooth.printNewLine();
+              if (isQrCodeKSA) {
+                bluetooth.printQRcode(
+                    SaudiConversion.getBase64(
+                        companySettings.name,
+                        ComSettings.getValue('GST-NO', settings),
+                        DateUtil.dateTimeQrDMY(
+                            DateUtil.datedYMD(dataInformation['DDate']) +
+                                ' ' +
+                                DateUtil.timeHMS(dataInformation['BTime'])),
+                        double.tryParse(
+                                dataInformation['GrandTotal'].toString())
+                            .toStringAsFixed(2),
+                        (double.tryParse(dataInformation['CGST'].toString()) +
+                                double.tryParse(
+                                    dataInformation['SGST'].toString()) +
+                                double.tryParse(
+                                    dataInformation['IGST'].toString()))
+                            .toStringAsFixed(2)),
+                    200,
+                    200,
+                    Enu.Align.center.val);
+              }
+              bluetooth.printNewLine();
+              bluetooth.printNewLine();
+              // bluetooth
+              //     .paperCut(); //some printer not supported (sometime making image not centered)
+              //bluetooth.drawerPin2(); // or you can use bluetooth.drawerPin5();
+              // }else{}
             } else {
               if (taxSale) {
                 if (isLogo) {

@@ -89,7 +89,8 @@ class _SaleState extends State<Sale> {
       gstVerified = false,
       gstValidation = false,
       isLedgerWiseLastSRate = false,
-      isQuantityBasedSerialNo = false;
+      isQuantityBasedSerialNo = false,
+      keySwitchSalesRateTypeSet = false;
   final List<TextEditingController> _controllers = [];
   DateTime now = DateTime.now();
   String formattedDate;
@@ -163,31 +164,21 @@ class _SaleState extends State<Sale> {
     itemStockAll = ComSettings.appSettings('bool', 'key-item-stock-all', false);
     keyItemsVariantStock =
         ComSettings.appSettings('bool', 'key-items-variant-stock', false);
-
-    if (optionRateTypeList.isEmpty) {
-      api.getRateTypeList().then((value) {
-        setState(() {
-          rateTypeList = value;
-
-          String rateTypeS = salesTypeData != null
-              ? salesTypeData.rateType.isNotEmpty
-                  ? salesTypeData.rateType
-                  : 'MRP'
-              : 'MRP';
-
-          rateTypeItem =
-              rateTypeList.firstWhere((element) => element.name == rateTypeS);
-        });
-      });
+    keySwitchSalesRateTypeSet = ComSettings.appSettings(
+        'bool', 'key-switch-sales-rate-type-set', false);
+    if (keySwitchSalesRateTypeSet) {
+      rateTypeList =
+          ComSettings.salesRateTypeList('key-item-rate-type-control-', false);
+      String rateTypeS = rateTypeList != null ? rateTypeList[0].name : 'MRP';
+      rateTypeItem =
+          rateTypeList.firstWhere((element) => element.name == rateTypeS);
     } else {
       rateTypeList = optionRateTypeList;
-
       String rateTypeS = salesTypeData != null
           ? salesTypeData.rateType.isNotEmpty
               ? salesTypeData.rateType
               : 'MRP'
           : 'MRP';
-
       rateTypeItem = rateTypeList.firstWhere((element) =>
           element.name.toString().toUpperCase() == rateTypeS.toUpperCase());
     }
@@ -4117,26 +4108,32 @@ class _SaleState extends State<Sale> {
                                   kPrimaryDarkColor),
                             ),
                             onPressed: () {
-                              List<ProductRating> rateData = [
-                                ProductRating(
-                                    id: 0,
-                                    name: 'MRP',
-                                    rate: product.sellingPrice),
-                                ProductRating(
-                                    id: 1,
-                                    name: 'Retail',
-                                    rate: product.retailPrice),
-                                ProductRating(
-                                    id: 2,
-                                    name: 'WsRate',
-                                    rate: product.wholeSalePrice),
-                                ProductRating(
-                                    id: 2,
-                                    name: labelSpRate,
-                                    rate: product.spRetailPrice),
-                                ProductRating(
-                                    id: 3, name: 'Branch', rate: product.branch)
-                              ];
+                              List<ProductRating> rateData =
+                                  keySwitchSalesRateTypeSet
+                                      ? selectedRateTypeData(
+                                          rateTypeList, product)
+                                      : [
+                                          ProductRating(
+                                              id: 0,
+                                              name: 'MRP',
+                                              rate: product.sellingPrice),
+                                          ProductRating(
+                                              id: 1,
+                                              name: 'Retail',
+                                              rate: product.retailPrice),
+                                          ProductRating(
+                                              id: 2,
+                                              name: 'WsRate',
+                                              rate: product.wholeSalePrice),
+                                          ProductRating(
+                                              id: 2,
+                                              name: labelSpRate,
+                                              rate: product.spRetailPrice),
+                                          ProductRating(
+                                              id: 3,
+                                              name: 'Branch',
+                                              rate: product.branch)
+                                        ];
                               showDialog(
                                   context: context,
                                   builder: (BuildContext context) {
@@ -6873,6 +6870,25 @@ class _SaleState extends State<Sale> {
             ],
           );
         });
+  }
+
+  selectedRateTypeData(
+      List<OptionRateType> rateTypeList, StockProduct product) {
+    List<ProductRating> result = [];
+    int _id = -1;
+    for (OptionRateType data in rateTypeList) {
+      var _rate = data.name == 'RETAIL'
+          ? product.retailPrice
+          : data.name == 'SPRETAIL'
+              ? product.spRetailPrice
+              : data.name == 'WHOLESALE'
+                  ? product.wholeSalePrice
+                  : data.name == 'BRANCH'
+                      ? product.branch
+                      : product.sellingPrice;
+      result.add(ProductRating(id: _id++, name: (data.name=='SPRETAIL'?labelSpRate:data.name), rate: _rate));
+    }
+    return result;
   }
 }
 

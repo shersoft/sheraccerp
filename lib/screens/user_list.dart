@@ -100,9 +100,6 @@ class _UserScreenState extends State<UserScreen> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Text(data[index].userType),
-                        Icon(Icons.circle,
-                            size: 10,
-                            color: data[index].active == "false" ? red : green),
                       ],
                     ),
                     onTap: () {

@@ -65,7 +65,6 @@ class _ProductRegisterState extends State<ProductRegister> {
   var dropDownStockValuation = 'AVERAGE VALUE', dropDownTypeOfSupply = 'GOODS';
   int dropDownUnit = 0, dropDownUnitPurchase, dropDownUnitSale;
   List<DataJson> unitModel = [];
-  List<DataJson> rateTypeModel = [];
   List<UnitDetailModel> unitDetail = [];
   String isItemName = '';
 
@@ -139,18 +138,11 @@ class _ProductRegisterState extends State<ProductRegister> {
 
         unitModel
             .addAll(DataJson.fromJsonListX(otherRegistrationList[0]['unit']));
-        rateTypeModel = [
-          DataJson(id: 0, name: ''),
-          DataJson(id: 1, name: 'MRP'),
-          DataJson(id: 2, name: 'RETAIL'),
-          DataJson(id: 3, name: 'WHOLESALE'),
-          DataJson(id: 4, name: 'SPRATE'),
-          DataJson(id: 5, name: 'BRANCH')
-        ];
+
         dropDownUnitPurchase = unitModel[0].id;
         dropDownUnitSale = unitModel[0].id;
         dropDownUnitData = unitModel[0].id;
-        dropDownRateData = rateTypeModel[0].id;
+        dropDownRateData = rateTypeModelData[0].id;
       });
     });
     api.getProductId().then((value) => {
@@ -1185,8 +1177,8 @@ class _ProductRegisterState extends State<ProductRegister> {
                       child: DropdownButton<String>(
                         value: dropDownRateData.toString(),
                         hint: const Text('Rate'),
-                        items:
-                            rateTypeModel.map<DropdownMenuItem<String>>((item) {
+                        items: rateTypeModelData
+                            .map<DropdownMenuItem<String>>((item) {
                           return DropdownMenuItem<String>(
                             value: item.id.toString(),
                             child: Text(item.name),
@@ -1230,7 +1222,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                                   .firstWhere((element) =>
                                       element.id == dropDownUnitData)
                                   .name,
-                              rateType: rateTypeModel
+                              rateType: rateTypeModelData
                                   .firstWhere((element) =>
                                       element.id == dropDownRateData)
                                   .name,
