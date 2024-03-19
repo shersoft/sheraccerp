@@ -2440,18 +2440,18 @@ class _BtPrintState extends State<BtPrint> {
                 styles: const PosStyles(align: PosAlign.left, bold: true));
 
             bytes += ticket.row([
-              PosColumn(text: '', width: 2),
+              PosColumn(text: '', width: 1),
               PosColumn(
                   text:
                       '${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}',
-                  width: 1),
+                  width: 4),
               PosColumn(
                   text: '${dataParticulars[i]['Rate']}',
-                  width: 2,
+                  width: 3,
                   styles: const PosStyles(align: PosAlign.right, bold: true)),
               PosColumn(
                   text: '${dataParticulars[i]['Total']}',
-                  width: 2,
+                  width: 4,
                   styles: const PosStyles(align: PosAlign.right, bold: true)),
             ]);
             totalQty += dataParticulars[i]['Qty'];

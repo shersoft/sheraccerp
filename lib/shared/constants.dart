@@ -17,8 +17,11 @@ import 'package:sheraccerp/models/print_settings_model.dart';
 import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/models/sms_data_model.dart';
 import 'package:sheraccerp/models/unit_model.dart';
+import 'package:sheraccerp/models/voucher_type_model.dart';
 import 'package:sheraccerp/screens/accounts/ledger.dart';
 import 'package:sheraccerp/service/api_dio.dart';
+import 'package:intl/intl.dart';
+import 'package:sheraccerp/util/dateUtil.dart';
 
 const gstBaseApi = "https://api.mastergst.com";
 const gstApi = "https://api.mastergst.com/einvoice/authenticate"; //get
@@ -51,11 +54,7 @@ String _sherSoftPassword = '';
 get sherSoftPassword => _sherSoftPassword;
 set sherSoftPassword(String value) => _sherSoftPassword = value;
 
-const String apiV = 'v21/';
-/**Web only**/
-// String _apiV = 'v20/';
-// String get apiV => _apiV;
-// set setApiV(String value) => _apiV = value + '/';
+const String apiV = 'v22/';
 
 const currencySymbol = '₹';
 // const bool isVariant = false;
@@ -90,6 +89,7 @@ List mfrList = [];
 List modelList = [];
 List subCategoryList = [];
 List<SalesType> salesTypeList = [];
+List<VoucherType> voucherTypeList = [];
 List otherRegistrationList = [];
 List<OtherRegistrationModel> otherRegUnitList = [];
 List<OtherRegistrationModel> otherRegLocationList = [];
@@ -156,6 +156,11 @@ class ComSettings {
     api.getSalesTypeList().then((value) {
       salesTypeList.addAll(value);
     });
+
+    api.getVoucherTypeList().then((value) {
+      voucherTypeList.addAll(value);
+    });
+
     api.fetchOtherRegList().then((value) {
       if (value != null && value.isNotEmpty) {
         otherRegistrationList = value;
@@ -609,19 +614,19 @@ const iAccentColor2 = Color(0xFFFFEAC9);
 
 const demoData = [
   {
-    "imagePath": "assets/images/c6.jpg",
+    "imagePath": "assets/logo1.png",
     "price": 5,
     "quantity": 2,
     "itemDesc": "Gingerbread Cake with orange cream chees"
   },
   {
-    "imagePath": "assets/images/c6.jpg",
+    "imagePath": "assets/logo1.png",
     "price": 10,
     "quantity": 4,
     "itemDesc": "Sauteed Onion and Hotdog with Ketchup"
   },
   {
-    "imagePath": "assets/images/c6.jpg",
+    "imagePath": "assets/logo1.png",
     "price": 14,
     "quantity": 1,
     "itemDesc": "Supreme Pizza Recipe"
@@ -723,3 +728,22 @@ class GSTStateModel {
   factory GSTStateModel.fromJson(String source) =>
       GSTStateModel.fromMap(json.decode(source));
 }
+
+bool checkFinancialYear(String date) {
+  bool status = false;
+  if (currentFinancialYear.status == 1) {
+    DateTime startDate = DateTime.parse(DateFormat('yyyy-MM-dd')
+        .format(DateTime.parse(currentFinancialYear.startDate)));
+    DateTime endDate = DateTime.parse(DateFormat('yyyy-MM-dd')
+        .format(DateTime.parse(currentFinancialYear.endDate)));
+    DateTime currentDate =
+        DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.parse(date)));
+    status = DateUtil.checkYearDate(
+        startDate: startDate, endDate: endDate, currentDate: currentDate);
+    var startDateX = (currentFinancialYear.startDate);
+    var endDateX = (currentFinancialYear.endDate);
+  }
+  return status;
+}
+
+List<dynamic> tempCustomerData = [];

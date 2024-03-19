@@ -98,4 +98,24 @@ class CustomerModel {
     list.map((item) => jsonList.add(item.toJson1())).toList();
     return jsonList;
   }
+
+  static CustomerModel emptyData() {
+    return CustomerModel(
+        address1: '',
+        address2: '',
+        address3: '',
+        address4: '',
+        balance: '0',
+        city: '',
+        email: '',
+        id: 0,
+        name: '',
+        phone: '',
+        pinNo: '',
+        remarks: '',
+        route: '',
+        state: '',
+        stateCode: '',
+        taxNumber: '');
+  }
 }

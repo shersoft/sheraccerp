@@ -9,6 +9,7 @@ import 'package:sheraccerp/models/company_user.dart';
 import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/screens/about_shersoft.dart';
+import 'package:sheraccerp/screens/inventory/sales/sale.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
 import 'package:sheraccerp/shared/constants.dart';
@@ -90,8 +91,6 @@ class _DeliveryHomeState extends State<DeliveryHome> {
       firm = (pref.getString('CompanyName') ?? "");
       firmCode = (pref.getString('CustomerCode') ?? "");
       fId = (pref.getString('fId') ?? "");
-      // /**Web only**/
-      // setApiV = (pref.getString('apiV') ?? "v13");
     });
   }
 
@@ -266,9 +265,9 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                           child: TextButton(
                             child: Text('Date : $getToDay',
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
-                                    fontFamily: 'Poppins')),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                )),
                             onPressed: () => _selectDate(),
                           ),
                         ),
@@ -281,9 +280,9 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                           child: TextButton(
                             child: Text('Hi  ' + args.username,
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
-                                    fontFamily: 'Poppins')),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                )),
                             onPressed: () {
                               //
                             },
@@ -304,9 +303,9 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                             child: TextButton(
                               child: const Text('Sales Order',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 bool sType = true;
                                 salesTypeData = salesTypeList.firstWhere(
@@ -321,26 +320,22 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                                         ? isSimpleSales
                                             ? Navigator.pushNamed(
                                                 context, '/SimpleSale')
-                                            : Navigator.pushNamed(
-                                                context,
-                                                ComSettings.appSettings(
-                                                        'bool',
-                                                        'key-simple-sales',
-                                                        false)
-                                                    ? '/SimpleSale'
-                                                    : '/sales',
-                                                arguments: {'default': sType})
+                                            : Navigator.of(context)
+                                                .push(MaterialPageRoute(
+                                                    builder: (context) => Sale(
+                                                          oldSale: false,
+                                                          thisSale: sType,
+                                                        )))
                                         : _expire(args, context)
                                     : isSimpleSales
                                         ? Navigator.pushNamed(
                                             context, '/SimpleSale')
-                                        : Navigator.pushNamed(
-                                            context,
-                                            ComSettings.appSettings('bool',
-                                                    'key-simple-sales', false)
-                                                ? '/SimpleSale'
-                                                : '/sales',
-                                            arguments: {'default': sType});
+                                        : Navigator.of(context)
+                                            .push(MaterialPageRoute(
+                                                builder: (context) => Sale(
+                                                      oldSale: false,
+                                                      thisSale: sType,
+                                                    )));
                               },
                             ),
                           ),
@@ -355,11 +350,11 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                               width: 2.0,
                             )),
                             child: TextButton(
-                              child: const Text('Sale',
+                              child: const Text('Sales',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 bool sType = true;
                                 salesTypeData = ComSettings.appSettings('bool',
@@ -380,26 +375,22 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                                         ? isSimpleSales
                                             ? Navigator.pushNamed(
                                                 context, '/SimpleSale')
-                                            : Navigator.pushNamed(
-                                                context,
-                                                ComSettings.appSettings(
-                                                        'bool',
-                                                        'key-simple-sales',
-                                                        false)
-                                                    ? '/SimpleSale'
-                                                    : '/sales',
-                                                arguments: {'default': sType})
+                                            : Navigator.of(context)
+                                                .push(MaterialPageRoute(
+                                                    builder: (context) => Sale(
+                                                          oldSale: false,
+                                                          thisSale: sType,
+                                                        )))
                                         : _expire(args, context)
                                     : isSimpleSales
                                         ? Navigator.pushNamed(
                                             context, '/SimpleSale')
-                                        : Navigator.pushNamed(
-                                            context,
-                                            ComSettings.appSettings('bool',
-                                                    'key-simple-sales', false)
-                                                ? '/SimpleSale'
-                                                : '/sales',
-                                            arguments: {'default': sType});
+                                        : Navigator.of(context)
+                                            .push(MaterialPageRoute(
+                                                builder: (context) => Sale(
+                                                      oldSale: false,
+                                                      thisSale: sType,
+                                                    )));
                               },
                             ),
                           ),
@@ -416,9 +407,9 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                             child: TextButton(
                               child: const Text('Receipt',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 args.active == "false"
                                     ? _commonService.getTrialPeriod(args.atDate)
@@ -444,9 +435,9 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                             child: TextButton(
                               child: const Text('Payment',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 args.active == "false"
                                     ? _commonService.getTrialPeriod(args.atDate)
@@ -472,9 +463,9 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                             child: TextButton(
                               child: const Text('Purchase',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 Navigator.pushNamed(context, '/purchase');
                               },
@@ -493,9 +484,9 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                             child: TextButton(
                               child: const Text('Order List',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 Navigator.pushNamed(context, '/OrderList');
                               },
@@ -514,9 +505,9 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                             child: TextButton(
                               child: const Text('Bill List',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 Navigator.pushNamed(context, '/BillList');
                               },
@@ -535,9 +526,9 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                             child: TextButton(
                               child: const Text('Sales Return',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 Navigator.pushNamed(context, '/salesReturn');
                               },
@@ -556,9 +547,9 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                             child: TextButton(
                               child: const Text('Damage Entry',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 Navigator.pushNamed(context, '/damageEntry');
                               },
@@ -577,9 +568,9 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                             child: TextButton(
                               child: const Text('Ledger Report',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 argumentsPass = {'mode': 'ledger'};
                                 Navigator.pushNamed(
@@ -602,9 +593,9 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                             child: TextButton(
                               child: const Text('Group List',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 argumentsPass = {'mode': 'GroupList'};
                                 Navigator.pushNamed(
@@ -625,9 +616,9 @@ class _DeliveryHomeState extends State<DeliveryHome> {
                           child: TextButton(
                             child: const Text('About',
                                 style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
-                                    fontFamily: 'Poppins')),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                )),
                             onPressed: () {
                               Navigator.push(
                                 context,

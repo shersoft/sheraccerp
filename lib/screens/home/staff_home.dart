@@ -8,6 +8,7 @@ import 'package:sheraccerp/models/company_user.dart';
 import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/dash_report/dash_page.dart';
+import 'package:sheraccerp/screens/inventory/sales/sale.dart';
 import 'package:sheraccerp/screens/quick_search.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
@@ -124,8 +125,6 @@ class _StaffHomeState extends State<StaffHome> with TickerProviderStateMixin {
       firm = (pref.getString('CompanyName') ?? "");
       firmCode = (pref.getString('CustomerCode') ?? "");
       fId = (pref.getString('fId') ?? "");
-      // /**Web only**/
-      // setApiV = (pref.getString('apiV') ?? "v13");
     });
   }
 
@@ -326,7 +325,7 @@ class _StaffHomeState extends State<StaffHome> with TickerProviderStateMixin {
         SpeedDialChild(
           child: const Icon(Icons.storefront_rounded),
           // backgroundColor: kPrimaryColor[500],
-          label: 'Sale',
+          label: 'Sales',
           labelStyle: const TextStyle(fontSize: 18.0),
           onTap: () {
             var settings = ScopedModel.of<MainModel>(context).getSettings();
@@ -338,20 +337,21 @@ class _StaffHomeState extends State<StaffHome> with TickerProviderStateMixin {
                 : false;
             args.active == "false"
                 ? _commonService.getTrialPeriod(args.atDate)
-                    ? Navigator.pushNamed(
-                        context,
-                        ComSettings.appSettings(
-                                'bool', 'key-simple-sales', false)
-                            ? '/SimpleSale'
-                            : '/sales',
-                        arguments: {'default': sType})
+                    ? ComSettings.appSettings('bool', 'key-simple-sales', false)
+                        ? Navigator.pushNamed(context, '/SimpleSale')
+                        : Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => Sale(
+                                  oldSale: false,
+                                  thisSale: sType,
+                                )))
                     : _expire(args, context)
-                : Navigator.pushNamed(
-                    context,
-                    ComSettings.appSettings('bool', 'key-simple-sales', false)
-                        ? '/SimpleSale'
-                        : '/sales',
-                    arguments: {'default': sType});
+                : ComSettings.appSettings('bool', 'key-simple-sales', false)
+                    ? Navigator.pushNamed(context, '/SimpleSale')
+                    : Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => Sale(
+                              oldSale: false,
+                              thisSale: sType,
+                            )));
           },
           // onLongPress: () => print('FIRST CHILD LONG PRESS'),
         ),

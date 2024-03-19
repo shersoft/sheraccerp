@@ -3,9 +3,12 @@
 import 'package:autocomplete_textfield/autocomplete_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:scoped_model/scoped_model.dart';
+import 'package:sheraccerp/models/company.dart';
 
 import 'package:sheraccerp/models/ledger_name_model.dart';
 import 'package:sheraccerp/models/ledger_parent.dart';
+import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
@@ -67,10 +70,12 @@ class _LedgerState extends State<Ledger> {
   String _stateCode = '32';
   GSTStateModel gstStateM;
   dynamic cityData, routeData;
+  List<CompanySettings> settings;
 
   @override
   void initState() {
     super.initState();
+    settings = ScopedModel.of<MainModel>(context).getSettings();
 
     // salesManId = ComSettings.appSettings(
     //         'int', 'key-dropdown-default-salesman-view', 1) -
@@ -85,6 +90,10 @@ class _LedgerState extends State<Ledger> {
     // if (isIn == null) {
     //   salesManList.add({'Auto': 0, 'Name': ''});
     // }
+    String stateValue =
+        ComSettings.getValue('COMP-STATE', settings) ?? _dropDownState;
+    String stateCodeValue =
+        ComSettings.getValue('COMP-STATECODE', settings) ?? _stateCode;
 
     obDate = DateUtil.datePickerDMY(now);
     api.getLedgerAll().then(
@@ -105,8 +114,12 @@ class _LedgerState extends State<Ledger> {
         ledgerGroupList.add(LedgerParent(id: 0, name: ''));
       });
     });
-    var gstState = gstStateModels.lastWhere((element) => element.code == '32');
+    var gstState = stateCodeValue.isNotEmpty
+        ? gstStateModels.lastWhere((element) => element.code == stateCodeValue)
+        : gstStateModels.lastWhere((element) => element.code == '32');
     gstStateM = gstStateM ?? gstState;
+    _dropDownState = gstStateM.state;
+    _stateCode = gstStateM.code;
     cityList.addAll(otherRegAreaList.map((e) => e.name).toList());
     routeList.addAll(otherRegRouteList.map((e) => e.name).toList());
   }
@@ -197,10 +210,10 @@ class _LedgerState extends State<Ledger> {
       {
         'name': name.toUpperCase(),
         'parent': _dropDownValue,
-        'add1': add1.toUpperCase(),
-        'add2': add2.toUpperCase(),
-        'add3': add3.toUpperCase(),
-        'add4': add4.toUpperCase(),
+        'add1': add1,
+        'add2': add2,
+        'add3': add3,
+        'add4': add4,
         'city': city,
         'route': route,
         'state': state.toUpperCase(),
@@ -221,7 +234,7 @@ class _LedgerState extends State<Ledger> {
         'cAmount': _creditAmtCtr.text.isNotEmpty
             ? double.parse(_creditAmtCtr.text)
             : 0,
-        'cPerson': _personCtr.text.toUpperCase(),
+        'cPerson': _personCtr.text,
         'costCenter': valueCostCenter ? 1 : 0,
         'franchisee': valueFranchisee ? 1 : 0,
         'billWise': valueBillWise ? 1 : 0,
@@ -559,9 +572,6 @@ class _LedgerState extends State<Ledger> {
                         TextFormField(
                           controller: _add1Ctr,
                           keyboardType: TextInputType.text,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(25),
-                          ],
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),
                             labelText: 'Address',
@@ -571,9 +581,6 @@ class _LedgerState extends State<Ledger> {
                         TextFormField(
                           controller: _add2Ctr,
                           keyboardType: TextInputType.text,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(25),
-                          ],
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),
                             labelText: 'Address 2',
@@ -583,9 +590,6 @@ class _LedgerState extends State<Ledger> {
                         TextFormField(
                           controller: _add3Ctr,
                           keyboardType: TextInputType.text,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(25),
-                          ],
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),
                             labelText: 'Address 3',
@@ -595,9 +599,6 @@ class _LedgerState extends State<Ledger> {
                         TextFormField(
                           controller: _add4Ctr,
                           keyboardType: TextInputType.text,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(25),
-                          ],
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),
                             labelText: 'Address 4',
@@ -606,9 +607,6 @@ class _LedgerState extends State<Ledger> {
                         const Divider(),
                         TextFormField(
                           controller: _taxNoCtr,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(50),
-                          ],
                           keyboardType: TextInputType.text,
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),

@@ -20,7 +20,7 @@ class _BillListState extends State<BillList> {
   bool loadReport = false;
   double offset = 0;
   List<dynamic> resultData = [];
-  List<SalesType> salesTypeData = [];
+  List<SalesType> salesTypeDataList = [];
   var dropDownBranchId;
   String fromDate = '', toDate = '';
   DateTime now = DateTime.now();
@@ -39,7 +39,7 @@ class _BillListState extends State<BillList> {
           .map((e) => e.key)
           .first;
     }
-    salesTypeData = salesTypeList;
+    salesTypeDataList = salesTypeList;
     salesManId = ComSettings.appSettings(
             'int', 'key-dropdown-default-salesman-view', 1) -
         1;
@@ -47,7 +47,7 @@ class _BillListState extends State<BillList> {
 
   void itemChange(bool val, int index) {
     setState(() {
-      salesTypeData[index].stock = val;
+      salesTypeDataList[index].stock = val;
     });
   }
 
@@ -246,7 +246,7 @@ class _BillListState extends State<BillList> {
     //     if (data.stock) dataSType.add({'id': data.id});
     //   }
     // } else {
-    for (var data in salesTypeData) {
+    for (var data in salesTypeDataList) {
       if (data.name != 'Sales Order Entry') dataSType.add({'id': data.id});
     }
     // }
@@ -389,153 +389,169 @@ class _BillListState extends State<BillList> {
                   ),
                 );
               } else {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: Stack(
-                      children: <Widget>[
-                        Container(
-                          height: 80,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(6),
-                            gradient: const LinearGradient(
-                                colors: [Color(0xff6DC8F3), Color(0xff73A1F9)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0xff73A1F9),
-                                blurRadius: 12,
-                                offset: Offset(0, 6),
-                              ),
-                            ],
+                return InkWell(
+                  onTap: () {
+                    int? _id =
+                        int.tryParse(dataDisplay[index]['Type'].toString());
+                    SalesType sData = salesTypeDataList
+                        .where((element) => element.id == _id)
+                        .first;
+                    salesTypeData = SalesType(
+                        id: sData.id,
+                        accounts: sData.accounts,
+                        location: sData.location,
+                        name: sData.name,
+                        rateType: sData.rateType,
+                        stock: sData.stock,
+                        type: sData.type,
+                        eInvoice: sData.eInvoice,
+                        sColor: sData.sColor,
+                        tax: sData.tax);
+                    showDetails(context, dataDisplay[index], _id);
+                  },
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: Stack(
+                        children: <Widget>[
+                          Container(
+                            height: 80,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(6),
+                              gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xff6DC8F3),
+                                    Color(0xff73A1F9)
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0xff73A1F9),
+                                  blurRadius: 12,
+                                  offset: Offset(0, 6),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          top: 0,
-                          child: CustomPaint(
-                            size: const Size(100, 150),
-                            painter: CustomCardShapePainter(
-                                24,
-                                const Color(0xff6DC8F3),
-                                const Color(0xff73A1F9)),
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            top: 0,
+                            child: CustomPaint(
+                              size: const Size(100, 150),
+                              painter: CustomCardShapePainter(
+                                  24,
+                                  const Color(0xff6DC8F3),
+                                  const Color(0xff73A1F9)),
+                            ),
                           ),
-                        ),
-                        Positioned.fill(
-                          child: Row(
-                            children: <Widget>[
-                              Expanded(
-                                flex: 5,
-                                child: Padding(
+                          Positioned.fill(
+                            child: Row(
+                              children: <Widget>[
+                                Expanded(
+                                  flex: 5,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(
+                                          dataDisplay[index]['ToName']
+                                              .toString(),
+                                          style: const TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w700),
+                                        ),
+                                        Text(
+                                          'Invoice : ' +
+                                              dataDisplay[index]['Invoice']
+                                                  .toString(),
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Date     : ' +
+                                              dataDisplay[index]['Date']
+                                                  .toString(),
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: const [
+                                    Text(
+                                      'Bill          : ',
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                    Text(
+                                      'Cash     : ',
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                    Text(
+                                      'Balance : ',
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                ),
+                                Padding(
                                   padding: const EdgeInsets.all(5.0),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
                                     children: <Widget>[
                                       Text(
-                                        dataDisplay[index]['ToName'].toString(),
+                                        dataDisplay[index]['Total']
+                                            .toStringAsFixed(2),
                                         style: const TextStyle(
                                             color: Colors.black,
-                                            fontFamily: 'Avenir',
+                                            fontSize: 14,
                                             fontWeight: FontWeight.w700),
                                       ),
                                       Text(
-                                        'Invoice : ' +
-                                            dataDisplay[index]['Invoice']
-                                                .toString(),
+                                        dataDisplay[index]['Cash']
+                                            .toStringAsFixed(2),
                                         style: const TextStyle(
-                                          color: Colors.black,
-                                          fontFamily: 'Avenir',
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                            color: Colors.black,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w700),
                                       ),
                                       Text(
-                                        'Date     : ' +
-                                            dataDisplay[index]['Date']
-                                                .toString(),
+                                        dataDisplay[index]['Balance']
+                                            .toStringAsFixed(2),
                                         style: const TextStyle(
-                                          color: Colors.black,
-                                          fontFamily: 'Avenir',
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                            color: Colors.black,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w700),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ),
-                              Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: const [
-                                  Text(
-                                    'Bill          : ',
-                                    style: TextStyle(
-                                        color: Colors.black,
-                                        fontFamily: 'Avenir',
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                  Text(
-                                    'Cash     : ',
-                                    style: TextStyle(
-                                        color: Colors.black,
-                                        fontFamily: 'Avenir',
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                  Text(
-                                    'Balance : ',
-                                    style: TextStyle(
-                                        color: Colors.black,
-                                        fontFamily: 'Avenir',
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(5.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: <Widget>[
-                                    Text(
-                                      dataDisplay[index]['Total']
-                                          .toStringAsFixed(2),
-                                      style: const TextStyle(
-                                          color: Colors.black,
-                                          fontFamily: 'Avenir',
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700),
-                                    ),
-                                    Text(
-                                      dataDisplay[index]['Cash']
-                                          .toStringAsFixed(2),
-                                      style: const TextStyle(
-                                          color: Colors.black,
-                                          fontFamily: 'Avenir',
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700),
-                                    ),
-                                    Text(
-                                      dataDisplay[index]['Balance']
-                                          .toStringAsFixed(2),
-                                      style: const TextStyle(
-                                          color: Colors.black,
-                                          fontFamily: 'Avenir',
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -553,5 +569,17 @@ class _BillListState extends State<BillList> {
     _scrollController.dispose();
     controller.dispose();
     super.dispose();
+  }
+
+  showDetails(context, data, sType) {
+    dataDynamic = [
+      {
+        'RealEntryNo': int.tryParse(data['Id'].toString()),
+        'EntryNo': int.tryParse(data['Id'].toString()),
+        'InvoiceNo': int.tryParse(data['Id'].toString()),
+        'Type': sType ?? 3
+      }
+    ];
+    Navigator.pushNamed(context, '/preview_show', arguments: {'title': 'Sale'});
   }
 }

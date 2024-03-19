@@ -32,7 +32,6 @@ class _LoginFormState extends State<LoginForm> {
 
   final _loginInFormKey = GlobalKey<FormState>();
   bool _isLoading = false;
-  String dropdownApiV = apiV.replaceAll('/', '');
 
   @override
   Widget build(BuildContext context) {
@@ -60,36 +59,6 @@ class _LoginFormState extends State<LoginForm> {
                         ),
                         label: 'Customer ID',
                         hint: 'Enter your unique identifier',
-                      ),
-                      Visibility(
-                        visible: kIsWeb,
-                        child: DropdownButton<String>(
-                          items: [
-                            'v21',
-                            'v20',
-                            'v19',
-                            'v18',
-                            'v17',
-                            'v16',
-                            'v15',
-                            'v14',
-                            'v13',
-                            'v12',
-                            'v11',
-                            'v10'
-                          ].map<DropdownMenuItem<String>>((item) {
-                            return DropdownMenuItem<String>(
-                              value: item,
-                              child: Text(item),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              dropdownApiV = value ?? '';
-                            });
-                          },
-                          value: dropdownApiV,
-                        ),
                       ),
                     ],
                   ),
@@ -140,7 +109,7 @@ class _LoginFormState extends State<LoginForm> {
                                     snapshot['url'] != '') {
                                   await pref.setString("fId", snapshot.id);
                                   await pref.setString("api", snapshot['url']);
-                                  await pref.setString("apiV", dropdownApiV);
+                                  await pref.setString("apiV", apiV);
 
                                   if (_uidController.text.trim() ==
                                       '099077055') {

@@ -13,6 +13,7 @@ import 'package:json_table/json_table.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:printing/printing.dart';
 import 'package:scoped_model/scoped_model.dart';
@@ -22,6 +23,8 @@ import 'package:sheraccerp/models/sales_bill.dart';
 import 'package:sheraccerp/models/sales_model.dart';
 import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
+import 'package:sheraccerp/screens/html_previews/sales_preview.dart';
+import 'package:sheraccerp/screens/html_previews/sales_return_preview.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/blue_thermal.dart';
 import 'package:sheraccerp/service/bt_print.dart';
@@ -213,16 +216,13 @@ class _PurchaseReturnPreviewShowState extends State<PurchaseReturnPreviewShow> {
           dataParticulars.addAll(dataParticularsAll);
 
           data['Particulars'] = dataParticulars;
-          if (title.isEmpty) {
-            title = (ModalRoute.of(context).settings.arguments
-                as Map<String, String>)['title'];
-          }
+
           if (printerType == 9) {
             isInvoiceDesigner = true;
           } else {
             _createPDF(
                     printModel,
-                    title + '_ref_${dataInformation['RealEntryNo']}',
+                    'Purchase_Return_ref_${dataInformation['RealEntryNo']}',
                     companySettings,
                     settings,
                     data,
@@ -251,15 +251,18 @@ class _PurchaseReturnPreviewShowState extends State<PurchaseReturnPreviewShow> {
     }
   }
 
-  var title = '';
   @override
   Widget build(BuildContext context) {
-    final route =
-        ModalRoute.of(context).settings.arguments as Map<String, String>;
-    title = route['title'];
     return Scaffold(
         appBar: AppBar(
-          title: Text(title + ' Preview'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            iconSize: 20.0,
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, '/purchaseReturn');
+            },
+          ),
+          title: const Text('Purchase Return View'),
           actions: [
             IconButton(
                 icon: const Icon(Icons.picture_as_pdf),
@@ -278,8 +281,8 @@ class _PurchaseReturnPreviewShowState extends State<PurchaseReturnPreviewShow> {
                       Navigator.of(context).push(MaterialPageRoute(
                           builder: (_) => PDFScreen(
                                 pathPDF: pdfPath,
-                                subject: title,
-                                text: 'this is ' + title,
+                                subject: 'Purchase Return',
+                                text: 'this is Purchase Return',
                               )));
                       // );
                       // try {
@@ -334,7 +337,7 @@ class _PurchaseReturnPreviewShowState extends State<PurchaseReturnPreviewShow> {
                           byteImage = value;
                           askPrintDevice(
                               context,
-                              title + '_ref_${dataInformation['RealEntryNo']}',
+                              'Purchase_Return_ref_${dataInformation['RealEntryNo']}',
                               companySettings,
                               settings,
                               data,
@@ -351,7 +354,8 @@ class _PurchaseReturnPreviewShowState extends State<PurchaseReturnPreviewShow> {
         body: eNo > 0
             ? isInvoiceDesigner
                 ? invoiceGenerate(context)
-                : webView()
+                // : webView()
+                : previewWidget()
             : const Center(child: Text('Not Found')));
   }
 
@@ -659,8 +663,11 @@ class _PurchaseReturnPreviewShowState extends State<PurchaseReturnPreviewShow> {
   }
 
   invoiceGenerate(context) {
-    bool isLoading = false;
-    var taxSale = dataInformation['TaxType'] == 'T' ? true : false;
+    var taxInvoice = dataInformation != null
+        ? dataInformation['TaxType'] == 'T'
+            ? true
+            : false
+        : false;
     var invoiceHead = Settings.getValue<String>(
         'key-purchase-return-head', 'PURCHASE RETURN');
     var ledger = dataLedger[0];
@@ -1472,6 +1479,2517 @@ class _PurchaseReturnPreviewShowState extends State<PurchaseReturnPreviewShow> {
       debugPrint(ex.toString());
     }
   }
+
+  previewWidget() {
+    var taxInvoice = dataInformation != null
+        ? dataInformation['TaxType'] == 'T'
+            ? true
+            : false
+        : false;
+    var invoiceHead = Settings.getValue<String>(
+        'key-purchase-return-head', 'PURCHASE RETURN');
+    // companyTaxMode == 'INDIA' ? '' : '';
+    double totalQuantity = dataParticulars.fold(
+        0, (total, particular) => total + particular['Qty']);
+    double totalTaxablevalue = dataParticulars.fold(
+        0, (total, particular) => total + particular['Net'].toDouble());
+    double lineTotal = dataParticulars.fold(
+        0, (total, particular) => total + particular['Total'].toDouble());
+    double oldBalance = double.tryParse(customerBalance).toDouble();
+
+    double cBalance = double.tryParse(customerBalance).toDouble() ?? 0.00;
+    double grandTotal =
+        _isLoading ? 0 : dataInformation['GrandTotal']?.toDouble() ?? 0.00;
+    // double cashReceived = _isLoading?0:dataInformation['CashReceived'].toDouble() ?? 0.00;
+    double cashReceived =
+        _isLoading ? 0 : (dataInformation['CashReceived']?.toDouble() ?? 0.00);
+
+    double balance = cBalance + grandTotal - cashReceived;
+
+    return taxInvoice
+        ? SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: _isLoading
+                  ? Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          CircularProgressIndicator(
+                            strokeWidth: 5,
+                            color: Colors.grey,
+                            backgroundColor: Colors.red,
+                          ),
+                          SizedBox(
+                            width: 10,
+                          ),
+                          Text(
+                            "Loading",
+                            style: TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18),
+                          )
+                        ],
+                      ),
+                    )
+                  : SizedBox(
+                      height: MediaQuery.of(context).size.height,
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            RepaintBoundary(
+                              key: _globalKey,
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      height: 100,
+                                      width: MediaQuery.of(context).size.width,
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                            color: Colors.black, width: 2),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 5),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  companySettings.name,
+                                                  style: const TextStyle(
+                                                      fontSize: 15,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                                Text(
+                                                  companySettings.add1,
+                                                  style: const TextStyle(
+                                                      fontSize: 8),
+                                                ),
+                                                Text(
+                                                  companySettings.add2,
+                                                  style: const TextStyle(
+                                                      fontSize: 8),
+                                                ),
+                                                Text(
+                                                  companySettings.email,
+                                                  style: const TextStyle(
+                                                      fontSize: 8),
+                                                ),
+                                                Text(
+                                                  companySettings.mobile,
+                                                  style: const TextStyle(
+                                                      fontSize: 8),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const SizedBox(
+                                                height: 5,
+                                              ),
+                                              Text(
+                                                "GST No : $companyTaxNo",
+                                                style: const TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight:
+                                                        FontWeight.w500),
+                                              ),
+                                              const SizedBox(
+                                                height: 10,
+                                              ),
+                                              Text(
+                                                "State      : $companyState       $companyStateCode",
+                                                style: const TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight:
+                                                        FontWeight.w500),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      height: 20,
+                                      width: MediaQuery.of(context).size.width,
+                                      decoration: const BoxDecoration(
+                                        border: Border(
+                                          // top: BorderSide(color: Colors.black, width: 2),
+                                          right: BorderSide(
+                                              color: Colors.black, width: 2),
+
+                                          left: BorderSide(
+                                              color: Colors.black, width: 2),
+                                        ),
+                                      ),
+                                      child: const Center(
+                                        child: Text(
+                                          "PURCHASE RETURN",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            height: 70,
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width /
+                                                2,
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                  color: Colors.black,
+                                                  width: 2),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                const SizedBox(
+                                                  height: 10,
+                                                ),
+                                                Text(
+                                                  " Invoice No        ${dataInformation['RealEntryNo']}",
+                                                  style: const TextStyle(
+                                                      fontSize: 6),
+                                                ),
+                                                Text(
+                                                  " Invoice Date     ${DateUtil.dateDMY(dataInformation['DDate'])} ",
+                                                  style: const TextStyle(
+                                                      fontSize: 6),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Container(
+                                            height: 70,
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width /
+                                                2,
+                                            decoration: const BoxDecoration(
+                                              border: Border(
+                                                top: BorderSide(
+                                                    color: Colors.black,
+                                                    width: 2),
+                                                right: BorderSide(
+                                                    color: Colors.black,
+                                                    width: 2),
+                                                bottom: BorderSide(
+                                                    color: Colors.black,
+                                                    width: 2),
+                                              ),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: const [
+                                                Center(
+                                                  child: Text(
+                                                    "Transportation Mode",
+                                                    style: TextStyle(
+                                                        fontSize: 8,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                  height: 2,
+                                                ),
+                                                Text(
+                                                  " Vehicle No",
+                                                  style: TextStyle(fontSize: 6),
+                                                ),
+                                                Text(
+                                                  " Date & Time of Supply",
+                                                  style: TextStyle(fontSize: 6),
+                                                ),
+                                                Text(
+                                                  " Place of Supply",
+                                                  style: TextStyle(fontSize: 6),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            height: 110,
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width /
+                                                2,
+                                            decoration: const BoxDecoration(
+                                              border: Border(
+                                                // top: BorderSide(color: Colors.black, width: 2),
+                                                right: BorderSide(
+                                                    color: Colors.black,
+                                                    width: 2),
+                                                bottom: BorderSide(
+                                                    color: Colors.black,
+                                                    width: 2),
+                                                left: BorderSide(
+                                                    color: Colors.black,
+                                                    width: 2),
+                                              ),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                const Center(
+                                                  child: Text(
+                                                    "Details of Receiver (Billed To)",
+                                                    style: TextStyle(
+                                                        fontSize: 8,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        decoration:
+                                                            TextDecoration
+                                                                .underline),
+                                                  ),
+                                                ),
+                                                const SizedBox(
+                                                  height: 2,
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    const Text(
+                                                      " Name",
+                                                      style: TextStyle(
+                                                          fontSize: 6),
+                                                    ),
+                                                    const SizedBox(
+                                                      width: 20,
+                                                    ),
+                                                    Expanded(
+                                                      child: Text(
+                                                        "    ${dataInformation['LedName']}",
+                                                        style: const TextStyle(
+                                                            fontSize: 6),
+                                                      ),
+                                                    )
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Text(
+                                                      " Address",
+                                                      style: TextStyle(
+                                                          fontSize: 6),
+                                                    ),
+                                                    const SizedBox(
+                                                      width: 20,
+                                                    ),
+                                                    Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          "${dataLedger[0]['add1']}",
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontSize: 6),
+                                                        ),
+                                                        Text(
+                                                          "${dataLedger[0]['add2']}",
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontSize: 6),
+                                                        ),
+                                                        Text(
+                                                          "${dataLedger[0]['add3']}",
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontSize: 6),
+                                                        ),
+                                                        Text(
+                                                          "${dataLedger[0]['add4']}",
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontSize: 6),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(
+                                                  height: 1,
+                                                ),
+                                                Text(
+                                                  " Mobile                ${dataLedger[0]['Mobile']}",
+                                                  style: const TextStyle(
+                                                      fontSize: 6),
+                                                ),
+                                                Text(
+                                                  " Sate/Code         ${dataLedger[0]['state']}        ${dataLedger[0]['stateCode']}",
+                                                  style: const TextStyle(
+                                                      fontSize: 6),
+                                                ),
+                                                Text(
+                                                  " GST No              ${dataLedger[0]['gstno']}",
+                                                  style: const TextStyle(
+                                                      fontSize: 6),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Container(
+                                            height: 110,
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width /
+                                                2,
+                                            decoration: const BoxDecoration(
+                                              border: Border(
+                                                // top: BorderSide(color: Colors.black, width: 2),
+                                                right: BorderSide(
+                                                    color: Colors.black,
+                                                    width: 2),
+                                                bottom: BorderSide(
+                                                    color: Colors.black,
+                                                    width: 2),
+                                              ),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                const Center(
+                                                  child: Text(
+                                                    "Details of Consignee (Shipped To)",
+                                                    style: TextStyle(
+                                                        fontSize: 8,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        decoration:
+                                                            TextDecoration
+                                                                .underline),
+                                                  ),
+                                                ),
+                                                const SizedBox(
+                                                  height: 5,
+                                                ),
+                                                const Text(
+                                                  " Name           ",
+                                                  style: TextStyle(fontSize: 6),
+                                                ),
+                                                Row(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Text(
+                                                      " Address          ",
+                                                      style: TextStyle(
+                                                          fontSize: 6),
+                                                    ),
+                                                    const SizedBox(
+                                                      width: 35,
+                                                    ),
+                                                    Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: const [
+                                                        Text(
+                                                          "",
+                                                          style: TextStyle(
+                                                              fontSize: 6),
+                                                        ),
+                                                        Text(
+                                                          "",
+                                                          style: TextStyle(
+                                                              fontSize: 6),
+                                                        ),
+                                                        Text(
+                                                          "",
+                                                          style: TextStyle(
+                                                              fontSize: 6),
+                                                        ),
+                                                        Text(
+                                                          "",
+                                                          style: TextStyle(
+                                                              fontSize: 6),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                          border: Border.all(),
+                                          color: Colors.grey.shade300),
+                                      child: Table(
+                                        border: const TableBorder(
+                                          horizontalInside: BorderSide
+                                              .none, // Remove horizontal borders inside the table
+
+                                          verticalInside:
+                                              BorderSide(), // Keep vertical borders
+                                        ),
+                                        columnWidths: const {
+                                          0: FixedColumnWidth(10),
+                                          1: FlexColumnWidth(22),
+                                          2: FlexColumnWidth(7),
+                                          3: FlexColumnWidth(7),
+                                          4: FlexColumnWidth(7),
+                                          5: FlexColumnWidth(10),
+                                          6: FlexColumnWidth(10),
+                                          7: FlexColumnWidth(15),
+                                          8: FlexColumnWidth(15),
+                                          9: FlexColumnWidth(15),
+                                          10: FlexColumnWidth(15),
+                                        },
+                                        children: [
+                                          TableRow(children: [
+                                            Center(
+                                                child: Column(
+                                              children: const [
+                                                Padding(
+                                                  padding: EdgeInsets.all(2.0),
+                                                  child: Text(
+                                                    "No",
+                                                    style: TextStyle(
+                                                        fontSize: 4,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ),
+                                              ],
+                                            )),
+                                            const Padding(
+                                              padding: EdgeInsets.all(2.0),
+                                              child: Text(
+                                                "Description of Goods",
+                                                style: TextStyle(
+                                                    fontSize: 4,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                            ),
+                                            const Padding(
+                                              padding: EdgeInsets.all(2.0),
+                                              child: Text(
+                                                "  Hsn\n Code",
+                                                style: TextStyle(
+                                                    fontSize: 4,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: const [
+                                                Padding(
+                                                  padding: EdgeInsets.all(2.0),
+                                                  child: Text(
+                                                    'Qty',
+                                                    style: TextStyle(
+                                                        fontSize: 4,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const Padding(
+                                              padding: EdgeInsets.all(2.0),
+                                              child: Center(
+                                                child: Text(
+                                                  'UOM',
+                                                  style: TextStyle(
+                                                      fontSize: 4,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ),
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: const [
+                                                Padding(
+                                                  padding: EdgeInsets.all(2.0),
+                                                  child: Text(
+                                                    '  Unit\n Price',
+                                                    style: TextStyle(
+                                                        fontSize: 4,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: const [
+                                                Padding(
+                                                  padding: EdgeInsets.all(2.0),
+                                                  child: Text(
+                                                    'Taxable\n Value',
+                                                    style: TextStyle(
+                                                        fontSize: 4,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: const [
+                                                Padding(
+                                                  padding: EdgeInsets.all(2.0),
+                                                  child: Center(
+                                                    child: Text(
+                                                      'CGST',
+                                                      style: TextStyle(
+                                                          fontSize: 4,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: const [
+                                                Padding(
+                                                  padding: EdgeInsets.all(2.0),
+                                                  child: Center(
+                                                    child: Text(
+                                                      'SGST',
+                                                      style: TextStyle(
+                                                          fontSize: 4,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: const [
+                                                Padding(
+                                                  padding: EdgeInsets.all(2.0),
+                                                  child: Center(
+                                                    child: Text(
+                                                      'IGST',
+                                                      style: TextStyle(
+                                                          fontSize: 4,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: const [
+                                                Padding(
+                                                  padding: EdgeInsets.all(2.0),
+                                                  child: Text(
+                                                    '   Total\nAmount',
+                                                    style: TextStyle(
+                                                        fontSize: 5,
+                                                        color: Colors.black,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ]),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      decoration:
+                                          BoxDecoration(border: Border.all()),
+                                      child: Table(
+                                        border: const TableBorder(
+                                          horizontalInside: BorderSide
+                                              .none, // Remove horizontal borders inside the table
+
+                                          verticalInside:
+                                              BorderSide(), // Keep vertical borders
+                                        ),
+                                        columnWidths: const {
+                                          0: FixedColumnWidth(10),
+                                          1: FlexColumnWidth(22),
+                                          2: FlexColumnWidth(7),
+                                          3: FlexColumnWidth(7),
+                                          4: FlexColumnWidth(7),
+                                          5: FlexColumnWidth(10),
+                                          6: FlexColumnWidth(10),
+                                          7: FlexColumnWidth(6),
+                                          8: FlexColumnWidth(9),
+                                          9: FlexColumnWidth(6),
+                                          10: FlexColumnWidth(9),
+                                          11: FlexColumnWidth(6),
+                                          12: FlexColumnWidth(9),
+                                          13: FlexColumnWidth(15),
+                                        },
+                                        children: [
+                                          for (var i = 0;
+                                              i < dataParticulars.length;
+                                              i++)
+                                            TableRow(children: [
+                                              Center(
+                                                  child: Column(
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            2.0),
+                                                    child: Text(
+                                                      dataParticulars[i]
+                                                              ['GridID']
+                                                          .toString(),
+                                                      style: const TextStyle(
+                                                          fontSize: 4,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ],
+                                              )),
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.all(2.0),
+                                                child: Text(
+                                                  dataParticulars[i]
+                                                          ['ProductName']
+                                                      .toString(),
+                                                  style: const TextStyle(
+                                                      fontSize: 4,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.all(2.0),
+                                                child: Text(
+                                                  dataParticulars[i]['hsncode'],
+                                                  style: const TextStyle(
+                                                      fontSize: 4,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            2.0),
+                                                    child: Text(
+                                                      dataParticulars[i]['Qty']
+                                                          .toStringAsFixed(2),
+                                                      style: const TextStyle(
+                                                          fontSize: 4,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const Padding(
+                                                padding: EdgeInsets.all(2.0),
+                                                // child: Text(
+                                                //   dataParticulars[i]
+                                                //       ['unitName'],
+                                                //   style: const TextStyle(
+                                                //       fontSize: 4,
+                                                //       fontWeight:
+                                                //           FontWeight.bold),
+                                                // ),
+                                                child: Text(""),
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            2.0),
+                                                    child: Text(
+                                                      dataParticulars[i]
+                                                              ['RealPrate']
+                                                          .toStringAsFixed(2),
+                                                      style: const TextStyle(
+                                                          fontSize: 4,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            2.0),
+                                                    child: Text(
+                                                      '${dataParticulars[i]['Net'].toStringAsFixed(2)}',
+                                                      style: const TextStyle(
+                                                          fontSize: 4,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            2.0),
+                                                    child: Center(
+                                                      child: Text(
+                                                        '${dataParticulars[i]['tax'] / 2}%',
+                                                        style: const TextStyle(
+                                                            fontSize: 4,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            2.0),
+                                                    child: Text(
+                                                      dataParticulars[i]['CGST']
+                                                          .toStringAsFixed(2),
+                                                      style: const TextStyle(
+                                                          fontSize: 4,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            2.0),
+                                                    child: Center(
+                                                      child: Text(
+                                                        '${dataParticulars[i]['tax'] / 2}%',
+                                                        style: const TextStyle(
+                                                            fontSize: 4,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            2.0),
+                                                    child: Text(
+                                                      dataParticulars[i]['SGST']
+                                                          .toStringAsFixed(2),
+                                                      style: const TextStyle(
+                                                          fontSize: 4,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: const [
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsets.all(2.0),
+                                                    child: Center(
+                                                      child: Text(
+                                                        '0%',
+                                                        style: TextStyle(
+                                                            fontSize: 4,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: const [
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsets.all(2.0),
+                                                    child: Text(
+                                                      '0.00',
+                                                      style: TextStyle(
+                                                          fontSize: 4,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            2.0),
+                                                    child: Text(
+                                                      dataParticulars[i]
+                                                              ['Total']
+                                                          .toStringAsFixed(2),
+                                                      style: const TextStyle(
+                                                          fontSize: 5,
+                                                          color: Colors.black,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ]),
+                                          if (dataParticulars.length < 10)
+                                            for (var k = 0; k < 4; k++)
+                                              TableRow(children: [
+                                                Center(
+                                                    child: Column(
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        '\n',
+                                                        style: TextStyle(
+                                                            fontSize: 11,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                )),
+                                                const Padding(
+                                                  padding: EdgeInsets.all(2.0),
+                                                  child: Text(
+                                                    "",
+                                                    style: TextStyle(
+                                                        fontSize: 5,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ),
+                                                const Padding(
+                                                  padding: EdgeInsets.all(2.0),
+                                                  child: Text(
+                                                    "",
+                                                    style: TextStyle(
+                                                        fontSize: 5,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        "",
+                                                        style: TextStyle(
+                                                            fontSize: 5,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const Padding(
+                                                  padding: EdgeInsets.all(2.0),
+                                                  child: Text(
+                                                    "",
+                                                    style: TextStyle(
+                                                        fontSize: 5,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        "",
+                                                        style: TextStyle(
+                                                            fontSize: 5,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        '',
+                                                        style: TextStyle(
+                                                            fontSize: 5,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Center(
+                                                        child: Text(
+                                                          '',
+                                                          style: TextStyle(
+                                                              fontSize: 5,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        "",
+                                                        style: TextStyle(
+                                                            fontSize: 5,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Center(
+                                                        child: Text(
+                                                          '',
+                                                          style: TextStyle(
+                                                              fontSize: 5,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        "",
+                                                        style: TextStyle(
+                                                            fontSize: 5,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Center(
+                                                        child: Text(
+                                                          '',
+                                                          style: TextStyle(
+                                                              fontSize: 5,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        '',
+                                                        style: TextStyle(
+                                                            fontSize: 5,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        "",
+                                                        style: TextStyle(
+                                                            fontSize: 6,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ]),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                          border: Border.all(),
+                                          color: Colors.grey.shade100),
+                                      child: Table(
+                                        border: const TableBorder(
+                                          horizontalInside: BorderSide
+                                              .none, // Remove horizontal borders inside the table
+
+                                          verticalInside:
+                                              BorderSide(), // Keep vertical borders
+                                        ),
+                                        columnWidths: const {
+                                          0: FlexColumnWidth(35.4),
+                                          1: FlexColumnWidth(8),
+                                          2: FlexColumnWidth(18.5),
+                                          3: FlexColumnWidth(11),
+                                          4: FlexColumnWidth(16.5),
+                                          5: FlexColumnWidth(16.5),
+                                          6: FlexColumnWidth(16.5),
+                                          7: FlexColumnWidth(16.5),
+                                        },
+                                        children: [
+                                          TableRow(children: [
+                                            Center(
+                                                child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: const [
+                                                Padding(
+                                                  padding: EdgeInsets.all(2.0),
+                                                  child: Text(
+                                                    "Total",
+                                                    style: TextStyle(
+                                                        fontSize: 6,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ),
+                                              ],
+                                            )),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(2.0),
+                                                  child: Text(
+                                                    totalQuantity
+                                                        .toStringAsFixed(2),
+                                                    style: const TextStyle(
+                                                        fontSize: 3,
+                                                        fontWeight:
+                                                            FontWeight.w900),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const Padding(
+                                              padding: EdgeInsets.all(2.0),
+                                              child: Center(
+                                                child: Text(
+                                                  '',
+                                                  style: TextStyle(
+                                                      fontSize: 4,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ),
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(2.0),
+                                                  child: Text(
+                                                    totalTaxablevalue
+                                                        .toStringAsFixed(2),
+                                                    style: const TextStyle(
+                                                        fontSize: 4,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(2.0),
+                                                  child: Center(
+                                                    child: Text(
+                                                      '${dataInformation['CGST'].toStringAsFixed(2)}',
+                                                      style: const TextStyle(
+                                                          fontSize: 4,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(2.0),
+                                                  child: Center(
+                                                    child: Text(
+                                                      '${dataInformation['SGST'].toStringAsFixed(2)}',
+                                                      style: const TextStyle(
+                                                          fontSize: 4,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(2.0),
+                                                  child: Center(
+                                                    child: Text(
+                                                      '${dataInformation['IGST'].toStringAsFixed(2)}',
+                                                      style: const TextStyle(
+                                                          fontSize: 4,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(2.0),
+                                                  child: Text(
+                                                    '${dataInformation['Total'].toStringAsFixed(2)}',
+                                                    style: const TextStyle(
+                                                        fontSize: 4,
+                                                        fontWeight:
+                                                            FontWeight.w900),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ]),
+                                        ],
+                                      ),
+                                    ),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width /
+                                                2,
+                                            height: 102,
+                                            decoration: const BoxDecoration(
+                                              border: Border(
+                                                // top: BorderSide(color: Colors.black, width: 2),
+                                                right: BorderSide(
+                                                    color: Colors.black,
+                                                    width: 1),
+                                                bottom: BorderSide(
+                                                    color: Colors.black,
+                                                    width: 1),
+                                                left: BorderSide(
+                                                    color: Colors.black,
+                                                    width: 1),
+                                              ),
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                  left: 5.0, top: 5),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    NumberToWord().convertDouble(
+                                                        'en',
+                                                        double.tryParse(
+                                                            dataInformation[
+                                                                    'GrandTotal']
+                                                                .toString())),
+                                                    style: const TextStyle(
+                                                        fontSize: 7,
+                                                        fontWeight:
+                                                            FontWeight.w900),
+                                                  ),
+                                                  const SizedBox(
+                                                    height: 2,
+                                                  ),
+                                                  const Text(
+                                                    "Bank Details",
+                                                    style: TextStyle(
+                                                        fontSize: 6,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        decoration:
+                                                            TextDecoration
+                                                                .underline),
+                                                  ),
+                                                  Column(
+                                                    children: [
+                                                      SizedBox(
+                                                          height: 40,
+                                                          child: Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .spaceBetween,
+                                                            children: [
+                                                              Column(
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                children: [
+                                                                  Text(
+                                                                    companySettings
+                                                                        .name,
+                                                                    style: const TextStyle(
+                                                                        fontSize:
+                                                                            7),
+                                                                  ),
+                                                                  Text(
+                                                                    "${dataBankLedger[0]['name'] ?? ''}",
+                                                                    style: const TextStyle(
+                                                                        fontSize:
+                                                                            7),
+                                                                  ),
+                                                                  Text(
+                                                                    "A/C  : ${dataBankLedger[0]['account'] ?? ''}",
+                                                                    style: const TextStyle(
+                                                                        fontSize:
+                                                                            7),
+                                                                  ),
+                                                                  Text(
+                                                                    "IFSC : ${dataBankLedger[0]['ifsc'] ?? ''}",
+                                                                    style: const TextStyle(
+                                                                        fontSize:
+                                                                            7),
+                                                                  ),
+                                                                  Text(
+                                                                    "${dataBankLedger[0]['branch'] ?? ''}",
+                                                                    style: const TextStyle(
+                                                                        fontSize:
+                                                                            7),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                              Visibility(
+                                                                visible:
+                                                                    oldBalance >
+                                                                            0 ||
+                                                                        balance >
+                                                                            0,
+                                                                child: Padding(
+                                                                  padding: const EdgeInsets
+                                                                          .only(
+                                                                      right:
+                                                                          10.0),
+                                                                  child: Column(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .center,
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .start,
+                                                                    children: [
+                                                                      Row(
+                                                                        children: [
+                                                                          const SizedBox(
+                                                                            width:
+                                                                                40,
+                                                                            child:
+                                                                                Text(
+                                                                              "OB           : ",
+                                                                              style: TextStyle(fontSize: 6),
+                                                                            ),
+                                                                          ),
+                                                                          Text(
+                                                                            double.tryParse(customerBalance).toStringAsFixed(decimal),
+                                                                            style:
+                                                                                const TextStyle(fontSize: 6),
+                                                                          )
+                                                                        ],
+                                                                      ),
+                                                                      Row(
+                                                                        children: [
+                                                                          const SizedBox(
+                                                                            width:
+                                                                                40,
+                                                                            child:
+                                                                                Text(
+                                                                              "Balance  : ",
+                                                                              style: TextStyle(fontSize: 6),
+                                                                            ),
+                                                                          ),
+                                                                          Text(
+                                                                            balance.toStringAsFixed(decimal),
+                                                                            style:
+                                                                                const TextStyle(fontSize: 6),
+                                                                          )
+                                                                        ],
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          )),
+                                                    ],
+                                                  ),
+                                                  const Text(
+                                                    "Certified that the particular given above are true and Correct",
+                                                    style: TextStyle(
+                                                        fontSize: 6,
+                                                        fontWeight:
+                                                            FontWeight.w500),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Container(
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width /
+                                                2,
+                                            height: 102,
+                                            decoration: const BoxDecoration(
+                                              border: Border(
+                                                // top: BorderSide(color: Colors.black, width: 2),
+                                                right: BorderSide(
+                                                    color: Colors.black,
+                                                    width: 1),
+                                                bottom: BorderSide(
+                                                    color: Colors.black,
+                                                    width: 1),
+                                              ),
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                _addOtherAmountNew(otherAmount),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Container(
+                                                        height: 17,
+                                                        decoration:
+                                                            const BoxDecoration(
+                                                          border: Border(
+                                                            // top: BorderSide(color: Colors.black, width: 2),
+                                                            right: BorderSide(
+                                                                color: Colors
+                                                                    .black,
+                                                                width: 1),
+                                                            bottom: BorderSide(
+                                                                color: Colors
+                                                                    .black,
+                                                                width: 1),
+                                                          ),
+                                                        ),
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .end,
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: const [
+                                                            Text(
+                                                              "TCS ",
+                                                              style: TextStyle(
+                                                                  fontSize: 8,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w500),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      child: Container(
+                                                        height: 17,
+                                                        decoration:
+                                                            const BoxDecoration(
+                                                                border: Border(
+                                                          // top: BorderSide(color: Colors.black, width: 2),
+                                                          right: BorderSide(
+                                                              color:
+                                                                  Colors.black,
+                                                              width: 1),
+                                                          bottom: BorderSide(
+                                                              color:
+                                                                  Colors.black,
+                                                              width: 1),
+                                                        )),
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .end,
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            Text(
+                                                              '${dataInformation['TCS'].toStringAsFixed(2)} ',
+                                                              style: const TextStyle(
+                                                                  fontSize: 8,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w500),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Container(
+                                                        height: 17,
+                                                        decoration:
+                                                            const BoxDecoration(
+                                                          border: Border(
+                                                            // top: BorderSide(color: Colors.black, width: 2),
+                                                            right: BorderSide(
+                                                                color: Colors
+                                                                    .black,
+                                                                width: 1),
+                                                            bottom: BorderSide(
+                                                                color: Colors
+                                                                    .black,
+                                                                width: 1),
+                                                          ),
+                                                        ),
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .end,
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: const [
+                                                            Text(
+                                                              "Round off ",
+                                                              style: TextStyle(
+                                                                  fontSize: 8,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w500),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      child: Container(
+                                                        height: 17,
+                                                        decoration:
+                                                            const BoxDecoration(
+                                                                border: Border(
+                                                          // top: BorderSide(color: Colors.black, width: 2),
+                                                          right: BorderSide(
+                                                              color:
+                                                                  Colors.black,
+                                                              width: 1),
+                                                          bottom: BorderSide(
+                                                              color:
+                                                                  Colors.black,
+                                                              width: 1),
+                                                        )),
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .end,
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            Text(
+                                                              '${dataInformation['ROUNDOFF'].toStringAsFixed(2)} ',
+                                                              style: const TextStyle(
+                                                                  fontSize: 8,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w500),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Container(
+                                                        height: 17,
+                                                        decoration:
+                                                            const BoxDecoration(
+                                                          border: Border(
+                                                            // top: BorderSide(color: Colors.black, width: 2),
+                                                            right: BorderSide(
+                                                                color: Colors
+                                                                    .black,
+                                                                width: 1),
+                                                            bottom: BorderSide(
+                                                                color: Colors
+                                                                    .black,
+                                                                width: 1),
+                                                          ),
+                                                        ),
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .end,
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: const [
+                                                            Text(
+                                                              "Total ",
+                                                              style: TextStyle(
+                                                                  fontSize: 8,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w900),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      child: Container(
+                                                        height: 17,
+                                                        decoration:
+                                                            const BoxDecoration(
+                                                          border: Border(
+                                                            // top: BorderSide(color: Colors.black, width: 2),
+                                                            right: BorderSide(
+                                                                color: Colors
+                                                                    .black,
+                                                                width: 1),
+                                                            bottom: BorderSide(
+                                                                color: Colors
+                                                                    .black,
+                                                                width: 1),
+                                                          ),
+                                                        ),
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .end,
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            Text(
+                                                              "${dataInformation['GrandTotal'].toStringAsFixed(2)} ",
+                                                              style: const TextStyle(
+                                                                  fontSize: 7,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w900),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(
+                                                  height: 3,
+                                                ),
+                                                Text(
+                                                  companySettings.name,
+                                                  style: const TextStyle(
+                                                      fontSize: 8,
+                                                      fontWeight:
+                                                          FontWeight.w900),
+                                                ),
+                                                const SizedBox(
+                                                  height: 10,
+                                                ),
+                                                const Text(
+                                                  "Authorised Signatuory",
+                                                  style: TextStyle(
+                                                      fontSize: 8,
+                                                      fontWeight:
+                                                          FontWeight.w500),
+                                                )
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+            ),
+          )
+        : SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: _isLoading
+                  ? Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          CircularProgressIndicator(
+                            strokeWidth: 5,
+                            color: Colors.grey,
+                            backgroundColor: Colors.red,
+                          ),
+                          SizedBox(
+                            width: 10,
+                          ),
+                          Text(
+                            "Loading",
+                            style: TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18),
+                          )
+                        ],
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: SingleChildScrollView(
+                          child: Column(
+                        children: [
+                          Container(
+                            width: MediaQuery.of(context).size.width,
+                            height: 30,
+                            decoration: BoxDecoration(
+                                color: Colors.grey[300], border: Border.all()),
+                            child: const Center(
+                                child: Text(
+                              "PURCHASE RETURN",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            )),
+                          ),
+                          Container(
+                            width: MediaQuery.of(context).size.width,
+                            height: 100,
+                            decoration: const BoxDecoration(
+                                border: Border(
+                                    left: BorderSide(),
+                                    right: BorderSide(),
+                                    bottom: BorderSide())),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                                Row(
+                                  children: [
+                                    const Text(
+                                      "  No         :",
+                                      style: TextStyle(fontSize: 9),
+                                    ),
+                                    Text(
+                                      "   ${dataInformation['InvoiceNo']}",
+                                      style: const TextStyle(fontSize: 9),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    const Text(
+                                      "  Date      :",
+                                      style: TextStyle(fontSize: 9),
+                                    ),
+                                    Text(
+                                      "   ${DateUtil.dateDMY(dataInformation['DDate'])}",
+                                      style: const TextStyle(fontSize: 9),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    const Text(
+                                      "  To          :",
+                                      style: TextStyle(fontSize: 9),
+                                    ),
+                                    Text(
+                                      "   ${dataInformation['ToName']}",
+                                      style: const TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                                color: Colors.grey[300], border: Border.all()),
+                            child: Table(
+                              border: const TableBorder(
+                                horizontalInside: BorderSide
+                                    .none, // Remove horizontal borders inside the table
+
+                                verticalInside:
+                                    BorderSide(), // Keep vertical borders
+                              ),
+                              columnWidths: const {
+                                0: FixedColumnWidth(15),
+                                1: FlexColumnWidth(20),
+                                2: FlexColumnWidth(10),
+                                3: FlexColumnWidth(10),
+                                4: FlexColumnWidth(10),
+                                5: FlexColumnWidth(20),
+                              },
+                              children: [
+                                TableRow(children: [
+                                  Center(
+                                      child: Column(
+                                    children: const [
+                                      Padding(
+                                        padding: EdgeInsets.all(2.0),
+                                        child: Text(
+                                          'No',
+                                          style: TextStyle(
+                                              fontSize: 6,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
+                                  )),
+                                  const Padding(
+                                    padding: EdgeInsets.all(2.0),
+                                    child: Center(
+                                      child: Text(
+                                        'Description Of Goods',
+                                        style: TextStyle(
+                                            fontSize: 6,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.all(2.0),
+                                    child: Center(
+                                      child: Text(
+                                        'Qty',
+                                        style: TextStyle(
+                                            fontSize: 6,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.all(2.0),
+                                    child: Center(
+                                      child: Text(
+                                        'Unit',
+                                        style: TextStyle(
+                                            fontSize: 6,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.all(2.0),
+                                    child: Center(
+                                      child: Text(
+                                        'Rate',
+                                        style: TextStyle(
+                                            fontSize: 6,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.all(2.0),
+                                    child: Center(
+                                      child: Text(
+                                        'Total',
+                                        style: TextStyle(
+                                            fontSize: 6,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ),
+                                ]),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(border: Border.all()),
+                            child: Table(
+                              border: const TableBorder(
+                                horizontalInside: BorderSide
+                                    .none, // Remove horizontal borders inside the table
+
+                                verticalInside:
+                                    BorderSide(), // Keep vertical borders
+                              ),
+                              columnWidths: const {
+                                0: FixedColumnWidth(15),
+                                1: FlexColumnWidth(20),
+                                2: FlexColumnWidth(10),
+                                3: FlexColumnWidth(10),
+                                4: FlexColumnWidth(10),
+                                5: FlexColumnWidth(20),
+                              },
+                              children: [
+                                for (var i = 0; i < dataParticulars.length; i++)
+                                  TableRow(children: [
+                                    Center(
+                                        child: Column(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.all(2.0),
+                                          child: Text(
+                                            '${dataParticulars[i]['slno']}',
+                                            style: const TextStyle(
+                                                fontSize: 6,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                      ],
+                                    )),
+                                    Padding(
+                                      padding: const EdgeInsets.all(2.0),
+                                      child: Text(
+                                        dataParticulars[i]['itemname'],
+                                        style: const TextStyle(
+                                            fontSize: 6,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(2.0),
+                                      child: Center(
+                                        child: Text(
+                                          dataParticulars[i]['Qty']
+                                              .toStringAsFixed(2),
+                                          style: const TextStyle(
+                                              fontSize: 6,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(2.0),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            dataParticulars[i]['unitName']
+                                                .toString(),
+                                            style: const TextStyle(
+                                                fontSize: 6,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(2.0),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            dataParticulars[i]['RealRate']
+                                                .toStringAsFixed(2),
+                                            style: const TextStyle(
+                                                fontSize: 6,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(2.0),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            dataParticulars[i]['Total']
+                                                .toStringAsFixed(2),
+                                            style: const TextStyle(
+                                                fontSize: 6,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ]),
+                                if (5 < 10)
+                                  for (var k = 0; k < 8; k++)
+                                    TableRow(children: [
+                                      Center(
+                                          child: Column(
+                                        children: const [
+                                          Padding(
+                                            padding: EdgeInsets.all(2.0),
+                                            child: Text(
+                                              '\n',
+                                              style: TextStyle(
+                                                  fontSize: 6,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        ],
+                                      )),
+                                      const Padding(
+                                        padding: EdgeInsets.all(2.0),
+                                        child: Text(
+                                          '',
+                                          style: TextStyle(
+                                              fontSize: 6,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.all(2.0),
+                                        child: Center(
+                                          child: Text(
+                                            '',
+                                            style: TextStyle(
+                                                fontSize: 6,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(2.0),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: const [
+                                            Text(
+                                              '',
+                                              style: TextStyle(
+                                                  fontSize: 6,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(2.0),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: const [
+                                            Text(
+                                              '',
+                                              style: TextStyle(
+                                                  fontSize: 6,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(2.0),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: const [
+                                            Text(
+                                              '',
+                                              style: TextStyle(
+                                                  fontSize: 6,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ]),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                border: const Border(
+                                    bottom: BorderSide(),
+                                    left: BorderSide(),
+                                    right: BorderSide())),
+                            child: Table(
+                              border: const TableBorder(
+                                horizontalInside: BorderSide
+                                    .none, // Remove horizontal borders inside the table
+
+                                verticalInside:
+                                    BorderSide(), // Keep vertical borders
+                              ),
+                              columnWidths: const {
+                                0: FixedColumnWidth(15),
+                                1: FlexColumnWidth(20),
+                                2: FlexColumnWidth(10),
+                                3: FlexColumnWidth(10),
+                                4: FlexColumnWidth(10),
+                                5: FlexColumnWidth(20),
+                              },
+                              children: [
+                                TableRow(children: [
+                                  Center(
+                                      child: Column(
+                                    children: const [
+                                      Padding(
+                                        padding: EdgeInsets.all(2.0),
+                                        child: Text(
+                                          '',
+                                          style: TextStyle(
+                                              fontSize: 6,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
+                                  )),
+                                  const Padding(
+                                    padding: EdgeInsets.all(2.0),
+                                    child: Center(
+                                      child: Text(
+                                        'Total',
+                                        style: TextStyle(
+                                            fontSize: 6,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(2.0),
+                                    child: Center(
+                                      child: Text(
+                                        totalQuantity.toStringAsFixed(2),
+                                        style: const TextStyle(
+                                            fontSize: 6,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.all(2.0),
+                                    child: Center(
+                                      child: Text(
+                                        '',
+                                        style: TextStyle(
+                                            fontSize: 6,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.all(2.0),
+                                    child: Center(
+                                      child: Text(
+                                        '',
+                                        style: TextStyle(
+                                            fontSize: 6,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(2.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          '${lineTotal.toStringAsFixed(2)} ',
+                                          style: const TextStyle(
+                                              fontSize: 6,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ]),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: SizedBox(
+                                  width: MediaQuery.of(context).size.width / 2,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        "Amount In Words :",
+                                        style: TextStyle(
+                                            fontSize: 8,
+                                            decoration:
+                                                TextDecoration.underline),
+                                      ),
+                                      Text(
+                                        NumberToWord().convertDouble(
+                                            'en',
+                                            double.tryParse(
+                                                dataInformation['GrandTotal']
+                                                    .toString())),
+                                        style: const TextStyle(
+                                          fontSize: 8,
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: SizedBox(
+                                  width: MediaQuery.of(context).size.width / 2,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              for (var i = 0;
+                                                  i < otherAmount.length;
+                                                  i++)
+                                                Text(
+                                                  "${otherAmount[i]['LedName']} ",
+                                                  style: const TextStyle(
+                                                    fontSize: 7,
+                                                  ),
+                                                ),
+                                              const Text(
+                                                "Return Amt         :",
+                                                style: TextStyle(
+                                                  fontSize: 8,
+                                                ),
+                                              ),
+                                              const Text(
+                                                "BILL AMOUNT    :",
+                                                style: TextStyle(
+                                                  fontSize: 8,
+                                                ),
+                                              ),
+                                              const Text(
+                                                "OB                       :",
+                                                style: TextStyle(
+                                                  fontSize: 8,
+                                                ),
+                                              ),
+                                              const Text(
+                                                "Cash Recieved   :",
+                                                style: TextStyle(
+                                                  fontSize: 8,
+                                                ),
+                                              ),
+                                              const SizedBox(
+                                                height: 5,
+                                              ),
+                                              const Text(
+                                                "NET AMOUNT    :",
+                                                style: TextStyle(
+                                                    fontSize: 8,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              )
+                                            ],
+                                          ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.end,
+                                            children: [
+                                              for (var i = 0;
+                                                  i < otherAmount.length;
+                                                  i++)
+                                                Text(
+                                                  "${otherAmount[i]['Amount'].toStringAsFixed(2)} ",
+                                                  style: const TextStyle(
+                                                      fontSize: 8,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              Text(
+                                                "${dataInformation['ReturnAmount'].toStringAsFixed(2)} ",
+                                                style: const TextStyle(
+                                                    fontSize: 8,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              Text(
+                                                "${dataInformation['GrandTotal'].toStringAsFixed(2)} ",
+                                                style: const TextStyle(
+                                                    fontSize: 8,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              Text(
+                                                "${dataInformation['BalanceAmount'].toStringAsFixed(2)} ",
+                                                style: const TextStyle(
+                                                    fontSize: 8,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              Text(
+                                                "${dataInformation['CashReceived'].toStringAsFixed(2)} ",
+                                                style: const TextStyle(
+                                                    fontSize: 8,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              const SizedBox(
+                                                height: 5,
+                                              ),
+                                              Text(
+                                                "${(lineTotal - dataInformation['ReturnAmount'] + otherAmount.fold(0.0, (t, e) => t + double.parse(e['Symbol'] == '-' ? (e['Amount'] * -1).toString() : e['Amount'].toString()))).toStringAsFixed(2)} ",
+                                                style: const TextStyle(
+                                                    fontSize: 8,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                            ],
+                                          )
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        ],
+                      ))),
+            ),
+          );
+  }
+}
+
+_addOtherAmountNew(List otherAmount) {
+  return otherAmount.isNotEmpty && checkOtherAmountHaveValue(otherAmount)
+      ? Table(
+          // border: pw.TableBorder.all(width: 0.2),
+          defaultColumnWidth: const IntrinsicColumnWidth(),
+          children: [
+              for (var i = 0; i < otherAmount.length; i++)
+                TableRow(children: [
+                  Column(children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          otherAmount[i]['LedName'] +
+                              ' : ' +
+                              otherAmount[i]['Amount'].toStringAsFixed(2),
+                          style: const TextStyle(
+                              fontSize: 5, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ])
+                ]),
+            ])
+      : Container(
+          height: 15,
+          decoration: const BoxDecoration(
+            border: Border(
+              // top: BorderSide(color: Colors.black, width: 2),
+              right: BorderSide(color: Colors.black, width: 1),
+              bottom: BorderSide(color: Colors.black, width: 1),
+            ),
+          ),
+        );
 }
 
 askPrintDevice(
@@ -2784,1764 +5302,1765 @@ Future<pw.Document> makePDF(
   final pdf = pw.Document();
   var _pageFormat = PdfPageFormat.a4;
 
-  if (model == 2) {
-    taxSale
-        ? pdf.addPage(pw.MultiPage(
-            /*company*/
-            maxPages: 100,
-            header: (context) => pw.Column(children: [
-                  pw.Row(
-                      crossAxisAlignment: pw.CrossAxisAlignment.center,
-                      children: [
-                        pw.Expanded(
-                            child: pw.Column(children: [
-                          pw.Container(
-                            height: 20,
-                            padding: const pw.EdgeInsets.all(8),
-                            alignment: pw.Alignment.center,
-                            child: pw.Text(
-                              invoiceHead,
-                              style: pw.TextStyle(
-                                fontWeight: pw.FontWeight.bold,
-                                fontSize: 25,
-                              ),
-                            ),
-                          ),
-                          pw.Container(
-                              height: 80,
-                              padding: const pw.EdgeInsets.all(8),
-                              alignment: pw.Alignment.center,
-                              child: pw.RichText(
-                                  textAlign: pw.TextAlign.center,
-                                  text: pw.TextSpan(
-                                      text: '${companySettings.name}\n',
-                                      style: pw.TextStyle(
-                                        // color: _darkColor,
-                                        fontWeight: pw.FontWeight.bold,
-                                        fontSize: 15,
-                                      ),
-                                      children: [
-                                        const pw.TextSpan(
-                                          text: '\n',
-                                          style: pw.TextStyle(
-                                            fontSize: 5,
-                                          ),
-                                        ),
-                                        pw.TextSpan(
-                                            text: companySettings.add2
-                                                    .toString()
-                                                    .isEmpty
-                                                ? companySettings.add1
-                                                : companySettings.add1 +
-                                                    '\n' +
-                                                    companySettings.add2,
-                                            style: pw.TextStyle(
-                                              fontWeight: pw.FontWeight.bold,
-                                              fontSize: 10,
-                                            ),
-                                            children: [
-                                              companySettings.telephone
-                                                      .toString()
-                                                      .isNotEmpty
-                                                  ? pw.TextSpan(
-                                                      text: companySettings
-                                                          .telephone,
-                                                      children: [
-                                                          companySettings.mobile
-                                                                  .toString()
-                                                                  .isNotEmpty ??
-                                                              pw.TextSpan(
-                                                                  text: ', ' +
-                                                                      companySettings
-                                                                          .mobile),
-                                                        ])
-                                                  : const pw.TextSpan(
-                                                      text: '\n',
-                                                      style: pw.TextStyle(
-                                                        fontSize: 5,
-                                                      ),
-                                                    ),
-                                            ]),
-                                        pw.TextSpan(
-                                          text:
-                                              '${ComSettings.getValue('GST-NO', settings)}',
-                                          style: pw.TextStyle(
-                                            fontWeight: pw.FontWeight.bold,
-                                            fontSize: 10,
-                                          ),
-                                        ),
-                                      ]))),
-                          pw.Container(
-                            padding: const pw.EdgeInsets.all(10),
-                            alignment: pw.Alignment.center,
-                            height: 10,
-                            child: pw.GridView(
-                              crossAxisCount: 2,
-                              children: [
-                                pw.Text(
-                                    'Invoice : ' + dataInformation['InvoiceNo'],
-                                    style: pw.TextStyle(
-                                      fontWeight: pw.FontWeight.bold,
-                                      fontSize: 10,
-                                    ),
-                                    textAlign: pw.TextAlign.left),
-                                pw.Text(
-                                    'Date : ' +
-                                        DateUtil.dateDMY(
-                                            dataInformation['DDate']),
-                                    style: pw.TextStyle(
-                                      fontWeight: pw.FontWeight.bold,
-                                      fontSize: 10,
-                                    ),
-                                    textAlign: pw.TextAlign.right),
-                              ],
-                            ),
-                          ),
-                        ])),
-                      ]),
-                  if (context.pageNumber > 1) pw.SizedBox(height: 20)
-                ]),
-            build: (context) => [
-                  /*customer*/
-                  pw.Row(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        pw.Container(
-                          margin: const pw.EdgeInsets.only(left: 10, right: 10),
-                          height: 70,
-                          child: pw.Text(
-                            'Bill to:',
-                            style: pw.TextStyle(
-                              fontWeight: pw.FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        pw.Expanded(
-                          child: pw.Container(
-                            height: 70,
-                            child: pw.RichText(
-                                text: pw.TextSpan(
-                                    text: '${dataInformation['ToName']}\n',
-                                    style: pw.TextStyle(
-                                      // color: _darkColor,
-                                      fontWeight: pw.FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                    children: [
-                                  const pw.TextSpan(
-                                    text: '\n',
-                                    style: pw.TextStyle(
-                                      fontSize: 5,
-                                    ),
-                                  ),
-                                  pw.TextSpan(
-                                      text: dataInformation['Add2']
-                                              .toString()
-                                              .isEmpty
-                                          ? dataInformation['Add1']
-                                          : dataInformation['Add1'] +
-                                              '\n' +
-                                              dataInformation['Add2'],
-                                      style: pw.TextStyle(
-                                        fontWeight: pw.FontWeight.normal,
-                                        fontSize: 10,
-                                      ),
-                                      children: const [
-                                        pw.TextSpan(
-                                          text: '\n',
-                                          style: pw.TextStyle(
-                                            fontSize: 5,
-                                          ),
-                                        )
-                                      ]),
-                                  companyTaxMode == 'INDIA'
-                                      ? pw.TextSpan(
-                                          text: dataInformation['Add4'],
-                                          style: pw.TextStyle(
-                                            fontWeight: pw.FontWeight.normal,
-                                            fontSize: 10,
-                                          ),
-                                          children: const [
-                                              pw.TextSpan(
-                                                text: '\n',
-                                                style: pw.TextStyle(
-                                                  fontSize: 5,
-                                                ),
-                                              )
-                                            ])
-                                      : pw.TextSpan(
-                                          text:
-                                              'T-No :${dataInformation['gstno']}',
-                                          style: pw.TextStyle(
-                                            fontWeight: pw.FontWeight.normal,
-                                            fontSize: 10,
-                                          ),
-                                          children: const [
-                                              pw.TextSpan(
-                                                text: '\n',
-                                                style: pw.TextStyle(
-                                                  fontSize: 5,
-                                                ),
-                                              )
-                                            ]),
-                                  pw.TextSpan(
-                                    text: dataInformation['Add3'],
-                                    style: pw.TextStyle(
-                                      fontWeight: pw.FontWeight.normal,
-                                      fontSize: 10,
-                                    ),
-                                  )
-                                ])),
-                          ),
-                        ),
-                      ]),
-                  pw.Table(
-                    border: pw.TableBorder.all(width: 0.2),
-                    defaultColumnWidth: const pw.IntrinsicColumnWidth(),
-                    children: [
-                      companyTaxMode == 'INDIA'
-                          ? pw.TableRow(children: [
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[0],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[1],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[2],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[3],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[4],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[5],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[6],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[7],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[8],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[9],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[10],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[11],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                            ])
-                          : pw.TableRow(children: [
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[0],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[1],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[2],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[3],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[4],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[5],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[6],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[7],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[8],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[9],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[10],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                            ]),
-                      for (var i = 0; i < dataParticulars.length; i++)
-                        // dataParticulars
-                        companyTaxMode == 'INDIA'
-                            ? pw.TableRow(children: [
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            '${dataParticulars[i]['ItemId']}',
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.start,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            dataParticulars[i]['ProductName'],
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.start,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            dataParticulars[i]['hsncode'],
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['RealPrate']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            '${dataParticulars[i]['Qty']}',
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                isItemSerialNo
-                                    ? pw.Column(
-                                        crossAxisAlignment:
-                                            pw.CrossAxisAlignment.center,
-                                        mainAxisAlignment:
-                                            pw.MainAxisAlignment.center,
-                                        children: [
-                                            pw.Padding(
-                                              padding:
-                                                  const pw.EdgeInsets.all(2.0),
-                                              child: pw.Text(
-                                                  dataParticulars[i]['serialno']
-                                                      .toString(),
-                                                  style: const pw.TextStyle(
-                                                      fontSize: 9)),
-                                              // pw.Divider(thickness: 1)
-                                            )
-                                          ])
-                                    : pw.Column(
-                                        crossAxisAlignment:
-                                            pw.CrossAxisAlignment.center,
-                                        mainAxisAlignment:
-                                            pw.MainAxisAlignment.center,
-                                        children: [
-                                            pw.Padding(
-                                              padding:
-                                                  const pw.EdgeInsets.all(2.0),
-                                              child: pw.Text(
-                                                  dataParticulars[i]['unitName']
-                                                      .toString(),
-                                                  style: const pw.TextStyle(
-                                                      fontSize: 9)),
-                                              // pw.Divider(thickness: 1)
-                                            )
-                                          ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['PRate']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['Net']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            '${dataParticulars[i]['tax']} %',
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['CGST']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['SGST']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['Total']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                              ])
-                            : pw.TableRow(children: [
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            '${dataParticulars[i]['ItemId']}',
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      ),
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.start,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            dataParticulars[i]['ProductName'],
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      ),
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.start,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            dataParticulars[i]['hsncode'],
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['RealPrate']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            '${dataParticulars[i]['Qty']}',
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                isItemSerialNo
-                                    ? pw.Column(
-                                        crossAxisAlignment:
-                                            pw.CrossAxisAlignment.center,
-                                        mainAxisAlignment:
-                                            pw.MainAxisAlignment.center,
-                                        children: [
-                                            pw.Padding(
-                                              padding:
-                                                  const pw.EdgeInsets.all(2.0),
-                                              child: pw.Text(
-                                                  dataParticulars[i]['serialno']
-                                                      .toString(),
-                                                  style: const pw.TextStyle(
-                                                      fontSize: 9)),
-                                              // pw.Divider(thickness: 1)
-                                            )
-                                          ])
-                                    : pw.Column(
-                                        crossAxisAlignment:
-                                            pw.CrossAxisAlignment.center,
-                                        mainAxisAlignment:
-                                            pw.MainAxisAlignment.center,
-                                        children: [
-                                            pw.Padding(
-                                              padding:
-                                                  const pw.EdgeInsets.all(2.0),
-                                              child: pw.Text(
-                                                  dataParticulars[i]['unitName']
-                                                      .toString(),
-                                                  style: const pw.TextStyle(
-                                                      fontSize: 9)),
-                                              // pw.Divider(thickness: 1)
-                                            )
-                                          ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['PRate']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['Net']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            '${dataParticulars[i]['tax']} %',
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['tax']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['Total']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                              ])
-                    ],
-                  ),
-                  pw.SizedBox(
-                    height: 40.0,
-                  ),
-                  pw.Column(
-                    children: [
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.end,
-                        children: [
-                          pw.Text(
-                              'SUB TOTAL : ${double.tryParse(dataInformation['GrossValue'].toString()).toStringAsFixed(decimal)}'),
-                        ],
-                      ),
-                      companyTaxMode == 'INDIA'
-                          ? pw.Row(
-                              mainAxisAlignment: pw.MainAxisAlignment.end,
-                              children: [
-                                pw.Text(
-                                    'CESS : ${double.tryParse(dataInformation['Cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['Cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
-                              ],
-                            )
-                          : pw.Row(
-                              mainAxisAlignment: pw.MainAxisAlignment.end,
-                              children: [
-                                pw.Text(
-                                    'VAT : ${double.tryParse(dataInformation['tax'].toString()).toStringAsFixed(decimal)}'),
-                              ],
-                            ),
-                      /**other amount**/
-                      // otherAmount.length>0 ?
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.end,
-                        children: [
-                          pw.Text('***Discount***'),
-                        ],
-                      ),
-                      _addOtherAmountPDF(otherAmount),
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.end,
-                        children: [
-                          pw.Text(
-                              'PAID : ${double.tryParse(dataInformation['CashReceived'].toString()).toStringAsFixed(decimal)}'),
-                        ],
-                      ),
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.end,
-                        children: [
-                          pw.Text(
-                              'TOTAL DUE : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}',
-                              style: pw.TextStyle(
-                                  color: PdfColors.black,
-                                  fontSize: 19,
-                                  fontWeight: pw.FontWeight.bold)),
-                        ],
-                      ),
-                      pw.Row(
-                        children: [
-                          pw.Text(
-                            'Bill Balance : ${double.tryParse((double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString())).toString()).toStringAsFixed(decimal)}',
-                          ),
-                        ],
-                      ),
-                      pw.Row(
-                        children: [
-                          pw.Text(
-                            'Old Balance : ${double.tryParse(customerBalance.toString()).toStringAsFixed(decimal)}',
-                          ),
-                        ],
-                      ),
-                      pw.Row(
-                        children: [
-                          pw.Text(
-                            'Balance : ${double.tryParse(((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toString()).toStringAsFixed(decimal)}',
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  byteImageQr != null
-                      ? pw.Image(imageQr,
-                          height: 100,
-                          width:
-                              100) //Image.provider(imageQr, width: 100, height: 100)
-                      : pw.Header(text: ''),
-                  pw.Container(
-                      alignment: pw.Alignment.center,
-                      child: pw.Text(data['message'],
-                          textAlign: pw.TextAlign.center))
-                ],
-            footer: _buildFooter))
-        : printHeaderOnES
-            ? pdf.addPage(pw.MultiPage(
-                maxPages: 100,
-                header: (context) => pw.Column(children: [
-                      pw.Container(
-                        height: 20,
-                        padding: const pw.EdgeInsets.all(10),
-                        alignment: pw.Alignment.center,
-                        child: pw.Text(
-                          invoiceHead,
-                          style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold,
-                            fontSize: 25,
-                          ),
-                        ),
-                      ),
-                      pw.SizedBox(height: 5),
-                      pw.Container(
-                          height: 80,
-                          padding: const pw.EdgeInsets.all(8),
-                          alignment: pw.Alignment.center,
-                          child: pw.RichText(
-                              textAlign: pw.TextAlign.center,
-                              text: pw.TextSpan(
-                                  text: '${companySettings.name}\n',
-                                  style: pw.TextStyle(
-                                    // color: _darkColor,
-                                    fontWeight: pw.FontWeight.bold,
-                                    fontSize: 15,
-                                  ),
-                                  children: [
-                                    const pw.TextSpan(
-                                      text: '\n',
-                                      style: pw.TextStyle(
-                                        fontSize: 5,
-                                      ),
-                                    ),
-                                    pw.TextSpan(
-                                        text: companySettings.add2
-                                                .toString()
-                                                .isEmpty
-                                            ? companySettings.add1
-                                            : companySettings.add1 +
-                                                '\n' +
-                                                companySettings.add2,
-                                        style: pw.TextStyle(
-                                          fontWeight: pw.FontWeight.bold,
-                                          fontSize: 10,
-                                        ),
-                                        children: [
-                                          companySettings.telephone
-                                                  .toString()
-                                                  .isNotEmpty
-                                              ? pw.TextSpan(
-                                                  text:
-                                                      companySettings.telephone,
-                                                  children: [
-                                                      companySettings.mobile
-                                                              .toString()
-                                                              .isNotEmpty ??
-                                                          pw.TextSpan(
-                                                              text: ', ' +
-                                                                  companySettings
-                                                                      .mobile),
-                                                    ])
-                                              : const pw.TextSpan(
-                                                  text: '\n',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 5,
-                                                  ),
-                                                ),
-                                        ]),
-                                    pw.TextSpan(
-                                      text:
-                                          '${ComSettings.getValue('GST-NO', settings)}',
-                                      style: pw.TextStyle(
-                                        fontWeight: pw.FontWeight.bold,
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                  ]))),
-                      pw.SizedBox(height: 20),
-                      pw.Container(
-                        padding: const pw.EdgeInsets.all(10),
-                        alignment: pw.Alignment.center,
-                        height: 10,
-                        child: pw.GridView(
-                          crossAxisCount: 2,
-                          children: [
-                            pw.Text('EntryNo : ' + dataInformation['InvoiceNo'],
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 10,
-                                ),
-                                textAlign: pw.TextAlign.left),
-                            pw.Text(
-                                'Date : ' +
-                                    DateUtil.dateDMY(dataInformation['DDate']),
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 10,
-                                ),
-                                textAlign: pw.TextAlign.right),
-                          ],
-                        ),
-                      ),
-                      if (context.pageNumber > 1) pw.SizedBox(height: 20)
-                    ]),
-                build: (context) => [
-                      /*customer*/
-                      pw.Row(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          children: [
-                            pw.Container(
-                              margin:
-                                  const pw.EdgeInsets.only(left: 10, right: 10),
-                              height: 70,
-                              child: pw.Text(
-                                'Bill to:',
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                            pw.Expanded(
-                                child: pw.Container(
-                                    height: 50,
-                                    child: pw.RichText(
-                                        text: pw.TextSpan(
-                                            text:
-                                                '${dataInformation['ToName']}\n',
-                                            style: pw.TextStyle(
-                                              // color: _darkColor,
-                                              fontWeight: pw.FontWeight.bold,
-                                              fontSize: 12,
-                                            ),
-                                            children: [
-                                          const pw.TextSpan(
-                                            text: '\n',
-                                            style: pw.TextStyle(
-                                              fontSize: 5,
-                                            ),
-                                          ),
-                                          pw.TextSpan(
-                                            text: dataInformation['Add2']
-                                                    .toString()
-                                                    .isEmpty
-                                                ? dataInformation['Add1']
-                                                : dataInformation['Add1'] +
-                                                    '\n' +
-                                                    dataInformation['Add2'],
-                                            style: pw.TextStyle(
-                                              fontWeight: pw.FontWeight.normal,
-                                              fontSize: 10,
-                                            ),
-                                          )
-                                        ])))),
-                          ]),
-                      pw.Table(
-                        border: pw.TableBorder.all(width: 0.2),
-                        children: [
-                          pw.TableRow(children: [
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[0],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[1],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[2],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[3],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[4],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[5],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                          ]),
-                          for (var i = 0; i < dataParticulars.length; i++)
-                            pw.TableRow(children: [
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          '${dataParticulars[i]['ItemId']}',
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    ),
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.start,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          dataParticulars[i]['ProductName'],
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    ),
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          double.tryParse(dataParticulars[i]
-                                                      ['PRate']
-                                                  .toString())
-                                              .toStringAsFixed(decimal),
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    )
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          dataParticulars[i]['Qty']
-                                              .toStringAsFixed(decimal),
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    )
-                                  ]),
-                              isItemSerialNo
-                                  ? pw.Column(
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.center,
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.center,
-                                      children: [
-                                          pw.Padding(
-                                            padding:
-                                                const pw.EdgeInsets.all(2.0),
-                                            child: pw.Text(
-                                                dataParticulars[i]['serialno']
-                                                    .toString(),
-                                                style: const pw.TextStyle(
-                                                    fontSize: 9)),
-                                            // pw.Divider(thickness: 1)
-                                          )
-                                        ])
-                                  : pw.Column(
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.center,
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.center,
-                                      children: [
-                                          pw.Padding(
-                                            padding:
-                                                const pw.EdgeInsets.all(2.0),
-                                            child: pw.Text(
-                                                dataParticulars[i]['unitName']
-                                                    .toString(),
-                                                style: const pw.TextStyle(
-                                                    fontSize: 9)),
-                                            // pw.Divider(thickness: 1)
-                                          )
-                                        ]),
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          double.tryParse(dataParticulars[i]
-                                                      ['Total']
-                                                  .toString())
-                                              .toStringAsFixed(decimal),
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    )
-                                  ]),
-                            ])
-                        ],
-                      ),
-                      pw.SizedBox(
-                        height: 40.0,
-                      ),
-                      pw.Column(
-                        children: [
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(
-                                  'SUB TOTAL : ${double.tryParse(dataInformation['GrossValue'].toString()).toStringAsFixed(decimal)}'),
-                            ],
-                          ),
-                          /**other amount**/
-                          // otherAmount.length>0 ?
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(''),
-                            ],
-                          ),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text('***Discount***'),
-                            ],
-                          ),
-                          _addOtherAmountPDF(otherAmount),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(
-                                  'TOTAL : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}'),
-                            ],
-                          ),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(
-                                  'PAID : ${double.tryParse(dataInformation['CashReceived'].toString()).toStringAsFixed(decimal)}'),
-                            ],
-                          ),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(
-                                  'TOTAL DUE : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}',
-                                  style: pw.TextStyle(
-                                      // color: Colors.black,
-                                      fontSize: 19,
-                                      fontWeight: pw.FontWeight.bold)),
-                            ],
-                          ),
-                          pw.Row(
-                            children: [
-                              pw.Text(
-                                'Bill Balance : ${(double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString())).toStringAsFixed(decimal)}',
-                              ),
-                            ],
-                          ),
-                          pw.Row(
-                            children: [
-                              pw.Text(
-                                'Old Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
-                              ),
-                            ],
-                          ),
-                          pw.Row(
-                            children: [
-                              pw.Text(
-                                'Balance : ${((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toStringAsFixed(decimal)}',
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      pw.Container(
-                          alignment: pw.Alignment.center,
-                          child: pw.Text(data['message'],
-                              textAlign: pw.TextAlign.center))
-                    ],
-                footer: _buildFooter))
-            : pdf.addPage(pw.MultiPage(
-                maxPages: 100,
-                header: (context) => pw.Column(children: [
-                      pw.Container(
-                        height: 20,
-                        padding: const pw.EdgeInsets.all(10),
-                        alignment: pw.Alignment.center,
-                        child: pw.Text(
-                          invoiceHead,
-                          style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold,
-                            fontSize: 25,
-                          ),
-                        ),
-                      ),
-                      pw.SizedBox(height: 20),
-                      pw.Container(
-                        padding: const pw.EdgeInsets.all(10),
-                        alignment: pw.Alignment.center,
-                        height: 10,
-                        child: pw.GridView(
-                          crossAxisCount: 2,
-                          children: [
-                            pw.Text('EntryNo : ' + dataInformation['InvoiceNo'],
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 10,
-                                ),
-                                textAlign: pw.TextAlign.left),
-                            pw.Text(
-                                'Date : ' +
-                                    DateUtil.dateDMY(dataInformation['DDate']),
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 10,
-                                ),
-                                textAlign: pw.TextAlign.right),
-                          ],
-                        ),
-                      ),
-                      if (context.pageNumber > 1) pw.SizedBox(height: 20)
-                    ]),
-                build: (context) => [
-                      /*customer*/
-                      pw.Row(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          children: [
-                            pw.Container(
-                              margin:
-                                  const pw.EdgeInsets.only(left: 10, right: 10),
-                              height: 70,
-                              child: pw.Text(
-                                'Bill to:',
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                            pw.Expanded(
-                                child: pw.Container(
-                                    height: 50,
-                                    child: pw.RichText(
-                                        text: pw.TextSpan(
-                                            text:
-                                                '${dataInformation['ToName']}\n',
-                                            style: pw.TextStyle(
-                                              // color: _darkColor,
-                                              fontWeight: pw.FontWeight.bold,
-                                              fontSize: 12,
-                                            ),
-                                            children: [
-                                          const pw.TextSpan(
-                                            text: '\n',
-                                            style: pw.TextStyle(
-                                              fontSize: 5,
-                                            ),
-                                          ),
-                                          pw.TextSpan(
-                                            text: dataInformation['Add2']
-                                                    .toString()
-                                                    .isEmpty
-                                                ? dataInformation['Add1']
-                                                : dataInformation['Add1'] +
-                                                    '\n' +
-                                                    dataInformation['Add2'],
-                                            style: pw.TextStyle(
-                                              fontWeight: pw.FontWeight.normal,
-                                              fontSize: 10,
-                                            ),
-                                          )
-                                        ])))),
-                          ]),
-                      pw.Table(
-                        border: pw.TableBorder.all(width: 0.2),
-                        children: [
-                          pw.TableRow(children: [
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[0],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[1],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[2],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[3],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[4],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[5],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                          ]),
-                          for (var i = 0; i < dataParticulars.length; i++)
-                            pw.TableRow(children: [
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          '${dataParticulars[i]['ItemId']}',
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    ),
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.start,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          dataParticulars[i]['ProductName'],
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    ),
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          double.tryParse(dataParticulars[i]
-                                                      ['PRate']
-                                                  .toString())
-                                              .toStringAsFixed(decimal),
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    )
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          dataParticulars[i]['Qty']
-                                              .toStringAsFixed(decimal),
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    )
-                                  ]),
-                              isItemSerialNo
-                                  ? pw.Column(
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.center,
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.center,
-                                      children: [
-                                          pw.Padding(
-                                            padding:
-                                                const pw.EdgeInsets.all(2.0),
-                                            child: pw.Text(
-                                                dataParticulars[i]['serialno']
-                                                    .toString(),
-                                                style: const pw.TextStyle(
-                                                    fontSize: 9)),
-                                            // pw.Divider(thickness: 1)
-                                          )
-                                        ])
-                                  : pw.Column(
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.center,
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.center,
-                                      children: [
-                                          pw.Padding(
-                                            padding:
-                                                const pw.EdgeInsets.all(2.0),
-                                            child: pw.Text(
-                                                dataParticulars[i]['unitName']
-                                                    .toString(),
-                                                style: const pw.TextStyle(
-                                                    fontSize: 9)),
-                                            // pw.Divider(thickness: 1)
-                                          )
-                                        ]),
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          double.tryParse(dataParticulars[i]
-                                                      ['Total']
-                                                  .toString())
-                                              .toStringAsFixed(decimal),
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    )
-                                  ]),
-                            ])
-                        ],
-                      ),
-                      pw.SizedBox(
-                        height: 40.0,
-                      ),
-                      pw.Column(
-                        children: [
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(
-                                  'SUB TOTAL : ${double.tryParse(dataInformation['GrossValue'].toString()).toStringAsFixed(decimal)}'),
-                            ],
-                          ),
-                          /**other amount**/
-                          // otherAmount.length>0 ?
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(''),
-                            ],
-                          ),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text('***Discount***'),
-                            ],
-                          ),
-                          _addOtherAmountPDF(otherAmount),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(
-                                  'TOTAL : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}'),
-                            ],
-                          ),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(
-                                  'PAID : ${double.tryParse(dataInformation['CashReceived'].toString()).toStringAsFixed(decimal)}'),
-                            ],
-                          ),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(
-                                  'TOTAL DUE : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}',
-                                  style: pw.TextStyle(
-                                      // color: Colors.black,
-                                      fontSize: 19,
-                                      fontWeight: pw.FontWeight.bold)),
-                            ],
-                          ),
-                          pw.Row(
-                            children: [
-                              pw.Text(
-                                'Bill Balance : ${(double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString())).toStringAsFixed(decimal)}',
-                              ),
-                            ],
-                          ),
-                          pw.Row(
-                            children: [
-                              pw.Text(
-                                'Old Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
-                              ),
-                            ],
-                          ),
-                          pw.Row(
-                            children: [
-                              pw.Text(
-                                'Balance : ${((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toStringAsFixed(decimal)}',
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      pw.Container(
-                          alignment: pw.Alignment.center,
-                          child: pw.Text(data['message'],
-                              textAlign: pw.TextAlign.center))
-                    ],
-                footer: _buildFooter));
-  } else if (model == 3) {
+  // if (model == 2) {
+  //   taxSale
+  //       ? pdf.addPage(pw.MultiPage(
+  //           /*company*/
+  //           maxPages: 100,
+  //           header: (context) => pw.Column(children: [
+  //                 pw.Row(
+  //                     crossAxisAlignment: pw.CrossAxisAlignment.center,
+  //                     children: [
+  //                       pw.Expanded(
+  //                           child: pw.Column(children: [
+  //                         pw.Container(
+  //                           height: 20,
+  //                           padding: const pw.EdgeInsets.all(8),
+  //                           alignment: pw.Alignment.center,
+  //                           child: pw.Text(
+  //                             invoiceHead,
+  //                             style: pw.TextStyle(
+  //                               fontWeight: pw.FontWeight.bold,
+  //                               fontSize: 25,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                         pw.Container(
+  //                             height: 80,
+  //                             padding: const pw.EdgeInsets.all(8),
+  //                             alignment: pw.Alignment.center,
+  //                             child: pw.RichText(
+  //                                 textAlign: pw.TextAlign.center,
+  //                                 text: pw.TextSpan(
+  //                                     text: '${companySettings.name}\n',
+  //                                     style: pw.TextStyle(
+  //                                       // color: _darkColor,
+  //                                       fontWeight: pw.FontWeight.bold,
+  //                                       fontSize: 15,
+  //                                     ),
+  //                                     children: [
+  //                                       const pw.TextSpan(
+  //                                         text: '\n',
+  //                                         style: pw.TextStyle(
+  //                                           fontSize: 5,
+  //                                         ),
+  //                                       ),
+  //                                       pw.TextSpan(
+  //                                           text: companySettings.add2
+  //                                                   .toString()
+  //                                                   .isEmpty
+  //                                               ? companySettings.add1
+  //                                               : companySettings.add1 +
+  //                                                   '\n' +
+  //                                                   companySettings.add2,
+  //                                           style: pw.TextStyle(
+  //                                             fontWeight: pw.FontWeight.bold,
+  //                                             fontSize: 10,
+  //                                           ),
+  //                                           children: [
+  //                                             companySettings.telephone
+  //                                                     .toString()
+  //                                                     .isNotEmpty
+  //                                                 ? pw.TextSpan(
+  //                                                     text: companySettings
+  //                                                         .telephone,
+  //                                                     children: [
+  //                                                         companySettings.mobile
+  //                                                                 .toString()
+  //                                                                 .isNotEmpty ??
+  //                                                             pw.TextSpan(
+  //                                                                 text: ', ' +
+  //                                                                     companySettings
+  //                                                                         .mobile),
+  //                                                       ])
+  //                                                 : const pw.TextSpan(
+  //                                                     text: '\n',
+  //                                                     style: pw.TextStyle(
+  //                                                       fontSize: 5,
+  //                                                     ),
+  //                                                   ),
+  //                                           ]),
+  //                                       pw.TextSpan(
+  //                                         text:
+  //                                             '${ComSettings.getValue('GST-NO', settings)}',
+  //                                         style: pw.TextStyle(
+  //                                           fontWeight: pw.FontWeight.bold,
+  //                                           fontSize: 10,
+  //                                         ),
+  //                                       ),
+  //                                     ]))),
+  //                         pw.Container(
+  //                           padding: const pw.EdgeInsets.all(10),
+  //                           alignment: pw.Alignment.center,
+  //                           height: 10,
+  //                           child: pw.GridView(
+  //                             crossAxisCount: 2,
+  //                             children: [
+  //                               pw.Text(
+  //                                   'Invoice : ' + dataInformation['InvoiceNo'],
+  //                                   style: pw.TextStyle(
+  //                                     fontWeight: pw.FontWeight.bold,
+  //                                     fontSize: 10,
+  //                                   ),
+  //                                   textAlign: pw.TextAlign.left),
+  //                               pw.Text(
+  //                                   'Date : ' +
+  //                                       DateUtil.dateDMY(
+  //                                           dataInformation['DDate']),
+  //                                   style: pw.TextStyle(
+  //                                     fontWeight: pw.FontWeight.bold,
+  //                                     fontSize: 10,
+  //                                   ),
+  //                                   textAlign: pw.TextAlign.right),
+  //                             ],
+  //                           ),
+  //                         ),
+  //                       ])),
+  //                     ]),
+  //                 if (context.pageNumber > 1) pw.SizedBox(height: 20)
+  //               ]),
+  //           build: (context) => [
+  //                 /*customer*/
+  //                 pw.Row(
+  //                     crossAxisAlignment: pw.CrossAxisAlignment.start,
+  //                     children: [
+  //                       pw.Container(
+  //                         margin: const pw.EdgeInsets.only(left: 10, right: 10),
+  //                         height: 70,
+  //                         child: pw.Text(
+  //                           'Bill to:',
+  //                           style: pw.TextStyle(
+  //                             fontWeight: pw.FontWeight.bold,
+  //                             fontSize: 12,
+  //                           ),
+  //                         ),
+  //                       ),
+  //                       pw.Expanded(
+  //                         child: pw.Container(
+  //                           height: 70,
+  //                           child: pw.RichText(
+  //                               text: pw.TextSpan(
+  //                                   text: '${dataInformation['ToName']}\n',
+  //                                   style: pw.TextStyle(
+  //                                     // color: _darkColor,
+  //                                     fontWeight: pw.FontWeight.bold,
+  //                                     fontSize: 12,
+  //                                   ),
+  //                                   children: [
+  //                                 const pw.TextSpan(
+  //                                   text: '\n',
+  //                                   style: pw.TextStyle(
+  //                                     fontSize: 5,
+  //                                   ),
+  //                                 ),
+  //                                 pw.TextSpan(
+  //                                     text: dataInformation['Add2']
+  //                                             .toString()
+  //                                             .isEmpty
+  //                                         ? dataInformation['Add1']
+  //                                         : dataInformation['Add1'] +
+  //                                             '\n' +
+  //                                             dataInformation['Add2'],
+  //                                     style: pw.TextStyle(
+  //                                       fontWeight: pw.FontWeight.normal,
+  //                                       fontSize: 10,
+  //                                     ),
+  //                                     children: const [
+  //                                       pw.TextSpan(
+  //                                         text: '\n',
+  //                                         style: pw.TextStyle(
+  //                                           fontSize: 5,
+  //                                         ),
+  //                                       )
+  //                                     ]),
+  //                                 companyTaxMode == 'INDIA'
+  //                                     ? pw.TextSpan(
+  //                                         text: dataInformation['Add4'],
+  //                                         style: pw.TextStyle(
+  //                                           fontWeight: pw.FontWeight.normal,
+  //                                           fontSize: 10,
+  //                                         ),
+  //                                         children: const [
+  //                                             pw.TextSpan(
+  //                                               text: '\n',
+  //                                               style: pw.TextStyle(
+  //                                                 fontSize: 5,
+  //                                               ),
+  //                                             )
+  //                                           ])
+  //                                     : pw.TextSpan(
+  //                                         text:
+  //                                             'T-No :${dataInformation['gstno']}',
+  //                                         style: pw.TextStyle(
+  //                                           fontWeight: pw.FontWeight.normal,
+  //                                           fontSize: 10,
+  //                                         ),
+  //                                         children: const [
+  //                                             pw.TextSpan(
+  //                                               text: '\n',
+  //                                               style: pw.TextStyle(
+  //                                                 fontSize: 5,
+  //                                               ),
+  //                                             )
+  //                                           ]),
+  //                                 pw.TextSpan(
+  //                                   text: dataInformation['Add3'],
+  //                                   style: pw.TextStyle(
+  //                                     fontWeight: pw.FontWeight.normal,
+  //                                     fontSize: 10,
+  //                                   ),
+  //                                 )
+  //                               ])),
+  //                         ),
+  //                       ),
+  //                     ]),
+  //                 pw.Table(
+  //                   border: pw.TableBorder.all(width: 0.2),
+  //                   defaultColumnWidth: const pw.IntrinsicColumnWidth(),
+  //                   children: [
+  //                     companyTaxMode == 'INDIA'
+  //                         ? pw.TableRow(children: [
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[0],
+  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[1],
+  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[2],
+  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[3],
+  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[4],
+  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[5],
+  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[6],
+  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[7],
+  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[8],
+  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[9],
+  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[10],
+  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[11],
+  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                           ])
+  //                         : pw.TableRow(children: [
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[0],
+  //                                       style: pw.TextStyle(
+  //                                           fontSize: 9,
+  //                                           fontWeight: pw.FontWeight.bold)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[1],
+  //                                       style: pw.TextStyle(
+  //                                           fontSize: 9,
+  //                                           fontWeight: pw.FontWeight.bold)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[2],
+  //                                       style: pw.TextStyle(
+  //                                           fontSize: 9,
+  //                                           fontWeight: pw.FontWeight.bold)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[3],
+  //                                       style: pw.TextStyle(
+  //                                           fontSize: 9,
+  //                                           fontWeight: pw.FontWeight.bold)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[4],
+  //                                       style: pw.TextStyle(
+  //                                           fontSize: 9,
+  //                                           fontWeight: pw.FontWeight.bold)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[5],
+  //                                       style: pw.TextStyle(
+  //                                           fontSize: 9,
+  //                                           fontWeight: pw.FontWeight.bold)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[6],
+  //                                       style: pw.TextStyle(
+  //                                           fontSize: 9,
+  //                                           fontWeight: pw.FontWeight.bold)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[7],
+  //                                       style: pw.TextStyle(
+  //                                           fontSize: 9,
+  //                                           fontWeight: pw.FontWeight.bold)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[8],
+  //                                       style: pw.TextStyle(
+  //                                           fontSize: 9,
+  //                                           fontWeight: pw.FontWeight.bold)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[9],
+  //                                       style: pw.TextStyle(
+  //                                           fontSize: 9,
+  //                                           fontWeight: pw.FontWeight.bold)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.center,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Text(tableHeaders[10],
+  //                                       style: pw.TextStyle(
+  //                                           fontSize: 9,
+  //                                           fontWeight: pw.FontWeight.bold)),
+  //                                   // pw.Divider(thickness: 1)
+  //                                 ]),
+  //                           ]),
+  //                     for (var i = 0; i < dataParticulars.length; i++)
+  //                       // dataParticulars
+  //                       companyTaxMode == 'INDIA'
+  //                           ? pw.TableRow(children: [
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           '${dataParticulars[i]['ItemId']}',
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.start,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           dataParticulars[i]['ProductName'],
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.start,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           dataParticulars[i]['hsncode'],
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           double.tryParse(dataParticulars[i]
+  //                                                       ['RealPrate']
+  //                                                   .toString())
+  //                                               .toStringAsFixed(decimal),
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           '${dataParticulars[i]['Qty']}',
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               isItemSerialNo
+  //                                   ? pw.Column(
+  //                                       crossAxisAlignment:
+  //                                           pw.CrossAxisAlignment.center,
+  //                                       mainAxisAlignment:
+  //                                           pw.MainAxisAlignment.center,
+  //                                       children: [
+  //                                           pw.Padding(
+  //                                             padding:
+  //                                                 const pw.EdgeInsets.all(2.0),
+  //                                             child: pw.Text(
+  //                                                 dataParticulars[i]['serialno']
+  //                                                     .toString(),
+  //                                                 style: const pw.TextStyle(
+  //                                                     fontSize: 9)),
+  //                                             // pw.Divider(thickness: 1)
+  //                                           )
+  //                                         ])
+  //                                   : pw.Column(
+  //                                       crossAxisAlignment:
+  //                                           pw.CrossAxisAlignment.center,
+  //                                       mainAxisAlignment:
+  //                                           pw.MainAxisAlignment.center,
+  //                                       children: [
+  //                                           pw.Padding(
+  //                                             padding:
+  //                                                 const pw.EdgeInsets.all(2.0),
+  //                                             child: pw.Text(
+  //                                                 dataParticulars[i]['unitName']
+  //                                                     .toString(),
+  //                                                 style: const pw.TextStyle(
+  //                                                     fontSize: 9)),
+  //                                             // pw.Divider(thickness: 1)
+  //                                           )
+  //                                         ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           double.tryParse(dataParticulars[i]
+  //                                                       ['PRate']
+  //                                                   .toString())
+  //                                               .toStringAsFixed(decimal),
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           double.tryParse(dataParticulars[i]
+  //                                                       ['Net']
+  //                                                   .toString())
+  //                                               .toStringAsFixed(decimal),
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           '${dataParticulars[i]['tax']} %',
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           double.tryParse(dataParticulars[i]
+  //                                                       ['CGST']
+  //                                                   .toString())
+  //                                               .toStringAsFixed(decimal),
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           double.tryParse(dataParticulars[i]
+  //                                                       ['SGST']
+  //                                                   .toString())
+  //                                               .toStringAsFixed(decimal),
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           double.tryParse(dataParticulars[i]
+  //                                                       ['Total']
+  //                                                   .toString())
+  //                                               .toStringAsFixed(decimal),
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                             ])
+  //                           : pw.TableRow(children: [
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           '${dataParticulars[i]['ItemId']}',
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     ),
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.start,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           dataParticulars[i]['ProductName'],
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     ),
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.start,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           dataParticulars[i]['hsncode'],
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           double.tryParse(dataParticulars[i]
+  //                                                       ['RealPrate']
+  //                                                   .toString())
+  //                                               .toStringAsFixed(decimal),
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           '${dataParticulars[i]['Qty']}',
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               isItemSerialNo
+  //                                   ? pw.Column(
+  //                                       crossAxisAlignment:
+  //                                           pw.CrossAxisAlignment.center,
+  //                                       mainAxisAlignment:
+  //                                           pw.MainAxisAlignment.center,
+  //                                       children: [
+  //                                           pw.Padding(
+  //                                             padding:
+  //                                                 const pw.EdgeInsets.all(2.0),
+  //                                             child: pw.Text(
+  //                                                 dataParticulars[i]['serialno']
+  //                                                     .toString(),
+  //                                                 style: const pw.TextStyle(
+  //                                                     fontSize: 9)),
+  //                                             // pw.Divider(thickness: 1)
+  //                                           )
+  //                                         ])
+  //                                   : pw.Column(
+  //                                       crossAxisAlignment:
+  //                                           pw.CrossAxisAlignment.center,
+  //                                       mainAxisAlignment:
+  //                                           pw.MainAxisAlignment.center,
+  //                                       children: [
+  //                                           pw.Padding(
+  //                                             padding:
+  //                                                 const pw.EdgeInsets.all(2.0),
+  //                                             child: pw.Text(
+  //                                                 dataParticulars[i]['unitName']
+  //                                                     .toString(),
+  //                                                 style: const pw.TextStyle(
+  //                                                     fontSize: 9)),
+  //                                             // pw.Divider(thickness: 1)
+  //                                           )
+  //                                         ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           double.tryParse(dataParticulars[i]
+  //                                                       ['PRate']
+  //                                                   .toString())
+  //                                               .toStringAsFixed(decimal),
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           double.tryParse(dataParticulars[i]
+  //                                                       ['Net']
+  //                                                   .toString())
+  //                                               .toStringAsFixed(decimal),
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           '${dataParticulars[i]['tax']} %',
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           double.tryParse(dataParticulars[i]
+  //                                                       ['tax']
+  //                                                   .toString())
+  //                                               .toStringAsFixed(decimal),
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                               pw.Column(
+  //                                   crossAxisAlignment:
+  //                                       pw.CrossAxisAlignment.end,
+  //                                   mainAxisAlignment:
+  //                                       pw.MainAxisAlignment.center,
+  //                                   children: [
+  //                                     pw.Padding(
+  //                                       padding: const pw.EdgeInsets.all(2.0),
+  //                                       child: pw.Text(
+  //                                           double.tryParse(dataParticulars[i]
+  //                                                       ['Total']
+  //                                                   .toString())
+  //                                               .toStringAsFixed(decimal),
+  //                                           style: const pw.TextStyle(
+  //                                               fontSize: 9)),
+  //                                       // pw.Divider(thickness: 1)
+  //                                     )
+  //                                   ]),
+  //                             ])
+  //                   ],
+  //                 ),
+  //                 pw.SizedBox(
+  //                   height: 40.0,
+  //                 ),
+  //                 pw.Column(
+  //                   children: [
+  //                     pw.Row(
+  //                       mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                       children: [
+  //                         pw.Text(
+  //                             'SUB TOTAL : ${double.tryParse(dataInformation['GrossValue'].toString()).toStringAsFixed(decimal)}'),
+  //                       ],
+  //                     ),
+  //                     companyTaxMode == 'INDIA'
+  //                         ? pw.Row(
+  //                             mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                             children: [
+  //                               pw.Text(
+  //                                   'CESS : ${double.tryParse(dataInformation['Cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['Cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
+  //                             ],
+  //                           )
+  //                         : pw.Row(
+  //                             mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                             children: [
+  //                               pw.Text(
+  //                                   'VAT : ${double.tryParse(dataInformation['tax'].toString()).toStringAsFixed(decimal)}'),
+  //                             ],
+  //                           ),
+  //                     /**other amount**/
+  //                     // otherAmount.length>0 ?
+  //                     pw.Row(
+  //                       mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                       children: [
+  //                         pw.Text('***Discount***'),
+  //                       ],
+  //                     ),
+  //                     _addOtherAmountPDF(otherAmount),
+  //                     pw.Row(
+  //                       mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                       children: [
+  //                         pw.Text(
+  //                             'PAID : ${double.tryParse(dataInformation['CashReceived'].toString()).toStringAsFixed(decimal)}'),
+  //                       ],
+  //                     ),
+  //                     pw.Row(
+  //                       mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                       children: [
+  //                         pw.Text(
+  //                             'TOTAL DUE : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}',
+  //                             style: pw.TextStyle(
+  //                                 color: PdfColors.black,
+  //                                 fontSize: 19,
+  //                                 fontWeight: pw.FontWeight.bold)),
+  //                       ],
+  //                     ),
+  //                     pw.Row(
+  //                       children: [
+  //                         pw.Text(
+  //                           'Bill Balance : ${double.tryParse((double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString())).toString()).toStringAsFixed(decimal)}',
+  //                         ),
+  //                       ],
+  //                     ),
+  //                     pw.Row(
+  //                       children: [
+  //                         pw.Text(
+  //                           'Old Balance : ${double.tryParse(customerBalance.toString()).toStringAsFixed(decimal)}',
+  //                         ),
+  //                       ],
+  //                     ),
+  //                     pw.Row(
+  //                       children: [
+  //                         pw.Text(
+  //                           'Balance : ${double.tryParse(((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toString()).toStringAsFixed(decimal)}',
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ],
+  //                 ),
+  //                 byteImageQr != null
+  //                     ? pw.Image(imageQr,
+  //                         height: 100,
+  //                         width:
+  //                             100) //Image.provider(imageQr, width: 100, height: 100)
+  //                     : pw.Header(text: ''),
+  //                 pw.Container(
+  //                     alignment: pw.Alignment.center,
+  //                     child: pw.Text(data['message'],
+  //                         textAlign: pw.TextAlign.center))
+  //               ],
+  //           footer: _buildFooter))
+  //       : printHeaderOnES
+  //           ? pdf.addPage(pw.MultiPage(
+  //               maxPages: 100,
+  //               header: (context) => pw.Column(children: [
+  //                     pw.Container(
+  //                       height: 20,
+  //                       padding: const pw.EdgeInsets.all(10),
+  //                       alignment: pw.Alignment.center,
+  //                       child: pw.Text(
+  //                         invoiceHead,
+  //                         style: pw.TextStyle(
+  //                           fontWeight: pw.FontWeight.bold,
+  //                           fontSize: 25,
+  //                         ),
+  //                       ),
+  //                     ),
+  //                     pw.SizedBox(height: 5),
+  //                     pw.Container(
+  //                         height: 80,
+  //                         padding: const pw.EdgeInsets.all(8),
+  //                         alignment: pw.Alignment.center,
+  //                         child: pw.RichText(
+  //                             textAlign: pw.TextAlign.center,
+  //                             text: pw.TextSpan(
+  //                                 text: '${companySettings.name}\n',
+  //                                 style: pw.TextStyle(
+  //                                   // color: _darkColor,
+  //                                   fontWeight: pw.FontWeight.bold,
+  //                                   fontSize: 15,
+  //                                 ),
+  //                                 children: [
+  //                                   const pw.TextSpan(
+  //                                     text: '\n',
+  //                                     style: pw.TextStyle(
+  //                                       fontSize: 5,
+  //                                     ),
+  //                                   ),
+  //                                   pw.TextSpan(
+  //                                       text: companySettings.add2
+  //                                               .toString()
+  //                                               .isEmpty
+  //                                           ? companySettings.add1
+  //                                           : companySettings.add1 +
+  //                                               '\n' +
+  //                                               companySettings.add2,
+  //                                       style: pw.TextStyle(
+  //                                         fontWeight: pw.FontWeight.bold,
+  //                                         fontSize: 10,
+  //                                       ),
+  //                                       children: [
+  //                                         companySettings.telephone
+  //                                                 .toString()
+  //                                                 .isNotEmpty
+  //                                             ? pw.TextSpan(
+  //                                                 text:
+  //                                                     companySettings.telephone,
+  //                                                 children: [
+  //                                                     companySettings.mobile
+  //                                                             .toString()
+  //                                                             .isNotEmpty ??
+  //                                                         pw.TextSpan(
+  //                                                             text: ', ' +
+  //                                                                 companySettings
+  //                                                                     .mobile),
+  //                                                   ])
+  //                                             : const pw.TextSpan(
+  //                                                 text: '\n',
+  //                                                 style: pw.TextStyle(
+  //                                                   fontSize: 5,
+  //                                                 ),
+  //                                               ),
+  //                                       ]),
+  //                                   pw.TextSpan(
+  //                                     text:
+  //                                         '${ComSettings.getValue('GST-NO', settings)}',
+  //                                     style: pw.TextStyle(
+  //                                       fontWeight: pw.FontWeight.bold,
+  //                                       fontSize: 10,
+  //                                     ),
+  //                                   ),
+  //                                 ]))),
+  //                     pw.SizedBox(height: 20),
+  //                     pw.Container(
+  //                       padding: const pw.EdgeInsets.all(10),
+  //                       alignment: pw.Alignment.center,
+  //                       height: 10,
+  //                       child: pw.GridView(
+  //                         crossAxisCount: 2,
+  //                         children: [
+  //                           pw.Text('EntryNo : ' + dataInformation['InvoiceNo'],
+  //                               style: pw.TextStyle(
+  //                                 fontWeight: pw.FontWeight.bold,
+  //                                 fontSize: 10,
+  //                               ),
+  //                               textAlign: pw.TextAlign.left),
+  //                           pw.Text(
+  //                               'Date : ' +
+  //                                   DateUtil.dateDMY(dataInformation['DDate']),
+  //                               style: pw.TextStyle(
+  //                                 fontWeight: pw.FontWeight.bold,
+  //                                 fontSize: 10,
+  //                               ),
+  //                               textAlign: pw.TextAlign.right),
+  //                         ],
+  //                       ),
+  //                     ),
+  //                     if (context.pageNumber > 1) pw.SizedBox(height: 20)
+  //                   ]),
+  //               build: (context) => [
+  //                     /*customer*/
+  //                     pw.Row(
+  //                         crossAxisAlignment: pw.CrossAxisAlignment.start,
+  //                         children: [
+  //                           pw.Container(
+  //                             margin:
+  //                                 const pw.EdgeInsets.only(left: 10, right: 10),
+  //                             height: 70,
+  //                             child: pw.Text(
+  //                               'Bill to:',
+  //                               style: pw.TextStyle(
+  //                                 fontWeight: pw.FontWeight.bold,
+  //                                 fontSize: 12,
+  //                               ),
+  //                             ),
+  //                           ),
+  //                           pw.Expanded(
+  //                               child: pw.Container(
+  //                                   height: 50,
+  //                                   child: pw.RichText(
+  //                                       text: pw.TextSpan(
+  //                                           text:
+  //                                               '${dataInformation['ToName']}\n',
+  //                                           style: pw.TextStyle(
+  //                                             // color: _darkColor,
+  //                                             fontWeight: pw.FontWeight.bold,
+  //                                             fontSize: 12,
+  //                                           ),
+  //                                           children: [
+  //                                         const pw.TextSpan(
+  //                                           text: '\n',
+  //                                           style: pw.TextStyle(
+  //                                             fontSize: 5,
+  //                                           ),
+  //                                         ),
+  //                                         pw.TextSpan(
+  //                                           text: dataInformation['Add2']
+  //                                                   .toString()
+  //                                                   .isEmpty
+  //                                               ? dataInformation['Add1']
+  //                                               : dataInformation['Add1'] +
+  //                                                   '\n' +
+  //                                                   dataInformation['Add2'],
+  //                                           style: pw.TextStyle(
+  //                                             fontWeight: pw.FontWeight.normal,
+  //                                             fontSize: 10,
+  //                                           ),
+  //                                         )
+  //                                       ])))),
+  //                         ]),
+  //                     pw.Table(
+  //                       border: pw.TableBorder.all(width: 0.2),
+  //                       children: [
+  //                         pw.TableRow(children: [
+  //                           pw.Column(
+  //                               crossAxisAlignment:
+  //                                   pw.CrossAxisAlignment.center,
+  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                               children: [
+  //                                 pw.Text(tableHeaders[0],
+  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                 // pw.Divider(thickness: 1)
+  //                               ]),
+  //                           pw.Column(
+  //                               crossAxisAlignment:
+  //                                   pw.CrossAxisAlignment.center,
+  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                               children: [
+  //                                 pw.Text(tableHeaders[1],
+  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                 // pw.Divider(thickness: 1)
+  //                               ]),
+  //                           pw.Column(
+  //                               crossAxisAlignment:
+  //                                   pw.CrossAxisAlignment.center,
+  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                               children: [
+  //                                 pw.Text(tableHeaders[2],
+  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                 // pw.Divider(thickness: 1)
+  //                               ]),
+  //                           pw.Column(
+  //                               crossAxisAlignment:
+  //                                   pw.CrossAxisAlignment.center,
+  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                               children: [
+  //                                 pw.Text(tableHeaders[3],
+  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                 // pw.Divider(thickness: 1)
+  //                               ]),
+  //                           pw.Column(
+  //                               crossAxisAlignment:
+  //                                   pw.CrossAxisAlignment.center,
+  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                               children: [
+  //                                 pw.Text(tableHeaders[4],
+  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                 // pw.Divider(thickness: 1)
+  //                               ]),
+  //                           pw.Column(
+  //                               crossAxisAlignment:
+  //                                   pw.CrossAxisAlignment.center,
+  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                               children: [
+  //                                 pw.Text(tableHeaders[5],
+  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                 // pw.Divider(thickness: 1)
+  //                               ]),
+  //                         ]),
+  //                         for (var i = 0; i < dataParticulars.length; i++)
+  //                           pw.TableRow(children: [
+  //                             pw.Column(
+  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Padding(
+  //                                     padding: const pw.EdgeInsets.all(2.0),
+  //                                     child: pw.Text(
+  //                                         '${dataParticulars[i]['ItemId']}',
+  //                                         style:
+  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                     // pw.Divider(thickness: 1)
+  //                                   ),
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.start,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Padding(
+  //                                     padding: const pw.EdgeInsets.all(2.0),
+  //                                     child: pw.Text(
+  //                                         dataParticulars[i]['ProductName'],
+  //                                         style:
+  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                     // pw.Divider(thickness: 1)
+  //                                   ),
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Padding(
+  //                                     padding: const pw.EdgeInsets.all(2.0),
+  //                                     child: pw.Text(
+  //                                         double.tryParse(dataParticulars[i]
+  //                                                     ['PRate']
+  //                                                 .toString())
+  //                                             .toStringAsFixed(decimal),
+  //                                         style:
+  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                     // pw.Divider(thickness: 1)
+  //                                   )
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Padding(
+  //                                     padding: const pw.EdgeInsets.all(2.0),
+  //                                     child: pw.Text(
+  //                                         dataParticulars[i]['Qty']
+  //                                             .toStringAsFixed(decimal),
+  //                                         style:
+  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                     // pw.Divider(thickness: 1)
+  //                                   )
+  //                                 ]),
+  //                             isItemSerialNo
+  //                                 ? pw.Column(
+  //                                     crossAxisAlignment:
+  //                                         pw.CrossAxisAlignment.center,
+  //                                     mainAxisAlignment:
+  //                                         pw.MainAxisAlignment.center,
+  //                                     children: [
+  //                                         pw.Padding(
+  //                                           padding:
+  //                                               const pw.EdgeInsets.all(2.0),
+  //                                           child: pw.Text(
+  //                                               dataParticulars[i]['serialno']
+  //                                                   .toString(),
+  //                                               style: const pw.TextStyle(
+  //                                                   fontSize: 9)),
+  //                                           // pw.Divider(thickness: 1)
+  //                                         )
+  //                                       ])
+  //                                 : pw.Column(
+  //                                     crossAxisAlignment:
+  //                                         pw.CrossAxisAlignment.center,
+  //                                     mainAxisAlignment:
+  //                                         pw.MainAxisAlignment.center,
+  //                                     children: [
+  //                                         pw.Padding(
+  //                                           padding:
+  //                                               const pw.EdgeInsets.all(2.0),
+  //                                           child: pw.Text(
+  //                                               dataParticulars[i]['unitName']
+  //                                                   .toString(),
+  //                                               style: const pw.TextStyle(
+  //                                                   fontSize: 9)),
+  //                                           // pw.Divider(thickness: 1)
+  //                                         )
+  //                                       ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Padding(
+  //                                     padding: const pw.EdgeInsets.all(2.0),
+  //                                     child: pw.Text(
+  //                                         double.tryParse(dataParticulars[i]
+  //                                                     ['Total']
+  //                                                 .toString())
+  //                                             .toStringAsFixed(decimal),
+  //                                         style:
+  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                     // pw.Divider(thickness: 1)
+  //                                   )
+  //                                 ]),
+  //                           ])
+  //                       ],
+  //                     ),
+  //                     pw.SizedBox(
+  //                       height: 40.0,
+  //                     ),
+  //                     pw.Column(
+  //                       children: [
+  //                         pw.Row(
+  //                           mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                           children: [
+  //                             pw.Text(
+  //                                 'SUB TOTAL : ${double.tryParse(dataInformation['GrossValue'].toString()).toStringAsFixed(decimal)}'),
+  //                           ],
+  //                         ),
+  //                         /**other amount**/
+  //                         // otherAmount.length>0 ?
+  //                         pw.Row(
+  //                           mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                           children: [
+  //                             pw.Text(''),
+  //                           ],
+  //                         ),
+  //                         pw.Row(
+  //                           mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                           children: [
+  //                             pw.Text('***Discount***'),
+  //                           ],
+  //                         ),
+  //                         _addOtherAmountPDF(otherAmount),
+  //                         pw.Row(
+  //                           mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                           children: [
+  //                             pw.Text(
+  //                                 'TOTAL : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}'),
+  //                           ],
+  //                         ),
+  //                         pw.Row(
+  //                           mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                           children: [
+  //                             pw.Text(
+  //                                 'PAID : ${double.tryParse(dataInformation['CashReceived'].toString()).toStringAsFixed(decimal)}'),
+  //                           ],
+  //                         ),
+  //                         pw.Row(
+  //                           mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                           children: [
+  //                             pw.Text(
+  //                                 'TOTAL DUE : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}',
+  //                                 style: pw.TextStyle(
+  //                                     // color: Colors.black,
+  //                                     fontSize: 19,
+  //                                     fontWeight: pw.FontWeight.bold)),
+  //                           ],
+  //                         ),
+  //                         pw.Row(
+  //                           children: [
+  //                             pw.Text(
+  //                               'Bill Balance : ${(double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString())).toStringAsFixed(decimal)}',
+  //                             ),
+  //                           ],
+  //                         ),
+  //                         pw.Row(
+  //                           children: [
+  //                             pw.Text(
+  //                               'Old Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
+  //                             ),
+  //                           ],
+  //                         ),
+  //                         pw.Row(
+  //                           children: [
+  //                             pw.Text(
+  //                               'Balance : ${((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toStringAsFixed(decimal)}',
+  //                             ),
+  //                           ],
+  //                         ),
+  //                       ],
+  //                     ),
+  //                     pw.Container(
+  //                         alignment: pw.Alignment.center,
+  //                         child: pw.Text(data['message'],
+  //                             textAlign: pw.TextAlign.center))
+  //                   ],
+  //               footer: _buildFooter))
+  //           : pdf.addPage(pw.MultiPage(
+  //               maxPages: 100,
+  //               header: (context) => pw.Column(children: [
+  //                     pw.Container(
+  //                       height: 20,
+  //                       padding: const pw.EdgeInsets.all(10),
+  //                       alignment: pw.Alignment.center,
+  //                       child: pw.Text(
+  //                         invoiceHead,
+  //                         style: pw.TextStyle(
+  //                           fontWeight: pw.FontWeight.bold,
+  //                           fontSize: 25,
+  //                         ),
+  //                       ),
+  //                     ),
+  //                     pw.SizedBox(height: 20),
+  //                     pw.Container(
+  //                       padding: const pw.EdgeInsets.all(10),
+  //                       alignment: pw.Alignment.center,
+  //                       height: 10,
+  //                       child: pw.GridView(
+  //                         crossAxisCount: 2,
+  //                         children: [
+  //                           pw.Text('EntryNo : ' + dataInformation['InvoiceNo'],
+  //                               style: pw.TextStyle(
+  //                                 fontWeight: pw.FontWeight.bold,
+  //                                 fontSize: 10,
+  //                               ),
+  //                               textAlign: pw.TextAlign.left),
+  //                           pw.Text(
+  //                               'Date : ' +
+  //                                   DateUtil.dateDMY(dataInformation['DDate']),
+  //                               style: pw.TextStyle(
+  //                                 fontWeight: pw.FontWeight.bold,
+  //                                 fontSize: 10,
+  //                               ),
+  //                               textAlign: pw.TextAlign.right),
+  //                         ],
+  //                       ),
+  //                     ),
+  //                     if (context.pageNumber > 1) pw.SizedBox(height: 20)
+  //                   ]),
+  //               build: (context) => [
+  //                     /*customer*/
+  //                     pw.Row(
+  //                         crossAxisAlignment: pw.CrossAxisAlignment.start,
+  //                         children: [
+  //                           pw.Container(
+  //                             margin:
+  //                                 const pw.EdgeInsets.only(left: 10, right: 10),
+  //                             height: 70,
+  //                             child: pw.Text(
+  //                               'Bill to:',
+  //                               style: pw.TextStyle(
+  //                                 fontWeight: pw.FontWeight.bold,
+  //                                 fontSize: 12,
+  //                               ),
+  //                             ),
+  //                           ),
+  //                           pw.Expanded(
+  //                               child: pw.Container(
+  //                                   height: 50,
+  //                                   child: pw.RichText(
+  //                                       text: pw.TextSpan(
+  //                                           text:
+  //                                               '${dataInformation['ToName']}\n',
+  //                                           style: pw.TextStyle(
+  //                                             // color: _darkColor,
+  //                                             fontWeight: pw.FontWeight.bold,
+  //                                             fontSize: 12,
+  //                                           ),
+  //                                           children: [
+  //                                         const pw.TextSpan(
+  //                                           text: '\n',
+  //                                           style: pw.TextStyle(
+  //                                             fontSize: 5,
+  //                                           ),
+  //                                         ),
+  //                                         pw.TextSpan(
+  //                                           text: dataInformation['Add2']
+  //                                                   .toString()
+  //                                                   .isEmpty
+  //                                               ? dataInformation['Add1']
+  //                                               : dataInformation['Add1'] +
+  //                                                   '\n' +
+  //                                                   dataInformation['Add2'],
+  //                                           style: pw.TextStyle(
+  //                                             fontWeight: pw.FontWeight.normal,
+  //                                             fontSize: 10,
+  //                                           ),
+  //                                         )
+  //                                       ])))),
+  //                         ]),
+  //                     pw.Table(
+  //                       border: pw.TableBorder.all(width: 0.2),
+  //                       children: [
+  //                         pw.TableRow(children: [
+  //                           pw.Column(
+  //                               crossAxisAlignment:
+  //                                   pw.CrossAxisAlignment.center,
+  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                               children: [
+  //                                 pw.Text(tableHeaders[0],
+  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                 // pw.Divider(thickness: 1)
+  //                               ]),
+  //                           pw.Column(
+  //                               crossAxisAlignment:
+  //                                   pw.CrossAxisAlignment.center,
+  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                               children: [
+  //                                 pw.Text(tableHeaders[1],
+  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                 // pw.Divider(thickness: 1)
+  //                               ]),
+  //                           pw.Column(
+  //                               crossAxisAlignment:
+  //                                   pw.CrossAxisAlignment.center,
+  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                               children: [
+  //                                 pw.Text(tableHeaders[2],
+  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                 // pw.Divider(thickness: 1)
+  //                               ]),
+  //                           pw.Column(
+  //                               crossAxisAlignment:
+  //                                   pw.CrossAxisAlignment.center,
+  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                               children: [
+  //                                 pw.Text(tableHeaders[3],
+  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                 // pw.Divider(thickness: 1)
+  //                               ]),
+  //                           pw.Column(
+  //                               crossAxisAlignment:
+  //                                   pw.CrossAxisAlignment.center,
+  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                               children: [
+  //                                 pw.Text(tableHeaders[4],
+  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                 // pw.Divider(thickness: 1)
+  //                               ]),
+  //                           pw.Column(
+  //                               crossAxisAlignment:
+  //                                   pw.CrossAxisAlignment.center,
+  //                               mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                               children: [
+  //                                 pw.Text(tableHeaders[5],
+  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                 // pw.Divider(thickness: 1)
+  //                               ]),
+  //                         ]),
+  //                         for (var i = 0; i < dataParticulars.length; i++)
+  //                           pw.TableRow(children: [
+  //                             pw.Column(
+  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Padding(
+  //                                     padding: const pw.EdgeInsets.all(2.0),
+  //                                     child: pw.Text(
+  //                                         '${dataParticulars[i]['ItemId']}',
+  //                                         style:
+  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                     // pw.Divider(thickness: 1)
+  //                                   ),
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment:
+  //                                     pw.CrossAxisAlignment.start,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Padding(
+  //                                     padding: const pw.EdgeInsets.all(2.0),
+  //                                     child: pw.Text(
+  //                                         dataParticulars[i]['ProductName'],
+  //                                         style:
+  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                     // pw.Divider(thickness: 1)
+  //                                   ),
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Padding(
+  //                                     padding: const pw.EdgeInsets.all(2.0),
+  //                                     child: pw.Text(
+  //                                         double.tryParse(dataParticulars[i]
+  //                                                     ['PRate']
+  //                                                 .toString())
+  //                                             .toStringAsFixed(decimal),
+  //                                         style:
+  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                     // pw.Divider(thickness: 1)
+  //                                   )
+  //                                 ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Padding(
+  //                                     padding: const pw.EdgeInsets.all(2.0),
+  //                                     child: pw.Text(
+  //                                         dataParticulars[i]['Qty']
+  //                                             .toStringAsFixed(decimal),
+  //                                         style:
+  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                     // pw.Divider(thickness: 1)
+  //                                   )
+  //                                 ]),
+  //                             isItemSerialNo
+  //                                 ? pw.Column(
+  //                                     crossAxisAlignment:
+  //                                         pw.CrossAxisAlignment.center,
+  //                                     mainAxisAlignment:
+  //                                         pw.MainAxisAlignment.center,
+  //                                     children: [
+  //                                         pw.Padding(
+  //                                           padding:
+  //                                               const pw.EdgeInsets.all(2.0),
+  //                                           child: pw.Text(
+  //                                               dataParticulars[i]['serialno']
+  //                                                   .toString(),
+  //                                               style: const pw.TextStyle(
+  //                                                   fontSize: 9)),
+  //                                           // pw.Divider(thickness: 1)
+  //                                         )
+  //                                       ])
+  //                                 : pw.Column(
+  //                                     crossAxisAlignment:
+  //                                         pw.CrossAxisAlignment.center,
+  //                                     mainAxisAlignment:
+  //                                         pw.MainAxisAlignment.center,
+  //                                     children: [
+  //                                         pw.Padding(
+  //                                           padding:
+  //                                               const pw.EdgeInsets.all(2.0),
+  //                                           child: pw.Text(
+  //                                               dataParticulars[i]['unitName']
+  //                                                   .toString(),
+  //                                               style: const pw.TextStyle(
+  //                                                   fontSize: 9)),
+  //                                           // pw.Divider(thickness: 1)
+  //                                         )
+  //                                       ]),
+  //                             pw.Column(
+  //                                 crossAxisAlignment: pw.CrossAxisAlignment.end,
+  //                                 mainAxisAlignment:
+  //                                     pw.MainAxisAlignment.center,
+  //                                 children: [
+  //                                   pw.Padding(
+  //                                     padding: const pw.EdgeInsets.all(2.0),
+  //                                     child: pw.Text(
+  //                                         double.tryParse(dataParticulars[i]
+  //                                                     ['Total']
+  //                                                 .toString())
+  //                                             .toStringAsFixed(decimal),
+  //                                         style:
+  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                     // pw.Divider(thickness: 1)
+  //                                   )
+  //                                 ]),
+  //                           ])
+  //                       ],
+  //                     ),
+  //                     pw.SizedBox(
+  //                       height: 40.0,
+  //                     ),
+  //                     pw.Column(
+  //                       children: [
+  //                         pw.Row(
+  //                           mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                           children: [
+  //                             pw.Text(
+  //                                 'SUB TOTAL : ${double.tryParse(dataInformation['GrossValue'].toString()).toStringAsFixed(decimal)}'),
+  //                           ],
+  //                         ),
+  //                         /**other amount**/
+  //                         // otherAmount.length>0 ?
+  //                         pw.Row(
+  //                           mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                           children: [
+  //                             pw.Text(''),
+  //                           ],
+  //                         ),
+  //                         pw.Row(
+  //                           mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                           children: [
+  //                             pw.Text('***Discount***'),
+  //                           ],
+  //                         ),
+  //                         _addOtherAmountPDF(otherAmount),
+  //                         pw.Row(
+  //                           mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                           children: [
+  //                             pw.Text(
+  //                                 'TOTAL : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}'),
+  //                           ],
+  //                         ),
+  //                         pw.Row(
+  //                           mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                           children: [
+  //                             pw.Text(
+  //                                 'PAID : ${double.tryParse(dataInformation['CashReceived'].toString()).toStringAsFixed(decimal)}'),
+  //                           ],
+  //                         ),
+  //                         pw.Row(
+  //                           mainAxisAlignment: pw.MainAxisAlignment.end,
+  //                           children: [
+  //                             pw.Text(
+  //                                 'TOTAL DUE : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}',
+  //                                 style: pw.TextStyle(
+  //                                     // color: Colors.black,
+  //                                     fontSize: 19,
+  //                                     fontWeight: pw.FontWeight.bold)),
+  //                           ],
+  //                         ),
+  //                         pw.Row(
+  //                           children: [
+  //                             pw.Text(
+  //                               'Bill Balance : ${(double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString())).toStringAsFixed(decimal)}',
+  //                             ),
+  //                           ],
+  //                         ),
+  //                         pw.Row(
+  //                           children: [
+  //                             pw.Text(
+  //                               'Old Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
+  //                             ),
+  //                           ],
+  //                         ),
+  //                         pw.Row(
+  //                           children: [
+  //                             pw.Text(
+  //                               'Balance : ${((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toStringAsFixed(decimal)}',
+  //                             ),
+  //                           ],
+  //                         ),
+  //                       ],
+  //                     ),
+  //                     pw.Container(
+  //                         alignment: pw.Alignment.center,
+  //                         child: pw.Text(data['message'],
+  //                             textAlign: pw.TextAlign.center))
+  //                   ],
+  //               footer: _buildFooter));
+  // } else
+  if (model == 3) {
     taxSale
         ? pdf.addPage(pw.MultiPage(
             /*company*/
@@ -9590,1763 +12109,4192 @@ Future<pw.Document> makePDF(
             footer: _buildFooter));
   } else {
     taxSale
+        // ? pdf.addPage(pw.MultiPage(
+        //     /*company*/
+        //     maxPages: 100,
+        //     header: (context) => pw.Column(children: [
+        //           pw.Row(
+        //               crossAxisAlignment: pw.CrossAxisAlignment.center,
+        //               children: [
+        //                 pw.Expanded(
+        //                     child: pw.Column(children: [
+        //                   pw.Container(
+        //                     height: 20,
+        //                     padding: const pw.EdgeInsets.all(8),
+        //                     alignment: pw.Alignment.center,
+        //                     child: pw.Text(
+        //                       invoiceHead,
+        //                       style: pw.TextStyle(
+        //                         fontWeight: pw.FontWeight.bold,
+        //                         fontSize: 25,
+        //                       ),
+        //                     ),
+        //                   ),
+        //                   pw.Container(
+        //                       height: 80,
+        //                       padding: const pw.EdgeInsets.all(8),
+        //                       alignment: pw.Alignment.center,
+        //                       child: pw.RichText(
+        //                           textAlign: pw.TextAlign.center,
+        //                           text: pw.TextSpan(
+        //                               text: '${companySettings.name}\n',
+        //                               style: pw.TextStyle(
+        //                                 // color: _darkColor,
+        //                                 fontWeight: pw.FontWeight.bold,
+        //                                 fontSize: 15,
+        //                               ),
+        //                               children: [
+        //                                 const pw.TextSpan(
+        //                                   text: '\n',
+        //                                   style: pw.TextStyle(
+        //                                     fontSize: 5,
+        //                                   ),
+        //                                 ),
+        //                                 pw.TextSpan(
+        //                                     text: companySettings.add2
+        //                                             .toString()
+        //                                             .isEmpty
+        //                                         ? companySettings.add1
+        //                                         : companySettings.add1 +
+        //                                             '\n' +
+        //                                             companySettings.add2,
+        //                                     style: pw.TextStyle(
+        //                                       fontWeight: pw.FontWeight.bold,
+        //                                       fontSize: 10,
+        //                                     ),
+        //                                     children: [
+        //                                       companySettings.telephone
+        //                                               .toString()
+        //                                               .isNotEmpty
+        //                                           ? pw.TextSpan(
+        //                                               text: companySettings
+        //                                                   .telephone,
+        //                                               children: [
+        //                                                   companySettings.mobile
+        //                                                           .toString()
+        //                                                           .isNotEmpty ??
+        //                                                       pw.TextSpan(
+        //                                                           text: ', ' +
+        //                                                               companySettings
+        //                                                                   .mobile),
+        //                                                 ])
+        //                                           : const pw.TextSpan(
+        //                                               text: '\n',
+        //                                               style: pw.TextStyle(
+        //                                                 fontSize: 5,
+        //                                               ),
+        //                                             ),
+        //                                     ]),
+        //                                 pw.TextSpan(
+        //                                   text:
+        //                                       '${ComSettings.getValue('GST-NO', settings)}',
+        //                                   style: pw.TextStyle(
+        //                                     fontWeight: pw.FontWeight.bold,
+        //                                     fontSize: 10,
+        //                                   ),
+        //                                 ),
+        //                               ]))),
+        //                   pw.Container(
+        //                     padding: const pw.EdgeInsets.all(10),
+        //                     alignment: pw.Alignment.center,
+        //                     height: 10,
+        //                     child: pw.GridView(
+        //                       crossAxisCount: 2,
+        //                       children: [
+        //                         pw.Text(
+        //                             'Invoice : ' + dataInformation['InvoiceNo'],
+        //                             style: pw.TextStyle(
+        //                               fontWeight: pw.FontWeight.bold,
+        //                               fontSize: 10,
+        //                             ),
+        //                             textAlign: pw.TextAlign.left),
+        //                         pw.Text(
+        //                             'Date : ' +
+        //                                 DateUtil.dateDMY(
+        //                                     dataInformation['DDate']),
+        //                             style: pw.TextStyle(
+        //                               fontWeight: pw.FontWeight.bold,
+        //                               fontSize: 10,
+        //                             ),
+        //                             textAlign: pw.TextAlign.right),
+        //                       ],
+        //                     ),
+        //                   ),
+        //                 ])),
+        //               ]),
+        //           if (context.pageNumber > 1) pw.SizedBox(height: 20)
+        //         ]),
+        //     build: (context) => [
+        //           /*customer*/
+        //           pw.Row(
+        //               crossAxisAlignment: pw.CrossAxisAlignment.start,
+        //               children: [
+        //                 pw.Container(
+        //                   margin: const pw.EdgeInsets.only(left: 10, right: 10),
+        //                   height: 70,
+        //                   child: pw.Text(
+        //                     'Bill to:',
+        //                     style: pw.TextStyle(
+        //                       fontWeight: pw.FontWeight.bold,
+        //                       fontSize: 12,
+        //                     ),
+        //                   ),
+        //                 ),
+        //                 pw.Expanded(
+        //                   child: pw.Container(
+        //                     height: 70,
+        //                     child: pw.RichText(
+        //                         text: pw.TextSpan(
+        //                             text: '${dataInformation['ToName']}\n',
+        //                             style: pw.TextStyle(
+        //                               // color: _darkColor,
+        //                               fontWeight: pw.FontWeight.bold,
+        //                               fontSize: 12,
+        //                             ),
+        //                             children: [
+        //                           const pw.TextSpan(
+        //                             text: '\n',
+        //                             style: pw.TextStyle(
+        //                               fontSize: 5,
+        //                             ),
+        //                           ),
+        //                           pw.TextSpan(
+        //                               text: dataInformation['Add2']
+        //                                       .toString()
+        //                                       .isEmpty
+        //                                   ? dataInformation['Add1']
+        //                                   : dataInformation['Add1'] +
+        //                                       '\n' +
+        //                                       dataInformation['Add2'],
+        //                               style: pw.TextStyle(
+        //                                 fontWeight: pw.FontWeight.normal,
+        //                                 fontSize: 10,
+        //                               ),
+        //                               children: const [
+        //                                 pw.TextSpan(
+        //                                   text: '\n',
+        //                                   style: pw.TextStyle(
+        //                                     fontSize: 5,
+        //                                   ),
+        //                                 )
+        //                               ]),
+        //                           companyTaxMode == 'INDIA'
+        //                               ? pw.TextSpan(
+        //                                   text: dataInformation['Add4'],
+        //                                   style: pw.TextStyle(
+        //                                     fontWeight: pw.FontWeight.normal,
+        //                                     fontSize: 10,
+        //                                   ),
+        //                                   children: const [
+        //                                       pw.TextSpan(
+        //                                         text: '\n',
+        //                                         style: pw.TextStyle(
+        //                                           fontSize: 5,
+        //                                         ),
+        //                                       )
+        //                                     ])
+        //                               : pw.TextSpan(
+        //                                   text:
+        //                                       'T-No :${dataInformation['gstno']}',
+        //                                   style: pw.TextStyle(
+        //                                     fontWeight: pw.FontWeight.normal,
+        //                                     fontSize: 10,
+        //                                   ),
+        //                                   children: const [
+        //                                       pw.TextSpan(
+        //                                         text: '\n',
+        //                                         style: pw.TextStyle(
+        //                                           fontSize: 5,
+        //                                         ),
+        //                                       )
+        //                                     ]),
+        //                           pw.TextSpan(
+        //                             text: dataInformation['Add3'],
+        //                             style: pw.TextStyle(
+        //                               fontWeight: pw.FontWeight.normal,
+        //                               fontSize: 10,
+        //                             ),
+        //                           )
+        //                         ])),
+        //                   ),
+        //                 ),
+        //               ]),
+        //           pw.Table(
+        //             border: pw.TableBorder.all(width: 0.2),
+        //             defaultColumnWidth: const pw.IntrinsicColumnWidth(),
+        //             children: [
+        //               companyTaxMode == 'INDIA'
+        //                   ? pw.TableRow(children: [
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[0],
+        //                                 style: const pw.TextStyle(fontSize: 9)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[1],
+        //                                 style: const pw.TextStyle(fontSize: 9)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[2],
+        //                                 style: const pw.TextStyle(fontSize: 9)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[3],
+        //                                 style: const pw.TextStyle(fontSize: 9)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[4],
+        //                                 style: const pw.TextStyle(fontSize: 9)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[5],
+        //                                 style: const pw.TextStyle(fontSize: 9)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[6],
+        //                                 style: const pw.TextStyle(fontSize: 9)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[7],
+        //                                 style: const pw.TextStyle(fontSize: 9)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[8],
+        //                                 style: const pw.TextStyle(fontSize: 9)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[9],
+        //                                 style: const pw.TextStyle(fontSize: 9)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[10],
+        //                                 style: const pw.TextStyle(fontSize: 9)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[11],
+        //                                 style: const pw.TextStyle(fontSize: 9)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                     ])
+        //                   : pw.TableRow(children: [
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[0],
+        //                                 style: pw.TextStyle(
+        //                                     fontSize: 9,
+        //                                     fontWeight: pw.FontWeight.bold)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[1],
+        //                                 style: pw.TextStyle(
+        //                                     fontSize: 9,
+        //                                     fontWeight: pw.FontWeight.bold)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[2],
+        //                                 style: pw.TextStyle(
+        //                                     fontSize: 9,
+        //                                     fontWeight: pw.FontWeight.bold)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[3],
+        //                                 style: pw.TextStyle(
+        //                                     fontSize: 9,
+        //                                     fontWeight: pw.FontWeight.bold)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[4],
+        //                                 style: pw.TextStyle(
+        //                                     fontSize: 9,
+        //                                     fontWeight: pw.FontWeight.bold)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[5],
+        //                                 style: pw.TextStyle(
+        //                                     fontSize: 9,
+        //                                     fontWeight: pw.FontWeight.bold)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[6],
+        //                                 style: pw.TextStyle(
+        //                                     fontSize: 9,
+        //                                     fontWeight: pw.FontWeight.bold)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[7],
+        //                                 style: pw.TextStyle(
+        //                                     fontSize: 9,
+        //                                     fontWeight: pw.FontWeight.bold)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[8],
+        //                                 style: pw.TextStyle(
+        //                                     fontSize: 9,
+        //                                     fontWeight: pw.FontWeight.bold)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[9],
+        //                                 style: pw.TextStyle(
+        //                                     fontSize: 9,
+        //                                     fontWeight: pw.FontWeight.bold)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.center,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Text(tableHeaders[10],
+        //                                 style: pw.TextStyle(
+        //                                     fontSize: 9,
+        //                                     fontWeight: pw.FontWeight.bold)),
+        //                             // pw.Divider(thickness: 1)
+        //                           ]),
+        //                     ]),
+        //               for (var i = 0; i < dataParticulars.length; i++)
+        //                 // dataParticulars
+        //                 companyTaxMode == 'INDIA'
+        //                     ? pw.TableRow(children: [
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     '${dataParticulars[i]['ItemId']}',
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.start,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     dataParticulars[i]['ProductName'],
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.start,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     dataParticulars[i]['hsncode'],
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     double.tryParse(dataParticulars[i]
+        //                                                 ['RealPrate']
+        //                                             .toString())
+        //                                         .toStringAsFixed(decimal),
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     '${dataParticulars[i]['Qty']}',
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         isItemSerialNo
+        //                             ? pw.Column(
+        //                                 crossAxisAlignment:
+        //                                     pw.CrossAxisAlignment.center,
+        //                                 mainAxisAlignment:
+        //                                     pw.MainAxisAlignment.center,
+        //                                 children: [
+        //                                     pw.Padding(
+        //                                       padding:
+        //                                           const pw.EdgeInsets.all(2.0),
+        //                                       child: pw.Text(
+        //                                           dataParticulars[i]['serialno']
+        //                                               .toString(),
+        //                                           style: const pw.TextStyle(
+        //                                               fontSize: 9)),
+        //                                       // pw.Divider(thickness: 1)
+        //                                     )
+        //                                   ])
+        //                             : pw.Column(
+        //                                 crossAxisAlignment:
+        //                                     pw.CrossAxisAlignment.center,
+        //                                 mainAxisAlignment:
+        //                                     pw.MainAxisAlignment.center,
+        //                                 children: [
+        //                                     pw.Padding(
+        //                                       padding:
+        //                                           const pw.EdgeInsets.all(2.0),
+        //                                       child: pw.Text(
+        //                                           dataParticulars[i]['unitName']
+        //                                               .toString(),
+        //                                           style: const pw.TextStyle(
+        //                                               fontSize: 9)),
+        //                                       // pw.Divider(thickness: 1)
+        //                                     )
+        //                                   ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     double.tryParse(dataParticulars[i]
+        //                                                 ['PRate']
+        //                                             .toString())
+        //                                         .toStringAsFixed(decimal),
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     double.tryParse(dataParticulars[i]
+        //                                                 ['Net']
+        //                                             .toString())
+        //                                         .toStringAsFixed(decimal),
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     '${dataParticulars[i]['tax']} %',
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     double.tryParse(dataParticulars[i]
+        //                                                 ['CGST']
+        //                                             .toString())
+        //                                         .toStringAsFixed(decimal),
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     double.tryParse(dataParticulars[i]
+        //                                                 ['SGST']
+        //                                             .toString())
+        //                                         .toStringAsFixed(decimal),
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     double.tryParse(dataParticulars[i]
+        //                                                 ['Total']
+        //                                             .toString())
+        //                                         .toStringAsFixed(decimal),
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                       ])
+        //                     : pw.TableRow(children: [
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     '${dataParticulars[i]['ItemId']}',
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               ),
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.start,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     dataParticulars[i]['ProductName'],
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               ),
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.start,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     dataParticulars[i]['hsncode'],
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     double.tryParse(dataParticulars[i]
+        //                                                 ['RealPrate']
+        //                                             .toString())
+        //                                         .toStringAsFixed(decimal),
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     '${dataParticulars[i]['Qty']}',
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         isItemSerialNo
+        //                             ? pw.Column(
+        //                                 crossAxisAlignment:
+        //                                     pw.CrossAxisAlignment.center,
+        //                                 mainAxisAlignment:
+        //                                     pw.MainAxisAlignment.center,
+        //                                 children: [
+        //                                     pw.Padding(
+        //                                       padding:
+        //                                           const pw.EdgeInsets.all(2.0),
+        //                                       child: pw.Text(
+        //                                           dataParticulars[i]['serialno']
+        //                                               .toString(),
+        //                                           style: const pw.TextStyle(
+        //                                               fontSize: 9)),
+        //                                       // pw.Divider(thickness: 1)
+        //                                     )
+        //                                   ])
+        //                             : pw.Column(
+        //                                 crossAxisAlignment:
+        //                                     pw.CrossAxisAlignment.center,
+        //                                 mainAxisAlignment:
+        //                                     pw.MainAxisAlignment.center,
+        //                                 children: [
+        //                                     pw.Padding(
+        //                                       padding:
+        //                                           const pw.EdgeInsets.all(2.0),
+        //                                       child: pw.Text(
+        //                                           dataParticulars[i]['unitName']
+        //                                               .toString(),
+        //                                           style: const pw.TextStyle(
+        //                                               fontSize: 9)),
+        //                                       // pw.Divider(thickness: 1)
+        //                                     )
+        //                                   ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     double.tryParse(dataParticulars[i]
+        //                                                 ['PRate']
+        //                                             .toString())
+        //                                         .toStringAsFixed(decimal),
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     double.tryParse(dataParticulars[i]
+        //                                                 ['Net']
+        //                                             .toString())
+        //                                         .toStringAsFixed(decimal),
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     '${dataParticulars[i]['tax']} %',
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     double.tryParse(dataParticulars[i]
+        //                                                 ['tax']
+        //                                             .toString())
+        //                                         .toStringAsFixed(decimal),
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                         pw.Column(
+        //                             crossAxisAlignment:
+        //                                 pw.CrossAxisAlignment.end,
+        //                             mainAxisAlignment:
+        //                                 pw.MainAxisAlignment.center,
+        //                             children: [
+        //                               pw.Padding(
+        //                                 padding: const pw.EdgeInsets.all(2.0),
+        //                                 child: pw.Text(
+        //                                     double.tryParse(dataParticulars[i]
+        //                                                 ['Total']
+        //                                             .toString())
+        //                                         .toStringAsFixed(decimal),
+        //                                     style: const pw.TextStyle(
+        //                                         fontSize: 9)),
+        //                                 // pw.Divider(thickness: 1)
+        //                               )
+        //                             ]),
+        //                       ])
+        //             ],
+        //           ),
+        //           pw.SizedBox(
+        //             height: 40.0,
+        //           ),
+        //           pw.Column(
+        //             children: [
+        //               pw.Row(
+        //                 mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                 children: [
+        //                   pw.Text(
+        //                       'SUB TOTAL : ${double.tryParse(dataInformation['GrossValue'].toString()).toStringAsFixed(decimal)}'),
+        //                 ],
+        //               ),
+        //               companyTaxMode == 'INDIA'
+        //                   ? pw.Row(
+        //                       mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                       children: [
+        //                         pw.Text(
+        //                             'CESS : ${double.tryParse(dataInformation['Cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['Cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
+        //                       ],
+        //                     )
+        //                   : pw.Row(
+        //                       mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                       children: [
+        //                         pw.Text(
+        //                             'VAT : ${double.tryParse(dataInformation['tax'].toString()).toStringAsFixed(decimal)}'),
+        //                       ],
+        //                     ),
+        //               /**other amount**/
+        //               // otherAmount.length>0 ?
+        //               pw.Row(
+        //                 mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                 children: [
+        //                   pw.Text('***Discount***'),
+        //                 ],
+        //               ),
+        //               _addOtherAmountPDF(otherAmount),
+        //               pw.Row(
+        //                 mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                 children: [
+        //                   pw.Text(
+        //                       'PAID : ${double.tryParse(dataInformation['CashReceived'].toString()).toStringAsFixed(decimal)}'),
+        //                 ],
+        //               ),
+        //               pw.Row(
+        //                 mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                 children: [
+        //                   pw.Text(
+        //                       'TOTAL DUE : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}',
+        //                       style: pw.TextStyle(
+        //                           color: PdfColors.black,
+        //                           fontSize: 19,
+        //                           fontWeight: pw.FontWeight.bold)),
+        //                 ],
+        //               ),
+        //               pw.Row(
+        //                 children: [
+        //                   pw.Text(
+        //                     'Bill Balance : ${double.tryParse((double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString())).toString()).toStringAsFixed(decimal)}',
+        //                   ),
+        //                 ],
+        //               ),
+        //               pw.Row(
+        //                 children: [
+        //                   pw.Text(
+        //                     'Old Balance : ${double.tryParse(customerBalance.toString()).toStringAsFixed(decimal)}',
+        //                   ),
+        //                 ],
+        //               ),
+        //               pw.Row(
+        //                 children: [
+        //                   pw.Text(
+        //                     'Balance : ${double.tryParse(((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toString()).toStringAsFixed(decimal)}',
+        //                   ),
+        //                 ],
+        //               ),
+        //             ],
+        //           ),
+        //           byteImageQr != null
+        //               ? pw.Image(imageQr,
+        //                   height: 100,
+        //                   width:
+        //                       100) //Image.provider(imageQr, width: 100, height: 100)
+        //               : pw.Header(text: ''),
+        //           pw.Container(
+        //               alignment: pw.Alignment.center,
+        //               child: pw.Text(data['message'],
+        //                   textAlign: pw.TextAlign.center))
+        //         ],
+        //     footer: _buildFooter))
         ? pdf.addPage(pw.MultiPage(
-            /*company*/
             maxPages: 100,
-            header: (context) => pw.Column(children: [
-                  pw.Row(
-                      crossAxisAlignment: pw.CrossAxisAlignment.center,
-                      children: [
-                        pw.Expanded(
-                            child: pw.Column(children: [
-                          pw.Container(
-                            height: 20,
-                            padding: const pw.EdgeInsets.all(8),
-                            alignment: pw.Alignment.center,
-                            child: pw.Text(
-                              invoiceHead,
-                              style: pw.TextStyle(
-                                fontWeight: pw.FontWeight.bold,
-                                fontSize: 25,
-                              ),
-                            ),
-                          ),
-                          pw.Container(
-                              height: 80,
-                              padding: const pw.EdgeInsets.all(8),
-                              alignment: pw.Alignment.center,
-                              child: pw.RichText(
-                                  textAlign: pw.TextAlign.center,
-                                  text: pw.TextSpan(
-                                      text: '${companySettings.name}\n',
-                                      style: pw.TextStyle(
-                                        // color: _darkColor,
-                                        fontWeight: pw.FontWeight.bold,
-                                        fontSize: 15,
-                                      ),
-                                      children: [
-                                        const pw.TextSpan(
-                                          text: '\n',
-                                          style: pw.TextStyle(
-                                            fontSize: 5,
-                                          ),
-                                        ),
-                                        pw.TextSpan(
-                                            text: companySettings.add2
-                                                    .toString()
-                                                    .isEmpty
-                                                ? companySettings.add1
-                                                : companySettings.add1 +
-                                                    '\n' +
-                                                    companySettings.add2,
-                                            style: pw.TextStyle(
-                                              fontWeight: pw.FontWeight.bold,
-                                              fontSize: 10,
-                                            ),
-                                            children: [
-                                              companySettings.telephone
-                                                      .toString()
-                                                      .isNotEmpty
-                                                  ? pw.TextSpan(
-                                                      text: companySettings
-                                                          .telephone,
-                                                      children: [
-                                                          companySettings.mobile
-                                                                  .toString()
-                                                                  .isNotEmpty ??
-                                                              pw.TextSpan(
-                                                                  text: ', ' +
-                                                                      companySettings
-                                                                          .mobile),
-                                                        ])
-                                                  : const pw.TextSpan(
-                                                      text: '\n',
-                                                      style: pw.TextStyle(
-                                                        fontSize: 5,
-                                                      ),
-                                                    ),
-                                            ]),
-                                        pw.TextSpan(
-                                          text:
-                                              '${ComSettings.getValue('GST-NO', settings)}',
-                                          style: pw.TextStyle(
-                                            fontWeight: pw.FontWeight.bold,
-                                            fontSize: 10,
-                                          ),
-                                        ),
-                                      ]))),
-                          pw.Container(
-                            padding: const pw.EdgeInsets.all(10),
-                            alignment: pw.Alignment.center,
-                            height: 10,
-                            child: pw.GridView(
-                              crossAxisCount: 2,
-                              children: [
-                                pw.Text(
-                                    'Invoice : ' + dataInformation['InvoiceNo'],
-                                    style: pw.TextStyle(
-                                      fontWeight: pw.FontWeight.bold,
-                                      fontSize: 10,
-                                    ),
-                                    textAlign: pw.TextAlign.left),
-                                pw.Text(
-                                    'Date : ' +
-                                        DateUtil.dateDMY(
-                                            dataInformation['DDate']),
-                                    style: pw.TextStyle(
-                                      fontWeight: pw.FontWeight.bold,
-                                      fontSize: 10,
-                                    ),
-                                    textAlign: pw.TextAlign.right),
-                              ],
-                            ),
-                          ),
-                        ])),
-                      ]),
-                  if (context.pageNumber > 1) pw.SizedBox(height: 20)
-                ]),
-            build: (context) => [
-                  /*customer*/
-                  pw.Row(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        pw.Container(
-                          margin: const pw.EdgeInsets.only(left: 10, right: 10),
-                          height: 70,
-                          child: pw.Text(
-                            'Bill to:',
-                            style: pw.TextStyle(
-                              fontWeight: pw.FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        pw.Expanded(
-                          child: pw.Container(
-                            height: 70,
-                            child: pw.RichText(
-                                text: pw.TextSpan(
-                                    text: '${dataInformation['ToName']}\n',
-                                    style: pw.TextStyle(
-                                      // color: _darkColor,
-                                      fontWeight: pw.FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                    children: [
-                                  const pw.TextSpan(
-                                    text: '\n',
-                                    style: pw.TextStyle(
-                                      fontSize: 5,
-                                    ),
-                                  ),
-                                  pw.TextSpan(
-                                      text: dataInformation['Add2']
-                                              .toString()
-                                              .isEmpty
-                                          ? dataInformation['Add1']
-                                          : dataInformation['Add1'] +
-                                              '\n' +
-                                              dataInformation['Add2'],
-                                      style: pw.TextStyle(
-                                        fontWeight: pw.FontWeight.normal,
-                                        fontSize: 10,
-                                      ),
-                                      children: const [
-                                        pw.TextSpan(
-                                          text: '\n',
-                                          style: pw.TextStyle(
-                                            fontSize: 5,
-                                          ),
-                                        )
-                                      ]),
-                                  companyTaxMode == 'INDIA'
-                                      ? pw.TextSpan(
-                                          text: dataInformation['Add4'],
-                                          style: pw.TextStyle(
-                                            fontWeight: pw.FontWeight.normal,
-                                            fontSize: 10,
-                                          ),
-                                          children: const [
-                                              pw.TextSpan(
-                                                text: '\n',
-                                                style: pw.TextStyle(
-                                                  fontSize: 5,
-                                                ),
-                                              )
-                                            ])
-                                      : pw.TextSpan(
-                                          text:
-                                              'T-No :${dataInformation['gstno']}',
-                                          style: pw.TextStyle(
-                                            fontWeight: pw.FontWeight.normal,
-                                            fontSize: 10,
-                                          ),
-                                          children: const [
-                                              pw.TextSpan(
-                                                text: '\n',
-                                                style: pw.TextStyle(
-                                                  fontSize: 5,
-                                                ),
-                                              )
-                                            ]),
-                                  pw.TextSpan(
-                                    text: dataInformation['Add3'],
-                                    style: pw.TextStyle(
-                                      fontWeight: pw.FontWeight.normal,
-                                      fontSize: 10,
-                                    ),
-                                  )
-                                ])),
-                          ),
-                        ),
-                      ]),
-                  pw.Table(
-                    border: pw.TableBorder.all(width: 0.2),
-                    defaultColumnWidth: const pw.IntrinsicColumnWidth(),
+            pageFormat: pw.PdfPageFormat.a4,
+            header: (pw.Context context) => _buildHeaderr(context,
+                companySettings, settings, dataLedger, dataInformation),
+            footer: (pw.Context context) => _buildFooterr(
+                context,
+                dataBankLedger,
+                dataInformation,
+                companySettings,
+                customerBalance,
+                dataInformation),
+            build: (pw.Context context) {
+              double calculateTotalQuantity(List<dynamic> perticu) {
+                return perticu.fold(
+                    0, (total, particular) => total + particular['Qty']);
+              }
+
+              double calculateTotalTaxablevalue(List<dynamic> perticu) {
+                return perticu.fold(
+                    0,
+                    (total, particular) =>
+                        total + particular['Net'].toDouble());
+              }
+
+              double calculateTotalAmount(List<dynamic> perticu) {
+                return perticu.fold(
+                    0,
+                    (total, particular) =>
+                        total + particular['Total'].toDouble());
+              }
+
+              double calculateTotalCGST(List<dynamic> perticu) {
+                return perticu.fold(
+                    0,
+                    (total, particular) =>
+                        total + particular['CGST'].toDouble());
+              }
+
+              double calculateTotalSGST(List<dynamic> perticu) {
+                return perticu.fold(
+                    0,
+                    (total, particular) =>
+                        total + particular['SGST'].toDouble());
+              }
+
+              double calculateEstTotalAmount(List<dynamic> perticu) {
+                return perticu.fold(
+                    0,
+                    (total, particular) =>
+                        total + particular['Total'].toDouble());
+              }
+
+              double calculateEstTotalQuantity(List<dynamic> perticu) {
+                return perticu.fold(
+                    0,
+                    (total, particular) =>
+                        total + particular['Qty'].toDouble());
+              }
+
+              double totalQuantity = calculateTotalQuantity(dataParticulars);
+
+              double totalTaxablevalue =
+                  calculateTotalTaxablevalue(dataParticulars);
+              double totalAmount = calculateTotalAmount(dataParticulars);
+              double totalCGST = calculateTotalCGST(dataParticulars);
+              double totalSGST = calculateTotalCGST(dataParticulars);
+              double totalEstAmount = calculateEstTotalAmount(dataParticulars);
+              double totalEstQuantity =
+                  calculateEstTotalQuantity(dataParticulars);
+              final int totalRowCount = 11; // Desired total row count
+              final int existingRowCount = dataParticulars.length;
+
+// Calculate the number of empty rows needed
+              final int emptyRowCount = totalRowCount - existingRowCount;
+              List<pw.Widget> widgets = [
+                pw.Container(
+                  decoration: pw.BoxDecoration(border: pw.Border.all()),
+                  child: pw.Table(
+                    border: const pw.TableBorder(
+                      horizontalInside: pw.BorderSide
+                          .none, // Remove horizontal borders inside the table
+
+                      verticalInside: pw.BorderSide(), // Keep vertical borders
+                    ),
+                    columnWidths: const {
+                      0: pw.FixedColumnWidth(10),
+                      1: pw.FlexColumnWidth(22),
+                      2: pw.FlexColumnWidth(7),
+                      3: pw.FlexColumnWidth(7),
+                      4: pw.FlexColumnWidth(7),
+                      5: pw.FlexColumnWidth(10),
+                      6: pw.FlexColumnWidth(10),
+                      7: pw.FlexColumnWidth(6),
+                      8: pw.FlexColumnWidth(9),
+                      9: pw.FlexColumnWidth(6),
+                      10: pw.FlexColumnWidth(9),
+                      11: pw.FlexColumnWidth(6),
+                      12: pw.FlexColumnWidth(9),
+                      13: pw.FlexColumnWidth(15),
+                    },
                     children: [
-                      companyTaxMode == 'INDIA'
-                          ? pw.TableRow(children: [
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[0],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[1],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[2],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[3],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[4],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[5],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[6],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[7],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[8],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[9],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[10],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[11],
-                                        style: const pw.TextStyle(fontSize: 9)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                            ])
-                          : pw.TableRow(children: [
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[0],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[1],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[2],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[3],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[4],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[5],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[6],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[7],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[8],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[9],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Text(tableHeaders[10],
-                                        style: pw.TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: pw.FontWeight.bold)),
-                                    // pw.Divider(thickness: 1)
-                                  ]),
-                            ]),
                       for (var i = 0; i < dataParticulars.length; i++)
-                        // dataParticulars
-                        companyTaxMode == 'INDIA'
-                            ? pw.TableRow(children: [
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            '${dataParticulars[i]['ItemId']}',
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.start,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            dataParticulars[i]['ProductName'],
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.start,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            dataParticulars[i]['hsncode'],
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['RealPrate']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            '${dataParticulars[i]['Qty']}',
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                isItemSerialNo
-                                    ? pw.Column(
-                                        crossAxisAlignment:
-                                            pw.CrossAxisAlignment.center,
-                                        mainAxisAlignment:
-                                            pw.MainAxisAlignment.center,
-                                        children: [
-                                            pw.Padding(
-                                              padding:
-                                                  const pw.EdgeInsets.all(2.0),
-                                              child: pw.Text(
-                                                  dataParticulars[i]['serialno']
-                                                      .toString(),
-                                                  style: const pw.TextStyle(
-                                                      fontSize: 9)),
-                                              // pw.Divider(thickness: 1)
-                                            )
-                                          ])
-                                    : pw.Column(
-                                        crossAxisAlignment:
-                                            pw.CrossAxisAlignment.center,
-                                        mainAxisAlignment:
-                                            pw.MainAxisAlignment.center,
-                                        children: [
-                                            pw.Padding(
-                                              padding:
-                                                  const pw.EdgeInsets.all(2.0),
-                                              child: pw.Text(
-                                                  dataParticulars[i]['unitName']
-                                                      .toString(),
-                                                  style: const pw.TextStyle(
-                                                      fontSize: 9)),
-                                              // pw.Divider(thickness: 1)
-                                            )
-                                          ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['PRate']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['Net']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            '${dataParticulars[i]['tax']} %',
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['CGST']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['SGST']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['Total']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                              ])
-                            : pw.TableRow(children: [
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            '${dataParticulars[i]['ItemId']}',
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      ),
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.start,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            dataParticulars[i]['ProductName'],
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      ),
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.start,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            dataParticulars[i]['hsncode'],
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['RealPrate']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            '${dataParticulars[i]['Qty']}',
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                isItemSerialNo
-                                    ? pw.Column(
-                                        crossAxisAlignment:
-                                            pw.CrossAxisAlignment.center,
-                                        mainAxisAlignment:
-                                            pw.MainAxisAlignment.center,
-                                        children: [
-                                            pw.Padding(
-                                              padding:
-                                                  const pw.EdgeInsets.all(2.0),
-                                              child: pw.Text(
-                                                  dataParticulars[i]['serialno']
-                                                      .toString(),
-                                                  style: const pw.TextStyle(
-                                                      fontSize: 9)),
-                                              // pw.Divider(thickness: 1)
-                                            )
-                                          ])
-                                    : pw.Column(
-                                        crossAxisAlignment:
-                                            pw.CrossAxisAlignment.center,
-                                        mainAxisAlignment:
-                                            pw.MainAxisAlignment.center,
-                                        children: [
-                                            pw.Padding(
-                                              padding:
-                                                  const pw.EdgeInsets.all(2.0),
-                                              child: pw.Text(
-                                                  dataParticulars[i]['unitName']
-                                                      .toString(),
-                                                  style: const pw.TextStyle(
-                                                      fontSize: 9)),
-                                              // pw.Divider(thickness: 1)
-                                            )
-                                          ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['PRate']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['Net']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            '${dataParticulars[i]['tax']} %',
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['tax']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                                pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.end,
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.center,
-                                    children: [
-                                      pw.Padding(
-                                        padding: const pw.EdgeInsets.all(2.0),
-                                        child: pw.Text(
-                                            double.tryParse(dataParticulars[i]
-                                                        ['Total']
-                                                    .toString())
-                                                .toStringAsFixed(decimal),
-                                            style: const pw.TextStyle(
-                                                fontSize: 9)),
-                                        // pw.Divider(thickness: 1)
-                                      )
-                                    ]),
-                              ])
-                    ],
-                  ),
-                  pw.SizedBox(
-                    height: 40.0,
-                  ),
-                  pw.Column(
-                    children: [
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.end,
-                        children: [
-                          pw.Text(
-                              'SUB TOTAL : ${double.tryParse(dataInformation['GrossValue'].toString()).toStringAsFixed(decimal)}'),
-                        ],
-                      ),
-                      companyTaxMode == 'INDIA'
-                          ? pw.Row(
-                              mainAxisAlignment: pw.MainAxisAlignment.end,
-                              children: [
-                                pw.Text(
-                                    'CESS : ${double.tryParse(dataInformation['Cess'].toString()).toStringAsFixed(decimal)} CGST : ${double.tryParse(dataInformation['CGST'].toString()).toStringAsFixed(decimal)} SGST : ${double.tryParse(dataInformation['SGST'].toString()).toStringAsFixed(decimal)} = ${(double.tryParse(dataInformation['Cess'].toString()) + double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString())).toStringAsFixed(decimal)}'),
-                              ],
-                            )
-                          : pw.Row(
-                              mainAxisAlignment: pw.MainAxisAlignment.end,
-                              children: [
-                                pw.Text(
-                                    'VAT : ${double.tryParse(dataInformation['tax'].toString()).toStringAsFixed(decimal)}'),
-                              ],
-                            ),
-                      /**other amount**/
-                      // otherAmount.length>0 ?
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.end,
-                        children: [
-                          pw.Text('***Discount***'),
-                        ],
-                      ),
-                      _addOtherAmountPDF(otherAmount),
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.end,
-                        children: [
-                          pw.Text(
-                              'PAID : ${double.tryParse(dataInformation['CashReceived'].toString()).toStringAsFixed(decimal)}'),
-                        ],
-                      ),
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.end,
-                        children: [
-                          pw.Text(
-                              'TOTAL DUE : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}',
+                        pw.TableRow(children: [
+                          pw.Center(
+                              child: pw.Column(
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  dataParticulars[i]['GridID'].toString(),
+                                  style: pw.TextStyle(
+                                      fontSize: 5,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          )),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(2.0),
+                            child: pw.Text(
+                              dataParticulars[i]['ProductName'],
                               style: pw.TextStyle(
-                                  color: PdfColors.black,
-                                  fontSize: 19,
-                                  fontWeight: pw.FontWeight.bold)),
-                        ],
-                      ),
-                      pw.Row(
-                        children: [
-                          pw.Text(
-                            'Bill Balance : ${double.tryParse((double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString())).toString()).toStringAsFixed(decimal)}',
+                                  fontSize: 5, fontWeight: pw.FontWeight.bold),
+                            ),
                           ),
-                        ],
-                      ),
-                      pw.Row(
-                        children: [
-                          pw.Text(
-                            'Old Balance : ${double.tryParse(customerBalance.toString()).toStringAsFixed(decimal)}',
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(2.0),
+                            child: pw.Text(
+                              dataParticulars[i]['hsncode'],
+                              style: pw.TextStyle(
+                                  fontSize: 5, fontWeight: pw.FontWeight.bold),
+                            ),
                           ),
-                        ],
-                      ),
-                      pw.Row(
-                        children: [
-                          pw.Text(
-                            'Balance : ${double.tryParse(((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toString()).toStringAsFixed(decimal)}',
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  dataParticulars[i]['Qty'].toStringAsFixed(2),
+                                  style: pw.TextStyle(
+                                      fontSize: 5,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(2.0),
+                            // child: pw.Text(
+                            //   dataParticulars[i]['unitName'],
+                            //   style: pw.TextStyle(
+                            //       fontSize: 5, fontWeight: pw.FontWeight.bold),
+                            // ),
+                            child: pw.Text(""),
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  dataParticulars[i]['RealPrate']
+                                      .toStringAsFixed(2),
+                                  style: pw.TextStyle(
+                                      fontSize: 5,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  '${dataParticulars[i]['Net']}',
+                                  style: pw.TextStyle(
+                                      fontSize: 5,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.center,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Center(
+                                  child: pw.Text(
+                                    '${dataParticulars[i]['tax'] / 2}%',
+                                    style: pw.TextStyle(
+                                        fontSize: 5,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  dataParticulars[i]['CGST'].toStringAsFixed(2),
+                                  style: pw.TextStyle(
+                                      fontSize: 5,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.center,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Center(
+                                  child: pw.Text(
+                                    '${dataParticulars[i]['tax'] / 2}%',
+                                    style: pw.TextStyle(
+                                        fontSize: 5,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  dataParticulars[i]['SGST'].toStringAsFixed(2),
+                                  style: pw.TextStyle(
+                                      fontSize: 5,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.center,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Center(
+                                  child: pw.Text(
+                                    '0%',
+                                    style: pw.TextStyle(
+                                        fontSize: 5,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  '0.00',
+                                  style: pw.TextStyle(
+                                      fontSize: 5,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  dataParticulars[i]['Total']
+                                      .toStringAsFixed(2),
+                                  style: pw.TextStyle(
+                                      fontSize: 6,
+                                      color:
+                                          const pw.PdfColor.fromInt(0xFF000000),
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ]),
+                      for (var j = 0; j < emptyRowCount; j++)
+                        pw.TableRow(children: [
+                          pw.Center(
+                              child: pw.Column(
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  '\n',
+                                  style: pw.TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          )),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(2.0),
+                            child: pw.Text(
+                              "",
+                              style: pw.TextStyle(
+                                  fontSize: 5, fontWeight: pw.FontWeight.bold),
+                            ),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(2.0),
+                            child: pw.Text(
+                              "",
+                              style: pw.TextStyle(
+                                  fontSize: 5, fontWeight: pw.FontWeight.bold),
+                            ),
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  "",
+                                  style: pw.TextStyle(
+                                      fontSize: 5,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(2.0),
+                            child: pw.Text(
+                              "",
+                              style: pw.TextStyle(
+                                  fontSize: 5, fontWeight: pw.FontWeight.bold),
+                            ),
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  "",
+                                  style: pw.TextStyle(
+                                      fontSize: 5,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  '',
+                                  style: pw.TextStyle(
+                                      fontSize: 5,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.center,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Center(
+                                  child: pw.Text(
+                                    '',
+                                    style: pw.TextStyle(
+                                        fontSize: 5,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  "",
+                                  style: pw.TextStyle(
+                                      fontSize: 5,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.center,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Center(
+                                  child: pw.Text(
+                                    '',
+                                    style: pw.TextStyle(
+                                        fontSize: 5,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  "",
+                                  style: pw.TextStyle(
+                                      fontSize: 5,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.center,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Center(
+                                  child: pw.Text(
+                                    '',
+                                    style: pw.TextStyle(
+                                        fontSize: 5,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  '',
+                                  style: pw.TextStyle(
+                                      fontSize: 5,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  "",
+                                  style: pw.TextStyle(
+                                      fontSize: 6,
+                                      color:
+                                          const pw.PdfColor.fromInt(0xFF000000),
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ]),
+                      if (dataParticulars.length < 5)
+                        for (var k = 0; k < 10; k++)
+                          pw.TableRow(children: [
+                            pw.Center(
+                                child: pw.Column(
+                              children: [
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.all(2.0),
+                                  child: pw.Text(
+                                    '\n',
+                                    style: pw.TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            )),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(2.0),
+                              child: pw.Text(
+                                "",
+                                style: pw.TextStyle(
+                                    fontSize: 5,
+                                    fontWeight: pw.FontWeight.bold),
+                              ),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(2.0),
+                              child: pw.Text(
+                                "",
+                                style: pw.TextStyle(
+                                    fontSize: 5,
+                                    fontWeight: pw.FontWeight.bold),
+                              ),
+                            ),
+                            pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.end,
+                              children: [
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.all(2.0),
+                                  child: pw.Text(
+                                    "",
+                                    style: pw.TextStyle(
+                                        fontSize: 5,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(2.0),
+                              child: pw.Text(
+                                "",
+                                style: pw.TextStyle(
+                                    fontSize: 5,
+                                    fontWeight: pw.FontWeight.bold),
+                              ),
+                            ),
+                            pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.end,
+                              children: [
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.all(2.0),
+                                  child: pw.Text(
+                                    "",
+                                    style: pw.TextStyle(
+                                        fontSize: 5,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.end,
+                              children: [
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.all(2.0),
+                                  child: pw.Text(
+                                    '',
+                                    style: pw.TextStyle(
+                                        fontSize: 5,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.center,
+                              children: [
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.all(2.0),
+                                  child: pw.Center(
+                                    child: pw.Text(
+                                      '',
+                                      style: pw.TextStyle(
+                                          fontSize: 5,
+                                          fontWeight: pw.FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.end,
+                              children: [
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.all(2.0),
+                                  child: pw.Text(
+                                    "",
+                                    style: pw.TextStyle(
+                                        fontSize: 5,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.center,
+                              children: [
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.all(2.0),
+                                  child: pw.Center(
+                                    child: pw.Text(
+                                      '',
+                                      style: pw.TextStyle(
+                                          fontSize: 5,
+                                          fontWeight: pw.FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.end,
+                              children: [
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.all(2.0),
+                                  child: pw.Text(
+                                    "",
+                                    style: pw.TextStyle(
+                                        fontSize: 5,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.center,
+                              children: [
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.all(2.0),
+                                  child: pw.Center(
+                                    child: pw.Text(
+                                      '',
+                                      style: pw.TextStyle(
+                                          fontSize: 5,
+                                          fontWeight: pw.FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.end,
+                              children: [
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.all(2.0),
+                                  child: pw.Text(
+                                    '',
+                                    style: pw.TextStyle(
+                                        fontSize: 5,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.end,
+                              children: [
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.all(2.0),
+                                  child: pw.Text(
+                                    "",
+                                    style: pw.TextStyle(
+                                        fontSize: 6,
+                                        color: const pw.PdfColor.fromInt(
+                                            0xFF000000),
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ]),
+                    ],
+                  ),
+                ),
+                pw.Container(
+                  decoration: pw.BoxDecoration(border: pw.Border.all()),
+                  height: 20, width: double.infinity,
+                  // color: const pw.PdfColor.fromInt(0xFF808080), // Grey color
+                  child: pw.Row(
+                    children: [
+                      pw.Container(
+                        height: 20,
+                        width: 121.5,
+                        decoration: const pw.BoxDecoration(
+                            border: pw.Border(
+                                right: pw.BorderSide(), left: pw.BorderSide())),
+                        child: pw.Center(
+                          child: pw.Text(
+                            " Total ",
+                            style: pw.TextStyle(
+                                fontSize: 7, fontWeight: pw.FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      pw.Container(
+                        height: 20,
+                        width: 27,
+                        decoration: const pw.BoxDecoration(
+                            border: pw.Border(right: pw.BorderSide())),
+                        child: pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.end,
+                          children: [
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.only(right: 2.0),
+                              child: pw.Text(
+                                '${totalQuantity.toStringAsFixed(2)}',
+                                style: pw.TextStyle(
+                                    fontSize: 5,
+                                    fontWeight: pw.FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      pw.Container(
+                          height: 20,
+                          width: 65.2,
+                          decoration: const pw.BoxDecoration(
+                              border: pw.Border(right: pw.BorderSide())),
+                          child: pw.Center(
+                            child: pw.Text(
+                              " ",
+                              style: const pw.TextStyle(fontSize: 5),
+                            ),
+                          )),
+                      pw.Container(
+                        height: 20,
+                        width: 38.2,
+                        decoration: const pw.BoxDecoration(
+                            border: pw.Border(right: pw.BorderSide())),
+                        child: pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.end,
+                          children: [
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.only(right: 2.0),
+                              child: pw.Text(
+                                '${totalTaxablevalue.toStringAsFixed(2)}',
+                                style: pw.TextStyle(
+                                    fontSize: 5,
+                                    fontWeight: pw.FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      pw.Container(
+                        height: 20,
+                        width: 58,
+                        decoration: const pw.BoxDecoration(
+                            border: pw.Border(right: pw.BorderSide())),
+                        child: pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.end,
+                          children: [
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.only(right: 2.0),
+                              child: pw.Text(
+                                '${totalCGST.toStringAsFixed(2)}',
+                                style: pw.TextStyle(
+                                    fontSize: 5,
+                                    fontWeight: pw.FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      pw.Container(
+                        height: 20,
+                        width: 57.2,
+                        decoration: const pw.BoxDecoration(
+                            border: pw.Border(right: pw.BorderSide())),
+                        child: pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.end,
+                          children: [
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.only(right: 2.0),
+                              child: pw.Text(
+                                '${totalSGST.toStringAsFixed(2)}',
+                                style: pw.TextStyle(
+                                    fontSize: 5,
+                                    fontWeight: pw.FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      pw.Container(
+                        height: 20,
+                        width: 57.5,
+                        decoration: const pw.BoxDecoration(
+                            border: pw.Border(right: pw.BorderSide())),
+                        child: pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.end,
+                          children: [
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.only(right: 2.0),
+                              child: pw.Text(
+                                "0.00",
+                                style: pw.TextStyle(
+                                    fontSize: 5,
+                                    fontWeight: pw.FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      pw.Expanded(
+                        child: pw.Container(
+                          height: 20,
+                          decoration: const pw.BoxDecoration(
+                              border: pw.Border(right: pw.BorderSide())),
+                          child: pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Padding(
+                                  padding: const pw.EdgeInsets.only(right: 2.0),
+                                  child: pw.Text(
+                                    '${totalAmount.toStringAsFixed(2)}',
+                                    style: pw.TextStyle(
+                                        fontSize: 5,
+                                        fontWeight: pw.FontWeight.bold),
+                                  )),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  byteImageQr != null
-                      ? pw.Image(imageQr,
-                          height: 100,
-                          width:
-                              100) //Image.provider(imageQr, width: 100, height: 100)
-                      : pw.Header(text: ''),
-                  pw.Container(
-                      alignment: pw.Alignment.center,
-                      child: pw.Text(data['message'],
-                          textAlign: pw.TextAlign.center))
-                ],
-            footer: _buildFooter))
-        : printHeaderOnES
-            ? pdf.addPage(pw.MultiPage(
-                maxPages: 100,
-                header: (context) => pw.Column(children: [
-                      pw.Container(
-                        height: 20,
-                        padding: const pw.EdgeInsets.all(10),
-                        alignment: pw.Alignment.center,
-                        child: pw.Text(
-                          invoiceHead,
-                          style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold,
-                            fontSize: 25,
-                          ),
-                        ),
-                      ),
-                      pw.Container(
-                          height: 80,
-                          padding: const pw.EdgeInsets.all(8),
-                          alignment: pw.Alignment.center,
-                          child: pw.RichText(
-                              textAlign: pw.TextAlign.center,
-                              text: pw.TextSpan(
-                                  text: '${companySettings.name}\n',
+                ),
+              ];
+
+              return widgets;
+            },
+          ))
+
+        // : printHeaderOnES
+        //     ? pdf.addPage(pw.MultiPage(
+        //         maxPages: 100,
+        //         header: (context) => pw.Column(children: [
+        //               pw.Container(
+        //                 height: 20,
+        //                 padding: const pw.EdgeInsets.all(10),
+        //                 alignment: pw.Alignment.center,
+        //                 child: pw.Text(
+        //                   invoiceHead,
+        //                   style: pw.TextStyle(
+        //                     fontWeight: pw.FontWeight.bold,
+        //                     fontSize: 25,
+        //                   ),
+        //                 ),
+        //               ),
+        //               pw.Container(
+        //                   height: 80,
+        //                   padding: const pw.EdgeInsets.all(8),
+        //                   alignment: pw.Alignment.center,
+        //                   child: pw.RichText(
+        //                       textAlign: pw.TextAlign.center,
+        //                       text: pw.TextSpan(
+        //                           text: '${companySettings.name}\n',
+        //                           style: pw.TextStyle(
+        //                             // color: _darkColor,
+        //                             fontWeight: pw.FontWeight.bold,
+        //                             fontSize: 15,
+        //                           ),
+        //                           children: [
+        //                             const pw.TextSpan(
+        //                               text: '\n',
+        //                               style: pw.TextStyle(
+        //                                 fontSize: 5,
+        //                               ),
+        //                             ),
+        //                             pw.TextSpan(
+        //                                 text: companySettings.add2
+        //                                         .toString()
+        //                                         .isEmpty
+        //                                     ? companySettings.add1
+        //                                     : companySettings.add1 +
+        //                                         '\n' +
+        //                                         companySettings.add2,
+        //                                 style: pw.TextStyle(
+        //                                   fontWeight: pw.FontWeight.bold,
+        //                                   fontSize: 10,
+        //                                 ),
+        //                                 children: [
+        //                                   companySettings.telephone
+        //                                           .toString()
+        //                                           .isNotEmpty
+        //                                       ? pw.TextSpan(
+        //                                           text:
+        //                                               companySettings.telephone,
+        //                                           children: [
+        //                                               companySettings.mobile
+        //                                                       .toString()
+        //                                                       .isNotEmpty ??
+        //                                                   pw.TextSpan(
+        //                                                       text: ', ' +
+        //                                                           companySettings
+        //                                                               .mobile),
+        //                                             ])
+        //                                       : const pw.TextSpan(
+        //                                           text: '\n',
+        //                                           style: pw.TextStyle(
+        //                                             fontSize: 5,
+        //                                           ),
+        //                                         ),
+        //                                 ]),
+        //                             pw.TextSpan(
+        //                               text:
+        //                                   '${ComSettings.getValue('GST-NO', settings)}',
+        //                               style: pw.TextStyle(
+        //                                 fontWeight: pw.FontWeight.bold,
+        //                                 fontSize: 10,
+        //                               ),
+        //                             ),
+        //                           ]))),
+        //               pw.SizedBox(height: 20),
+        //               pw.Container(
+        //                 padding: const pw.EdgeInsets.all(10),
+        //                 alignment: pw.Alignment.center,
+        //                 height: 10,
+        //                 child: pw.GridView(
+        //                   crossAxisCount: 2,
+        //                   children: [
+        //                     pw.Text('EntryNo : ' + dataInformation['InvoiceNo'],
+        //                         style: pw.TextStyle(
+        //                           fontWeight: pw.FontWeight.bold,
+        //                           fontSize: 10,
+        //                         ),
+        //                         textAlign: pw.TextAlign.left),
+        //                     pw.Text(
+        //                         'Date : ' +
+        //                             DateUtil.dateDMY(dataInformation['DDate']),
+        //                         style: pw.TextStyle(
+        //                           fontWeight: pw.FontWeight.bold,
+        //                           fontSize: 10,
+        //                         ),
+        //                         textAlign: pw.TextAlign.right),
+        //                   ],
+        //                 ),
+        //               ),
+        //               if (context.pageNumber > 1) pw.SizedBox(height: 20)
+        //             ]),
+        //         build: (context) => [
+        //               /*customer*/
+        //               pw.Row(
+        //                   crossAxisAlignment: pw.CrossAxisAlignment.start,
+        //                   children: [
+        //                     pw.Container(
+        //                       margin:
+        //                           const pw.EdgeInsets.only(left: 10, right: 10),
+        //                       height: 70,
+        //                       child: pw.Text(
+        //                         'Bill to:',
+        //                         style: pw.TextStyle(
+        //                           fontWeight: pw.FontWeight.bold,
+        //                           fontSize: 12,
+        //                         ),
+        //                       ),
+        //                     ),
+        //                     pw.Expanded(
+        //                         child: pw.Container(
+        //                             height: 50,
+        //                             child: pw.RichText(
+        //                                 text: pw.TextSpan(
+        //                                     text:
+        //                                         '${dataInformation['ToName']}\n',
+        //                                     style: pw.TextStyle(
+        //                                       // color: _darkColor,
+        //                                       fontWeight: pw.FontWeight.bold,
+        //                                       fontSize: 12,
+        //                                     ),
+        //                                     children: [
+        //                                   const pw.TextSpan(
+        //                                     text: '\n',
+        //                                     style: pw.TextStyle(
+        //                                       fontSize: 5,
+        //                                     ),
+        //                                   ),
+        //                                   pw.TextSpan(
+        //                                     text: dataInformation['Add2']
+        //                                             .toString()
+        //                                             .isEmpty
+        //                                         ? dataInformation['Add1']
+        //                                         : dataInformation['Add1'] +
+        //                                             '\n' +
+        //                                             dataInformation['Add2'],
+        //                                     style: pw.TextStyle(
+        //                                       fontWeight: pw.FontWeight.normal,
+        //                                       fontSize: 10,
+        //                                     ),
+        //                                   )
+        //                                 ])))),
+        //                   ]),
+        //               pw.Table(
+        //                 border: pw.TableBorder.all(width: 0.2),
+        //                 children: [
+        //                   pw.TableRow(children: [
+        //                     pw.Column(
+        //                         crossAxisAlignment:
+        //                             pw.CrossAxisAlignment.center,
+        //                         mainAxisAlignment: pw.MainAxisAlignment.center,
+        //                         children: [
+        //                           pw.Text(tableHeaders[0],
+        //                               style: const pw.TextStyle(fontSize: 9)),
+        //                           // pw.Divider(thickness: 1)
+        //                         ]),
+        //                     pw.Column(
+        //                         crossAxisAlignment:
+        //                             pw.CrossAxisAlignment.center,
+        //                         mainAxisAlignment: pw.MainAxisAlignment.center,
+        //                         children: [
+        //                           pw.Text(tableHeaders[1],
+        //                               style: const pw.TextStyle(fontSize: 9)),
+        //                           // pw.Divider(thickness: 1)
+        //                         ]),
+        //                     pw.Column(
+        //                         crossAxisAlignment:
+        //                             pw.CrossAxisAlignment.center,
+        //                         mainAxisAlignment: pw.MainAxisAlignment.center,
+        //                         children: [
+        //                           pw.Text(tableHeaders[2],
+        //                               style: const pw.TextStyle(fontSize: 9)),
+        //                           // pw.Divider(thickness: 1)
+        //                         ]),
+        //                     pw.Column(
+        //                         crossAxisAlignment:
+        //                             pw.CrossAxisAlignment.center,
+        //                         mainAxisAlignment: pw.MainAxisAlignment.center,
+        //                         children: [
+        //                           pw.Text(tableHeaders[3],
+        //                               style: const pw.TextStyle(fontSize: 9)),
+        //                           // pw.Divider(thickness: 1)
+        //                         ]),
+        //                     pw.Column(
+        //                         crossAxisAlignment:
+        //                             pw.CrossAxisAlignment.center,
+        //                         mainAxisAlignment: pw.MainAxisAlignment.center,
+        //                         children: [
+        //                           pw.Text(tableHeaders[4],
+        //                               style: const pw.TextStyle(fontSize: 9)),
+        //                           // pw.Divider(thickness: 1)
+        //                         ]),
+        //                     pw.Column(
+        //                         crossAxisAlignment:
+        //                             pw.CrossAxisAlignment.center,
+        //                         mainAxisAlignment: pw.MainAxisAlignment.center,
+        //                         children: [
+        //                           pw.Text(tableHeaders[5],
+        //                               style: const pw.TextStyle(fontSize: 9)),
+        //                           // pw.Divider(thickness: 1)
+        //                         ]),
+        //                   ]),
+        //                   for (var i = 0; i < dataParticulars.length; i++)
+        //                     pw.TableRow(children: [
+        //                       pw.Column(
+        //                           crossAxisAlignment: pw.CrossAxisAlignment.end,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Padding(
+        //                               padding: const pw.EdgeInsets.all(2.0),
+        //                               child: pw.Text(
+        //                                   '${dataParticulars[i]['ItemId']}',
+        //                                   style:
+        //                                       const pw.TextStyle(fontSize: 9)),
+        //                               // pw.Divider(thickness: 1)
+        //                             ),
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.start,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Padding(
+        //                               padding: const pw.EdgeInsets.all(2.0),
+        //                               child: pw.Text(
+        //                                   dataParticulars[i]['ProductName'],
+        //                                   style:
+        //                                       const pw.TextStyle(fontSize: 9)),
+        //                               // pw.Divider(thickness: 1)
+        //                             ),
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment: pw.CrossAxisAlignment.end,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Padding(
+        //                               padding: const pw.EdgeInsets.all(2.0),
+        //                               child: pw.Text(
+        //                                   double.tryParse(dataParticulars[i]
+        //                                               ['PRate']
+        //                                           .toString())
+        //                                       .toStringAsFixed(decimal),
+        //                                   style:
+        //                                       const pw.TextStyle(fontSize: 9)),
+        //                               // pw.Divider(thickness: 1)
+        //                             )
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment: pw.CrossAxisAlignment.end,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Padding(
+        //                               padding: const pw.EdgeInsets.all(2.0),
+        //                               child: pw.Text(
+        //                                   dataParticulars[i]['Qty']
+        //                                       .toStringAsFixed(decimal),
+        //                                   style:
+        //                                       const pw.TextStyle(fontSize: 9)),
+        //                               // pw.Divider(thickness: 1)
+        //                             )
+        //                           ]),
+        //                       isItemSerialNo
+        //                           ? pw.Column(
+        //                               crossAxisAlignment:
+        //                                   pw.CrossAxisAlignment.center,
+        //                               mainAxisAlignment:
+        //                                   pw.MainAxisAlignment.center,
+        //                               children: [
+        //                                   pw.Padding(
+        //                                     padding:
+        //                                         const pw.EdgeInsets.all(2.0),
+        //                                     child: pw.Text(
+        //                                         dataParticulars[i]['serialno']
+        //                                             .toString(),
+        //                                         style: const pw.TextStyle(
+        //                                             fontSize: 9)),
+        //                                     // pw.Divider(thickness: 1)
+        //                                   )
+        //                                 ])
+        //                           : pw.Column(
+        //                               crossAxisAlignment:
+        //                                   pw.CrossAxisAlignment.center,
+        //                               mainAxisAlignment:
+        //                                   pw.MainAxisAlignment.center,
+        //                               children: [
+        //                                   pw.Padding(
+        //                                     padding:
+        //                                         const pw.EdgeInsets.all(2.0),
+        //                                     child: pw.Text(
+        //                                         dataParticulars[i]['unitName']
+        //                                             .toString(),
+        //                                         style: const pw.TextStyle(
+        //                                             fontSize: 9)),
+        //                                     // pw.Divider(thickness: 1)
+        //                                   )
+        //                                 ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment: pw.CrossAxisAlignment.end,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Padding(
+        //                               padding: const pw.EdgeInsets.all(2.0),
+        //                               child: pw.Text(
+        //                                   double.tryParse(dataParticulars[i]
+        //                                               ['Total']
+        //                                           .toString())
+        //                                       .toStringAsFixed(decimal),
+        //                                   style:
+        //                                       const pw.TextStyle(fontSize: 9)),
+        //                               // pw.Divider(thickness: 1)
+        //                             )
+        //                           ]),
+        //                     ])
+        //                 ],
+        //               ),
+        //               pw.SizedBox(
+        //                 height: 40.0,
+        //               ),
+        //               pw.Column(
+        //                 children: [
+        //                   pw.Row(
+        //                     mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                     children: [
+        //                       pw.Text(
+        //                           'SUB TOTAL : ${double.tryParse(dataInformation['GrossValue'].toString()).toStringAsFixed(decimal)}'),
+        //                     ],
+        //                   ),
+        //                   /**other amount**/
+        //                   // otherAmount.length>0 ?
+        //                   pw.Row(
+        //                     mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                     children: [
+        //                       pw.Text(''),
+        //                     ],
+        //                   ),
+        //                   pw.Row(
+        //                     mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                     children: [
+        //                       pw.Text('***Discount***'),
+        //                     ],
+        //                   ),
+        //                   _addOtherAmountPDF(otherAmount),
+        //                   pw.Row(
+        //                     mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                     children: [
+        //                       pw.Text(
+        //                           'TOTAL : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}'),
+        //                     ],
+        //                   ),
+        //                   pw.Row(
+        //                     mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                     children: [
+        //                       pw.Text(
+        //                           'PAID : ${double.tryParse(dataInformation['CashReceived'].toString()).toStringAsFixed(decimal)}'),
+        //                     ],
+        //                   ),
+        //                   pw.Row(
+        //                     mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                     children: [
+        //                       pw.Text(
+        //                           'TOTAL DUE : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}',
+        //                           style: pw.TextStyle(
+        //                               // color: Colors.black,
+        //                               fontSize: 19,
+        //                               fontWeight: pw.FontWeight.bold)),
+        //                     ],
+        //                   ),
+        //                   pw.Row(
+        //                     children: [
+        //                       pw.Text(
+        //                         'Bill Balance : ${(double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString())).toStringAsFixed(decimal)}',
+        //                       ),
+        //                     ],
+        //                   ),
+        //                   pw.Row(
+        //                     children: [
+        //                       pw.Text(
+        //                         'Old Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
+        //                       ),
+        //                     ],
+        //                   ),
+        //                   pw.Row(
+        //                     children: [
+        //                       pw.Text(
+        //                         'Balance : ${((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toStringAsFixed(decimal)}',
+        //                       ),
+        //                     ],
+        //                   ),
+        //                 ],
+        //               ),
+        //               pw.Container(
+        //                   alignment: pw.Alignment.center,
+        //                   child: pw.Text(data['message'],
+        //                       textAlign: pw.TextAlign.center))
+        //             ],
+        //         footer: _buildFooter))
+        //     : pdf.addPage(pw.MultiPage(
+        //         maxPages: 100,
+        //         header: (context) => pw.Column(children: [
+        //               pw.Container(
+        //                 height: 20,
+        //                 padding: const pw.EdgeInsets.all(10),
+        //                 alignment: pw.Alignment.center,
+        //                 child: pw.Text(
+        //                   invoiceHead,
+        //                   style: pw.TextStyle(
+        //                     fontWeight: pw.FontWeight.bold,
+        //                     fontSize: 25,
+        //                   ),
+        //                 ),
+        //               ),
+        //               pw.SizedBox(height: 20),
+        //               pw.Container(
+        //                 padding: const pw.EdgeInsets.all(10),
+        //                 alignment: pw.Alignment.center,
+        //                 height: 10,
+        //                 child: pw.GridView(
+        //                   crossAxisCount: 2,
+        //                   children: [
+        //                     pw.Text('EntryNo : ' + dataInformation['InvoiceNo'],
+        //                         style: pw.TextStyle(
+        //                           fontWeight: pw.FontWeight.bold,
+        //                           fontSize: 10,
+        //                         ),
+        //                         textAlign: pw.TextAlign.left),
+        //                     pw.Text(
+        //                         'Date : ' +
+        //                             DateUtil.dateDMY(dataInformation['DDate']),
+        //                         style: pw.TextStyle(
+        //                           fontWeight: pw.FontWeight.bold,
+        //                           fontSize: 10,
+        //                         ),
+        //                         textAlign: pw.TextAlign.right),
+        //                   ],
+        //                 ),
+        //               ),
+        //               if (context.pageNumber > 1) pw.SizedBox(height: 20)
+        //             ]),
+        //         build: (context) => [
+        //               /*customer*/
+        //               pw.Row(
+        //                   crossAxisAlignment: pw.CrossAxisAlignment.start,
+        //                   children: [
+        //                     pw.Container(
+        //                       margin:
+        //                           const pw.EdgeInsets.only(left: 10, right: 10),
+        //                       height: 70,
+        //                       child: pw.Text(
+        //                         'Bill to:',
+        //                         style: pw.TextStyle(
+        //                           fontWeight: pw.FontWeight.bold,
+        //                           fontSize: 12,
+        //                         ),
+        //                       ),
+        //                     ),
+        //                     pw.Expanded(
+        //                         child: pw.Container(
+        //                             height: 50,
+        //                             child: pw.RichText(
+        //                                 text: pw.TextSpan(
+        //                                     text:
+        //                                         '${dataInformation['ToName']}\n',
+        //                                     style: pw.TextStyle(
+        //                                       // color: _darkColor,
+        //                                       fontWeight: pw.FontWeight.bold,
+        //                                       fontSize: 12,
+        //                                     ),
+        //                                     children: [
+        //                                   const pw.TextSpan(
+        //                                     text: '\n',
+        //                                     style: pw.TextStyle(
+        //                                       fontSize: 5,
+        //                                     ),
+        //                                   ),
+        //                                   pw.TextSpan(
+        //                                     text: dataInformation['Add2']
+        //                                             .toString()
+        //                                             .isEmpty
+        //                                         ? dataInformation['Add1']
+        //                                         : dataInformation['Add1'] +
+        //                                             '\n' +
+        //                                             dataInformation['Add2'],
+        //                                     style: pw.TextStyle(
+        //                                       fontWeight: pw.FontWeight.normal,
+        //                                       fontSize: 10,
+        //                                     ),
+        //                                   )
+        //                                 ])))),
+        //                   ]),
+        //               pw.Table(
+        //                 border: pw.TableBorder.all(width: 0.2),
+        //                 children: [
+        //                   pw.TableRow(children: [
+        //                     pw.Column(
+        //                         crossAxisAlignment:
+        //                             pw.CrossAxisAlignment.center,
+        //                         mainAxisAlignment: pw.MainAxisAlignment.center,
+        //                         children: [
+        //                           pw.Text(tableHeaders[0],
+        //                               style: const pw.TextStyle(fontSize: 9)),
+        //                           // pw.Divider(thickness: 1)
+        //                         ]),
+        //                     pw.Column(
+        //                         crossAxisAlignment:
+        //                             pw.CrossAxisAlignment.center,
+        //                         mainAxisAlignment: pw.MainAxisAlignment.center,
+        //                         children: [
+        //                           pw.Text(tableHeaders[1],
+        //                               style: const pw.TextStyle(fontSize: 9)),
+        //                           // pw.Divider(thickness: 1)
+        //                         ]),
+        //                     pw.Column(
+        //                         crossAxisAlignment:
+        //                             pw.CrossAxisAlignment.center,
+        //                         mainAxisAlignment: pw.MainAxisAlignment.center,
+        //                         children: [
+        //                           pw.Text(tableHeaders[2],
+        //                               style: const pw.TextStyle(fontSize: 9)),
+        //                           // pw.Divider(thickness: 1)
+        //                         ]),
+        //                     pw.Column(
+        //                         crossAxisAlignment:
+        //                             pw.CrossAxisAlignment.center,
+        //                         mainAxisAlignment: pw.MainAxisAlignment.center,
+        //                         children: [
+        //                           pw.Text(tableHeaders[3],
+        //                               style: const pw.TextStyle(fontSize: 9)),
+        //                           // pw.Divider(thickness: 1)
+        //                         ]),
+        //                     pw.Column(
+        //                         crossAxisAlignment:
+        //                             pw.CrossAxisAlignment.center,
+        //                         mainAxisAlignment: pw.MainAxisAlignment.center,
+        //                         children: [
+        //                           pw.Text(tableHeaders[4],
+        //                               style: const pw.TextStyle(fontSize: 9)),
+        //                           // pw.Divider(thickness: 1)
+        //                         ]),
+        //                     pw.Column(
+        //                         crossAxisAlignment:
+        //                             pw.CrossAxisAlignment.center,
+        //                         mainAxisAlignment: pw.MainAxisAlignment.center,
+        //                         children: [
+        //                           pw.Text(tableHeaders[5],
+        //                               style: const pw.TextStyle(fontSize: 9)),
+        //                           // pw.Divider(thickness: 1)
+        //                         ]),
+        //                   ]),
+        //                   for (var i = 0; i < dataParticulars.length; i++)
+        //                     pw.TableRow(children: [
+        //                       pw.Column(
+        //                           crossAxisAlignment: pw.CrossAxisAlignment.end,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Padding(
+        //                               padding: const pw.EdgeInsets.all(2.0),
+        //                               child: pw.Text(
+        //                                   '${dataParticulars[i]['ItemId']}',
+        //                                   style:
+        //                                       const pw.TextStyle(fontSize: 9)),
+        //                               // pw.Divider(thickness: 1)
+        //                             ),
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment:
+        //                               pw.CrossAxisAlignment.start,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Padding(
+        //                               padding: const pw.EdgeInsets.all(2.0),
+        //                               child: pw.Text(
+        //                                   dataParticulars[i]['ProductName'],
+        //                                   style:
+        //                                       const pw.TextStyle(fontSize: 9)),
+        //                               // pw.Divider(thickness: 1)
+        //                             ),
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment: pw.CrossAxisAlignment.end,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Padding(
+        //                               padding: const pw.EdgeInsets.all(2.0),
+        //                               child: pw.Text(
+        //                                   double.tryParse(dataParticulars[i]
+        //                                               ['PRate']
+        //                                           .toString())
+        //                                       .toStringAsFixed(decimal),
+        //                                   style:
+        //                                       const pw.TextStyle(fontSize: 9)),
+        //                               // pw.Divider(thickness: 1)
+        //                             )
+        //                           ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment: pw.CrossAxisAlignment.end,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Padding(
+        //                               padding: const pw.EdgeInsets.all(2.0),
+        //                               child: pw.Text(
+        //                                   dataParticulars[i]['Qty']
+        //                                       .toStringAsFixed(decimal),
+        //                                   style:
+        //                                       const pw.TextStyle(fontSize: 9)),
+        //                               // pw.Divider(thickness: 1)
+        //                             )
+        //                           ]),
+        //                       isItemSerialNo
+        //                           ? pw.Column(
+        //                               crossAxisAlignment:
+        //                                   pw.CrossAxisAlignment.center,
+        //                               mainAxisAlignment:
+        //                                   pw.MainAxisAlignment.center,
+        //                               children: [
+        //                                   pw.Padding(
+        //                                     padding:
+        //                                         const pw.EdgeInsets.all(2.0),
+        //                                     child: pw.Text(
+        //                                         dataParticulars[i]['serialno']
+        //                                             .toString(),
+        //                                         style: const pw.TextStyle(
+        //                                             fontSize: 9)),
+        //                                     // pw.Divider(thickness: 1)
+        //                                   )
+        //                                 ])
+        //                           : pw.Column(
+        //                               crossAxisAlignment:
+        //                                   pw.CrossAxisAlignment.center,
+        //                               mainAxisAlignment:
+        //                                   pw.MainAxisAlignment.center,
+        //                               children: [
+        //                                   pw.Padding(
+        //                                     padding:
+        //                                         const pw.EdgeInsets.all(2.0),
+        //                                     child: pw.Text(
+        //                                         dataParticulars[i]['unitName']
+        //                                             .toString(),
+        //                                         style: const pw.TextStyle(
+        //                                             fontSize: 9)),
+        //                                     // pw.Divider(thickness: 1)
+        //                                   )
+        //                                 ]),
+        //                       pw.Column(
+        //                           crossAxisAlignment: pw.CrossAxisAlignment.end,
+        //                           mainAxisAlignment:
+        //                               pw.MainAxisAlignment.center,
+        //                           children: [
+        //                             pw.Padding(
+        //                               padding: const pw.EdgeInsets.all(2.0),
+        //                               child: pw.Text(
+        //                                   double.tryParse(dataParticulars[i]
+        //                                               ['Total']
+        //                                           .toString())
+        //                                       .toStringAsFixed(decimal),
+        //                                   style:
+        //                                       const pw.TextStyle(fontSize: 9)),
+        //                               // pw.Divider(thickness: 1)
+        //                             )
+        //                           ]),
+        //                     ])
+        //                 ],
+        //               ),
+        //               pw.SizedBox(
+        //                 height: 40.0,
+        //               ),
+        //               pw.Column(
+        //                 children: [
+        //                   pw.Row(
+        //                     mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                     children: [
+        //                       pw.Text(
+        //                           'SUB TOTAL : ${double.tryParse(dataInformation['GrossValue'].toString()).toStringAsFixed(decimal)}'),
+        //                     ],
+        //                   ),
+        //                   /**other amount**/
+        //                   // otherAmount.length>0 ?
+        //                   pw.Row(
+        //                     mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                     children: [
+        //                       pw.Text(''),
+        //                     ],
+        //                   ),
+        //                   pw.Row(
+        //                     mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                     children: [
+        //                       pw.Text('***Discount***'),
+        //                     ],
+        //                   ),
+        //                   _addOtherAmountPDF(otherAmount),
+        //                   pw.Row(
+        //                     mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                     children: [
+        //                       pw.Text(
+        //                           'TOTAL : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}'),
+        //                     ],
+        //                   ),
+        //                   pw.Row(
+        //                     mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                     children: [
+        //                       pw.Text(
+        //                           'PAID : ${double.tryParse(dataInformation['CashReceived'].toString()).toStringAsFixed(decimal)}'),
+        //                     ],
+        //                   ),
+        //                   pw.Row(
+        //                     mainAxisAlignment: pw.MainAxisAlignment.end,
+        //                     children: [
+        //                       pw.Text(
+        //                           'TOTAL DUE : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}',
+        //                           style: pw.TextStyle(
+        //                               // color: Colors.black,
+        //                               fontSize: 19,
+        //                               fontWeight: pw.FontWeight.bold)),
+        //                     ],
+        //                   ),
+        //                   pw.Row(
+        //                     children: [
+        //                       pw.Text(
+        //                         'Bill Balance : ${(double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString())).toStringAsFixed(decimal)}',
+        //                       ),
+        //                     ],
+        //                   ),
+        //                   pw.Row(
+        //                     children: [
+        //                       pw.Text(
+        //                         'Old Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
+        //                       ),
+        //                     ],
+        //                   ),
+        //                   pw.Row(
+        //                     children: [
+        //                       pw.Text(
+        //                         'Balance : ${((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toStringAsFixed(decimal)}',
+        //                       ),
+        //                     ],
+        //                   ),
+        //                 ],
+        //               ),
+        //               pw.Container(
+        //                   alignment: pw.Alignment.center,
+        //                   child: pw.Text(data['message'],
+        //                       textAlign: pw.TextAlign.center))
+        //             ],
+        //         footer: _buildFooter));
+        : pdf.addPage(pw.MultiPage(
+            maxPages: 100,
+            pageFormat: pw.PdfPageFormat.a4,
+            header: (pw.Context context) => _buildEstimateHeader(
+                companySettings,
+                settings,
+                dataLedger,
+                dataInformation,
+                printHeaderOnES),
+            footer: (pw.Context context) => _buildEstimateFooter(
+                context,
+                dataBankLedger,
+                dataInformation,
+                companySettings,
+                otherAmount,
+                dataParticulars),
+            build: (pw.Context context) {
+              double calculateEstTotalAmount(List<dynamic> perticu) {
+                return perticu.fold(
+                    0,
+                    (total, particular) =>
+                        total + particular['Total'].toDouble());
+              }
+
+              double calculateEstTotalQuantity(List<dynamic> perticu) {
+                return perticu.fold(
+                    0,
+                    (total, particular) =>
+                        total + particular['Qty'].toDouble());
+              }
+
+              final int totalRowCount = 53; // Desired total row count
+              final int existingRowCount = dataParticulars.length;
+
+// Calculate the number of empty rows needed
+              final int emptyRowCount = totalRowCount - existingRowCount;
+              List<pw.Widget> widgets = [
+                pw.Container(
+                  decoration: pw.BoxDecoration(border: pw.Border.all()),
+                  child: pw.Table(
+                    border: const pw.TableBorder(
+                      horizontalInside: pw.BorderSide
+                          .none, // Remove horizontal borders inside the table
+
+                      verticalInside: pw.BorderSide(), // Keep vertical borders
+                    ),
+                    columnWidths: const {
+                      0: pw.FixedColumnWidth(15),
+                      1: pw.FlexColumnWidth(20),
+                      2: pw.FlexColumnWidth(10),
+                      3: pw.FlexColumnWidth(10),
+                      4: pw.FlexColumnWidth(10),
+                      5: pw.FlexColumnWidth(20),
+                    },
+                    children: [
+                      for (var i = 0; i < dataParticulars.length; i++)
+                        pw.TableRow(children: [
+                          pw.Center(
+                              child: pw.Column(
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  dataParticulars[i]['GridID'].toString(),
                                   style: pw.TextStyle(
-                                    // color: _darkColor,
-                                    fontWeight: pw.FontWeight.bold,
-                                    fontSize: 15,
+                                      fontSize: 6,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          )),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(2.0),
+                            child: pw.Text(
+                              dataParticulars[i]['ProductName'].toString(),
+                              style: pw.TextStyle(
+                                  fontSize: 6, fontWeight: pw.FontWeight.bold),
+                            ),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(2.0),
+                            child: pw.Center(
+                              child: pw.Text(
+                                dataParticulars[i]['Qty'].toStringAsFixed(2),
+                                style: pw.TextStyle(
+                                    fontSize: 6,
+                                    fontWeight: pw.FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(2.0),
+                            child: pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.center,
+                              children: [
+                                // pw.Text(
+                                //   dataParticulars[i]['unitName'].toString(),
+                                //   style: pw.TextStyle(
+                                //       fontSize: 6,
+                                //       fontWeight: pw.FontWeight.bold),
+                                // ),
+                                pw.Text(""),
+                              ],
+                            ),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(2.0),
+                            child: pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.end,
+                              children: [
+                                pw.Text(
+                                  dataParticulars[i]['PRate']
+                                      .toStringAsFixed(2),
+                                  style: pw.TextStyle(
+                                      fontSize: 6,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(2.0),
+                            child: pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.end,
+                              children: [
+                                pw.Text(
+                                  dataParticulars[i]['Total']
+                                      .toStringAsFixed(2),
+                                  style: pw.TextStyle(
+                                      fontSize: 6,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ]),
+                      if (dataParticulars.length > 45)
+                        for (var k = 0; k < 45; k++)
+                          pw.TableRow(children: [
+                            pw.Center(
+                                child: pw.Column(
+                              children: [
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.all(2.0),
+                                  child: pw.Text(
+                                    '\n',
+                                    style: pw.TextStyle(
+                                        fontSize: 6,
+                                        fontWeight: pw.FontWeight.bold),
                                   ),
-                                  children: [
-                                    const pw.TextSpan(
-                                      text: '\n',
-                                      style: pw.TextStyle(
-                                        fontSize: 5,
-                                      ),
-                                    ),
-                                    pw.TextSpan(
-                                        text: companySettings.add2
-                                                .toString()
-                                                .isEmpty
-                                            ? companySettings.add1
-                                            : companySettings.add1 +
-                                                '\n' +
-                                                companySettings.add2,
-                                        style: pw.TextStyle(
-                                          fontWeight: pw.FontWeight.bold,
-                                          fontSize: 10,
-                                        ),
-                                        children: [
-                                          companySettings.telephone
-                                                  .toString()
-                                                  .isNotEmpty
-                                              ? pw.TextSpan(
-                                                  text:
-                                                      companySettings.telephone,
-                                                  children: [
-                                                      companySettings.mobile
-                                                              .toString()
-                                                              .isNotEmpty ??
-                                                          pw.TextSpan(
-                                                              text: ', ' +
-                                                                  companySettings
-                                                                      .mobile),
-                                                    ])
-                                              : const pw.TextSpan(
-                                                  text: '\n',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 5,
-                                                  ),
-                                                ),
-                                        ]),
-                                    pw.TextSpan(
-                                      text:
-                                          '${ComSettings.getValue('GST-NO', settings)}',
-                                      style: pw.TextStyle(
-                                        fontWeight: pw.FontWeight.bold,
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                  ]))),
-                      pw.SizedBox(height: 20),
-                      pw.Container(
-                        padding: const pw.EdgeInsets.all(10),
-                        alignment: pw.Alignment.center,
-                        height: 10,
-                        child: pw.GridView(
-                          crossAxisCount: 2,
-                          children: [
-                            pw.Text('EntryNo : ' + dataInformation['InvoiceNo'],
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 10,
                                 ),
-                                textAlign: pw.TextAlign.left),
-                            pw.Text(
-                                'Date : ' +
-                                    DateUtil.dateDMY(dataInformation['DDate']),
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 10,
-                                ),
-                                textAlign: pw.TextAlign.right),
-                          ],
-                        ),
-                      ),
-                      if (context.pageNumber > 1) pw.SizedBox(height: 20)
-                    ]),
-                build: (context) => [
-                      /*customer*/
-                      pw.Row(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          children: [
-                            pw.Container(
-                              margin:
-                                  const pw.EdgeInsets.only(left: 10, right: 10),
-                              height: 70,
+                              ],
+                            )),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(2.0),
                               child: pw.Text(
-                                'Bill to:',
+                                '',
                                 style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 12,
+                                    fontSize: 6,
+                                    fontWeight: pw.FontWeight.bold),
+                              ),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(2.0),
+                              child: pw.Center(
+                                child: pw.Text(
+                                  '',
+                                  style: pw.TextStyle(
+                                      fontSize: 6,
+                                      fontWeight: pw.FontWeight.bold),
                                 ),
                               ),
                             ),
-                            pw.Expanded(
-                                child: pw.Container(
-                                    height: 50,
-                                    child: pw.RichText(
-                                        text: pw.TextSpan(
-                                            text:
-                                                '${dataInformation['ToName']}\n',
-                                            style: pw.TextStyle(
-                                              // color: _darkColor,
-                                              fontWeight: pw.FontWeight.bold,
-                                              fontSize: 12,
-                                            ),
-                                            children: [
-                                          const pw.TextSpan(
-                                            text: '\n',
-                                            style: pw.TextStyle(
-                                              fontSize: 5,
-                                            ),
-                                          ),
-                                          pw.TextSpan(
-                                            text: dataInformation['Add2']
-                                                    .toString()
-                                                    .isEmpty
-                                                ? dataInformation['Add1']
-                                                : dataInformation['Add1'] +
-                                                    '\n' +
-                                                    dataInformation['Add2'],
-                                            style: pw.TextStyle(
-                                              fontWeight: pw.FontWeight.normal,
-                                              fontSize: 10,
-                                            ),
-                                          )
-                                        ])))),
-                          ]),
-                      pw.Table(
-                        border: pw.TableBorder.all(width: 0.2),
-                        children: [
-                          pw.TableRow(children: [
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(2.0),
+                              child: pw.Row(
+                                mainAxisAlignment: pw.MainAxisAlignment.end,
                                 children: [
-                                  pw.Text(tableHeaders[0],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[1],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[2],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[3],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[4],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[5],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                          ]),
-                          for (var i = 0; i < dataParticulars.length; i++)
-                            pw.TableRow(children: [
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          '${dataParticulars[i]['ItemId']}',
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    ),
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.start,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          dataParticulars[i]['ProductName'],
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    ),
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          double.tryParse(dataParticulars[i]
-                                                      ['PRate']
-                                                  .toString())
-                                              .toStringAsFixed(decimal),
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    )
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          dataParticulars[i]['Qty']
-                                              .toStringAsFixed(decimal),
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    )
-                                  ]),
-                              isItemSerialNo
-                                  ? pw.Column(
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.center,
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.center,
-                                      children: [
-                                          pw.Padding(
-                                            padding:
-                                                const pw.EdgeInsets.all(2.0),
-                                            child: pw.Text(
-                                                dataParticulars[i]['serialno']
-                                                    .toString(),
-                                                style: const pw.TextStyle(
-                                                    fontSize: 9)),
-                                            // pw.Divider(thickness: 1)
-                                          )
-                                        ])
-                                  : pw.Column(
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.center,
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.center,
-                                      children: [
-                                          pw.Padding(
-                                            padding:
-                                                const pw.EdgeInsets.all(2.0),
-                                            child: pw.Text(
-                                                dataParticulars[i]['unitName']
-                                                    .toString(),
-                                                style: const pw.TextStyle(
-                                                    fontSize: 9)),
-                                            // pw.Divider(thickness: 1)
-                                          )
-                                        ]),
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          double.tryParse(dataParticulars[i]
-                                                      ['Total']
-                                                  .toString())
-                                              .toStringAsFixed(decimal),
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    )
-                                  ]),
-                            ])
-                        ],
-                      ),
-                      pw.SizedBox(
-                        height: 40.0,
-                      ),
-                      pw.Column(
-                        children: [
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(
-                                  'SUB TOTAL : ${double.tryParse(dataInformation['GrossValue'].toString()).toStringAsFixed(decimal)}'),
-                            ],
-                          ),
-                          /**other amount**/
-                          // otherAmount.length>0 ?
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(''),
-                            ],
-                          ),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text('***Discount***'),
-                            ],
-                          ),
-                          _addOtherAmountPDF(otherAmount),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(
-                                  'TOTAL : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}'),
-                            ],
-                          ),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(
-                                  'PAID : ${double.tryParse(dataInformation['CashReceived'].toString()).toStringAsFixed(decimal)}'),
-                            ],
-                          ),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(
-                                  'TOTAL DUE : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}',
-                                  style: pw.TextStyle(
-                                      // color: Colors.black,
-                                      fontSize: 19,
-                                      fontWeight: pw.FontWeight.bold)),
-                            ],
-                          ),
-                          pw.Row(
-                            children: [
-                              pw.Text(
-                                'Bill Balance : ${(double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString())).toStringAsFixed(decimal)}',
-                              ),
-                            ],
-                          ),
-                          pw.Row(
-                            children: [
-                              pw.Text(
-                                'Old Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
-                              ),
-                            ],
-                          ),
-                          pw.Row(
-                            children: [
-                              pw.Text(
-                                'Balance : ${((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toStringAsFixed(decimal)}',
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      pw.Container(
-                          alignment: pw.Alignment.center,
-                          child: pw.Text(data['message'],
-                              textAlign: pw.TextAlign.center))
-                    ],
-                footer: _buildFooter))
-            : pdf.addPage(pw.MultiPage(
-                maxPages: 100,
-                header: (context) => pw.Column(children: [
-                      pw.Container(
-                        height: 20,
-                        padding: const pw.EdgeInsets.all(10),
-                        alignment: pw.Alignment.center,
-                        child: pw.Text(
-                          invoiceHead,
-                          style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold,
-                            fontSize: 25,
-                          ),
-                        ),
-                      ),
-                      pw.SizedBox(height: 20),
-                      pw.Container(
-                        padding: const pw.EdgeInsets.all(10),
-                        alignment: pw.Alignment.center,
-                        height: 10,
-                        child: pw.GridView(
-                          crossAxisCount: 2,
-                          children: [
-                            pw.Text('EntryNo : ' + dataInformation['InvoiceNo'],
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 10,
-                                ),
-                                textAlign: pw.TextAlign.left),
-                            pw.Text(
-                                'Date : ' +
-                                    DateUtil.dateDMY(dataInformation['DDate']),
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 10,
-                                ),
-                                textAlign: pw.TextAlign.right),
-                          ],
-                        ),
-                      ),
-                      if (context.pageNumber > 1) pw.SizedBox(height: 20)
-                    ]),
-                build: (context) => [
-                      /*customer*/
-                      pw.Row(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          children: [
-                            pw.Container(
-                              margin:
-                                  const pw.EdgeInsets.only(left: 10, right: 10),
-                              height: 70,
-                              child: pw.Text(
-                                'Bill to:',
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 12,
-                                ),
+                                  pw.Text(
+                                    '',
+                                    style: pw.TextStyle(
+                                        fontSize: 6,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ],
                               ),
                             ),
-                            pw.Expanded(
-                                child: pw.Container(
-                                    height: 50,
-                                    child: pw.RichText(
-                                        text: pw.TextSpan(
-                                            text:
-                                                '${dataInformation['ToName']}\n',
-                                            style: pw.TextStyle(
-                                              // color: _darkColor,
-                                              fontWeight: pw.FontWeight.bold,
-                                              fontSize: 12,
-                                            ),
-                                            children: [
-                                          const pw.TextSpan(
-                                            text: '\n',
-                                            style: pw.TextStyle(
-                                              fontSize: 5,
-                                            ),
-                                          ),
-                                          pw.TextSpan(
-                                            text: dataInformation['Add2']
-                                                    .toString()
-                                                    .isEmpty
-                                                ? dataInformation['Add1']
-                                                : dataInformation['Add1'] +
-                                                    '\n' +
-                                                    dataInformation['Add2'],
-                                            style: pw.TextStyle(
-                                              fontWeight: pw.FontWeight.normal,
-                                              fontSize: 10,
-                                            ),
-                                          )
-                                        ])))),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(2.0),
+                              child: pw.Row(
+                                mainAxisAlignment: pw.MainAxisAlignment.end,
+                                children: [
+                                  pw.Text(
+                                    '',
+                                    style: pw.TextStyle(
+                                        fontSize: 6,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(2.0),
+                              child: pw.Row(
+                                mainAxisAlignment: pw.MainAxisAlignment.end,
+                                children: [
+                                  pw.Text(
+                                    '',
+                                    style: pw.TextStyle(
+                                        fontSize: 6,
+                                        fontWeight: pw.FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ]),
-                      pw.Table(
-                        border: pw.TableBorder.all(width: 0.2),
-                        children: [
-                          pw.TableRow(children: [
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[0],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[1],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[2],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[3],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[4],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                            pw.Column(
-                                crossAxisAlignment:
-                                    pw.CrossAxisAlignment.center,
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                children: [
-                                  pw.Text(tableHeaders[5],
-                                      style: const pw.TextStyle(fontSize: 9)),
-                                  // pw.Divider(thickness: 1)
-                                ]),
-                          ]),
-                          for (var i = 0; i < dataParticulars.length; i++)
-                            pw.TableRow(children: [
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          '${dataParticulars[i]['ItemId']}',
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    ),
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.start,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          dataParticulars[i]['ProductName'],
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    ),
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          double.tryParse(dataParticulars[i]
-                                                      ['PRate']
-                                                  .toString())
-                                              .toStringAsFixed(decimal),
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    )
-                                  ]),
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          dataParticulars[i]['Qty']
-                                              .toStringAsFixed(decimal),
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    )
-                                  ]),
-                              isItemSerialNo
-                                  ? pw.Column(
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.center,
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.center,
-                                      children: [
-                                          pw.Padding(
-                                            padding:
-                                                const pw.EdgeInsets.all(2.0),
-                                            child: pw.Text(
-                                                dataParticulars[i]['serialno']
-                                                    .toString(),
-                                                style: const pw.TextStyle(
-                                                    fontSize: 9)),
-                                            // pw.Divider(thickness: 1)
-                                          )
-                                        ])
-                                  : pw.Column(
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.center,
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.center,
-                                      children: [
-                                          pw.Padding(
-                                            padding:
-                                                const pw.EdgeInsets.all(2.0),
-                                            child: pw.Text(
-                                                dataParticulars[i]['unitName']
-                                                    .toString(),
-                                                style: const pw.TextStyle(
-                                                    fontSize: 9)),
-                                            // pw.Divider(thickness: 1)
-                                          )
-                                        ]),
-                              pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Padding(
-                                      padding: const pw.EdgeInsets.all(2.0),
-                                      child: pw.Text(
-                                          double.tryParse(dataParticulars[i]
-                                                      ['Total']
-                                                  .toString())
-                                              .toStringAsFixed(decimal),
-                                          style:
-                                              const pw.TextStyle(fontSize: 9)),
-                                      // pw.Divider(thickness: 1)
-                                    )
-                                  ]),
-                            ])
-                        ],
-                      ),
-                      pw.SizedBox(
-                        height: 40.0,
-                      ),
-                      pw.Column(
-                        children: [
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                      for (var j = 0; j < emptyRowCount; j++)
+                        pw.TableRow(children: [
+                          pw.Center(
+                              child: pw.Column(
                             children: [
-                              pw.Text(
-                                  'SUB TOTAL : ${double.tryParse(dataInformation['GrossValue'].toString()).toStringAsFixed(decimal)}'),
-                            ],
-                          ),
-                          /**other amount**/
-                          // otherAmount.length>0 ?
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(''),
-                            ],
-                          ),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text('***Discount***'),
-                            ],
-                          ),
-                          _addOtherAmountPDF(otherAmount),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(
-                                  'TOTAL : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}'),
-                            ],
-                          ),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(
-                                  'PAID : ${double.tryParse(dataInformation['CashReceived'].toString()).toStringAsFixed(decimal)}'),
-                            ],
-                          ),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            children: [
-                              pw.Text(
-                                  'TOTAL DUE : ${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}',
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(2.0),
+                                child: pw.Text(
+                                  '\n',
                                   style: pw.TextStyle(
-                                      // color: Colors.black,
-                                      fontSize: 19,
-                                      fontWeight: pw.FontWeight.bold)),
-                            ],
-                          ),
-                          pw.Row(
-                            children: [
-                              pw.Text(
-                                'Bill Balance : ${(double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString())).toStringAsFixed(decimal)}',
+                                      fontSize: 6,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
                               ),
                             ],
+                          )),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(2.0),
+                            child: pw.Text(
+                              '',
+                              style: pw.TextStyle(
+                                  fontSize: 6, fontWeight: pw.FontWeight.bold),
+                            ),
                           ),
-                          pw.Row(
-                            children: [
-                              pw.Text(
-                                'Old Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(2.0),
+                            child: pw.Center(
+                              child: pw.Text(
+                                '',
+                                style: pw.TextStyle(
+                                    fontSize: 6,
+                                    fontWeight: pw.FontWeight.bold),
                               ),
-                            ],
+                            ),
                           ),
-                          pw.Row(
-                            children: [
-                              pw.Text(
-                                'Balance : ${((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toStringAsFixed(decimal)}',
-                              ),
-                            ],
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(2.0),
+                            child: pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.end,
+                              children: [
+                                pw.Text(
+                                  '',
+                                  style: pw.TextStyle(
+                                      fontSize: 6,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
-                      pw.Container(
-                          alignment: pw.Alignment.center,
-                          child: pw.Text(data['message'],
-                              textAlign: pw.TextAlign.center))
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(2.0),
+                            child: pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.end,
+                              children: [
+                                pw.Text(
+                                  '',
+                                  style: pw.TextStyle(
+                                      fontSize: 6,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(2.0),
+                            child: pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.end,
+                              children: [
+                                pw.Text(
+                                  '',
+                                  style: pw.TextStyle(
+                                      fontSize: 6,
+                                      fontWeight: pw.FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ]),
                     ],
-                footer: _buildFooter));
+                  ),
+                ),
+                pw.Container(
+                  decoration: const pw.BoxDecoration(
+                      color: pw.PdfColor.fromInt(0xFFCCCCCC),
+                      border: pw.Border(
+                          bottom: pw.BorderSide(),
+                          left: pw.BorderSide(),
+                          right: pw.BorderSide())),
+                  child: pw.Table(
+                    border: const pw.TableBorder(
+                      horizontalInside: pw.BorderSide
+                          .none, // Remove horizontal borders inside the table
+
+                      verticalInside: pw.BorderSide(), // Keep vertical borders
+                    ),
+                    columnWidths: const {
+                      0: pw.FixedColumnWidth(15),
+                      1: pw.FlexColumnWidth(20),
+                      2: pw.FlexColumnWidth(10),
+                      3: pw.FlexColumnWidth(10),
+                      4: pw.FlexColumnWidth(10),
+                      5: pw.FlexColumnWidth(20),
+                    },
+                    children: [
+                      pw.TableRow(children: [
+                        pw.Center(
+                            child: pw.Column(
+                          children: [
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(2.0),
+                              child: pw.Text(
+                                '',
+                                style: pw.TextStyle(
+                                    fontSize: 6,
+                                    fontWeight: pw.FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        )),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(2.0),
+                          child: pw.Center(
+                            child: pw.Text(
+                              'Total',
+                              style: pw.TextStyle(
+                                  fontSize: 6, fontWeight: pw.FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(2.0),
+                          child: pw.Center(
+                            child: pw.Text(
+                              '${calculateEstTotalQuantity(dataParticulars)}',
+                              style: pw.TextStyle(
+                                  fontSize: 6, fontWeight: pw.FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(2.0),
+                          child: pw.Center(
+                            child: pw.Text(
+                              '',
+                              style: pw.TextStyle(
+                                  fontSize: 6, fontWeight: pw.FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(2.0),
+                          child: pw.Center(
+                            child: pw.Text(
+                              '',
+                              style: pw.TextStyle(
+                                  fontSize: 6, fontWeight: pw.FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(2.0),
+                          child: pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Text(
+                                '${calculateEstTotalAmount(dataParticulars).toStringAsFixed(2)} ',
+                                style: pw.TextStyle(
+                                    fontSize: 6,
+                                    fontWeight: pw.FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ]),
+                    ],
+                  ),
+                ),
+              ];
+
+              return widgets;
+            },
+          ));
   }
   documentPDF = pdf;
   return pdf;
+}
+
+_buildEstimateFooter(pw.Context context, dataBankLedger, dataInformation,
+    companySettings, otherAmount, dataParticulars) {
+  double calculateEstTotalAmount(List<dynamic> perticu) {
+    return perticu.fold(
+        0, (total, particular) => total + particular['Total'].toDouble());
+  }
+
+  return pw.Column(
+    children: [
+      pw.SizedBox(
+        height: 10,
+      ),
+      pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.start,
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Expanded(
+            child: pw.SizedBox(
+              width: double.infinity / 2,
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    "Amount In Words :",
+                    style: const pw.TextStyle(
+                        fontSize: 8, decoration: pw.TextDecoration.underline),
+                  ),
+                  pw.Text(
+                    NumberToWord().convertDouble(
+                        'en',
+                        double.tryParse(
+                            dataInformation['GrandTotal'].toString())),
+                    style: const pw.TextStyle(
+                      fontSize: 8,
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),
+          pw.Expanded(
+            child: pw.SizedBox(
+              width: double.infinity / 2,
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          for (var i = 0; i < otherAmount.length; i++)
+                            pw.Text(
+                              "${otherAmount[i]['ledName']} ",
+                              style: const pw.TextStyle(
+                                fontSize: 8,
+                              ),
+                            ),
+                          pw.Text(
+                            "Return Amt          :",
+                            style: const pw.TextStyle(
+                              fontSize: 8,
+                            ),
+                          ),
+                          pw.Text(
+                            "BILL AMOUNT    :",
+                            style: const pw.TextStyle(
+                              fontSize: 8,
+                            ),
+                          ),
+                          pw.Text(
+                            "OB                       :",
+                            style: const pw.TextStyle(
+                              fontSize: 8,
+                            ),
+                          ),
+                          pw.Text(
+                            "Cash Recieved    :",
+                            style: const pw.TextStyle(
+                              fontSize: 8,
+                            ),
+                          ),
+                          pw.SizedBox(
+                            height: 5,
+                          ),
+                          pw.Text(
+                            "NET AMOUNT    :",
+                            style: pw.TextStyle(
+                                fontSize: 8, fontWeight: pw.FontWeight.bold),
+                          )
+                        ],
+                      ),
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.end,
+                        children: [
+                          for (var i = 0; i < otherAmount.length; i++)
+                            pw.Text(
+                              "${otherAmount[i]['Amount'].toStringAsFixed(2)} ",
+                              style: pw.TextStyle(
+                                  fontSize: 8, fontWeight: pw.FontWeight.bold),
+                            ),
+                          pw.Text(
+                            "${dataInformation['ReturnAmount'].toStringAsFixed(2)} ",
+                            style: pw.TextStyle(
+                                fontSize: 8, fontWeight: pw.FontWeight.bold),
+                          ),
+                          pw.Text(
+                            "${(calculateEstTotalAmount(dataParticulars) - dataInformation['ReturnAmount'] + otherAmount.fold(0.0, (t, e) => t + double.parse(e['symbol'] == '-' ? (e['Amount'] * -1).toString() : e['Amount'].toString()))).toStringAsFixed(2)} ",
+                            style: pw.TextStyle(
+                                fontSize: 8, fontWeight: pw.FontWeight.bold),
+                          ),
+                          pw.Text(
+                            "${dataInformation['BalanceAmount'].toStringAsFixed(2)} ",
+                            style: pw.TextStyle(
+                                fontSize: 8, fontWeight: pw.FontWeight.bold),
+                          ),
+                          pw.Text(
+                            "${dataInformation['CashReceived'].toStringAsFixed(2)} ",
+                            style: pw.TextStyle(
+                                fontSize: 8, fontWeight: pw.FontWeight.bold),
+                          ),
+                          pw.SizedBox(
+                            height: 5,
+                          ),
+                          pw.Text(
+                            "${dataInformation['GrandTotal'].toStringAsFixed(2)} ",
+                            style: pw.TextStyle(
+                                fontSize: 8, fontWeight: pw.FontWeight.bold),
+                          )
+                        ],
+                      )
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      pw.SizedBox(
+        height: 20,
+      ),
+      pw.Footer(
+        trailing: pw.Text('Page ${context.pageNumber} /${context.pagesCount}',
+            style: const pw.TextStyle(fontSize: 10)),
+      ),
+    ],
+  );
+}
+
+_buildEstimateHeader(
+    companyS, companySettings, dataLedger, dataInformation, bool isHeading) {
+  var companyState = ComSettings.getValue('COMP-STATE', companyS);
+  var companyStateCode = ComSettings.getValue('COMP-STATECODE', companyS);
+  var companyTaxNo = ComSettings.getValue('GST-NO', companyS);
+  return pw.Column(children: [
+    isHeading
+        ? pw.Container(
+            padding: const pw.EdgeInsets.all(10),
+            height: 100,
+            width: double.infinity,
+            decoration: pw.BoxDecoration(
+              border: pw.Border.all(
+                  color: const pw.PdfColor.fromInt(0xFF000000), // Black color
+                  width: 2),
+            ),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(top: 5),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        companyS.name,
+                        style: pw.TextStyle(
+                            fontSize: 15, fontWeight: pw.FontWeight.bold),
+                      ),
+                      pw.Text(
+                        companyS.add1,
+                        style: const pw.TextStyle(fontSize: 8),
+                      ),
+                      pw.Text(
+                        companySettings.add2,
+                        style: const pw.TextStyle(fontSize: 8),
+                      ),
+                      pw.Text(
+                        companyS.email,
+                        style: const pw.TextStyle(fontSize: 8),
+                      ),
+                      pw.Text(
+                        companyS.mobile,
+                        style: const pw.TextStyle(fontSize: 8),
+                      ),
+                    ],
+                  ),
+                ),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.SizedBox(
+                      height: 5,
+                    ),
+                    pw.Text(
+                      "GST No : $companyTaxNo",
+                      style: pw.TextStyle(
+                          fontSize: 12, fontWeight: pw.FontWeight.bold),
+                    ),
+                    pw.SizedBox(
+                      height: 10,
+                    ),
+                    pw.Text(
+                      "State: ${companyState}    ${companyStateCode}",
+                      style: pw.TextStyle(
+                          fontSize: 12, fontWeight: pw.FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          )
+        : pw.Container(),
+    pw.Container(
+      width: double.infinity,
+      height: 30,
+      decoration: pw.BoxDecoration(
+          color: const pw.PdfColor.fromInt(0xFFCCCCCC),
+          border: pw.Border.all()),
+      child: pw.Center(
+          child: pw.Text(
+        "ESTIMATE",
+        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+      )),
+    ),
+    pw.Container(
+      width: double.infinity,
+      height: 100,
+      decoration: const pw.BoxDecoration(
+          border: pw.Border(
+              left: pw.BorderSide(),
+              right: pw.BorderSide(),
+              bottom: pw.BorderSide())),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.SizedBox(
+            height: 8,
+          ),
+          pw.Row(
+            children: [
+              pw.Text(
+                "  No         :",
+                style: const pw.TextStyle(fontSize: 9),
+              ),
+              pw.Text(
+                "   ${dataInformation['InvoiceNo']}",
+                style: const pw.TextStyle(fontSize: 9),
+              ),
+            ],
+          ),
+          pw.Row(
+            children: [
+              pw.Text(
+                "  Date      :",
+                style: const pw.TextStyle(fontSize: 9),
+              ),
+              pw.Text(
+                "   ${DateUtil.dateDMY(dataInformation['DDate'])}",
+                style: const pw.TextStyle(fontSize: 9),
+              ),
+            ],
+          ),
+          pw.Row(
+            children: [
+              pw.Text(
+                "  To         :",
+                style: const pw.TextStyle(fontSize: 9),
+              ),
+              pw.Text(
+                "    ${dataInformation['ToName']}",
+                style: const pw.TextStyle(fontSize: 8),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+    pw.Container(
+      decoration: pw.BoxDecoration(
+          color: const pw.PdfColor.fromInt(0xFFCCCCCC),
+          border: pw.Border.all()),
+      child: pw.Table(
+        border: const pw.TableBorder(
+          horizontalInside:
+              pw.BorderSide.none, // Remove horizontal borders inside the table
+
+          verticalInside: pw.BorderSide(), // Keep vertical borders
+        ),
+        columnWidths: const {
+          0: pw.FixedColumnWidth(15),
+          1: pw.FlexColumnWidth(20),
+          2: pw.FlexColumnWidth(10),
+          3: pw.FlexColumnWidth(10),
+          4: pw.FlexColumnWidth(10),
+          5: pw.FlexColumnWidth(20),
+        },
+        children: [
+          pw.TableRow(children: [
+            pw.Center(
+                child: pw.Column(
+              children: [
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(2.0),
+                  child: pw.Text(
+                    'No',
+                    style: pw.TextStyle(
+                        fontSize: 6, fontWeight: pw.FontWeight.bold),
+                  ),
+                ),
+              ],
+            )),
+            pw.Padding(
+              padding: const pw.EdgeInsets.all(2.0),
+              child: pw.Center(
+                child: pw.Text(
+                  'Description Of Goods',
+                  style:
+                      pw.TextStyle(fontSize: 6, fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+            ),
+            pw.Padding(
+              padding: const pw.EdgeInsets.all(2.0),
+              child: pw.Center(
+                child: pw.Text(
+                  'Qty',
+                  style:
+                      pw.TextStyle(fontSize: 6, fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+            ),
+            pw.Padding(
+              padding: const pw.EdgeInsets.all(2.0),
+              child: pw.Center(
+                child: pw.Text(
+                  'Unit',
+                  style:
+                      pw.TextStyle(fontSize: 6, fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+            ),
+            pw.Padding(
+              padding: const pw.EdgeInsets.all(2.0),
+              child: pw.Center(
+                child: pw.Text(
+                  'Rate',
+                  style:
+                      pw.TextStyle(fontSize: 6, fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+            ),
+            pw.Padding(
+              padding: const pw.EdgeInsets.all(2.0),
+              child: pw.Center(
+                child: pw.Text(
+                  'Total',
+                  style:
+                      pw.TextStyle(fontSize: 6, fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+            ),
+          ]),
+        ],
+      ),
+    ),
+  ]);
+}
+
+_buildFooterr(pw.Context context, bankledger, dataInfo, cSettings,
+    customerBalance, dataInformation) {
+  double oldBalance = double.tryParse(customerBalance).toDouble();
+
+  double cBalance = double.tryParse(customerBalance).toDouble() ?? 0.00;
+  double grandTotal = dataInformation['GrandTotal']?.toDouble() ?? 0.00;
+  // double cashReceived = _isLoading?0:dataInformation['CashReceived'].toDouble() ?? 0.00;
+  double cashReceived = (dataInformation['CashReceived']?.toDouble() ?? 0.00);
+
+  double balance = cBalance + grandTotal - cashReceived;
+  return pw.Column(
+    children: [
+      pw.Row(
+        children: [
+          pw.Expanded(
+            child: pw.Container(
+              width: double.infinity / 2,
+              height: 102,
+              decoration: const pw.BoxDecoration(
+                border: pw.Border(
+                  // top: BorderSide(color: Colors.black, width: 2),
+                  right: pw.BorderSide(
+                      color: pw.PdfColor.fromInt(0xFF000000), // Black color,
+                      width: 1),
+                  bottom: pw.BorderSide(
+                      color: pw.PdfColor.fromInt(0xFF000000), // Black color,
+                      width: 1),
+                  left: pw.BorderSide(
+                      color: pw.PdfColor.fromInt(0xFF000000), // Black color,
+                      width: 1),
+                ),
+              ),
+              child: pw.Padding(
+                padding: const pw.EdgeInsets.only(top: 0, left: 3),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      NumberToWord().convertDouble('en',
+                          double.tryParse(dataInfo['GrandTotal'].toString())),
+                      style: pw.TextStyle(
+                          fontSize: 7, fontWeight: pw.FontWeight.bold),
+                    ),
+                    pw.SizedBox(
+                      height: 5,
+                    ),
+                    pw.Text(
+                      "Bank Details",
+                      style: pw.TextStyle(
+                          fontSize: 8,
+                          fontWeight: pw.FontWeight.bold,
+                          decoration: pw.TextDecoration.underline),
+                    ),
+                    pw.Column(
+                      children: [
+                        pw.Container(
+                            height: 40,
+                            child: pw.Row(
+                              mainAxisAlignment:
+                                  pw.MainAxisAlignment.spaceBetween,
+                              children: [
+                                pw.Column(
+                                  crossAxisAlignment:
+                                      pw.CrossAxisAlignment.start,
+                                  children: [
+                                    pw.Text(
+                                      " ${bankledger['name']}",
+                                      style: const pw.TextStyle(fontSize: 7),
+                                    ),
+                                    pw.Text(
+                                      " ${bankledger['account']}",
+                                      style: const pw.TextStyle(fontSize: 7),
+                                    ),
+                                    pw.Text(
+                                      " ${bankledger['ifsc']}",
+                                      style: const pw.TextStyle(fontSize: 7),
+                                    ),
+                                    pw.Text(
+                                      " ${bankledger['branch']}",
+                                      style: const pw.TextStyle(fontSize: 7),
+                                    ),
+                                  ],
+                                ),
+                                oldBalance > 0 || balance > 0
+                                    ? pw.Padding(
+                                        padding: const pw.EdgeInsets.only(
+                                            right: 10.0),
+                                        child: pw.Column(
+                                          mainAxisAlignment:
+                                              pw.MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              pw.CrossAxisAlignment.start,
+                                          children: [
+                                            pw.Row(
+                                              children: [
+                                                pw.SizedBox(
+                                                  child: pw.Text(
+                                                    "OB           : ",
+                                                    style: const pw.TextStyle(
+                                                        fontSize: 6),
+                                                  ),
+                                                ),
+                                                pw.Text(
+                                                  double.tryParse(
+                                                          customerBalance)
+                                                      .toStringAsFixed(2),
+                                                  style: const pw.TextStyle(
+                                                      fontSize: 6),
+                                                )
+                                              ],
+                                            ),
+                                            pw.Row(
+                                              children: [
+                                                pw.SizedBox(
+                                                  child: pw.Text(
+                                                    "Balance  : ",
+                                                    style: const pw.TextStyle(
+                                                        fontSize: 6),
+                                                  ),
+                                                ),
+                                                pw.Text(
+                                                  balance.toStringAsFixed(2),
+                                                  style: const pw.TextStyle(
+                                                      fontSize: 6),
+                                                )
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : pw.Container(),
+                              ],
+                            )),
+                      ],
+                    ),
+                    pw.Text(
+                      " Certified that the perticular given above are true and Correct",
+                      style: pw.TextStyle(
+                          fontSize: 6, fontWeight: pw.FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          pw.Expanded(
+            child: pw.Container(
+              width: double.infinity / 2,
+              height: 102,
+              decoration: const pw.BoxDecoration(
+                border: pw.Border(
+                  // top: BorderSide(color: Colors.black, width: 2),
+                  right: pw.BorderSide(
+                      color: pw.PdfColor.fromInt(0xFF000000), // Black color,
+                      width: 1),
+                  bottom: pw.BorderSide(
+                      color: pw.PdfColor.fromInt(0xFF000000), // Black color,
+                      width: 1),
+                ),
+              ),
+              child: pw.Column(
+                children: [
+                  pw.Container(
+                    height: 15,
+                    decoration: const pw.BoxDecoration(
+                      border: pw.Border(
+                        // top: BorderSide(color: Colors.black, width: 2),
+                        right: pw.BorderSide(
+                            color:
+                                pw.PdfColor.fromInt(0xFF000000), // Black color,
+                            width: 1),
+                        bottom: pw.BorderSide(
+                            color:
+                                pw.PdfColor.fromInt(0xFF000000), // Black color,
+                            width: 1),
+                      ),
+                    ),
+                  ),
+                  pw.Container(
+                    height: 15,
+                    decoration: const pw.BoxDecoration(
+                      border: pw.Border(
+                        // top: BorderSide(color: Colors.black, width: 2),
+                        right: pw.BorderSide(
+                            color:
+                                pw.PdfColor.fromInt(0xFF000000), // Black color,
+                            width: 1),
+                        bottom: pw.BorderSide(
+                            color:
+                                pw.PdfColor.fromInt(0xFF000000), // Black color,
+                            width: 1),
+                      ),
+                    ),
+                  ),
+                  pw.Row(
+                    children: [
+                      pw.Expanded(
+                        child: pw.Container(
+                          height: 17,
+                          decoration: const pw.BoxDecoration(
+                            border: pw.Border(
+                              // top: BorderSide(color: Colors.black, width: 2),
+                              right: pw.BorderSide(
+                                  color: pw.PdfColor.fromInt(
+                                      0xFF000000), // Black color,
+                                  width: 1),
+                              bottom: pw.BorderSide(
+                                  color: pw.PdfColor.fromInt(
+                                      0xFF000000), // Black color,
+                                  width: 1),
+                            ),
+                          ),
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.end,
+                            mainAxisAlignment: pw.MainAxisAlignment.center,
+                            children: [
+                              pw.Text(
+                                "Round off ",
+                                style: pw.TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: pw.FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      pw.Expanded(
+                        child: pw.Container(
+                          height: 17,
+                          decoration: const pw.BoxDecoration(
+                              border: pw.Border(
+                            // top: BorderSide(color: Colors.black, width: 2),
+                            right: pw.BorderSide(
+                                color: pw.PdfColor.fromInt(
+                                    0xFF000000), // Black color,
+                                width: 1),
+                            bottom: pw.BorderSide(
+                                color: pw.PdfColor.fromInt(
+                                    0xFF000000), // Black color,
+                                width: 1),
+                          )),
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.end,
+                            mainAxisAlignment: pw.MainAxisAlignment.center,
+                            children: [
+                              pw.Text(
+                                "0.00 ",
+                                style: pw.TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: pw.FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  pw.Row(
+                    children: [
+                      pw.Expanded(
+                        child: pw.Container(
+                          height: 17,
+                          decoration: const pw.BoxDecoration(
+                            border: pw.Border(
+                              // top: BorderSide(color: Colors.black, width: 2),
+                              right: pw.BorderSide(
+                                  color: pw.PdfColor.fromInt(
+                                      0xFF000000), // Black color,
+                                  width: 1),
+                              bottom: pw.BorderSide(
+                                  color: pw.PdfColor.fromInt(
+                                      0xFF000000), // Black color,
+                                  width: 1),
+                            ),
+                          ),
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.end,
+                            mainAxisAlignment: pw.MainAxisAlignment.center,
+                            children: [
+                              pw.Text(
+                                "Total ",
+                                style: pw.TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: pw.FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      pw.Expanded(
+                        child: pw.Container(
+                          height: 17,
+                          decoration: const pw.BoxDecoration(
+                            border: pw.Border(
+                              // top: BorderSide(color: Colors.black, width: 2),
+                              right: pw.BorderSide(
+                                  color: pw.PdfColor.fromInt(
+                                      0xFF000000), // Black color,
+                                  width: 1),
+                              bottom: pw.BorderSide(
+                                  color: pw.PdfColor.fromInt(
+                                      0xFF000000), // Black color,
+                                  width: 1),
+                            ),
+                          ),
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.end,
+                            mainAxisAlignment: pw.MainAxisAlignment.center,
+                            children: [
+                              pw.Text(
+                                "${dataInfo['GrandTotal']?.toStringAsFixed(2)} ",
+                                style: pw.TextStyle(
+                                    fontSize: 7,
+                                    fontWeight: pw.FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  pw.Text(
+                    cSettings.name,
+                    style: pw.TextStyle(
+                        fontSize: 8, fontWeight: pw.FontWeight.bold),
+                  ),
+                  pw.SizedBox(
+                    height: 10,
+                  ),
+                  pw.Text(
+                    "Authorised Signatuory",
+                    style: pw.TextStyle(
+                        fontSize: 8, fontWeight: pw.FontWeight.bold),
+                  )
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      pw.SizedBox(
+        height: 10,
+      ),
+      pw.Footer(
+        trailing: pw.Text('Page ${context.pageNumber} /${context.pagesCount}',
+            style: const pw.TextStyle(fontSize: 10)),
+      ),
+    ],
+  );
+}
+
+_buildHeaderr(
+  pw.Context context,
+  companySettings,
+  settings,
+  dataLedger,
+  dataInformation,
+) {
+  var companyState = ComSettings.getValue('COMP-STATE', settings);
+  var companyStateCode = ComSettings.getValue('COMP-STATECODE', settings);
+  var companyTaxNo = ComSettings.getValue('GST-NO', settings);
+  return pw.Column(children: [
+    pw.Container(
+      padding: const pw.EdgeInsets.all(10),
+      height: 100,
+      width: double.infinity,
+      decoration: pw.BoxDecoration(
+        border: pw.Border.all(
+            color: const pw.PdfColor.fromInt(0xFF000000), // Black color
+            width: 2),
+      ),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(top: 5),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  companySettings.name,
+                  style: pw.TextStyle(
+                      fontSize: 15, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.Text(
+                  companySettings.add1,
+                  style: const pw.TextStyle(fontSize: 8),
+                ),
+                pw.Text(
+                  companySettings.add2,
+                  style: const pw.TextStyle(fontSize: 8),
+                ),
+                pw.Text(
+                  companySettings.email,
+                  style: const pw.TextStyle(fontSize: 8),
+                ),
+                pw.Text(
+                  companySettings.mobile,
+                  style: const pw.TextStyle(fontSize: 8),
+                ),
+              ],
+            ),
+          ),
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.SizedBox(
+                height: 5,
+              ),
+              pw.Text(
+                "GST No : $companyTaxNo",
+                style:
+                    pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+              ),
+              pw.SizedBox(
+                height: 10,
+              ),
+              pw.Text(
+                "State      : $companyState       $companyStateCode",
+                style:
+                    pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+    pw.Container(
+      height: 20,
+      width: double.infinity,
+      decoration: const pw.BoxDecoration(
+        border: pw.Border(
+          // top: BorderSide(color: Colors.black, width: 2),
+          right: pw.BorderSide(
+              color: pw.PdfColor.fromInt(0xFF000000), // Black color
+              width: 2),
+
+          left: pw.BorderSide(
+              color: pw.PdfColor.fromInt(0xFF000000), // Black color
+              width: 2),
+        ),
+      ),
+      child: pw.Center(
+        child: pw.Text(
+          "PURCHASE RETURN",
+          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+        ),
+      ),
+    ),
+    pw.Row(
+      children: [
+        pw.Expanded(
+          child: pw.Container(
+            height: 70,
+            width: double.infinity / 2,
+            decoration: pw.BoxDecoration(
+              border: pw.Border.all(
+                  color: const pw.PdfColor.fromInt(0xFF000000), // Black color
+                  width: 2),
+            ),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.SizedBox(
+                  height: 10,
+                ),
+                pw.Text(
+                  " Invoice No        ${dataInformation['RealEntryNo']}",
+                  style: const pw.TextStyle(fontSize: 10),
+                ),
+                pw.Text(
+                  " Invoice Date     ${DateUtil.dateDMY(dataInformation['DDate'])} ",
+                  style: const pw.TextStyle(fontSize: 10),
+                ),
+              ],
+            ),
+          ),
+        ),
+        pw.Expanded(
+          child: pw.Container(
+            height: 70,
+            width: double.infinity / 2,
+            decoration: const pw.BoxDecoration(
+              border: pw.Border(
+                top: pw.BorderSide(
+                    color: pw.PdfColor.fromInt(0xFF000000), // Black color
+                    width: 2),
+                right: pw.BorderSide(
+                    color: pw.PdfColor.fromInt(0xFF000000), // Black color,
+                    width: 2),
+                bottom: pw.BorderSide(
+                    color: pw.PdfColor.fromInt(0xFF000000), // Black color
+                    width: 2),
+              ),
+            ),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.SizedBox(
+                  height: 10,
+                ),
+                pw.Text(
+                  " Vehicle No",
+                  style: const pw.TextStyle(fontSize: 10),
+                ),
+                pw.Text(
+                  " Date & Time of Supply",
+                  style: const pw.TextStyle(fontSize: 10),
+                ),
+                pw.Text(
+                  " Place of Supply",
+                  style: const pw.TextStyle(fontSize: 10),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+    pw.Row(
+      children: [
+        pw.Expanded(
+          child: pw.Container(
+            height: 110,
+            width: double.infinity / 2,
+            decoration: const pw.BoxDecoration(
+              border: pw.Border(
+                // top: BorderSide(color: Colors.black, width: 2),
+                right: pw.BorderSide(
+                    color: pw.PdfColor.fromInt(0xFF000000), // Black color,
+                    width: 2),
+                bottom: pw.BorderSide(
+                    color: pw.PdfColor.fromInt(0xFF000000), // Black color,
+                    width: 2),
+                left: pw.BorderSide(
+                    color: pw.PdfColor.fromInt(0xFF000000), // Black color,
+                    width: 2),
+              ),
+            ),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.SizedBox(height: 5),
+                pw.Center(
+                  child: pw.Text(
+                    "Details of Receiver (Billed To)",
+                    style: pw.TextStyle(
+                        fontSize: 8,
+                        fontWeight: pw.FontWeight.bold,
+                        decoration: pw.TextDecoration.underline),
+                  ),
+                ),
+                pw.SizedBox(
+                  height: 5,
+                ),
+                pw.Text(
+                  " Name                   ${dataInformation['LedName']}",
+                  style: const pw.TextStyle(fontSize: 8),
+                ),
+                pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      " Address",
+                      style: const pw.TextStyle(fontSize: 8),
+                    ),
+                    pw.SizedBox(
+                      width: 35,
+                    ),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          "${dataLedger['add1']} ",
+                          style: const pw.TextStyle(fontSize: 8),
+                        ),
+                        pw.Text(
+                          "${dataLedger['add2']} ",
+                          style: const pw.TextStyle(fontSize: 8),
+                        ),
+                        pw.Text(
+                          "${dataLedger['add3']} ",
+                          style: const pw.TextStyle(fontSize: 8),
+                        ),
+                        pw.Text(
+                          "${dataLedger['add4']} ",
+                          style: const pw.TextStyle(fontSize: 8),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(
+                  height: 1,
+                ),
+                pw.Text(
+                  " Mobile                ${dataLedger['Mobile']}",
+                  style: const pw.TextStyle(fontSize: 8),
+                ),
+                pw.Text(
+                  " Sate/Code         ${dataLedger['state']}        ${dataLedger['stateCode']}",
+                  style: const pw.TextStyle(fontSize: 8),
+                ),
+                pw.Text(
+                  " GST No                  ${dataLedger['gstno']}",
+                  style: const pw.TextStyle(fontSize: 8),
+                ),
+              ],
+            ),
+          ),
+        ),
+        pw.Expanded(
+          child: pw.Container(
+            height: 110,
+            width: double.infinity / 2,
+            decoration: const pw.BoxDecoration(
+              border: pw.Border(
+                // top: BorderSide(color: Colors.black, width: 2),
+                right: pw.BorderSide(
+                    color: pw.PdfColor.fromInt(0xFF000000), // Black color,
+                    width: 2),
+                bottom: pw.BorderSide(
+                    color: pw.PdfColor.fromInt(0xFF000000), // Black color,
+                    width: 2),
+              ),
+            ),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.SizedBox(height: 5),
+                pw.Center(
+                  child: pw.Text(
+                    "Details of Consignee (Shipped To)",
+                    style: pw.TextStyle(
+                        fontSize: 8,
+                        fontWeight: pw.FontWeight.bold,
+                        decoration: pw.TextDecoration.underline),
+                  ),
+                ),
+                pw.SizedBox(
+                  height: 5,
+                ),
+                pw.Text(
+                  " Name              ",
+                  style: const pw.TextStyle(fontSize: 8),
+                ),
+                pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      " Address",
+                      style: const pw.TextStyle(fontSize: 8),
+                    ),
+                    pw.SizedBox(
+                      width: 28,
+                    ),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [pw.Text('')],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+    pw.Container(
+      height: 20, width: double.infinity,
+      color: const pw.PdfColor.fromInt(0xFFC0C0C0), // Light Grey color
+      // color: const pw.PdfColor.fromInt(0xFF808080), // Grey color
+      child: pw.Row(
+        children: [
+          pw.Container(
+            height: 20,
+            width: 10,
+            decoration: const pw.BoxDecoration(
+                border:
+                    pw.Border(right: pw.BorderSide(), left: pw.BorderSide())),
+            child: pw.Center(
+              child: pw.Text(
+                " No ",
+                style: const pw.TextStyle(fontSize: 6),
+              ),
+            ),
+          ),
+          pw.Container(
+            height: 20,
+            width: 84,
+            decoration: const pw.BoxDecoration(
+                border: pw.Border(
+              right: pw.BorderSide(),
+            )),
+            child: pw.Center(
+              child: pw.Text(
+                " Description of goods",
+                style: const pw.TextStyle(fontSize: 6),
+              ),
+            ),
+          ),
+          pw.Container(
+            height: 20,
+            width: 27,
+            decoration: const pw.BoxDecoration(
+                border: pw.Border(right: pw.BorderSide())),
+            child: pw.Center(
+              child: pw.Text(
+                "Hsn code",
+                style: const pw.TextStyle(fontSize: 6),
+              ),
+            ),
+          ),
+          pw.Container(
+            height: 20,
+            width: 27,
+            decoration: const pw.BoxDecoration(
+                border: pw.Border(right: pw.BorderSide())),
+            child: pw.Center(
+              child: pw.Text(
+                "Qty",
+                style: const pw.TextStyle(fontSize: 6),
+              ),
+            ),
+          ),
+          pw.Container(
+              height: 20,
+              width: 27,
+              decoration: const pw.BoxDecoration(
+                  border: pw.Border(right: pw.BorderSide())),
+              child: pw.Center(
+                child: pw.Text(
+                  "UOM",
+                  style: const pw.TextStyle(fontSize: 6),
+                ),
+              )),
+          pw.Container(
+              height: 20,
+              width: 38.2,
+              decoration: const pw.BoxDecoration(
+                  border: pw.Border(right: pw.BorderSide())),
+              child: pw.Center(
+                child: pw.Text(
+                  "Unit price",
+                  style: const pw.TextStyle(fontSize: 6),
+                ),
+              )),
+          pw.Container(
+              height: 20,
+              width: 38.2,
+              decoration: const pw.BoxDecoration(
+                  border: pw.Border(right: pw.BorderSide())),
+              child: pw.Center(
+                child: pw.Text(
+                  "Taxable value",
+                  style: const pw.TextStyle(fontSize: 6),
+                ),
+              )),
+          pw.Container(
+            height: 20,
+            width: 58,
+            decoration: const pw.BoxDecoration(
+                border: pw.Border(right: pw.BorderSide())),
+            child: pw.Center(
+              child: pw.Text(
+                "CGST",
+                style: const pw.TextStyle(fontSize: 6),
+              ),
+            ),
+          ),
+          pw.Container(
+              height: 20,
+              width: 57.2,
+              decoration: const pw.BoxDecoration(
+                  border: pw.Border(right: pw.BorderSide())),
+              child: pw.Center(
+                child: pw.Text(
+                  "SGST",
+                  style: const pw.TextStyle(fontSize: 6),
+                ),
+              )),
+          pw.Container(
+              height: 20,
+              width: 57.5,
+              decoration: const pw.BoxDecoration(
+                  border: pw.Border(right: pw.BorderSide())),
+              child: pw.Center(
+                child: pw.Text(
+                  "IGST",
+                  style: const pw.TextStyle(fontSize: 6),
+                ),
+              )),
+          pw.Expanded(
+            child: pw.Container(
+                height: 20,
+                decoration: const pw.BoxDecoration(
+                    border: pw.Border(right: pw.BorderSide())),
+                child: pw.Center(
+                  child: pw.Text(
+                    "Total Amount",
+                    style: const pw.TextStyle(fontSize: 6),
+                  ),
+                )),
+          ),
+        ],
+      ),
+    ),
+  ]);
 }
 
 pw.Widget _buildFooter(pw.Context context) {

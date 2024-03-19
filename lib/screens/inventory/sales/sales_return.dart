@@ -24,7 +24,9 @@ import 'package:sheraccerp/service/com_service.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/util/res_color.dart';
+import 'package:sheraccerp/widget/components.dart';
 import 'package:sheraccerp/widget/loading.dart';
+import 'package:sheraccerp/widget/popup_menu_action.dart';
 import 'package:sheraccerp/widget/progress_hud.dart';
 
 class SalesReturn extends StatefulWidget {
@@ -39,7 +41,7 @@ class SalesReturn extends StatefulWidget {
 class _SalesReturnState extends State<SalesReturn> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isLoading = false;
-  DioService dio = DioService();
+  DioService api = DioService();
   Size deviceSize;
   var ledgerModel;
   dynamic productModel;
@@ -58,13 +60,21 @@ class _SalesReturnState extends State<SalesReturn> {
       keyItemsVariantStock = false,
       buttonEvent = false,
       isFreeItem = false,
-      productTracking = false;
+      productTracking = false,
+      keyEditAndDeleteAdminOnlyDaysBefore = false,
+      daysBefore = false,
+      isFreeQty = false,
+      manualInvoiceNumberInSales = false;
   final List<TextEditingController> _controllers = [];
   DateTime now = DateTime.now();
-  String formattedDate, _narration = '';
+  String formattedDate;
   final double _balance = 0;
   double grandTotal = 0;
-  int page = 1, pageTotal = 0, totalRecords = 0, decimal = 2;
+  int page = 1,
+      pageTotal = 0,
+      totalRecords = 0,
+      decimal = 2,
+      valueDaysBefore = 0;
   List<dynamic> ledgerDisplay = [];
   List<dynamic> _ledger = [];
   List<ProductPurchaseModel> itemDisplay = [];
@@ -76,6 +86,9 @@ class _SalesReturnState extends State<SalesReturn> {
   int printerType = 0, printerDevice = 0, printModel = 2;
   String labelSerialNo = 'SerialNo';
   String labelSpRate = 'SpRetail';
+  CartItem cartModel;
+  // final TextEditingController invoiceNoController = TextEditingController();
+  final TextEditingController controllerNarration = TextEditingController();
 
   @override
   void initState() {
@@ -84,7 +97,7 @@ class _SalesReturnState extends State<SalesReturn> {
         getToDay.isNotEmpty ? getToDay : DateFormat('dd-MM-yyyy').format(now);
 
     loadSettings();
-    dio.fetchDetailAmount().then((value) {
+    api.fetchDetailAmount().then((value) {
       otherAmountList = value;
       setState(() {
         otherAmountLoaded = true;
@@ -166,13 +179,39 @@ class _SalesReturnState extends State<SalesReturn> {
 
     isItemSerialNo = ComSettings.getStatus('KEY ITEM SERIAL NO', settings);
     isFreeItem = ComSettings.getStatus('KEY FREE ITEM', settings);
+    isFreeQty = ComSettings.getStatus('KEY FREE QTY IN SALE', settings);
+
     labelSerialNo =
         ComSettings.getValue('KEY ITEM SERIAL NO', settings).toString();
     labelSpRate =
         ComSettings.getValue('KEY ITEM SP RATE TITLE', settings).toString();
     labelSerialNo = labelSerialNo.isEmpty ? 'Remark' : labelSerialNo;
     labelSpRate = labelSpRate.isEmpty ? 'SpRetail' : labelSpRate;
+
+    keyEditAndDeleteAdminOnlyDaysBefore = ComSettings.getStatus(
+        'KEY EDIT AND DELETE ADMIN ONLY DAYS BEFORE', settings);
+    valueDaysBefore = int.tryParse(ComSettings.getValue(
+            'KEY EDIT AND DELETE ADMIN ONLY DAYS BEFORE', settings)
+        .toString());
+    manualInvoiceNumberInSales =
+        ComSettings.getStatus('MANNUAL INVOICE NUMBER IN SALES', settings);
+
     loadAsset();
+  }
+
+  userDateCheck(String date) {
+    if (keyEditAndDeleteAdminOnlyDaysBefore) {
+      DateTime date1 =
+          DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.parse(date)));
+      DateTime date2 = DateTime.parse(DateFormat('yyyy-MM-dd').format(now));
+
+      if (DateUtil.compareDate(
+          date1: date1, date2: date2, days: valueDaysBefore)) {
+        if (companyUserData.userType.toUpperCase() != 'ADMIN') {
+          daysBefore = true;
+        }
+      }
+    }
   }
 
   @override
@@ -188,20 +227,24 @@ class _SalesReturnState extends State<SalesReturn> {
           title: const Text("Sales Return"),
           actions: [
             TextButton(
-                child: const Text(
-                  "New",
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.blue[700],
-                ),
-                onPressed: () async {
-                  setState(() {
-                    widgetID = false;
-                  });
-                }),
+              child: const Text(
+                "New",
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.blue[700],
+              ),
+              onPressed: () async {
+                setState(() {
+                  widgetID = false;
+                });
+              },
+              onLongPress: () {
+                searchBill(context, 1);
+              },
+            ),
           ],
         ),
         body: Container(
@@ -226,10 +269,18 @@ class _SalesReturnState extends State<SalesReturn> {
                     } else {
                       if (totalItem > 0) {
                         if (companyUserData.deleteData) {
-                          setState(() {
-                            _isLoading = true;
-                          });
-                          deleteSale();
+                          if (!daysBefore) {
+                            setState(() {
+                              _isLoading = true;
+                            });
+                            deleteSale();
+                          } else {
+                            Fluttertoast.showToast(
+                                msg: 'Invoice Date not equal\ncan`t delete');
+                            setState(() {
+                              buttonEvent = false;
+                            });
+                          }
                         } else {
                           Fluttertoast.showToast(
                               msg: 'Permission denied\ncan`t delete');
@@ -258,11 +309,19 @@ class _SalesReturnState extends State<SalesReturn> {
                       } else {
                         if (totalItem > 0) {
                           if (companyUserData.updateData) {
-                            setState(() {
-                              _isLoading = true;
-                              buttonEvent = true;
-                            });
-                            updateSale();
+                            if (!daysBefore) {
+                              setState(() {
+                                _isLoading = true;
+                                buttonEvent = true;
+                              });
+                              updateSale();
+                            } else {
+                              Fluttertoast.showToast(
+                                  msg: 'Invoice Date not equal\ncan`t edit');
+                              setState(() {
+                                buttonEvent = false;
+                              });
+                            }
                           } else {
                             Fluttertoast.showToast(
                                 msg: 'Permission denied\ncan`t edit');
@@ -365,6 +424,11 @@ class _SalesReturnState extends State<SalesReturn> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text("No items in Sales Return"),
+              IconButton(
+                  onPressed: () {
+                    searchBill(context, 1);
+                  },
+                  icon: const Icon(Icons.search)),
               TextButton.icon(
                   style: ButtonStyle(
                     backgroundColor:
@@ -397,14 +461,14 @@ class _SalesReturnState extends State<SalesReturn> {
 
         List tempList = [];
 
-        dio
+        api
             .getPaginationList(
                 'SalesReturnList',
                 page,
                 lId.toString(),
                 '1',
                 DateUtil.dateYMD(formattedDate),
-                salesManId > 0 ? salesManId.toString() : '0')
+                salesManId > 0 ? salesManId.toString() : '')
             .then((value) {
           if (value.isEmpty) {
             return;
@@ -430,6 +494,20 @@ class _SalesReturnState extends State<SalesReturn> {
   @override
   void dispose() {
     _scrollController.dispose();
+    // invoiceNoController.dispose();
+    // controllerCashReceived.dispose();
+    controllerNarration.dispose();
+    _rateController.dispose();
+    _discountController.dispose();
+    _quantityController.dispose();
+    _freeQuantityController.dispose();
+    _discountPercentController.dispose();
+    _serialNoController.dispose();
+    // returnAmountController.dispose();
+    // returnEntryNoController.dispose();
+    // bankAmountController.dispose();
+    // commissionAmountController.dispose();
+
     super.dispose();
   }
 
@@ -463,7 +541,8 @@ class _SalesReturnState extends State<SalesReturn> {
         discountPer: '0',
         balanceAmount: '0',
         creditPeriod: '0',
-        narration: _narration.isNotEmpty ? _narration : '',
+        narration:
+            controllerNarration.text.isNotEmpty ? controllerNarration.text : '',
         takeUser: userIdC.toString(),
         location: locationId.toString(),
         billType: companyTaxMode == 'GULF' ? '2' : '0',
@@ -570,7 +649,7 @@ class _SalesReturnState extends State<SalesReturn> {
         'fyId': currentFinancialYear.id
       };
 
-      dio.spSale(body).then((value0) {
+      api.spSale(body).then((value0) {
         setState(() {
           _isLoading = false;
         });
@@ -594,7 +673,7 @@ class _SalesReturnState extends State<SalesReturn> {
             'particular': items,
             'otherAmount': otherAmount
           };
-          dio.spSale(body1).then((value1) {
+          api.spSale(body1).then((value1) {
             if (widget.fromSale) {
               setReturnBillNo = value1;
               setReturnBillAmount =
@@ -648,7 +727,8 @@ class _SalesReturnState extends State<SalesReturn> {
         discountPer: '0',
         balanceAmount: '0',
         creditPeriod: '0',
-        narration: _narration.isNotEmpty ? _narration : '',
+        narration:
+            controllerNarration.text.isNotEmpty ? controllerNarration.text : '',
         takeUser: userIdC.toString(),
         location: locationId.toString(),
         billType: companyTaxMode == 'GULF' ? '2' : '0',
@@ -750,7 +830,7 @@ class _SalesReturnState extends State<SalesReturn> {
         'fyId': currentFinancialYear.id
       };
 
-      dio.spSale(body).then((value) {
+      api.spSale(body).then((value) {
         setState(() {
           _isLoading = false;
         });
@@ -786,7 +866,7 @@ class _SalesReturnState extends State<SalesReturn> {
       'otherAmount': '[{}]'
     };
 
-    dio.spSale(body).then((value) {
+    api.spSale(body).then((value) {
       setState(() {
         _isLoading = false;
       });
@@ -854,7 +934,7 @@ class _SalesReturnState extends State<SalesReturn> {
       if (_ledger.isNotEmpty) isData = true;
     });
     return FutureBuilder<List<dynamic>>(
-      future: dio.getCustomerNameList(),
+      future: api.getCustomerNameList(),
       builder: (ctx, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
@@ -886,6 +966,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                     }).toList();
                                   });
                                 },
+                                autofocus: true,
                               ),
                             ),
                             IconButton(
@@ -923,7 +1004,7 @@ class _SalesReturnState extends State<SalesReturn> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const <Widget>[
                   SizedBox(height: 20),
-                  Text('No Data Found..')
+                  Text('No Ledger Found..')
                 ],
               ),
             );
@@ -974,7 +1055,7 @@ class _SalesReturnState extends State<SalesReturn> {
 
   selectLedgerDetailWidget() {
     return FutureBuilder<CustomerModel>(
-      future: dio.getCustomerDetail(ledgerModel.id),
+      future: api.getCustomerDetail(ledgerModel.id),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data.id != null || snapshot.data.id > 0) {
@@ -1112,7 +1193,7 @@ class _SalesReturnState extends State<SalesReturn> {
   String _dropDownValue = '2-RETAIL';
   widgetRateType() {
     return FutureBuilder(
-      future: dio.getRateTypeList(),
+      future: api.getRateTypeList(),
       builder: (BuildContext context, AsyncSnapshot snapshot) {
         return snapshot.hasData
             ? DropdownButton<String>(
@@ -1153,7 +1234,7 @@ class _SalesReturnState extends State<SalesReturn> {
       if (items.isNotEmpty) isItemData = true;
     });
     return FutureBuilder<List<ProductPurchaseModel>>(
-      future: dio.fetchAllProductPurchase(),
+      future: api.fetchAllProductPurchase(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
@@ -1181,6 +1262,7 @@ class _SalesReturnState extends State<SalesReturn> {
                               }).toList();
                             });
                           },
+                          autofocus: true,
                         ),
                       )
                     : InkWell(
@@ -1258,76 +1340,179 @@ class _SalesReturnState extends State<SalesReturn> {
 
   dynamic productModelPrize;
   itemDetailWidget() {
-    int id = productModel.slNo;
+    int id = editItem ? cartModel.itemId : productModel.slNo;
     int locationId = lId.toString().trim().isNotEmpty ? lId : 1;
-    return FutureBuilder(
-        future: dio.fetchProductPrizeStock(id, locationId),
-        builder: (context, snapshoNew) {
-          if (snapshoNew.hasData) {
-            if (snapshoNew.data.length > 0) {
-              if (snapshoNew.data.length <= 1) {
-                productModelPrize = snapshoNew.data[0];
-                return showAddMore(context);
+    if (editItem) {
+      return FutureBuilder<ProductRegisterModel>(
+          future: api.getProductById(cartModel.itemId.toString()),
+          builder: (context0, snapshot1) {
+            if (snapshot1.hasData) {
+              var data = snapshot1.data;
+              productModel = ProductPurchaseModel(
+                  slNo: data.slno,
+                  itemCode: data.itemcode,
+                  itemName: data.itemname,
+                  tax: data.tax,
+                  cess: data.cess,
+                  cessPer: data.cessper,
+                  adCessPer: data.adcessper,
+                  stockValuation: data.stockvaluation,
+                  typeOfSupply: data.typeofsupply,
+                  internationalBarcode: data.internationalbarcode,
+                  serialNo: (data.serialno > 0 ? true : false));
+
+              return FutureBuilder(
+                  future: api.fetchProductPrizeStock(id, locationId),
+                  builder: (context, snapshoNew) {
+                    if (snapshoNew.hasData) {
+                      if (snapshoNew.data.length > 0) {
+                        if (snapshoNew.data.length <= 1) {
+                          productModelPrize = snapshoNew.data[0];
+
+                          return showAddMore(context);
+                        }
+                      } else {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const SizedBox(height: 20),
+                              const Text('Price Data Missing...'),
+                              TextButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      nextWidget = 2;
+                                    });
+                                  },
+                                  child: const Text('Select Product Again'))
+                            ],
+                          ),
+                        );
+                      }
+                    } else if (snapshoNew.hasError) {
+                      return AlertDialog(
+                        title: const Text(
+                          'An Error Occurred!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.redAccent,
+                          ),
+                        ),
+                        content: Text(
+                          "${snapshoNew.error}",
+                          style: const TextStyle(
+                            color: Colors.blueAccent,
+                          ),
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            child: const Text(
+                              'Go Back',
+                              style: TextStyle(
+                                color: Colors.redAccent,
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          )
+                        ],
+                      );
+                    }
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const <Widget>[
+                          CircularProgressIndicator(),
+                          SizedBox(height: 20),
+                          Text('This may take some time..')
+                        ],
+                      ),
+                    );
+                  });
+            }
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const <Widget>[
+                  CircularProgressIndicator(),
+                  SizedBox(height: 20),
+                  Text('This may take some time..')
+                ],
+              ),
+            );
+          });
+    } else {
+      return FutureBuilder(
+          future: api.fetchProductPrizeStock(id, locationId),
+          builder: (context, snapshoNew) {
+            if (snapshoNew.hasData) {
+              if (snapshoNew.data.length > 0) {
+                if (snapshoNew.data.length <= 1) {
+                  productModelPrize = snapshoNew.data[0];
+
+                  return showAddMore(context);
+                }
+              } else {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 20),
+                      const Text('Price Data Missing...'),
+                      TextButton(
+                          onPressed: () {
+                            setState(() {
+                              nextWidget = 2;
+                            });
+                          },
+                          child: const Text('Select Product Again'))
+                    ],
+                  ),
+                );
               }
-            } else {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 20),
-                    const Text('Stock Ledger Data Missing...'),
-                    TextButton(
-                        onPressed: () {
-                          setState(() {
-                            nextWidget = 2;
-                          });
-                        },
-                        child: const Text('Select Product Again'))
-                  ],
+            } else if (snapshoNew.hasError) {
+              return AlertDialog(
+                title: const Text(
+                  'An Error Occurred!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.redAccent,
+                  ),
                 ),
+                content: Text(
+                  "${snapshoNew.error}",
+                  style: const TextStyle(
+                    color: Colors.blueAccent,
+                  ),
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    child: const Text(
+                      'Go Back',
+                      style: TextStyle(
+                        color: Colors.redAccent,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  )
+                ],
               );
             }
-          } else if (snapshoNew.hasError) {
-            return AlertDialog(
-              title: const Text(
-                'An Error Occurred!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.redAccent,
-                ),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const <Widget>[
+                  CircularProgressIndicator(),
+                  SizedBox(height: 20),
+                  Text('This may take some time..')
+                ],
               ),
-              content: Text(
-                "${snapshoNew.error}",
-                style: const TextStyle(
-                  color: Colors.blueAccent,
-                ),
-              ),
-              actions: <Widget>[
-                TextButton(
-                  child: const Text(
-                    'Go Back',
-                    style: TextStyle(
-                      color: Colors.redAccent,
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                )
-              ],
             );
-          }
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const <Widget>[
-                CircularProgressIndicator(),
-                SizedBox(height: 20),
-                Text('This may take some time..')
-              ],
-            ),
-          );
-        });
+          });
+    }
   }
 
   bool isVariantSelected = false;
@@ -1335,9 +1520,11 @@ class _SalesReturnState extends State<SalesReturn> {
 
   clearValue() {
     _quantityController.text = '';
+    _freeQuantityController.text = '';
     _rateController.text = '';
     _discountController.text = '';
-    // _discountPercentController.text = '';
+    _discountPercentController.text = '';
+    _serialNoController.text = '';
     taxP = 0;
     tax = 0;
     gross = 0;
@@ -1355,7 +1542,7 @@ class _SalesReturnState extends State<SalesReturn> {
     kfc = 0;
     unitValue = 1;
     _conversion = 0;
-    free = 0;
+    freeQty = 0;
     fUnitId = 0;
     fUnitValue = 0;
     cdPer = 0;
@@ -1375,12 +1562,17 @@ class _SalesReturnState extends State<SalesReturn> {
   }
 
   final TextEditingController _quantityController = TextEditingController();
+  final TextEditingController _freeQuantityController = TextEditingController();
   final TextEditingController _rateController = TextEditingController();
   final TextEditingController _discountController = TextEditingController();
-  // TextEditingController _discountPercentController = TextEditingController();
+  final TextEditingController _discountPercentController =
+      TextEditingController();
+  final TextEditingController _serialNoController = TextEditingController();
   FocusNode _focusNodeQuantity = FocusNode();
+  FocusNode _focusNodeFreeQuantity = FocusNode();
   FocusNode _focusNodeRate = FocusNode();
   FocusNode _focusNodeDiscount = FocusNode();
+  FocusNode _focusNodeDiscountPer = FocusNode();
 
   final _resetKey = GlobalKey<FormState>();
   String expDate = '2000-01-01';
@@ -1403,7 +1595,7 @@ class _SalesReturnState extends State<SalesReturn> {
       kfc = 0,
       unitValue = 1,
       _conversion = 0,
-      free = 0,
+      freeQty = 0,
       fUnitValue = 0,
       cdPer = 0,
       cDisc = 0,
@@ -1418,33 +1610,79 @@ class _SalesReturnState extends State<SalesReturn> {
       rPRate = 0;
 
   showAddMore(BuildContext context) {
-    pRate = double.tryParse(productModelPrize['prate'].toString());
-    rPRate = double.tryParse(productModelPrize['realprate'].toString());
-    isTax = taxable;
-    taxP = isTax ? double.tryParse(productModel.tax.toString()) : 0;
-    cess = isTax ? double.tryParse(productModel.cess.toString()) : 0;
-    cessPer = isTax ? double.tryParse(productModel.cessPer.toString()) : 0;
-    adCessPer = isTax ? double.tryParse(productModel.adCessPer.toString()) : 0;
-    kfcP = isTax
-        ? enableKeralaFloodCess
-            ? kfcPer
-            : 0
-        : 0;
-    if (rateType == 'RETAIL') {
-      saleRate = double.tryParse(productModelPrize['retail'].toString());
-    } else if (rateType == 'WHOLESALE') {
-      saleRate = double.tryParse(productModelPrize['wsrate'].toString());
+    if (editItem) {
+      productModel = productModel == null
+          ? ProductPurchaseModel(
+              itemName: cartModel.itemName,
+              adCessPer: 0,
+              cess: cartModel.cess,
+              cessPer: cartModel.cess,
+              internationalBarcode: '',
+              itemCode: cartModel.itemId.toString(),
+              serialNo: cartModel.serialNo.isNotEmpty ? true : false,
+              slNo: cartModel.itemId,
+              stockValuation: '',
+              tax: cartModel.tax,
+              typeOfSupply: '')
+          : productModel;
+      pRate = double.tryParse(productModelPrize['prate'].toString());
+      rPRate = double.tryParse(productModelPrize['realprate'].toString());
+      isTax = taxable;
+      taxP = isTax ? double.tryParse(productModel.tax.toString()) : 0;
+      cess = isTax ? double.tryParse(productModel.cess.toString()) : 0;
+      cessPer = isTax ? double.tryParse(productModel.cessPer.toString()) : 0;
+      adCessPer =
+          isTax ? double.tryParse(productModel.adCessPer.toString()) : 0;
+      kfcP = isTax
+          ? enableKeralaFloodCess
+              ? kfcPer
+              : 0
+          : 0;
+      if (rateType == 'RETAIL') {
+        saleRate = double.tryParse(productModelPrize['retail'].toString());
+      } else if (rateType == 'WHOLESALE') {
+        saleRate = double.tryParse(productModelPrize['wsrate'].toString());
+      } else {
+        saleRate = double.tryParse(productModelPrize['mrp'].toString());
+      }
+      if (saleRate > 0 &&
+          !_focusNodeRate.hasFocus &&
+          _rateController.text.isEmpty) {
+        _rateController.text = saleRate.toStringAsFixed(decimal);
+        rate = saleRate;
+      }
+      uniqueCode = productModelPrize['uniquecode'];
+      List<UnitModel> unitList = [];
     } else {
-      saleRate = double.tryParse(productModelPrize['mrp'].toString());
+      pRate = double.tryParse(productModelPrize['prate'].toString());
+      rPRate = double.tryParse(productModelPrize['realprate'].toString());
+      isTax = taxable;
+      taxP = isTax ? double.tryParse(productModel.tax.toString()) : 0;
+      cess = isTax ? double.tryParse(productModel.cess.toString()) : 0;
+      cessPer = isTax ? double.tryParse(productModel.cessPer.toString()) : 0;
+      adCessPer =
+          isTax ? double.tryParse(productModel.adCessPer.toString()) : 0;
+      kfcP = isTax
+          ? enableKeralaFloodCess
+              ? kfcPer
+              : 0
+          : 0;
+      if (rateType == 'RETAIL') {
+        saleRate = double.tryParse(productModelPrize['retail'].toString());
+      } else if (rateType == 'WHOLESALE') {
+        saleRate = double.tryParse(productModelPrize['wsrate'].toString());
+      } else {
+        saleRate = double.tryParse(productModelPrize['mrp'].toString());
+      }
+      if (saleRate > 0 &&
+          !_focusNodeRate.hasFocus &&
+          _rateController.text.isEmpty) {
+        _rateController.text = saleRate.toStringAsFixed(decimal);
+        rate = saleRate;
+      }
+      uniqueCode = productModelPrize['uniquecode'];
+      List<UnitModel> unitList = [];
     }
-    if (saleRate > 0 &&
-        !_focusNodeRate.hasFocus &&
-        _rateController.text.isEmpty) {
-      _rateController.text = saleRate.toStringAsFixed(decimal);
-      rate = saleRate;
-    }
-    uniqueCode = productModelPrize['uniquecode'];
-    List<UnitModel> unitList = [];
     calculate() {
       if (enableMULTIUNIT) {
         if (saleRate > 0) {
@@ -1482,6 +1720,9 @@ class _SalesReturnState extends State<SalesReturn> {
       quantity = _quantityController.text.isNotEmpty
           ? double.tryParse(_quantityController.text)
           : 0;
+      freeQty = _freeQuantityController.text.isNotEmpty
+          ? double.tryParse(_freeQuantityController.text)
+          : 0;
       rRate = taxMethod == 'MINUS'
           ? cessOnNetAmount
               ? CommonService.getRound(
@@ -1491,8 +1732,44 @@ class _SalesReturnState extends State<SalesReturn> {
       discount = _discountController.text.isNotEmpty
           ? double.tryParse(_discountController.text)
           : 0;
+      double discP = _discountPercentController.text.isNotEmpty
+          ? double.tryParse(_discountPercentController.text)
+          : 0;
+      double disc = _discountController.text.isNotEmpty
+          ? double.tryParse(_discountController.text)
+          : 0;
+      double qt = _quantityController.text.isNotEmpty
+          ? double.tryParse(_quantityController.text)
+          : 0;
+      double sRate = _rateController.text.isNotEmpty
+          ? double.tryParse(_rateController.text)
+          : 0;
+      if (_focusNodeDiscountPer.hasFocus) {
+        _discountController.text = _discountPercentController.text.isNotEmpty
+            ? (((qt * sRate) * discP) / 100).toStringAsFixed(2)
+            : '';
+        discount = _discountController.text.isNotEmpty
+            ? double.tryParse(_discountController.text)
+            : 0;
+        discountPercent = double.tryParse(_discountPercentController.text);
+      }
+
+      if (_focusNodeDiscount.hasFocus) {
+        _discountPercentController.text = _discountController.text.isNotEmpty
+            ? ((disc * 100) / (qt * sRate)).toStringAsFixed(2)
+            : '';
+        discountPercent = _discountController.text.isNotEmpty
+            ? double.tryParse(_discountPercentController.text)
+            : 0;
+        double.tryParse(_discountController.text);
+      }
       rDisc = taxMethod == 'MINUS'
-          ? CommonService.getRound(4, ((discount * 100) / (taxP + 100)))
+          ? CommonService.getRound(
+              4,
+              ((discount * 100) /
+                  (cessOnNetAmount
+                      ? (taxP + 100 + cessPer + kfcP)
+                      : (taxP + 100 + kfcP))))
           : discount;
       gross = CommonService.getRound(decimal, ((rRate * quantity)));
       subTotal = CommonService.getRound(decimal, (gross - rDisc));
@@ -1561,6 +1838,136 @@ class _SalesReturnState extends State<SalesReturn> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Visibility(
+                          visible: !editItem,
+                          child: MaterialButton(
+                            onPressed: () {
+                              setState(() {
+                                editItem = false;
+                                nextWidget = 2;
+                                isVariantSelected = false;
+                                clearValue();
+                              });
+                            },
+                            child: const Text("BACK"),
+                            color: blue[400],
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 2,
+                        ),
+                        MaterialButton(
+                          onPressed: () {
+                            setState(() {
+                              editItem = false;
+                              isVariantSelected = false;
+                              nextWidget = 4;
+                              clearValue();
+                            });
+                          },
+                          child: const Text("CANCEL"),
+                          color: blue[400],
+                        ),
+                        const SizedBox(
+                          width: 2,
+                        ),
+                        MaterialButton(
+                          child: Text(editItem ? 'EDIT' : 'ADD'),
+                          color: blue,
+                          onPressed: () {
+                            setState(() {
+                              if (editItem) {
+                                cartItem[position].adCess = adCess;
+                                cartItem[position].quantity = quantity;
+                                cartItem[position].rate = rate;
+                                cartItem[position].rRate = rRate;
+                                cartItem[position].uniqueCode = uniqueCode;
+                                cartItem[position].gross = gross;
+                                cartItem[position].discount = discount;
+                                cartItem[position].discountPercent =
+                                    discountPercent;
+                                cartItem[position].rDiscount = rDisc;
+                                cartItem[position].fCess = kfc;
+                                cartItem[position].serialNo =
+                                    _serialNoController.text;
+                                cartItem[position].tax = tax;
+                                cartItem[position].taxP = taxP;
+                                cartItem[position].unitId = _dropDownUnit;
+                                cartItem[position].unitValue = unitValue ?? 1;
+                                cartItem[position].pRate = pRate;
+                                cartItem[position].rPRate = rPRate;
+                                cartItem[position].barcode = barcode;
+                                cartItem[position].expDate = expDate;
+                                cartItem[position].free = freeQty;
+                                cartItem[position].fUnitId = fUnitId;
+                                cartItem[position].cdPer = cdPer;
+                                cartItem[position].cDisc = cDisc;
+                                cartItem[position].net = subTotal;
+                                cartItem[position].cess = cess;
+                                cartItem[position].total = total;
+                                cartItem[position].profitPer = profitPer;
+                                cartItem[position].fUnitValue = fUnitValue;
+                                cartItem[position].adCess = adCess;
+                                cartItem[position].iGST = iGST;
+                                cartItem[position].cGST = csGST;
+                                cartItem[position].sGST = csGST;
+                                cartItem[position].stock = 0;
+                                editItem = false;
+                              } else {
+                                addProduct(
+                                    CartItem(
+                                        id: totalItem + 1,
+                                        itemId: int.tryParse(
+                                            productModel.slNo.toString()),
+                                        itemName:
+                                            productModel.itemName.toString(),
+                                        quantity: quantity,
+                                        rate: rate,
+                                        rRate: rRate,
+                                        uniqueCode: uniqueCode,
+                                        gross: gross,
+                                        discount: discount,
+                                        discountPercent: discountPercent,
+                                        rDiscount: rDisc,
+                                        fCess: kfc,
+                                        serialNo: _serialNoController.text,
+                                        tax: tax,
+                                        taxP: taxP,
+                                        unitId: _dropDownUnit,
+                                        unitValue: unitValue ?? 1,
+                                        pRate: pRate,
+                                        rPRate: rPRate,
+                                        barcode: barcode,
+                                        expDate: expDate,
+                                        free: freeQty,
+                                        fUnitId: fUnitId,
+                                        cdPer: cdPer,
+                                        cDisc: cDisc,
+                                        net: subTotal,
+                                        cess: cess,
+                                        total: total,
+                                        profitPer: profitPer,
+                                        fUnitValue: fUnitValue,
+                                        adCess: adCess,
+                                        iGST: iGST,
+                                        cGST: csGST,
+                                        sGST: csGST,
+                                        minimumRate: 0,
+                                        stock: 0),
+                                    -1);
+                              }
+                              if (totalItem > 0) {
+                                clearValue();
+                                nextWidget = 4;
+                              }
+                            });
+                          },
+                        ),
+                      ]),
+                  const Divider(),
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
@@ -1584,15 +1991,42 @@ class _SalesReturnState extends State<SalesReturn> {
                               calculate();
                             });
                           },
+                          autofocus: true,
                         ),
                       )),
+                      Visibility(
+                        visible: isFreeQty,
+                        child: Expanded(
+                            child: Padding(
+                          padding: const EdgeInsets.all(2.0),
+                          child: TextFormField(
+                            controller: _freeQuantityController,
+                            focusNode: _focusNodeFreeQuantity,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                                  allow: true, replacementString: '.')
+                            ],
+                            decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                labelText: 'free qty',
+                                hintText: '0.0'),
+                            onChanged: (value) {
+                              setState(() {
+                                calculate();
+                              });
+                            },
+                          ),
+                        )),
+                      ),
                       Visibility(
                         visible: enableMULTIUNIT,
                         child: Expanded(
                           child: Padding(
                             padding: const EdgeInsets.all(2.0),
                             child: FutureBuilder(
-                              future: dio.fetchUnitOf(int.tryParse(
+                              future: api.fetchUnitOf(int.tryParse(
                                   productModel.itemCode.toString())),
                               builder: (BuildContext context,
                                   AsyncSnapshot snapshot) {
@@ -1624,7 +2058,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                         hint: Text(_dropDownUnit > 0
                                             ? UnitSettings.getUnitName(
                                                 _dropDownUnit)
-                                            : 'SKU'),
+                                            : 'Unit'),
                                         items: snapshot.data
                                             .map<DropdownMenuItem<String>>(
                                                 (item) {
@@ -1833,6 +2267,29 @@ class _SalesReturnState extends State<SalesReturn> {
                           child: Padding(
                         padding: const EdgeInsets.all(2.0),
                         child: TextField(
+                          controller: _discountPercentController,
+                          focusNode: _focusNodeDiscountPer,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          inputFormatters: [
+                            FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                                allow: true, replacementString: '.')
+                          ],
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              labelText: 'Discount % ',
+                              hintText: '0.0'),
+                          onChanged: (value) {
+                            setState(() {
+                              calculate();
+                            });
+                          },
+                        ),
+                      )),
+                      Expanded(
+                          child: Padding(
+                        padding: const EdgeInsets.all(2.0),
+                        child: TextField(
                           controller: _discountController,
                           focusNode: _focusNodeDiscount,
                           keyboardType: const TextInputType.numberWithOptions(
@@ -1852,16 +2309,41 @@ class _SalesReturnState extends State<SalesReturn> {
                           },
                         ),
                       )),
-                      Visibility(
-                        visible: isTax,
-                        child: Expanded(
-                            child: Padding(
-                                padding: const EdgeInsets.all(2.0),
-                                child: Text('Tax % : $taxP'))),
-                      )
                     ],
                   ),
+                  const Divider(),
+                  Visibility(
+                    visible: isItemSerialNo,
+                    child: Row(
+                      children: [
+                        Expanded(
+                            child: Padding(
+                          padding: const EdgeInsets.all(2.0),
+                          child: TextField(
+                            controller: _serialNoController,
+                            decoration: InputDecoration(
+                                border: const OutlineInputBorder(),
+                                labelText: labelSerialNo.isNotEmpty
+                                    ? labelSerialNo
+                                    : 'SerialNo'),
+                            onChanged: (value) {
+                              // setState(() {
+                              //   // calculate(product);
+                              // });
+                            },
+                          ),
+                        )),
+                      ],
+                    ),
+                  ),
+                  const Divider(),
                   Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                    Visibility(
+                      visible: isTax,
+                      child: Padding(
+                          padding: const EdgeInsets.all(2.0),
+                          child: Text('Tax % : $taxP')),
+                    ),
                     const Padding(
                       padding: EdgeInsets.all(2.0),
                       child: Text('SubTotal : '),
@@ -1903,77 +2385,6 @@ class _SalesReturnState extends State<SalesReturn> {
                       ),
                     ),
                   ]),
-                  const Divider(),
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        MaterialButton(
-                          onPressed: () {
-                            setState(() {
-                              nextWidget = 4;
-                              clearValue();
-                            });
-                          },
-                          child: const Text("CANCEL"),
-                          color: blue[400],
-                        ),
-                        const SizedBox(
-                          width: 2,
-                        ),
-                        MaterialButton(
-                          child: const Text("ADD"),
-                          color: blue,
-                          onPressed: () {
-                            setState(() {
-                              addProduct(
-                                  CartItem(
-                                      id: totalItem + 1,
-                                      itemId: int.tryParse(
-                                          productModel.slNo.toString()),
-                                      itemName:
-                                          productModel.itemName.toString(),
-                                      quantity: quantity,
-                                      rate: rate,
-                                      rRate: rRate,
-                                      uniqueCode: uniqueCode,
-                                      gross: gross,
-                                      discount: discount,
-                                      discountPercent: discountPercent,
-                                      rDiscount: rDisc,
-                                      fCess: kfc,
-                                      serialNo: '',
-                                      tax: tax,
-                                      taxP: taxP,
-                                      unitId: _dropDownUnit,
-                                      unitValue: unitValue,
-                                      pRate: pRate,
-                                      rPRate: rPRate,
-                                      barcode: barcode,
-                                      expDate: expDate,
-                                      free: free,
-                                      fUnitId: fUnitId,
-                                      cdPer: cdPer,
-                                      cDisc: cDisc,
-                                      net: subTotal,
-                                      cess: cess,
-                                      total: total,
-                                      profitPer: profitPer,
-                                      fUnitValue: fUnitValue,
-                                      adCess: adCess,
-                                      iGST: iGST,
-                                      cGST: csGST,
-                                      sGST: csGST,
-                                      minimumRate: 0,
-                                      stock: 0),
-                                  -1);
-                              if (totalItem > 0) {
-                                clearValue();
-                                nextWidget = 4;
-                              }
-                            });
-                          },
-                        ),
-                      ])
                 ],
               ),
             ),
@@ -1982,6 +2393,9 @@ class _SalesReturnState extends State<SalesReturn> {
       ),
     );
   }
+
+  bool editItem = false;
+  int position;
 
   cartProduct() {
     setState(() {
@@ -1992,115 +2406,198 @@ class _SalesReturnState extends State<SalesReturn> {
         salesHeaderWidget(),
         totalItem > 0
             ? Expanded(
-                child: ListView.separated(
+                child: ListView.builder(
+                  shrinkWrap: true,
                   itemCount: cartItem.length,
-                  separatorBuilder: (BuildContext context, int index) =>
-                      const Divider(),
                   itemBuilder: (context, index) {
-                    return ListTile(
-                      title: Text(cartItem[index].itemName),
-                      subtitle: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          SizedBox(
-                            height: 40,
-                            width: 40,
-                            child: Card(
-                              color: Colors.green[200],
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.add,
-                                  color: Colors.black,
-                                  size: 18,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    updateProduct(cartItem[index],
-                                        cartItem[index].quantity + 1, index);
-                                  });
-                                },
-                              ),
+                    return Card(
+                      color: blue.shade100,
+                      elevation: 5.0,
+                      child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            RichText(
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              text: TextSpan(
+                                  text: '${cartItem[index].itemName}\n',
+                                  style: const TextStyle(
+                                      color: black,
+                                      fontWeight: FontWeight.bold)),
                             ),
-                          ),
-                          InkWell(
-                            child: Text(cartItem[index].quantity.toString(),
-                                style: const TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold)),
-                            onTap: () {
-                              _displayTextInputDialog(
-                                  context,
-                                  'Edit Quantity',
-                                  cartItem[index].quantity > 0
-                                      ? double.tryParse(cartItem[index]
-                                              .quantity
-                                              .toString())
-                                          .toString()
-                                      : '',
-                                  index);
-                            },
-                          ),
-                          SizedBox(
-                            height: 40,
-                            width: 40,
-                            child: Card(
-                              color: Colors.red[200],
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.remove,
-                                  color: Colors.black,
-                                  size: 18,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                SizedBox(
+                                  width: 100,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      RichText(
+                                        maxLines: 1,
+                                        text: TextSpan(
+                                            text: '${cartItem[index].id}/',
+                                            style: TextStyle(
+                                                color: Colors.blueGrey.shade800,
+                                                fontSize: 10.0),
+                                            children: [
+                                              TextSpan(
+                                                  text:
+                                                      '${cartItem[index].uniqueCode}/${cartItem[index].itemId}',
+                                                  style: const TextStyle(
+                                                      fontSize: 10.0,
+                                                      fontWeight:
+                                                          FontWeight.bold)),
+                                            ]),
+                                      ),
+                                      RichText(
+                                        maxLines: 1,
+                                        text: TextSpan(
+                                            text: 'Unit: ',
+                                            style: TextStyle(
+                                                color: Colors.blueGrey.shade800,
+                                                fontSize: 12.0),
+                                            children: [
+                                              TextSpan(
+                                                  text:
+                                                      '${UnitSettings.getUnitName(cartItem[index].unitId)}\n',
+                                                  style: const TextStyle(
+                                                      fontSize: 12.0,
+                                                      fontWeight:
+                                                          FontWeight.bold)),
+                                            ]),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                onPressed: () {
-                                  setState(() {
-                                    updateProduct(cartItem[index],
-                                        cartItem[index].quantity - 1, index);
-                                  });
-                                },
-                              ),
+                                PlusMinusButtons(
+                                  addQuantity: () {
+                                    setState(() {
+                                      updateProduct(cartItem[index],
+                                          cartItem[index].quantity + 1, index);
+                                    });
+                                  },
+                                  deleteQuantity: () {
+                                    setState(() {
+                                      updateProduct(cartItem[index],
+                                          cartItem[index].quantity - 1, index);
+                                    });
+                                  },
+                                  text: cartItem[index].quantity.toString(),
+                                ),
+                                RichText(
+                                  maxLines: 1,
+                                  text: TextSpan(
+                                      text: 'Rate: ',
+                                      style: TextStyle(
+                                          color: Colors.blueGrey.shade800,
+                                          fontSize: 13.0),
+                                      children: [
+                                        TextSpan(
+                                            text: '${cartItem[index].rate}\n',
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 12.0)),
+                                      ]),
+                                ),
+                                PopUpMenuAction(
+                                  onDelete: () {
+                                    setState(() {
+                                      cartItem.removeAt(index);
+                                    });
+                                  },
+                                  onEdit: () {
+                                    setState(() {
+                                      editItem = true;
+                                      position = index;
+                                      cartModel = cartItem.elementAt(position);
+                                      _rateController.text =
+                                          cartModel.rate.toString();
+                                      _quantityController.text =
+                                          cartModel.quantity.toString();
+                                      _freeQuantityController.text =
+                                          cartModel.free.toString();
+                                      _discountController.text =
+                                          cartModel.discount.toString();
+                                      _discountPercentController.text =
+                                          cartModel.discountPercent.toString();
+                                      _serialNoController.text =
+                                          cartModel.serialNo;
+
+                                      nextWidget = 3;
+                                    });
+                                  },
+                                ),
+                              ],
                             ),
-                          ),
-                          Text(
-                              cartItem[index].unitId > 0
-                                  ? '(' +
-                                      UnitSettings.getUnitName(
-                                          cartItem[index].unitId) +
-                                      ')'
-                                  : " x ",
-                              style: const TextStyle(
-                                  color: Colors.black, fontSize: 12)),
-                          InkWell(
-                            child: Text(
-                                cartItem[index].rate.toStringAsFixed(decimal),
-                                style: const TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold)),
-                            onTap: () {
-                              _displayTextInputDialog(
-                                  context,
-                                  'Edit Rate',
-                                  cartItem[index].rate > 0
-                                      ? double.tryParse(
-                                              cartItem[index].rate.toString())
-                                          .toString()
-                                      : '',
-                                  index);
-                            },
-                          ),
-                          const Text(" = ",
-                              style: TextStyle(
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.bold)),
-                          Text(
-                              ((cartItem[index].quantity *
-                                          cartItem[index].rate) -
-                                      (cartItem[index].discount))
-                                  .toStringAsFixed(decimal),
-                              style: const TextStyle(
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20)),
-                        ],
+                            RichText(
+                              text: TextSpan(
+                                  text: 'Gross:',
+                                  style: TextStyle(
+                                      color: Colors.blueGrey.shade800,
+                                      fontSize: 12.0),
+                                  children: [
+                                    TextSpan(
+                                        text: '${cartItem[index].gross}    ',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12.0)),
+                                    TextSpan(
+                                        text: 'Disc:',
+                                        style: const TextStyle(fontSize: 12.0),
+                                        children: [
+                                          TextSpan(
+                                              text:
+                                                  '${cartItem[index].discountPercent}% ${cartItem[index].discount}    ',
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12.0)),
+                                        ]),
+                                    TextSpan(
+                                        text: 'Net:',
+                                        style: const TextStyle(fontSize: 12.0),
+                                        children: [
+                                          TextSpan(
+                                              text:
+                                                  '${cartItem[index].net}    ',
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12.0)),
+                                        ]),
+                                    isTax
+                                        ? TextSpan(
+                                            text:
+                                                'Tax:${cartItem[index].taxP}% ',
+                                            style:
+                                                const TextStyle(fontSize: 12.0),
+                                            children: [
+                                                TextSpan(
+                                                    text:
+                                                        '${cartItem[index].tax}    ',
+                                                    style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 12.0)),
+                                              ])
+                                        : const TextSpan(text: ''),
+                                    TextSpan(
+                                        text: 'Total:',
+                                        style: const TextStyle(fontSize: 12.0),
+                                        children: [
+                                          TextSpan(
+                                              text: '${cartItem[index].total}',
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12.0)),
+                                        ]),
+                                  ]),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -2341,215 +2838,299 @@ class _SalesReturnState extends State<SalesReturn> {
   }
 
   footerWidget() {
-    return Container(
-      color: Colors.blue[50],
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("SubTotal: ",
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold, color: Colors.red[300])),
-              Text(
-                  CommonService.getRound(decimal, totalGrossValue)
-                      .toStringAsFixed(decimal),
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold, color: Colors.red[300])),
-            ],
-          ),
-          Visibility(
-            visible: isTax,
-            child: Row(
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        color: Colors.blue[50],
+        child: Column(
+          children: [
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Tax: ",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.red[400])),
                 Text(
-                    CommonService.getRound(decimal, taxTotalCartValue)
+                    "SubTotal: " +
+                        CommonService.getRound(decimal, totalGrossValue)
+                            .toStringAsFixed(decimal),
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red[300])),
+                Text(
+                    "Discount : " +
+                        CommonService.getRound(decimal, totalDiscount)
+                            .toStringAsFixed(decimal),
+                    style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red[300])),
+              ],
+            ),
+            Visibility(
+              visible: isTax,
+              child: companyTaxMode == 'INDIA'
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("GST :- ",
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red)),
+                        Text(
+                            "CGST : " +
+                                CommonService.getRound(
+                                        decimal, taxTotalCartValue / 2)
+                                    .toStringAsFixed(decimal),
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[400])),
+                        Text(
+                            "SGST : " +
+                                CommonService.getRound(
+                                        decimal, taxTotalCartValue / 2)
+                                    .toStringAsFixed(decimal),
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[400])),
+                        Text(
+                            "IGST : " +
+                                CommonService.getRound(decimal, 0)
+                                    .toStringAsFixed(decimal),
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[400])),
+                        Text(
+                            " = " +
+                                CommonService.getRound(
+                                        decimal, taxTotalCartValue)
+                                    .toStringAsFixed(decimal),
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[400])),
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("VAT: ",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[400])),
+                        Text(
+                            CommonService.getRound(decimal, taxTotalCartValue)
+                                .toStringAsFixed(decimal),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[400])),
+                      ],
+                    ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Total: ",
+                    style: TextStyle(
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red[500])),
+                Text(
+                    CommonService.getRound(decimal, totalCartValue)
                         .toStringAsFixed(decimal),
                     style: TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.red[400])),
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red[500])),
               ],
             ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("Total: ",
-                  style: TextStyle(
-                      fontSize: 20.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red[500])),
-              Text(
-                  CommonService.getRound(decimal, totalCartValue)
-                      .toStringAsFixed(decimal),
-                  style: TextStyle(
-                      fontSize: 20.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red[500])),
-            ],
-          ),
-          Card(
-            elevation: 5,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                const Text('More Details'),
-                Switch(
-                    value: valueMore,
-                    onChanged: (value) {
-                      setState(() {
-                        valueMore = value;
-                      });
-                    }),
-              ],
+            // Card(
+            //   elevation: 5,
+            //   child: Row(
+            //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            //     children: [
+            //       Text(
+            //           'Balance : ${ComSettings.appSettings('bool', 'key-round-off-amount', false) ? _balance.toStringAsFixed(decimal) : _balance.roundToDouble().toString()}'),
+            //       //     const Text('More Details'),
+            //       // Switch(
+            //       //     value: valueMore,
+            //       //     onChanged: (value) {
+            //       //       setState(() {
+            //       //         valueMore = value;
+            //       //       });
+            //       //     }),
+            //     ],
+            //   ),
+            // ),
+            const Divider(
+              height: 2,
             ),
-          ),
-          Visibility(
-            visible: valueMore,
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: 'Narration...',
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _narration = value;
-                          });
-                        },
+            Visibility(
+              visible: valueMore,
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const SizedBox(
+                        height: 10,
                       ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: deviceSize.height / 6,
-                  child: Container(
-                    color: white,
-                    child: ListView.builder(
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: otherAmountList.length,
-                        shrinkWrap: true,
-                        itemBuilder: (BuildContext context, int index) {
-                          _controllers.add(TextEditingController());
-                          _controllers[index].text =
-                              otherAmountList[index]['Amount'].toString();
-                          return Container(
-                              padding: const EdgeInsets.only(
-                                  top: 0, right: 10, left: 10),
-                              child: Row(children: <Widget>[
-                                expandStyle(
-                                    2,
-                                    Container(
-                                        margin: const EdgeInsets.only(top: 35),
-                                        child: Text(otherAmountList[index]
-                                            ['LedName']))),
-                                expandStyle(
-                                    1,
-                                    TextFormField(
-                                        controller: TextEditingController
-                                            .fromValue(TextEditingValue(
-                                                text: otherAmountList[index]
-                                                        ['Amount']
-                                                    .toString(),
-                                                selection:
-                                                    TextSelection.collapsed(
-                                                        offset: otherAmountList[
-                                                                index]['Amount']
-                                                            .toString()
-                                                            .length))),
-                                        keyboardType: const TextInputType
-                                            .numberWithOptions(decimal: true),
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter(
-                                              RegExp(r'[0-9]'),
-                                              allow: true,
-                                              replacementString: '.')
-                                        ],
-                                        onFieldSubmitted: (String str) {
-                                          var cartTotal = totalCartValue;
-                                          if (str.isNotEmpty) {
-                                            otherAmountList[index]['Amount'] =
-                                                double.tryParse(str);
-                                            otherAmountList[index]
-                                                    ['Percentage'] =
-                                                CommonService.getRound(
-                                                    2,
-                                                    ((double.tryParse(str) *
-                                                            100) /
-                                                        cartTotal));
-                                            var netTotal = cartTotal +
-                                                otherAmountList.fold(
-                                                    0.0,
-                                                    (t, e) =>
-                                                        t +
-                                                        double.parse(e[
-                                                                    'Symbol'] ==
-                                                                '-'
-                                                            ? (e['Amount'] * -1)
-                                                                .toString()
-                                                            : e['Amount']
-                                                                .toString()));
-                                            setState(() {
-                                              grandTotal = netTotal;
-                                            });
-                                          }
-                                        }))
-                              ]));
-                        }),
+                      SizedBox(
+                        width: deviceSize.width - 18,
+                        height: 35,
+                        child: TextField(
+                          controller: controllerNarration,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Narration',
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                  SizedBox(
+                    height: deviceSize.height / 5,
+                    child: Container(
+                      color: white,
+                      child: ListView.builder(
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: otherAmountList.length,
+                          shrinkWrap: true,
+                          itemBuilder: (BuildContext context, int index) {
+                            _controllers.add(TextEditingController());
+                            _controllers[index].text =
+                                otherAmountList[index]['Amount'].toString();
+                            return Card(
+                                elevation: 5,
+                                child: Row(children: <Widget>[
+                                  expandStyle(
+                                      2,
+                                      Container(
+                                          margin:
+                                              const EdgeInsets.only(top: 35),
+                                          child: Text(otherAmountList[index]
+                                              ['LedName']))),
+                                  SizedBox(
+                                      height: 35,
+                                      width: 100,
+                                      child: TextFormField(
+                                          decoration: const InputDecoration(
+                                              border: OutlineInputBorder()),
+                                          controller: TextEditingController
+                                              .fromValue(TextEditingValue(
+                                                  text: otherAmountList[index]
+                                                          ['Amount']
+                                                      .toString(),
+                                                  selection:
+                                                      TextSelection.collapsed(
+                                                          offset: otherAmountList[
+                                                                      index]
+                                                                  ['Amount']
+                                                              .toString()
+                                                              .length))),
+                                          keyboardType: const TextInputType
+                                              .numberWithOptions(decimal: true),
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter(
+                                                RegExp(r'[0-9]'),
+                                                allow: true,
+                                                replacementString: '.')
+                                          ],
+                                          onFieldSubmitted: (String str) {
+                                            var cartTotal = totalCartValue;
+                                            if (str.isNotEmpty) {
+                                              otherAmountList[index]['Amount'] =
+                                                  double.tryParse(str);
+                                              otherAmountList[index]
+                                                      ['Percentage'] =
+                                                  CommonService.getRound(
+                                                      2,
+                                                      ((double.tryParse(str) *
+                                                              100) /
+                                                          cartTotal));
+                                              var netTotal = cartTotal +
+                                                  otherAmountList.fold(
+                                                      0.0,
+                                                      (t, e) =>
+                                                          t +
+                                                          double.parse(e[
+                                                                      'Symbol'] ==
+                                                                  '-'
+                                                              ? (e['Amount'] *
+                                                                      -1)
+                                                                  .toString()
+                                                              : e['Amount']
+                                                                  .toString()));
+                                              setState(() {
+                                                grandTotal = netTotal;
+                                              });
+                                            }
+                                          }))
+                                ]));
+                          }),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      valueMore = valueMore == true ? false : true;
+                    });
+                  },
+                  style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all(Colors.blue.shade200),
+                  ),
+                  child: Icon(valueMore
+                      ? Icons.keyboard_double_arrow_down_outlined
+                      : Icons.keyboard_double_arrow_up_outlined), //Text('More',
                 ),
+                const Text('GrandTotal : ',
+                    style: TextStyle(
+                        fontSize: 22.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red)),
+                Text(
+                    grandTotal > 0
+                        ? ComSettings.appSettings(
+                                'bool', 'key-round-off-amount', false)
+                            ? CommonService.getRound(decimal, grandTotal)
+                                .toString()
+                            : CommonService.getRound(decimal, grandTotal)
+                                .roundToDouble()
+                                .toString()
+                        : ComSettings.appSettings(
+                                'bool', 'key-round-off-amount', false)
+                            ? CommonService.getRound(decimal, totalCartValue)
+                                .toString()
+                            : CommonService.getRound(
+                                    2, totalCartValue.roundToDouble())
+                                .toString(),
+                    style: const TextStyle(
+                        fontSize: 22.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red))
               ],
             ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('GrandTotal : ',
-                  style: TextStyle(
-                      fontSize: 22.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red)),
-              Text(
-                  grandTotal > 0
-                      ? ComSettings.appSettings(
-                              'bool', 'key-round-off-amount', false)
-                          ? CommonService.getRound(decimal, grandTotal)
-                              .toString()
-                          : CommonService.getRound(decimal, grandTotal)
-                              .roundToDouble()
-                              .toString()
-                      : ComSettings.appSettings(
-                              'bool', 'key-round-off-amount', false)
-                          ? CommonService.getRound(decimal, totalCartValue)
-                              .toString()
-                          : CommonService.getRound(
-                                  2, totalCartValue.roundToDouble())
-                              .toString(),
-                  style: const TextStyle(
-                      fontSize: 22.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red))
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Balance : '),
-              Text(
-                  ComSettings.appSettings('bool', 'key-round-off-amount', false)
-                      ? _balance.toStringAsFixed(decimal)
-                      : _balance.roundToDouble().toString()),
-            ],
-          ),
-        ],
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //   children: [
+            //     const Text('Balance : '),
+            //     Text(ComSettings.appSettings(
+            //             'bool', 'key-round-off-amount', false)
+            //         ? _balance.toStringAsFixed(decimal)
+            //         : _balance.roundToDouble().toString()),
+            //   ],
+            // ),
+          ],
+        ),
       ),
     );
   }
@@ -2750,7 +3331,7 @@ class _SalesReturnState extends State<SalesReturn> {
           //   }
           // }
 
-          Navigator.of(context).pop();
+          // Navigator.of(context).pop();
           Navigator.pushReplacementNamed(context, '/return_preview_show',
               arguments: {'title': 'SalesReturn'});
           //   }
@@ -2798,9 +3379,8 @@ class _SalesReturnState extends State<SalesReturn> {
   fetchSaleReturn(context, id) {
     rateType = '1';
     double billTotal = 0;
-    String narration = ' ';
 
-    dio.fetchSalesReturnInvoice(id.toString(), 1).then((value) {
+    api.fetchSalesReturnInvoice(id.toString(), 1).then((value) {
       if (value != null) {
         var information = value['Information'][0];
         var particulars = value['Particulars'];
@@ -2820,7 +3400,7 @@ class _SalesReturnState extends State<SalesReturn> {
           }
         ];
         billTotal = double.tryParse(information['GrandTotal'].toString());
-        narration = information['Narration'];
+        controllerNarration.text = information['Narration'];
         CustomerModel cModel = CustomerModel(
             id: information['Customer'],
             name: information['ToName'],
@@ -2887,18 +3467,81 @@ class _SalesReturnState extends State<SalesReturn> {
                   stock: 0),
               -1);
         }
+
+        userDateCheck(information['DDate'].toString());
       }
 
       setState(() {
         widgetID = false;
         grandTotal = billTotal;
-        _narration = narration;
         nextWidget = 4;
         oldBill = true;
       });
       // Navigator.pushReplacementNamed(context, '/preview_show',
       // arguments: {'title': 'Sale'});
     });
+  }
+
+  Future<void> searchBill(BuildContext context, int type) async {
+    TextEditingController _controller = TextEditingController();
+    String valueText;
+    _controller.text = '';
+
+    return showDialog(
+        context: context,
+        builder: (BuildContext cx) {
+          return AlertDialog(
+            title: const Text('Type EntryNo'),
+            content: TextField(
+              onChanged: (value) {
+                valueText = value;
+              },
+              controller: _controller,
+              decoration: const InputDecoration(
+                  border: OutlineInputBorder(), labelText: "EntryNo"),
+              keyboardType: const TextInputType.numberWithOptions(),
+              inputFormatters: [
+                FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                    allow: true, replacementString: '.')
+              ],
+            ),
+            actions: [
+              TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.red,
+                ),
+                child: const Text('CANCEL'),
+                onPressed: () {
+                  setState(() {
+                    Navigator.pop(cx);
+                  });
+                },
+              ),
+              TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.green,
+                ),
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.pop(cx);
+                  if (_controller.text.isNotEmpty) {
+                    dataDynamic = [
+                      {
+                        'Type': type,
+                        'InvoiceNo': _controller.text,
+                        'EntryNo': int.tryParse(_controller.text) ?? 0,
+                        'Id': int.tryParse(_controller.text) ?? 0
+                      }
+                    ];
+                    fetchSaleReturn(context, dataDynamic[0]['Id']);
+                  }
+                },
+              ),
+            ],
+          );
+        });
   }
 
   Uint8List byteImage;
@@ -2971,7 +3614,7 @@ class _SalesReturnState extends State<SalesReturn> {
 
   productTrackingListData(ledger, String itemId) {
     return FutureBuilder(
-        future: dio.getSoldProductTracking(itemId, ledger),
+        future: api.getSoldProductTracking(itemId, ledger),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data.length > 0) {
@@ -3057,15 +3700,6 @@ class _SalesReturnState extends State<SalesReturn> {
             ),
           );
         });
-
-    // return ListView.builder(
-    //   itemCount: 150,
-    //   itemBuilder: (BuildContext context, int index) {
-    //     return ListTile(
-    //       title: Text(index.toString()),
-    //     );
-    //   },
-    // );
   }
 }
 

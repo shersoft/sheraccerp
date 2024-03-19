@@ -98,7 +98,7 @@ class _SalesReturnListState extends State<SalesReturnList> {
           'subcategory': subCategory != null ? subCategory['id'] : '0',
           'location': dropDownBranchId != null ? location['id'] ?? '0' : '0',
           'project': project != null ? project['id'] : '0',
-          'salesMan': salesMan != null ? salesMan['id'] : '0'
+          'salesMan': salesMan != null ? salesMan.id.toString() : '0'
         }) +
         ']';
 

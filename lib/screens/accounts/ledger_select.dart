@@ -412,8 +412,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                 TextButton(
                   onPressed: () {
                     statement = _showQty ? 'Ledger_Report_Qty' : statement;
-                    List<int> branches =
-                        locationId != null ? [locationId.id] : [0];
+                    List<int> branches = locationId != null
+                        ? [locationId.id]
+                        : otherRegLocationList.map((e) => e.id).toList();
                     Navigator.push(
                         context,
                         MaterialPageRoute(

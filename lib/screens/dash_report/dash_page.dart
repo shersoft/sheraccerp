@@ -98,7 +98,6 @@ class _DashPageState extends State<DashPage> {
       _fetchSalesSummary(dropdownBranchId);
       _fetchPurchaseSummary(dropdownBranchId);
     } else {
-      dio.checkDomain();
       _fetchDataAll();
     }
   }

@@ -513,7 +513,8 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                               ),
                               onPressed: () {
                                 isData = false;
-                                Navigator.pushNamed(context, '/ledger',
+                                Navigator.pushReplacementNamed(
+                                    context, '/ledger',
                                     arguments: {'parent': 'SUPPLIERS'});
                               },
                             )
@@ -2005,8 +2006,7 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                   TextButton(
                     onPressed: () {
                       Navigator.of(context).pop();
-                      Navigator.pushReplacementNamed(
-                          context, '/purchaseReturn');
+                      Navigator.pushNamed(context, '/purchaseReturn');
                     },
                     child: const Text('CANCEL'),
                   )
@@ -2050,7 +2050,7 @@ showMore(context, purchaseState) {
           'otherAmount': '[{}]'
         };
 
-        Navigator.of(context).pop();
+        // Navigator.of(context).pop();
         Navigator.pushReplacementNamed(context, '/purchase_return_preview_show',
             arguments: {'title': 'PurchaseReturn'});
       },

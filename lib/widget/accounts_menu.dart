@@ -38,8 +38,7 @@ class AccountsMenu extends StatelessWidget {
             ),
           ),
           onTap: () {
-            Navigator.pushNamed(context, '/RPVoucher',
-                arguments: {'voucher': 'Payment'});
+            showPaymentOptionList(context);
           },
         ),
         GestureDetector(
@@ -63,60 +62,7 @@ class AccountsMenu extends StatelessWidget {
             ),
           ),
           onTap: () {
-            Navigator.pushNamed(context, '/RPVoucher',
-                arguments: {'voucher': 'Receipt'});
-          },
-        ),
-        GestureDetector(
-          child: Card(
-            elevation: 5.0,
-            child: Container(
-              padding: const EdgeInsets.all(0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[
-                  Icon(
-                    Icons.payments_rounded,
-                    color: Colors.green[500],
-                    size: 90.0,
-                  ),
-                  const Text(
-                    'Payment Invoice',
-                    style: TextStyle(
-                        color: Colors.black, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          onTap: () {
-            Navigator.pushNamed(context, '/InvRPVoucher',
-                arguments: {'voucher': 'Payment Invoice'});
-          },
-        ),
-        GestureDetector(
-          child: Card(
-            elevation: 5.0,
-            child: Container(
-              padding: const EdgeInsets.all(0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[
-                  Icon(
-                    Icons.receipt_long_rounded,
-                    color: Colors.blue[500],
-                    size: 90.0,
-                  ),
-                  const Text('Receipt Invoice',
-                      style: TextStyle(
-                          color: Colors.black, fontWeight: FontWeight.bold)),
-                ],
-              ),
-            ),
-          ),
-          onTap: () {
-            Navigator.pushNamed(context, '/InvRPVoucher',
-                arguments: {'voucher': 'Receipt Invoice'});
+            showReceiptOptionList(context);
           },
         ),
         GestureDetector(
@@ -273,59 +219,123 @@ class AccountsMenu extends StatelessWidget {
             // _showDialog(context);
           },
         ),
-        GestureDetector(
-          child: Card(
-            elevation: 5.0,
-            child: Container(
-              padding: const EdgeInsets.all(0),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.payment_rounded,
-                    color: Colors.red[500],
-                    size: 90.0,
-                  ),
-                  const Text(
-                    'Bank Payment',
-                    style: TextStyle(
-                        color: Colors.black, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          onTap: () {
-            Navigator.pushNamed(context, '/BankVoucher',
-                arguments: {'voucher': 'Payment'});
-          },
-        ),
-        GestureDetector(
-          child: Card(
-            elevation: 5.0,
-            child: Container(
-              padding: const EdgeInsets.all(0),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.receipt_rounded,
-                    color: Colors.green[500],
-                    size: 90.0,
-                  ),
-                  const Text(
-                    'Bank Receipt',
-                    style: TextStyle(
-                        color: Colors.black, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          onTap: () {
-            Navigator.pushNamed(context, '/BankVoucher',
-                arguments: {'voucher': 'Receipt'});
-          },
-        ),
       ],
     );
+  }
+
+  showReceiptOptionList(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            title: const Text('Receipt Option'),
+            children: [
+              SimpleDialogOption(
+                child: Card(
+                    color: blue.shade50,
+                    child: const ListTile(title: Text('Cash Receipt'))),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.pushNamed(context, '/RPVoucher',
+                      arguments: {'voucher': 'Receipt'});
+                },
+              ),
+              SimpleDialogOption(
+                child: Card(
+                    color: blue.shade50,
+                    child: const ListTile(title: Text('Bank Receipt'))),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.pushNamed(context, '/BankVoucher',
+                      arguments: {'voucher': 'Receipt'});
+                },
+              ),
+              SimpleDialogOption(
+                child: Card(
+                    color: blue.shade50,
+                    child: const ListTile(title: Text('Receipt Invoice'))),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.pushNamed(context, '/InvRPVoucher',
+                      arguments: {'voucher': 'Receipt Invoice'});
+                },
+              ),
+              // SimpleDialogOption(
+              //   child: Card(
+              //       color: blue.shade50,
+              //       child: const ListTile(title: Text('Consignment Receipt'))),
+              //   onPressed: () {
+              //     Navigator.of(context).pop();
+              //   },
+              // ),
+              // SimpleDialogOption(
+              //   child: Card(
+              //       color: blue.shade50,
+              //       child: const ListTile(title: Text('Casual Receipt'))),
+              //   onPressed: () {
+              //     Navigator.of(context).pop();
+              //   },
+              // ),
+            ],
+          );
+        });
+  }
+
+  showPaymentOptionList(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            title: const Text('Payment Option'),
+            children: [
+              SimpleDialogOption(
+                child: Card(
+                    color: blue.shade50,
+                    child: const ListTile(title: Text('Cash Payment'))),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.pushNamed(context, '/RPVoucher',
+                      arguments: {'voucher': 'Payment'});
+                },
+              ),
+              SimpleDialogOption(
+                child: Card(
+                    color: blue.shade50,
+                    child: const ListTile(title: Text('Bank Payment'))),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.pushNamed(context, '/BankVoucher',
+                      arguments: {'voucher': 'Payment'});
+                },
+              ),
+              SimpleDialogOption(
+                child: Card(
+                    color: blue.shade50,
+                    child: const ListTile(title: Text('Payment Invoice'))),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.pushNamed(context, '/InvRPVoucher',
+                      arguments: {'voucher': 'Payment Invoice'});
+                },
+              ),
+              // SimpleDialogOption(
+              //   child: Card(
+              //       color: blue.shade50,
+              //       child: const ListTile(title: Text('Consignment Payment'))),
+              //   onPressed: () {
+              //     Navigator.of(context).pop();
+              //   },
+              // ),
+              // SimpleDialogOption(
+              //   child: Card(
+              //       color: blue.shade50,
+              //       child: const ListTile(title: Text('Casual Payment'))),
+              //   onPressed: () {
+              //     Navigator.of(context).pop();
+              //   },
+              // ),
+            ],
+          );
+        });
   }
 }

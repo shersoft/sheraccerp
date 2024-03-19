@@ -7,6 +7,7 @@ import 'package:sheraccerp/sales_man_settings.dart';
 import 'package:sheraccerp/models/company_user.dart';
 import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/screens/about_shersoft.dart';
+import 'package:sheraccerp/screens/inventory/sales/sale.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
 import 'package:sheraccerp/shared/constants.dart';
@@ -155,8 +156,6 @@ class _SalesManHomeState extends State<SalesManHome> {
       firm = (pref.getString('CompanyName') ?? "");
       firmCode = (pref.getString('CustomerCode') ?? "");
       fId = (pref.getString('fId') ?? "");
-      // /**Web only**/
-      // setApiV = (pref.getString('apiV') ?? "v13");
     });
   }
 
@@ -332,9 +331,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                           child: TextButton(
                             child: Text('Date : $getToDay',
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
-                                    fontFamily: 'Poppins')),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                )),
                             onPressed: () => _selectDate(),
                           ),
                         ),
@@ -347,9 +346,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                           child: TextButton(
                             child: Text('Hi  ' + args.username,
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
-                                    fontFamily: 'Poppins')),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                )),
                             onPressed: () {
                               //
                               var d = userControlData;
@@ -371,9 +370,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Sales Order',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 bool sType = true;
                                 salesTypeData = salesTypeList.firstWhere(
@@ -388,26 +387,22 @@ class _SalesManHomeState extends State<SalesManHome> {
                                         ? isSimpleSales
                                             ? Navigator.pushNamed(
                                                 context, '/SimpleSale')
-                                            : Navigator.pushNamed(
-                                                context,
-                                                ComSettings.appSettings(
-                                                        'bool',
-                                                        'key-simple-sales',
-                                                        false)
-                                                    ? '/SimpleSale'
-                                                    : '/sales',
-                                                arguments: {'default': sType})
+                                            : Navigator.of(context)
+                                                .push(MaterialPageRoute(
+                                                    builder: (context) => Sale(
+                                                          oldSale: false,
+                                                          thisSale: sType,
+                                                        )))
                                         : _expire(args, context)
                                     : isSimpleSales
                                         ? Navigator.pushNamed(
                                             context, '/SimpleSale')
-                                        : Navigator.pushNamed(
-                                            context,
-                                            ComSettings.appSettings('bool',
-                                                    'key-simple-sales', false)
-                                                ? '/SimpleSale'
-                                                : '/sales',
-                                            arguments: {'default': sType});
+                                        : Navigator.of(context)
+                                            .push(MaterialPageRoute(
+                                                builder: (context) => Sale(
+                                                      oldSale: false,
+                                                      thisSale: sType,
+                                                    )));
                               },
                             ),
                           ),
@@ -422,11 +417,11 @@ class _SalesManHomeState extends State<SalesManHome> {
                               width: 2.0,
                             )),
                             child: TextButton(
-                              child: const Text('Sale',
+                              child: const Text('Sales',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 bool sType = isEstimateDataBase;
 
@@ -448,26 +443,22 @@ class _SalesManHomeState extends State<SalesManHome> {
                                         ? isSimpleSales
                                             ? Navigator.pushNamed(
                                                 context, '/SimpleSale')
-                                            : Navigator.pushNamed(
-                                                context,
-                                                ComSettings.appSettings(
-                                                        'bool',
-                                                        'key-simple-sales',
-                                                        false)
-                                                    ? '/SimpleSale'
-                                                    : '/sales',
-                                                arguments: {'default': sType})
+                                            : Navigator.of(context)
+                                                .push(MaterialPageRoute(
+                                                    builder: (context) => Sale(
+                                                          oldSale: false,
+                                                          thisSale: sType,
+                                                        )))
                                         : _expire(args, context)
                                     : isSimpleSales
                                         ? Navigator.pushNamed(
                                             context, '/SimpleSale')
-                                        : Navigator.pushNamed(
-                                            context,
-                                            ComSettings.appSettings('bool',
-                                                    'key-simple-sales', false)
-                                                ? '/SimpleSale'
-                                                : '/sales',
-                                            arguments: {'default': sType});
+                                        : Navigator.of(context)
+                                            .push(MaterialPageRoute(
+                                                builder: (context) => Sale(
+                                                      oldSale: false,
+                                                      thisSale: sType,
+                                                    )));
                               },
                             ),
                           ),
@@ -484,9 +475,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Receipt',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 args.active == "false"
                                     ? _commonService.getTrialPeriod(args.atDate)
@@ -512,9 +503,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Payment',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 args.active == "false"
                                     ? _commonService.getTrialPeriod(args.atDate)
@@ -540,9 +531,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Purchase',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 Navigator.pushNamed(context, '/purchase');
                               },
@@ -561,9 +552,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Order List',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 Navigator.pushNamed(context, '/OrderList');
                               },
@@ -582,9 +573,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Bill List',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 Navigator.pushNamed(context, '/BillList');
                               },
@@ -603,9 +594,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Order Item List',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 Navigator.pushNamed(context, '/OrderItemList');
                               },
@@ -624,9 +615,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Sales Return',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 Navigator.pushNamed(context, '/salesReturn');
                               },
@@ -645,9 +636,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Damage Entry',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 Navigator.pushNamed(context, '/damageEntry');
                               },
@@ -666,9 +657,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Ledger',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 Navigator.pushNamed(context, '/ledger',
                                     arguments: {'parent': ''});
@@ -688,9 +679,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Journal',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 args.active == "false"
                                     ? _commonService.getTrialPeriod(args.atDate)
@@ -714,9 +705,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Ledger Report',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 argumentsPass = {'mode': 'ledger'};
                                 Navigator.pushNamed(
@@ -739,9 +730,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Group List',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 argumentsPass = {'mode': 'GroupList'};
                                 Navigator.pushNamed(
@@ -764,9 +755,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Sales List',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 Navigator.pushNamed(
                                   context,
@@ -788,9 +779,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Payment Invoice',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 Navigator.pushNamed(context, '/InvRPVoucher',
                                     arguments: {'voucher': 'Payment Invoice'});
@@ -810,9 +801,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Receipt Invoice',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 Navigator.pushNamed(context, '/InvRPVoucher',
                                     arguments: {'voucher': 'Receipt Invoice'});
@@ -832,9 +823,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                             child: TextButton(
                               child: const Text('Stock Report',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      fontFamily: 'Poppins')),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
                               onPressed: () {
                                 Navigator.pushNamed(context, '/StockReport');
                               },
@@ -851,9 +842,9 @@ class _SalesManHomeState extends State<SalesManHome> {
                           child: TextButton(
                             child: const Text('About',
                                 style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
-                                    fontFamily: 'Poppins')),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                )),
                             onPressed: () {
                               Navigator.push(
                                 context,

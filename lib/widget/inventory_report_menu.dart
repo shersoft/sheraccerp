@@ -83,7 +83,7 @@ class InventoryReportMenu extends StatelessWidget {
                     size: 90.0,
                   ),
                   const Text(
-                    'Product Report',
+                    'Product List',
                     style: TextStyle(
                         color: Colors.black, fontWeight: FontWeight.bold),
                   ),

@@ -117,4 +117,44 @@ class StockProduct {
       color: json['color'] ?? 0,
     );
   }
+
+  static StockProduct empty() {
+    return const StockProduct(
+        adCessPer: 0,
+        branch: 0,
+        brand: 0,
+        buyingPrice: 0,
+        buyingPriceReal: 0,
+        categoryId: 0,
+        cess: 0,
+        cessPer: 0,
+        color: 0,
+        company: 0,
+        estUniqueCode: 0,
+        expDate: '',
+        free: 0,
+        hsnCode: '',
+        itemId: 0,
+        locationId: 0,
+        locked: '',
+        mfrId: 0,
+        minimumRate: 0,
+        name: '',
+        oBarcode: '',
+        productId: 0,
+        quantity: 0,
+        rackId: 0,
+        retailPrice: 0,
+        sellingPrice: 0,
+        serialNo: '',
+        size: 0,
+        spRetailPrice: 0,
+        stockValuation: '',
+        subcategoryId: 0,
+        supplierId: 0,
+        tax: 0,
+        taxType: '',
+        unitId: 0,
+        wholeSalePrice: 0);
+  }
 }

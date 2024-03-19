@@ -144,7 +144,8 @@ class MyApp extends StatelessWidget {
               '/manager_home': (context) => const ManagerHome(title: 'SherAcc'),
               '/staff_home': (context) => const StaffHome(title: 'SherAcc'),
               '/expense_list': (context) => ExpenseList(null, 0),
-              '/sales': (context) => const Sale(),
+              '/sales': (context) =>
+                  const Sale(oldSale: false, thisSale: false),
               '/AlignmentEntry': (context) => AlignmentEntry(),
               '/ServiceEntry': (context) => ServiceEntry(),
               '/purchase': (context) => const Purchase(),

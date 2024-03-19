@@ -3,7 +3,7 @@ description: A new SherSoft Flutter project.
 
 publish_to: "none"
 
-version: 1.0.16+22
+version: 1.0.17+23
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
@@ -88,6 +88,7 @@ dependencies:
   #     url: https://github.com/safvanp/thermal_printer_plus.git
   ping_discover_network:
   wifi:
+  google_translate:
 
 dev_dependencies:
   flutter_test:
@@ -111,20 +112,12 @@ flutter:
   assets:
     - assets/
     - assets/icons/
-    - assets/images/
 
-  fonts:
-    - family: Poppins
-      fonts:
-        - asset: assets/fonts/Poppins-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Poppins-Regular.ttf
-          weight: 400
-    - family: Holyfat
-      fonts:
-        - asset: assets/fonts/Holyfat.ttf
-    - family: Raleway
-      fonts:
-        - asset: assets/fonts/Raleway-Regular.ttf
-        - asset: assets/fonts/Raleway-Italic.ttf
-          style: italic
+  # fonts:
+  #   - family: Poppins
+  #     fonts:
+  #       - asset: assets/fonts/Poppins-SemiBold.ttf
+  #         weight: 600
+  #       - asset: assets/fonts/Poppins-Regular.ttf
+  #         weight: 400
+    

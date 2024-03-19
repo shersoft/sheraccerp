@@ -231,7 +231,7 @@ class _OtherRegistrationState extends State<OtherRegistration> {
         type = _dropDownValue;
     var data = {
       'name': name.toUpperCase(),
-      'description': description.toUpperCase(),
+      'description': description,
       'type': type.toUpperCase(),
       'auto': id.isNotEmpty ? id.toString() : '0',
       'add1': '',

@@ -12,10 +12,15 @@ class SalesManSettings extends StatefulWidget {
 class _SalesManSettingsState extends State<SalesManSettings> {
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-        // appBar: AppBar(
-        //   title: Text("SherAcc"),
-        // ),
-        body: AppSettings());
+    return Scaffold(
+        body: WillPopScope(
+      child: const AppSettings(),
+      onWillPop: onBackPress,
+    ));
+  }
+
+  Future<bool> onBackPress() {
+    Navigator.pushNamedAndRemoveUntil(context, '/', ModalRoute.withName('/'));
+    return Future.value(false);
   }
 }

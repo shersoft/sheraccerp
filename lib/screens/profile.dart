@@ -80,7 +80,6 @@ class _ProfileState extends State<Profile> {
         Text(
           companySettings.name,
           style: const TextStyle(
-              fontFamily: 'Poppins',
               color: kPrimaryDarkColor,
               fontSize: 25,
               fontWeight: FontWeight.bold),
@@ -116,7 +115,6 @@ class _ProfileState extends State<Profile> {
               title: Text(
                 'Business Card',
                 style: TextStyle(
-                  fontFamily: 'Poppins',
                   color: blueAccent,
                   fontSize: 20,
                 ),
@@ -137,7 +135,6 @@ class _ProfileState extends State<Profile> {
                   '  Mob:' +
                   companySettings.mobile,
               style: const TextStyle(
-                fontFamily: 'Poppins',
                 color: blueAccent,
                 fontSize: 12,
               ),
@@ -156,7 +153,6 @@ class _ProfileState extends State<Profile> {
                   ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
                   : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
               style: const TextStyle(
-                fontFamily: 'Poppins',
                 color: blueAccent,
                 fontSize: 15,
               ),
@@ -173,7 +169,6 @@ class _ProfileState extends State<Profile> {
             title: Text(
               'Email:' + companySettings.email.toString(),
               style: const TextStyle(
-                fontFamily: 'Poppins',
                 color: blueAccent,
                 fontSize: 15,
               ),
@@ -196,7 +191,6 @@ class _ProfileState extends State<Profile> {
                   ',' +
                   companySettings.add5,
               style: const TextStyle(
-                fontFamily: 'Poppins',
                 color: blueAccent,
                 fontSize: 12,
               ),
@@ -213,7 +207,6 @@ class _ProfileState extends State<Profile> {
             title: Text(
               'PIN:' + companySettings.pin,
               style: const TextStyle(
-                fontFamily: 'Poppins',
                 color: blueAccent,
                 fontSize: 15,
               ),

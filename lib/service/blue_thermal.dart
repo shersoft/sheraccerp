@@ -933,14 +933,13 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
 
       ///image from File path
       // String filename = 'yourlogo.png';
-      // ByteData bytesData = await rootBundle.load("assets/images/yourlogo.png");
+      // ByteData bytesData = await rootBundle.load("assets/logo1.png");
       // String dir = (await getApplicationDocumentsDirectory()).path;
       // File file = await File('$dir/$filename').writeAsBytes(bytesData.buffer
       //     .asUint8List(bytesData.offsetInBytes, bytesData.lengthInBytes));
 
       ///image from Asset
-      ByteData bytesAsset =
-          await rootBundle.load("assets/images/logo/green.png");
+      ByteData bytesAsset = await rootBundle.load("assets/logo1.png");
       Uint8List imageBytesFromAsset = bytesAsset.buffer
           .asUint8List(bytesAsset.offsetInBytes, bytesAsset.lengthInBytes);
 

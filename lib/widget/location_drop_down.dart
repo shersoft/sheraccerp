@@ -47,7 +47,6 @@ class _LocationDDState extends State<LocationDD> {
             child: Text(
               process,
               style: TextStyle(
-                fontFamily: "Nunito",
                 fontSize: 16,
                 color: ColorPalette.nileBlue.withOpacity(0.58),
               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sheraccerp/screens/about_shersoft.dart';
 import 'package:sheraccerp/screens/html_previews/invoice_make.dart';
+import 'package:sheraccerp/screens/inventory/sales/sale.dart';
 import 'package:sheraccerp/util/res_color.dart';
 
 import '../shared/constants.dart';
@@ -111,7 +112,7 @@ class InventoryMenu extends StatelessWidget {
                     size: 90.0,
                   ),
                   const Text(
-                    'Sale',
+                    'Sales',
                     style: TextStyle(
                         color: Colors.black, fontWeight: FontWeight.bold),
                   ),
@@ -120,12 +121,13 @@ class InventoryMenu extends StatelessWidget {
             ),
           ),
           onTap: () {
-            Navigator.pushNamed(
-                context,
-                ComSettings.appSettings('bool', 'key-simple-sales', false)
-                    ? '/SimpleSale'
-                    : '/sales',
-                arguments: {'default': false});
+            ComSettings.appSettings('bool', 'key-simple-sales', false)
+                ? Navigator.pushNamed(context, '/SimpleSale')
+                : Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => Sale(
+                          oldSale: false,
+                          thisSale: false,
+                        )));
           },
         ),
         GestureDetector(

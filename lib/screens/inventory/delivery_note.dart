@@ -575,7 +575,6 @@ class _DeliveryNoteState extends State<DeliveryNote> {
                                   dataDisplay[index]['Name'],
                                   // maxLines: 1,
                                   style: const TextStyle(
-                                    // fontFamily: "Nunito",
                                     // fontSize: 16,
                                     color: ColorPalette.timberGreen,
                                   ),
@@ -589,7 +588,6 @@ class _DeliveryNoteState extends State<DeliveryNote> {
                                       'Date :${dataDisplay[index]['Date']}',
                                       maxLines: 1,
                                       style: TextStyle(
-                                        // fontFamily: "Nunito",
                                         fontSize: 12,
                                         color: ColorPalette.timberGreen
                                             .withOpacity(0.44),
@@ -612,7 +610,6 @@ class _DeliveryNoteState extends State<DeliveryNote> {
                                       'EntryNo :${dataDisplay[index]['Id'].toString()}',
                                       maxLines: 1,
                                       style: TextStyle(
-                                        // fontFamily: "Nunito",
                                         fontSize: 12,
                                         color: ColorPalette.timberGreen
                                             .withOpacity(0.44),
@@ -636,7 +633,6 @@ class _DeliveryNoteState extends State<DeliveryNote> {
                                 const Text(
                                   'Total',
                                   style: TextStyle(
-                                    // fontFamily: "Nunito",
                                     fontSize: 14,
                                     color: ColorPalette.nileBlue,
                                   ),
@@ -3339,7 +3335,7 @@ class _DeliveryNoteState extends State<DeliveryNote> {
                                         pUnit: snapshot.data[i].pUnit,
                                         sUnit: snapshot.data[i].sUnit,
                                         unit: snapshot.data[i].unit,
-                                        rate: snapshot.data[i].rate));
+                                        rate: snapshot.data[i].pRate));
                                   }
                                 }
                                 return snapshot.data != null &&

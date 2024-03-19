@@ -605,7 +605,6 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
                                                 dataDisplayBill[index]['Stype'],
                                                 style: const TextStyle(
                                                     color: Colors.black,
-                                                    fontFamily: 'Avenir',
                                                     fontWeight:
                                                         FontWeight.w700),
                                               ),
@@ -616,7 +615,6 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
                                                         .toString(),
                                                 style: const TextStyle(
                                                   color: Colors.black,
-                                                  fontFamily: 'Avenir',
                                                   fontWeight: FontWeight.w600,
                                                 ),
                                               ),
@@ -627,7 +625,6 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
                                                         .toString(),
                                                 style: const TextStyle(
                                                   color: Colors.black,
-                                                  fontFamily: 'Avenir',
                                                   fontWeight: FontWeight.w600,
                                                 ),
                                               ),
@@ -647,7 +644,6 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
                                                     .toStringAsFixed(2),
                                             style: const TextStyle(
                                                 color: Colors.black,
-                                                fontFamily: 'Avenir',
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w600),
                                           ),
@@ -658,7 +654,6 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
                                                     .toStringAsFixed(2),
                                             style: const TextStyle(
                                                 color: Colors.black,
-                                                fontFamily: 'Avenir',
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w600),
                                           ),

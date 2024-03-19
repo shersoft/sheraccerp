@@ -94,9 +94,9 @@ class _DashListState extends State<DashList> {
                               child: TextButton(
                                 child: const Text('Statement',
                                     style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20,
-                                        fontFamily: 'Poppins')),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                    )),
                                 onPressed: () {
                                   setState(() {
                                     index = 1;
@@ -111,9 +111,9 @@ class _DashListState extends State<DashList> {
                               child: TextButton(
                                 child: const Text('Expense',
                                     style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20,
-                                        fontFamily: 'Poppins')),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                    )),
                                 onPressed: () {
                                   setState(() {
                                     index = 2;
@@ -128,9 +128,9 @@ class _DashListState extends State<DashList> {
                               child: TextButton(
                                 child: const Text('Cash & Bank',
                                     style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20,
-                                        fontFamily: 'Poppins')),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                    )),
                                 onPressed: () {
                                   setState(() {
                                     index = 3;
@@ -145,9 +145,9 @@ class _DashListState extends State<DashList> {
                               child: TextButton(
                                 child: const Text('Receivable & Payable',
                                     style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20,
-                                        fontFamily: 'Poppins')),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                    )),
                                 onPressed: () {
                                   setState(() {
                                     index = 4;

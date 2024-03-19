@@ -21,6 +21,7 @@ import 'package:sheraccerp/models/stock_product.dart';
 import 'package:sheraccerp/models/unit_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/inventory/sales/previous_bill.dart';
+import 'package:sheraccerp/screens/inventory/sales/sale.dart';
 import 'package:sheraccerp/screens/inventory/sales/sales_return.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
@@ -640,7 +641,6 @@ class _SimpleSaleState extends State<SimpleSale> {
                                   dataDisplay[index]['Name'],
                                   // maxLines: 1,
                                   style: const TextStyle(
-                                    // fontFamily: "Nunito",
                                     // fontSize: 16,
                                     color: ColorPalette.timberGreen,
                                   ),
@@ -654,7 +654,6 @@ class _SimpleSaleState extends State<SimpleSale> {
                                       'Date :${dataDisplay[index]['Date']}',
                                       maxLines: 1,
                                       style: TextStyle(
-                                        // fontFamily: "Nunito",
                                         fontSize: 12,
                                         color: ColorPalette.timberGreen
                                             .withOpacity(0.44),
@@ -677,7 +676,6 @@ class _SimpleSaleState extends State<SimpleSale> {
                                       'EntryNo :${dataDisplay[index]['Id'].toString()}',
                                       maxLines: 1,
                                       style: TextStyle(
-                                        // fontFamily: "Nunito",
                                         fontSize: 12,
                                         color: ColorPalette.timberGreen
                                             .withOpacity(0.44),
@@ -701,7 +699,6 @@ class _SimpleSaleState extends State<SimpleSale> {
                                 const Text(
                                   'Total',
                                   style: TextStyle(
-                                    // fontFamily: "Nunito",
                                     fontSize: 14,
                                     color: ColorPalette.nileBlue,
                                   ),
@@ -1321,7 +1318,7 @@ class _SimpleSaleState extends State<SimpleSale> {
                                   'bool', 'key-simple-sales', false)
                               ? '/SimpleSale'
                               : '/sales',
-                          arguments: {'default': thisSale});
+                          arguments: Sale(thisSale: thisSale, oldSale: true));
                     },
                     child: const Text('CANCEL'),
                   )
@@ -3625,7 +3622,7 @@ class _SimpleSaleState extends State<SimpleSale> {
                                         pUnit: snapshot.data[i].pUnit,
                                         sUnit: snapshot.data[i].sUnit,
                                         unit: snapshot.data[i].unit,
-                                        rate: snapshot.data[i].rate));
+                                        rate: snapshot.data[i].pRate));
                                   }
                                 }
                                 return snapshot.data != null &&
@@ -5603,7 +5600,7 @@ class _SimpleSaleState extends State<SimpleSale> {
               ComSettings.appSettings('bool', 'key-simple-sales', false)
                   ? '/SimpleSale'
                   : '/sales',
-              arguments: {'default': thisSale});
+              arguments: Sale(thisSale: thisSale, oldSale: true));
         },
         onPressedYes: () {
           Navigator.of(context).pop();

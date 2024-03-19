@@ -696,18 +696,14 @@ class _SalesmanRegistrationState extends State<SalesmanRegistration> {
         'name': nameControl.text.isNotEmpty
             ? nameControl.text.trim().toUpperCase()
             : '',
-        'address1': addressControl.text.isNotEmpty
-            ? addressControl.text.trim().toUpperCase()
-            : '',
-        'address2': address2Control.text.isNotEmpty
-            ? address2Control.text.trim().toUpperCase()
-            : '',
-        'address3': address3Control.text.isNotEmpty
-            ? address3Control.text.trim().toUpperCase()
-            : '',
-        'mobile': mobileControl.text.isNotEmpty
-            ? mobileControl.text.trim().toUpperCase()
-            : '',
+        'address1':
+            addressControl.text.isNotEmpty ? addressControl.text.trim() : '',
+        'address2':
+            address2Control.text.isNotEmpty ? address2Control.text.trim() : '',
+        'address3':
+            address3Control.text.isNotEmpty ? address3Control.text.trim() : '',
+        'mobile':
+            mobileControl.text.isNotEmpty ? mobileControl.text.trim() : '',
         'section': '',
         'location': locationId,
         'gender': _gender,

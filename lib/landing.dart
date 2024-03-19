@@ -11,13 +11,11 @@ import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sheraccerp/main.dart';
 import 'package:sheraccerp/models/api_error.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/company_user.dart';
 import 'package:sheraccerp/provider/app_provider.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
-import 'package:sheraccerp/screens/company_alert.dart';
 import 'package:sheraccerp/service/api.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
@@ -182,7 +180,6 @@ class _LandingState extends State<Landing> {
                           textStyle: const TextStyle(
                             fontSize: 40.0,
                             fontWeight: FontWeight.bold,
-                            fontFamily: 'Raleway',
                           ),
                           boxHeight: 100.0,
                         ),
@@ -425,6 +422,7 @@ class _LandingState extends State<Landing> {
             if ((apiResponse.ApiError as ApiError) == null) {
               data = apiResponse.Data;
             } else {
+              data = [];
               _showErrorDialog((apiResponse.ApiError as ApiError).error);
             }
           });
@@ -895,9 +893,6 @@ class _LandingState extends State<Landing> {
   _loadingCompanyInfo() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     _regId = (pref.getString('regId') ?? "");
-    /**Web only**/
-    // setApiV = (pref.getString('apiV') ?? "v13");
-    // debugPrint(apiV);
     if (_regId.trim().isNotEmpty) {
       var dataBase = isEstimateDataBase
           ? pref.getString('DBName')
@@ -1033,11 +1028,9 @@ class _LandingState extends State<Landing> {
   }
 
   void _showErrorDialog(String message) {
-    // flutter defined function
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        // return object of type Dialog
         return AlertDialog(
           title: Row(
             children: [
@@ -1048,7 +1041,6 @@ class _LandingState extends State<Landing> {
           ),
           content: Text(message),
           actions: <Widget>[
-            // usually buttons at the bottom of the dialog
             TextButton(
               child: const Text("Close"),
               onPressed: () {

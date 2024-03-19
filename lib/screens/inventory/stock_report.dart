@@ -180,8 +180,7 @@ class _StockReportState extends State<StockReport> {
                         labelColor: black,
                         indicatorColor: blue,
                         labelPadding: EdgeInsets.all(0),
-                        labelStyle:
-                            TextStyle(fontSize: 19, fontFamily: 'Poppins'),
+                        labelStyle: TextStyle(fontSize: 19),
                         tabs: [
                           Tab(
                             // icon: Icon(Icons.camera),

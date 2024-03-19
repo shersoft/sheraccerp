@@ -190,7 +190,19 @@ class CartItemP {
       retailPer,
       spRetailPer,
       branchPer;
-  int id, itemId, unitId, fUnitId, barcode, uniqueCode, location;
+  int id,
+      itemId,
+      unitId,
+      fUnitId,
+      barcode,
+      uniqueCode,
+      location,
+      estUniqueCode,
+      brand,
+      company,
+      size,
+      color,
+      expenseQty;
   CartItemP(
       {required this.id,
       required this.itemId,
@@ -235,7 +247,13 @@ class CartItemP {
       required this.retailPer,
       required this.spRetailPer,
       required this.branchPer,
-      required this.unitName});
+      required this.unitName,
+      required this.estUniqueCode,
+      required this.brand,
+      required this.company,
+      required this.size,
+      required this.color,
+      required this.expenseQty});
 
   Map<String, dynamic> toCartJson() {
     return {
@@ -283,6 +301,12 @@ class CartItemP {
       'spRetailPer': spRetailPer,
       'branchPer': branchPer,
       'unitName': unitName,
+      'estUniqueCode': estUniqueCode,
+      'brand': brand,
+      'company': company,
+      'size': size,
+      'color': color,
+      'expenseQty': expenseQty
     };
   }
 
@@ -338,6 +362,12 @@ class CartItemP {
     map['spRetailPer'] = spRetailPer;
     map['branchPer'] = branchPer;
     map['unitName'] = unitName;
+    map['estUniqueCode'] = estUniqueCode;
+    map['brand'] = brand;
+    map['company'] = company;
+    map['size'] = size;
+    map['color'] = color;
+    map['expenseQty'] = expenseQty;
     return map;
   }
 }

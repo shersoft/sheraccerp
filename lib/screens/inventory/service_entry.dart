@@ -406,7 +406,6 @@ class _ServiceEntryState extends State<ServiceEntry> {
                                   dataDisplay[index]['Name'],
                                   // maxLines: 1,
                                   style: const TextStyle(
-                                    // fontFamily: "Nunito",
                                     // fontSize: 16,
                                     color: ColorPalette.timberGreen,
                                   ),
@@ -420,7 +419,6 @@ class _ServiceEntryState extends State<ServiceEntry> {
                                       'Date :${dataDisplay[index]['Date']}',
                                       maxLines: 1,
                                       style: TextStyle(
-                                        // fontFamily: "Nunito",
                                         fontSize: 12,
                                         color: ColorPalette.timberGreen
                                             .withOpacity(0.44),
@@ -443,7 +441,6 @@ class _ServiceEntryState extends State<ServiceEntry> {
                                       'EntryNo :${dataDisplay[index]['Id'].toString()}',
                                       maxLines: 1,
                                       style: TextStyle(
-                                        // fontFamily: "Nunito",
                                         fontSize: 12,
                                         color: ColorPalette.timberGreen
                                             .withOpacity(0.44),
@@ -467,7 +464,6 @@ class _ServiceEntryState extends State<ServiceEntry> {
                                 const Text(
                                   'Total',
                                   style: TextStyle(
-                                    // fontFamily: "Nunito",
                                     fontSize: 14,
                                     color: ColorPalette.nileBlue,
                                   ),

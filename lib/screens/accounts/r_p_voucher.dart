@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_awesome_alert_box/flutter_awesome_alert_box.dart';
@@ -13,6 +14,7 @@ import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/customer_model.dart';
 import 'package:sheraccerp/models/ledger_name_model.dart';
 import 'package:sheraccerp/models/sms_data_model.dart';
+import 'package:sheraccerp/models/voucher_type_model.dart';
 import 'package:sheraccerp/screens/html_previews/rpv_preview.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/bt_print.dart';
@@ -50,15 +52,18 @@ class _RPVoucherState extends State<RPVoucher> {
       widgetID = true,
       lastRecord = false,
       buttonEvent = false,
-      isMultiRvPv = false;
+      isMultiRvPv = false,
+      keyEditAndDeleteAdminOnlyDaysBefore = false,
+      daysBefore = false;
   int refNo = 0, acId = 0;
-  int page = 1, pageTotal = 0, totalRecords = 0;
+  int page = 1, pageTotal = 0, totalRecords = 0, valueDaysBefore = 0;
   int locationId = 1,
       salesManId = 0,
       decimal = 2,
       groupId = 0,
       areaId = 0,
       routeId = 0;
+  VoucherType voucherTypeData;
   List<CompanySettings> settings;
   CompanyInformation companySettings;
   final TextEditingController _controllerAmount = TextEditingController();
@@ -113,6 +118,26 @@ class _RPVoucherState extends State<RPVoucher> {
     routeId =
         ComSettings.appSettings('int', 'key-dropdown-default-route-view', 0) -
             1;
+    keyEditAndDeleteAdminOnlyDaysBefore = ComSettings.getStatus(
+        'KEY EDIT AND DELETE ADMIN ONLY DAYS BEFORE', settings);
+    valueDaysBefore = int.tryParse(ComSettings.getValue(
+            'KEY EDIT AND DELETE ADMIN ONLY DAYS BEFORE', settings)
+        .toString());
+  }
+
+  userDateCheck(String date) {
+    if (keyEditAndDeleteAdminOnlyDaysBefore) {
+      DateTime date1 =
+          DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.parse(date)));
+      DateTime date2 = DateTime.parse(DateFormat('yyyy-MM-dd').format(now));
+
+      if (DateUtil.compareDate(
+          date1: date1, date2: date2, days: valueDaysBefore)) {
+        if (companyUserData.userType.toUpperCase() != 'ADMIN') {
+          daysBefore = true;
+        }
+      }
+    }
   }
 
   @override
@@ -121,6 +146,15 @@ class _RPVoucherState extends State<RPVoucher> {
     final routes =
         ModalRoute.of(context).settings.arguments as Map<String, String>;
     var title = routes != null ? routes['voucher'].toString() : 'Voucher';
+    if (voucherTypeList.isNotEmpty) {
+      voucherTypeData = title == 'Payment'
+          ? voucherTypeList.firstWhere(
+              (element) => element.voucher.toLowerCase() == 'payment')
+          : title == 'Receipt'
+              ? voucherTypeList.firstWhere(
+                  (element) => element.voucher.toLowerCase() == 'receipt')
+              : VoucherType.emptyData();
+    }
     return WillPopScope(
         onWillPop: _onWillPop,
         child: widgetID ? widgetPrefix(title) : widgetSuffix(title));
@@ -164,9 +198,17 @@ class _RPVoucherState extends State<RPVoucher> {
                     } else {
                       accountId = acId > 0 ? acId.toString() : '';
                       if (companyUserData.deleteData) {
-                        title == 'Payment'
-                            ? deleteVoucher('Payment', 'DELETE')
-                            : deleteVoucher('Receipt', 'DELETE');
+                        if (!daysBefore) {
+                          title == 'Payment'
+                              ? deleteVoucher('Payment', 'DELETE')
+                              : deleteVoucher('Receipt', 'DELETE');
+                        } else {
+                          Fluttertoast.showToast(
+                              msg: 'Voucher Date not equal\ncan`t delete');
+                          setState(() {
+                            buttonEvent = false;
+                          });
+                        }
                       } else {
                         Fluttertoast.showToast(
                             msg: 'Permission denied\ncan`t delete');
@@ -186,9 +228,17 @@ class _RPVoucherState extends State<RPVoucher> {
                       //edit
                       accountId = acId > 0 ? acId.toString() : '';
                       if (companyUserData.updateData) {
-                        title == 'Payment'
-                            ? submitData('Payment', 'UPDATE')
-                            : submitData('Receipt', 'UPDATE');
+                        if (!daysBefore) {
+                          title == 'Payment'
+                              ? submitData('Payment', 'UPDATE')
+                              : submitData('Receipt', 'UPDATE');
+                        } else {
+                          Fluttertoast.showToast(
+                              msg: 'Voucher Date not equal\ncan`t edit');
+                          setState(() {
+                            buttonEvent = false;
+                          });
+                        }
                       } else {
                         Fluttertoast.showToast(
                             msg: 'Permission denied\ncan`t edit');
@@ -288,8 +338,13 @@ class _RPVoucherState extends State<RPVoucher> {
         locationId = locationId > 0 ? locationId : -1;
         String salesMan = salesManId > 0 ? salesManId.toString() : '';
         api
-            .getPaginationList(statement, page, locationId.toString(), '0',
-                DateUtil.dateYMD(formattedDate), salesMan)
+            .getPaginationList(
+                statement,
+                page,
+                locationId.toString(),
+                voucherTypeData.id.toString(),
+                DateUtil.dateYMD(formattedDate),
+                salesMan)
             .then((value) {
           if (value.isEmpty) {
             return;
@@ -421,6 +476,7 @@ class _RPVoucherState extends State<RPVoucher> {
             'month': '',
             'particular': particular,
             'fyId': currentFinancialYear.id,
+            'frmId': voucherTypeData.id,
             'statementType': operation == 'UPDATE'
                 ? mode == 'Payment'
                     ? 'Update_Pv'
@@ -573,7 +629,12 @@ class _RPVoucherState extends State<RPVoucher> {
         var entryNo = oldVoucher ? dataDynamic[0]['EntryNo'].toString() : '0';
         var fyId = currentFinancialYear.id;
         var statementType = mode == 'Payment' ? 'Delete_Pv' : 'Delete_Rv';
-        refNo = await api.deleteVoucher(entryNo, fyId, statementType);
+        refNo = await api.deleteVoucher(
+          entryNo,
+          fyId,
+          statementType,
+          voucherTypeData.id,
+        );
         if (refNo > 0) {
           setState(() {
             _isLoading = false;
@@ -844,7 +905,8 @@ class _RPVoucherState extends State<RPVoucher> {
     double voucherTotal = 0;
     int row = 0;
     api
-        .fetchVoucher(data['Id'], mode == 'Payment' ? 'FindPv' : 'FindRv')
+        .fetchVoucher(data['Id'], mode == 'Payment' ? 'FindPv' : 'FindRv',
+            voucherTypeData.id)
         .then((value) {
       if (value != null) {
         var information = value[0][0];
@@ -879,6 +941,8 @@ class _RPVoucherState extends State<RPVoucher> {
         // for (var part in particulars) {
         //   //
         // }
+
+        userDateCheck(information['DDate']);
         setState(() {
           if (row > 0) {
             widgetID = false;
@@ -901,8 +965,12 @@ class _RPVoucherState extends State<RPVoucher> {
       final String result = await platform.invokeMethod(
           'sendSMS', <String, dynamic>{"phone": number, "msg": msg});
       debugPrint(result);
-    } on PlatformException catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result)));
+    } on PlatformException catch (e, s) {
       debugPrint(e.toString());
+      FirebaseCrashlytics.instance
+          .recordError(e, s, reason: 'sent SMS:' + number.toString());
     }
   }
 

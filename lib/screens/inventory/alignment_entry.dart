@@ -403,7 +403,6 @@ class _AlignmentEntryState extends State<AlignmentEntry> {
                                   dataDisplay[index]['Name'],
                                   // maxLines: 1,
                                   style: const TextStyle(
-                                    // fontFamily: "Nunito",
                                     // fontSize: 16,
                                     color: ColorPalette.timberGreen,
                                   ),
@@ -417,7 +416,6 @@ class _AlignmentEntryState extends State<AlignmentEntry> {
                                       'Date :${dataDisplay[index]['Date']}',
                                       maxLines: 1,
                                       style: TextStyle(
-                                        // fontFamily: "Nunito",
                                         fontSize: 12,
                                         color: ColorPalette.timberGreen
                                             .withOpacity(0.44),
@@ -440,7 +438,6 @@ class _AlignmentEntryState extends State<AlignmentEntry> {
                                       'EntryNo :${dataDisplay[index]['Id'].toString()}',
                                       maxLines: 1,
                                       style: TextStyle(
-                                        // fontFamily: "Nunito",
                                         fontSize: 12,
                                         color: ColorPalette.timberGreen
                                             .withOpacity(0.44),
@@ -464,7 +461,6 @@ class _AlignmentEntryState extends State<AlignmentEntry> {
                                 const Text(
                                   'Total',
                                   style: TextStyle(
-                                    // fontFamily: "Nunito",
                                     fontSize: 14,
                                     color: ColorPalette.nileBlue,
                                   ),

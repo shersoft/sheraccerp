@@ -1648,7 +1648,7 @@ class _DamageEntryState extends State<DamageEntry> {
         onPressedYes: () {
           Navigator.of(context).pop();
           // Navigator.pushReplacementNamed(context, '/preview_show',
-          //     arguments: {'title': 'Sale'});
+          //     arguments: {'title': 'Sales'});
         },
         buttonTextForNo: 'No',
         buttonTextForYes: 'YES',

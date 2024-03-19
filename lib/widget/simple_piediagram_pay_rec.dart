@@ -29,9 +29,7 @@ class SimplePieDiagramPayRec extends StatelessWidget {
           desiredMaxRows: 2,
           cellPadding: const EdgeInsets.only(right: 4.0, bottom: 4.0, top: 4.0),
           entryTextStyle: charts.TextStyleSpec(
-              color: charts.MaterialPalette.purple.shadeDefault,
-              fontFamily: 'Holyfat',
-              fontSize: 18),
+              color: charts.MaterialPalette.purple.shadeDefault, fontSize: 18),
         )
       ],
       defaultRenderer:

@@ -8,6 +8,7 @@ import 'package:sheraccerp/app_settings_page.dart';
 import 'package:sheraccerp/models/company_user.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/dash_report/dash_page.dart';
+import 'package:sheraccerp/screens/inventory/sales/sale.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
 import 'package:sheraccerp/shared/constants.dart';
@@ -125,8 +126,6 @@ class _ManagerHomeState extends State<ManagerHome>
       firm = (prefs.getString('CompanyName') ?? "");
       firmCode = (prefs.getString('CustomerCode') ?? "");
       fId = (prefs.getString('fId') ?? "");
-      // /**Web only**/
-      // setApiV = (pref.getString('apiV') ?? "v13");
     });
   }
 
@@ -324,7 +323,7 @@ class _ManagerHomeState extends State<ManagerHome>
         SpeedDialChild(
           child: const Icon(Icons.storefront_rounded),
           // backgroundColor: kPrimaryColor[500],
-          label: 'Sale',
+          label: 'Sales',
           labelStyle: const TextStyle(fontSize: 18.0),
           onTap: () {
             var settings = ScopedModel.of<MainModel>(context).getSettings();
@@ -336,20 +335,21 @@ class _ManagerHomeState extends State<ManagerHome>
                 : false;
             args.active == "false"
                 ? _commonService.getTrialPeriod(args.atDate)
-                    ? Navigator.pushNamed(
-                        context,
-                        ComSettings.appSettings(
-                                'bool', 'key-simple-sales', false)
-                            ? '/SimpleSale'
-                            : '/sales',
-                        arguments: {'default': sType})
+                    ? ComSettings.appSettings('bool', 'key-simple-sales', false)
+                        ? Navigator.pushNamed(context, '/SimpleSale')
+                        : Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => Sale(
+                                  oldSale: false,
+                                  thisSale: sType,
+                                )))
                     : _expire(args, context)
-                : Navigator.pushNamed(
-                    context,
-                    ComSettings.appSettings('bool', 'key-simple-sales', false)
-                        ? '/SimpleSale'
-                        : '/sales',
-                    arguments: {'default': sType});
+                : ComSettings.appSettings('bool', 'key-simple-sales', false)
+                    ? Navigator.pushNamed(context, '/SimpleSale')
+                    : Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => Sale(
+                              oldSale: false,
+                              thisSale: sType,
+                            )));
           },
           // onLongPress: () => print('FIRST CHILD LONG PRESS'),
         ),

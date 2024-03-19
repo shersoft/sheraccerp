@@ -87,4 +87,24 @@ class DateUtil {
 
     return ('$days days ago');
   }
+
+  static bool compareDate(
+      {required DateTime date1, required DateTime date2, required int days}) {
+    int diff = date1.difference(date2).inDays;
+
+    bool valDate = date1.isBefore(date2);
+    return diff != days;
+  }
+
+  static bool checkYearDate(
+      {required DateTime startDate,
+      required DateTime endDate,
+      required DateTime currentDate}) {
+    // (date.Value.Date < SherClass.CompanySdate ? false : date.Value.Date <= SherClass.CompanyEdate);
+    return (currentDate.isBefore(startDate)
+        ? false
+        : currentDate.isAfter(endDate)
+            ? false
+            : true);
+  }
 }

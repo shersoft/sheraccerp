@@ -86,7 +86,6 @@ class NewProductPage extends StatelessWidget {
                           const Text(
                             "New Product",
                             style: TextStyle(
-                              fontFamily: "Nunito",
                               fontSize: 28,
                               color: ColorPalette.timberGreen,
                             ),
@@ -141,7 +140,6 @@ class NewProductPage extends StatelessWidget {
                                           child: Text(
                                             "Product Group : $group",
                                             style: const TextStyle(
-                                              fontFamily: "Nunito",
                                               fontSize: 17,
                                               color: ColorPalette.nileBlue,
                                             ),
@@ -173,7 +171,6 @@ class NewProductPage extends StatelessWidget {
                                             key: UniqueKey(),
                                             keyboardType: TextInputType.text,
                                             style: const TextStyle(
-                                              fontFamily: "Nunito",
                                               fontSize: 16,
                                               color: ColorPalette.nileBlue,
                                             ),
@@ -183,7 +180,6 @@ class NewProductPage extends StatelessWidget {
                                               filled: true,
                                               fillColor: Colors.transparent,
                                               hintStyle: TextStyle(
-                                                fontFamily: "Nunito",
                                                 fontSize: 16,
                                                 color: ColorPalette.nileBlue
                                                     .withOpacity(0.58),
@@ -240,7 +236,6 @@ class NewProductPage extends StatelessWidget {
                                                         replacementString: '.')
                                                   ],
                                                   style: const TextStyle(
-                                                    fontFamily: "Nunito",
                                                     fontSize: 16,
                                                     color:
                                                         ColorPalette.nileBlue,
@@ -252,7 +247,6 @@ class NewProductPage extends StatelessWidget {
                                                     fillColor:
                                                         Colors.transparent,
                                                     hintStyle: TextStyle(
-                                                      fontFamily: "Nunito",
                                                       fontSize: 16,
                                                       color: ColorPalette
                                                           .nileBlue
@@ -310,7 +304,6 @@ class NewProductPage extends StatelessWidget {
                                                         replacementString: '.')
                                                   ],
                                                   style: const TextStyle(
-                                                    fontFamily: "Nunito",
                                                     fontSize: 16,
                                                     color:
                                                         ColorPalette.nileBlue,
@@ -323,7 +316,6 @@ class NewProductPage extends StatelessWidget {
                                                     fillColor:
                                                         Colors.transparent,
                                                     hintStyle: TextStyle(
-                                                      fontFamily: "Nunito",
                                                       fontSize: 16,
                                                       color: ColorPalette
                                                           .nileBlue
@@ -366,7 +358,6 @@ class NewProductPage extends StatelessWidget {
                                             key: UniqueKey(),
                                             keyboardType: TextInputType.text,
                                             style: const TextStyle(
-                                              fontFamily: "Nunito",
                                               fontSize: 16,
                                               color: ColorPalette.nileBlue,
                                             ),
@@ -376,7 +367,6 @@ class NewProductPage extends StatelessWidget {
                                               filled: true,
                                               fillColor: Colors.transparent,
                                               hintStyle: TextStyle(
-                                                fontFamily: "Nunito",
                                                 fontSize: 16,
                                                 color: ColorPalette.nileBlue
                                                     .withOpacity(0.58),
@@ -415,7 +405,6 @@ class NewProductPage extends StatelessWidget {
                                             key: UniqueKey(),
                                             keyboardType: TextInputType.text,
                                             style: const TextStyle(
-                                              fontFamily: "Nunito",
                                               fontSize: 16,
                                               color: ColorPalette.nileBlue,
                                             ),
@@ -425,7 +414,6 @@ class NewProductPage extends StatelessWidget {
                                               filled: true,
                                               fillColor: Colors.transparent,
                                               hintStyle: TextStyle(
-                                                fontFamily: "Nunito",
                                                 fontSize: 16,
                                                 color: ColorPalette.nileBlue
                                                     .withOpacity(0.58),
@@ -444,7 +432,6 @@ class NewProductPage extends StatelessWidget {
                                           child: Text(
                                             "Location",
                                             style: TextStyle(
-                                              fontFamily: "Nunito",
                                               fontSize: 14,
                                               color: ColorPalette.nileBlue,
                                             ),

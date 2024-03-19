@@ -6,9 +6,12 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_awesome_alert_box/flutter_awesome_alert_box.dart';
+import 'package:scoped_model/scoped_model.dart';
+import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/product_register_model.dart';
 import 'package:sheraccerp/models/tax_group_model.dart';
 import 'package:sheraccerp/models/unit_model.dart';
+import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/accounts/ledger.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
@@ -31,7 +34,10 @@ class _ProductRegisterState extends State<ProductRegister> {
   Size deviceSize;
   String productId = '';
   List<DataJson> productList0 = [];
-  bool _isLoading = false, isExist = false, buttonEvent = false;
+  bool _isLoading = false,
+      isExist = false,
+      buttonEvent = false,
+      isGoogleTranslator = false;
   DataJson itemId,
       itemName,
       supplier,
@@ -70,6 +76,7 @@ class _ProductRegisterState extends State<ProductRegister> {
 
   @override
   void initState() {
+    loadSettings();
     categoryDataList
         .addAll(DataJson.fromJsonListX(otherRegistrationList[0]['category']));
     categoryList.addAll(List<String>.from(categoryDataList
@@ -150,7 +157,24 @@ class _ProductRegisterState extends State<ProductRegister> {
             itemCodeController.text = value > 0 ? value.toString() : '';
           })
         });
+
     super.initState();
+  }
+
+  CompanyInformation companySettings;
+  List<CompanySettings> settings;
+
+  loadSettings() {
+    companySettings = ScopedModel.of<MainModel>(context).getCompanySettings();
+    settings = ScopedModel.of<MainModel>(context).getSettings();
+
+    // String cashAc =
+    //     ComSettings.getValue('CASH A/C', settings).toString().trim() ?? 'CASH';
+    // ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0);
+    taxMethod = companySettings.taxCalculation;
+    isGoogleTranslator =
+        ComSettings.getStatus('USE GOOGLE TRANSLATE', settings);
+    companyTaxMode = ComSettings.getValue('PACKAGE', settings);
   }
 
   @override
@@ -182,6 +206,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                 hsnController.text = '';
                 itemCodeController.text = '';
                 itemNameController.text = '';
+                itemLocalNameController.text = '';
                 packingController.text = '';
                 maxOrderLevelController.text = '';
                 reOrderLevelController.text = '';
@@ -251,6 +276,10 @@ class _ProductRegisterState extends State<ProductRegister> {
                           'itemName': itemNameController.text.trim().isNotEmpty
                               ? itemNameController.text.trim()
                               : '',
+                          'itemLocalName':
+                              itemLocalNameController.text.trim().isNotEmpty
+                                  ? itemLocalNameController.text.trim()
+                                  : '',
                           'categoryId': category != null ? category.id : 0,
                           'mfrId': mfr != null ? mfr.id : 0,
                           'subCategoryId':
@@ -371,6 +400,10 @@ class _ProductRegisterState extends State<ProductRegister> {
                           'itemName': itemNameController.text.trim().isNotEmpty
                               ? itemNameController.text.trim()
                               : '',
+                          'itemLocalName':
+                              itemLocalNameController.text.trim().isNotEmpty
+                                  ? itemLocalNameController.text.trim()
+                                  : '',
                           'categoryId': category != null ? category.id : 0,
                           'mfrId': mfr != null ? mfr.id : 0,
                           'subCategoryId':
@@ -503,6 +536,7 @@ class _ProductRegisterState extends State<ProductRegister> {
 
   TextEditingController itemCodeController = TextEditingController();
   TextEditingController itemNameController = TextEditingController();
+  TextEditingController itemLocalNameController = TextEditingController();
   TextEditingController packingController = TextEditingController();
   TextEditingController maxOrderLevelController = TextEditingController();
   TextEditingController reOrderLevelController = TextEditingController();
@@ -593,6 +627,19 @@ class _ProductRegisterState extends State<ProductRegister> {
                     findProduct(pItemName);
                   }
                 },
+                textChanged: (data) {
+                  if (data.isNotEmpty && isGoogleTranslator) {
+                    api
+                        .translateText(data.trim())
+                        .then((value) => itemLocalNameController.text = value);
+                  }
+                },
+              ),
+              const Divider(),
+              TextField(
+                controller: itemLocalNameController,
+                decoration: const InputDecoration(
+                    border: OutlineInputBorder(), labelText: 'Item Local Name'),
               ),
               const Divider(),
               DropdownSearch<dynamic>(
@@ -1337,6 +1384,7 @@ class _ProductRegisterState extends State<ProductRegister> {
       productId = value.slno.toString();
       pItemName = value.itemname;
       itemNameController.text = value.itemname;
+      itemLocalNameController.text = value.regItemName;
       pHSNCode = value.hsncode;
       hsnController.text = value.hsncode;
       pItemCode = value.itemcode;

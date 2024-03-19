@@ -15,6 +15,7 @@ import 'package:json_table/json_table.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:sunmi_printer_service/sunmi_printer_service.dart' as sum_mi;
@@ -144,7 +145,7 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
         _isLoading = false;
 
         _createPDF(title + '_ref_$eNo', companySettings, settings, bill,
-                dataParticulars, invoiceHead)
+                dataParticulars, invoiceHead, form, dataParticulars)
             .then((value) => pdfPath = value);
       });
     }
@@ -236,7 +237,20 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
                 })
           ],
         ),
-        body: eNo > 0 ? webView() : const Center(child: Text('Not Found')));
+        body: eNo > 0
+            ? previewWidget(
+                context,
+                _isLoading,
+                companySettings,
+                bill,
+                settings,
+                dataParticulars,
+                invoiceHead,
+                form,
+                oldBalance,
+                balance)
+            // webView()
+            : const Center(child: Text('Not Found')));
   }
 
   Future<ui.Image> loadImage(Uint8List img) async {
@@ -686,6 +700,355 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
     setState(() {});
     return pngBytes;
   }
+}
+
+previewWidget(
+    context,
+    bool isLoading,
+    CompanyInformation companySettings,
+    Map bill,
+    List<CompanySettings> settings,
+    dataParticulars,
+    invoiceHead,
+    form,
+    oldBalance,
+    balance) {
+  invoiceHead = form == 'RECEIPT'
+      ? Settings.getValue<String>('key-receipt-voucher-head', 'RECEIPT')
+              .isNotEmpty
+          ? Settings.getValue<String>('key-receipt-voucher-head', 'RECEIPT')
+          : 'Receipt voucher'.toUpperCase()
+      : Settings.getValue<String>('key-payment-voucher-head', 'PAYMENT')
+              .isNotEmpty
+          ? Settings.getValue<String>('key-payment-voucher-head', 'PAYMENT')
+          : 'Payment voucher'.toUpperCase();
+
+  return SafeArea(
+    child: Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: isLoading
+          ? Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  CircularProgressIndicator(
+                    strokeWidth: 5,
+                    color: Colors.grey,
+                    backgroundColor: Colors.red,
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text(
+                    "Loading",
+                    style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18),
+                  )
+                ],
+              ),
+            )
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    " ${companySettings.name}",
+                    style: const TextStyle(
+                        fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 7.0, top: 5),
+                    child: Column(
+                      children: [
+                        Visibility(
+                          visible: companySettings.mobile.isNotEmpty,
+                          child: Text(
+                            companySettings.mobile,
+                            style: const TextStyle(fontSize: 8),
+                          ),
+                        ),
+                        Visibility(
+                          visible: companySettings.add1.isNotEmpty,
+                          child: Text(
+                            companySettings.add1,
+                            style: const TextStyle(fontSize: 8),
+                          ),
+                        ),
+                        Visibility(
+                          visible: companySettings.add2.isNotEmpty,
+                          child: Text(
+                            companySettings.add2,
+                            style: const TextStyle(fontSize: 8),
+                          ),
+                        ),
+                        Visibility(
+                          visible: companySettings.email.isNotEmpty,
+                          child: Text(
+                            companySettings.email,
+                            style: const TextStyle(fontSize: 8),
+                          ),
+                        ),
+                        companyTaxMode == 'INDIA'
+                            ? Text(
+                                'GST No : ${ComSettings.getValue('GST-NO', settings)}',
+                                style: const TextStyle(
+                                    fontSize: 8, fontWeight: FontWeight.bold),
+                              )
+                            : Text(
+                                "TRN : ${ComSettings.getValue('GST-NO', settings)}",
+                                style: const TextStyle(
+                                    fontSize: 8, fontWeight: FontWeight.bold),
+                              )
+                      ],
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 30,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "No: ${bill["entryNo"]}",
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 10),
+                      ),
+                      Column(
+                        children: [
+                          Text(
+                            "Date: ${DateUtil.dateDMY(bill['date'])}",
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  form == 'RECEIPT'
+                      ? const Text(
+                          "RECEIPT VOUCHER",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, color: Colors.black),
+                        )
+                      : const Text(
+                          "PAYMENT VOUCHER",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, color: Colors.black),
+                        ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          SizedBox(
+                              width: 130,
+                              child: form == 'RECEIPT'
+                                  ? const Text(
+                                      "Recieved With Thanks From",
+                                      style: TextStyle(fontSize: 10),
+                                    )
+                                  : const Text(
+                                      "Paid To",
+                                      style: TextStyle(fontSize: 10),
+                                    )),
+                          const SizedBox(
+                            width: 20,
+                          ),
+                          Text(
+                            "${bill["name"]}",
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 130,
+                            child: Text(
+                              "the sumof rupees",
+                              style: TextStyle(fontSize: 10),
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 20,
+                          ),
+                          Expanded(
+                            child: Text(
+                              NumberToWord().convertDouble('en',
+                                  double.tryParse(bill['total'].toString())),
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: const [
+                          SizedBox(
+                            width: 130,
+                            child: Text(
+                              "By Cash/Cheque/DD No",
+                              style: TextStyle(fontSize: 10),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 20,
+                          ),
+                          Text(
+                            "",
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 130,
+                            child: Text(
+                              "towards",
+                              style: TextStyle(fontSize: 10),
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 20,
+                          ),
+                          Text(
+                            dataParticulars[0]['narration'].toString(),
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Container(
+                        height: 40,
+                        width: 180,
+                        decoration: BoxDecoration(border: Border.all()),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              width: 50,
+                              color: Colors.black,
+                            ),
+                            Text(
+                              "${bill["total"].toStringAsFixed(2)} ",
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "All Cheque/DD are subject to realisation",
+                            style: TextStyle(fontSize: 8),
+                          ),
+                          const SizedBox(
+                            height: 15,
+                          ),
+                          Visibility(
+                            visible: oldBalance <= 0 && balance <= 0,
+                            child: Column(
+                              children: const [
+                                SizedBox(
+                                  height: 50,
+                                ),
+                                Text(
+                                  "Receiver Signature   ",
+                                  style: TextStyle(fontSize: 8),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      Visibility(
+                        visible: oldBalance > 0 || balance > 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          height: 50,
+                          width: MediaQuery.of(context).size.width,
+                          decoration: BoxDecoration(border: Border.all()),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 100,
+                                        child: Text(
+                                          "Old Balance    :",
+                                          style: TextStyle(fontSize: 11),
+                                        ),
+                                      ),
+                                      Text(
+                                        "${oldBalance.toStringAsFixed(2)}",
+                                        style: const TextStyle(fontSize: 11),
+                                      )
+                                    ],
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      const SizedBox(
+                                        width: 100,
+                                        child: Text(
+                                          "Balance           :",
+                                          style: TextStyle(fontSize: 11),
+                                        ),
+                                      ),
+                                      Text(
+                                        "${balance.toStringAsFixed(2)}",
+                                        style: const TextStyle(fontSize: 11),
+                                      )
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: const [
+                                  Text(
+                                    "Receiver Signature   ",
+                                    style: TextStyle(fontSize: 8),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Text(
+                    "${bill['message']}",
+                    style: const TextStyle(fontSize: 10),
+                  )
+                ],
+              ),
+            ),
+    ),
+  );
 }
 
 askPrintDevice(
@@ -1433,9 +1796,11 @@ Future<String> _createPDF(
     List<CompanySettings> settings,
     var information,
     var particular,
-    String invoiceHead) async {
+    String invoiceHead,
+    form,
+    dataParticulars) async {
   return makePDF(title, companySettings, settings, information, particular,
-          invoiceHead)
+          invoiceHead, form, dataParticulars)
       .then((value) => savePreviewPDF(value, title));
 }
 
@@ -1473,8 +1838,13 @@ Future<pw.Document> makePDF(
     List<CompanySettings> settings,
     var information,
     var particular,
-    String invoiceHead) async {
+    String invoiceHead,
+    form,
+    dataParticulars) async {
   double oldBalance = 0, balance = 0, a = 0;
+  var bill = information;
+  dataParticulars = jsonDecode(bill['particular']);
+  //  var dataParticulars = bill['Particulars'];
   var bal = information['oldBalance'].toString().split(' ');
   if (bal[1] == 'Dr') {
     oldBalance = double.tryParse(bal[0].toString()) ?? 0;
@@ -1485,246 +1855,554 @@ Future<pw.Document> makePDF(
   }
   final pdf = pw.Document();
 
+  // pdf.addPage(pw.MultiPage(
+  //     /*company*/
+  //     header: (context) => pw.Column(children: [
+  //           pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.center, children: [
+  //             pw.Expanded(
+  //                 child: pw.Column(children: [
+  //               pw.Container(
+  //                   height: 80,
+  //                   padding: const pw.EdgeInsets.all(8),
+  //                   alignment: pw.Alignment.center,
+  //                   child: pw.RichText(
+  //                       textAlign: pw.TextAlign.center,
+  //                       text: pw.TextSpan(
+  //                           text: '${companySettings.name}\n',
+  //                           style: pw.TextStyle(
+  //                             // color: _darkColor,
+  //                             fontWeight: pw.FontWeight.bold,
+  //                             fontSize: 15,
+  //                           ),
+  //                           children: [
+  //                             const pw.TextSpan(
+  //                               text: '\n',
+  //                               style: pw.TextStyle(
+  //                                 fontSize: 5,
+  //                               ),
+  //                             ),
+  //                             pw.TextSpan(
+  //                                 text: companySettings.add2.toString().isEmpty
+  //                                     ? companySettings.add1
+  //                                     : companySettings.add1 +
+  //                                         '\n' +
+  //                                         companySettings.add2,
+  //                                 style: pw.TextStyle(
+  //                                   fontWeight: pw.FontWeight.bold,
+  //                                   fontSize: 10,
+  //                                 ),
+  //                                 children: [
+  //                                   companySettings.telephone
+  //                                           .toString()
+  //                                           .isNotEmpty
+  //                                       ? pw.TextSpan(
+  //                                           text: companySettings.telephone,
+  //                                           children: [
+  //                                               companySettings.mobile
+  //                                                       .toString()
+  //                                                       .isNotEmpty
+  //                                                   ? pw.TextSpan(
+  //                                                       text: ', ' +
+  //                                                           companySettings
+  //                                                               .mobile)
+  //                                                   : const pw.TextSpan(
+  //                                                       text: ' '),
+  //                                             ])
+  //                                       : const pw.TextSpan(
+  //                                           text: '\n',
+  //                                           style: pw.TextStyle(
+  //                                             fontSize: 5,
+  //                                           ),
+  //                                         ),
+  //                                 ]),
+  //                           ]))),
+  //               pw.Container(
+  //                   height: 80,
+  //                   padding: const pw.EdgeInsets.all(8),
+  //                   alignment: pw.Alignment.center,
+  //                   child: pw.Text(invoiceHead,
+  //                       style: pw.TextStyle(
+  //                           fontWeight: pw.FontWeight.bold,
+  //                           fontSize: 15,
+  //                           decoration: pw.TextDecoration.underline))),
+  //               pw.Container(
+  //                 padding: const pw.EdgeInsets.all(10),
+  //                 alignment: pw.Alignment.center,
+  //                 height: 10,
+  //                 child: pw.GridView(
+  //                   crossAxisCount: 2,
+  //                   children: [
+  //                     pw.Text('VoucherNo : ${information['entryNo']}',
+  //                         style: pw.TextStyle(
+  //                           fontWeight: pw.FontWeight.bold,
+  //                           fontSize: 10,
+  //                         ),
+  //                         textAlign: pw.TextAlign.left),
+  //                     pw.Text('Date : ' + DateUtil.dateDMY(information['date']),
+  //                         style: pw.TextStyle(
+  //                           fontWeight: pw.FontWeight.bold,
+  //                           fontSize: 10,
+  //                         ),
+  //                         textAlign: pw.TextAlign.right),
+  //                   ],
+  //                 ),
+  //               ),
+  //               pw.SizedBox(
+  //                 height: 5,
+  //               ),
+  //             ])),
+  //           ]),
+  //           if (context.pageNumber > 1) pw.SizedBox(height: 20)
+  //         ]),
+  //     build: (context) => [
+  //           /*customer*/
+  //           pw.Table(
+  //             border: pw.TableBorder.all(width: 0.2),
+  //             defaultColumnWidth: const pw.IntrinsicColumnWidth(),
+  //             children: [
+  //               pw.TableRow(children: [
+  //                 pw.Column(
+  //                     crossAxisAlignment: pw.CrossAxisAlignment.center,
+  //                     mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                     children: [
+  //                       pw.Text('Particulars',
+  //                           style: pw.TextStyle(
+  //                               fontSize: 9, fontWeight: pw.FontWeight.bold)),
+  //                       // pw.Divider(thickness: 1)
+  //                     ]),
+  //                 pw.Column(
+  //                     crossAxisAlignment: pw.CrossAxisAlignment.center,
+  //                     mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                     children: [
+  //                       pw.Text('Amount',
+  //                           style: pw.TextStyle(
+  //                               fontSize: 9, fontWeight: pw.FontWeight.bold)),
+  //                       // pw.Divider(thickness: 1)
+  //                     ]),
+  //                 pw.Column(
+  //                     crossAxisAlignment: pw.CrossAxisAlignment.center,
+  //                     mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                     children: [
+  //                       pw.Text('Discount',
+  //                           style: pw.TextStyle(
+  //                               fontSize: 9, fontWeight: pw.FontWeight.bold)),
+  //                       // pw.Divider(thickness: 1)
+  //                     ]),
+  //                 pw.Column(
+  //                     crossAxisAlignment: pw.CrossAxisAlignment.center,
+  //                     mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                     children: [
+  //                       pw.Text('Total',
+  //                           style: pw.TextStyle(
+  //                               fontSize: 9, fontWeight: pw.FontWeight.bold)),
+  //                       // pw.Divider(thickness: 1)
+  //                     ]),
+  //               ]),
+  //               // dataParticulars
+  //               pw.TableRow(children: [
+  //                 pw.Column(
+  //                     crossAxisAlignment: pw.CrossAxisAlignment.start,
+  //                     mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                     children: [
+  //                       pw.Padding(
+  //                         padding: const pw.EdgeInsets.all(2.0),
+  //                         child: pw.Text(
+  //                             information['name'] +
+  //                                 "\n" +
+  //                                 particular[0]['narration'].toString(),
+  //                             style: const pw.TextStyle(fontSize: 9)),
+  //                         // pw.Divider(thickness: 1)
+  //                       ),
+  //                     ]),
+  //                 pw.Column(
+  //                     crossAxisAlignment: pw.CrossAxisAlignment.end,
+  //                     mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                     children: [
+  //                       pw.Padding(
+  //                         padding: const pw.EdgeInsets.all(2.0),
+  //                         child: pw.Text(
+  //                             double.tryParse(
+  //                                     particular[0]['amount'].toString())!
+  //                                 .toStringAsFixed(2),
+  //                             style: const pw.TextStyle(fontSize: 9)),
+  //                         // pw.Divider(thickness: 1)
+  //                       )
+  //                     ]),
+  //                 pw.Column(
+  //                     crossAxisAlignment: pw.CrossAxisAlignment.end,
+  //                     mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                     children: [
+  //                       pw.Padding(
+  //                         padding: const pw.EdgeInsets.all(2.0),
+  //                         child: pw.Text(
+  //                             double.tryParse(
+  //                                     particular[0]['discount'].toString())!
+  //                                 .toStringAsFixed(2),
+  //                             style: const pw.TextStyle(fontSize: 9)),
+  //                         // pw.Divider(thickness: 1)
+  //                       )
+  //                     ]),
+  //                 pw.Column(
+  //                     crossAxisAlignment: pw.CrossAxisAlignment.end,
+  //                     mainAxisAlignment: pw.MainAxisAlignment.center,
+  //                     children: [
+  //                       pw.Padding(
+  //                         padding: const pw.EdgeInsets.all(2.0),
+  //                         child: pw.Text(
+  //                             double.tryParse(
+  //                                     particular[0]['total'].toString())!
+  //                                 .toStringAsFixed(2),
+  //                             style: const pw.TextStyle(fontSize: 9)),
+  //                         // pw.Divider(thickness: 1)
+  //                       )
+  //                     ]),
+  //               ])
+  //             ],
+  //           ),
+  //           pw.Container(
+  //               alignment: pw.Alignment.center,
+  //               child: pw.Text(
+  //                 ' Amount in Words: ${NumberToWord().convertDouble('en', double.tryParse(information['total'].toString()))}',
+  //               )),
+  //           pw.Column(children: [
+  //             pw.Row(
+  //               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+  //               children: [
+  //                 pw.Text(' Old Balance : ${oldBalance.toStringAsFixed(2)}',
+  //                     style: pw.TextStyle(
+  //                       fontWeight: pw.FontWeight.bold,
+  //                       fontSize: 10,
+  //                     ),
+  //                     textAlign: pw.TextAlign.left),
+  //                 pw.Text(' Balance : ${balance.toStringAsFixed(2)}',
+  //                     style: pw.TextStyle(
+  //                       fontWeight: pw.FontWeight.bold,
+  //                       fontSize: 10,
+  //                     ),
+  //                     textAlign: pw.TextAlign.right),
+  //               ],
+  //             )
+  //           ]),
+  //           pw.SizedBox(
+  //             height: 40.0,
+  //           ),
+  //           pw.Container(
+  //               alignment: pw.Alignment.center,
+  //               child: pw.Text(
+  //                   information['message'].toString().isNotEmpty
+  //                       ? information['message'].toString()
+  //                       : 'Thank you',
+  //                   textAlign: pw.TextAlign.center))
+  //         ],
+  //     footer: _buildFooter));
   pdf.addPage(pw.MultiPage(
-      /*company*/
-      header: (context) => pw.Column(children: [
-            pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.center, children: [
-              pw.Expanded(
-                  child: pw.Column(children: [
-                pw.Container(
-                    height: 80,
-                    padding: const pw.EdgeInsets.all(8),
-                    alignment: pw.Alignment.center,
-                    child: pw.RichText(
-                        textAlign: pw.TextAlign.center,
-                        text: pw.TextSpan(
-                            text: '${companySettings.name}\n',
-                            style: pw.TextStyle(
-                              // color: _darkColor,
-                              fontWeight: pw.FontWeight.bold,
-                              fontSize: 15,
-                            ),
-                            children: [
-                              const pw.TextSpan(
-                                text: '\n',
-                                style: pw.TextStyle(
-                                  fontSize: 5,
-                                ),
-                              ),
-                              pw.TextSpan(
-                                  text: companySettings.add2.toString().isEmpty
-                                      ? companySettings.add1
-                                      : companySettings.add1 +
-                                          '\n' +
-                                          companySettings.add2,
-                                  style: pw.TextStyle(
-                                    fontWeight: pw.FontWeight.bold,
-                                    fontSize: 10,
-                                  ),
-                                  children: [
-                                    companySettings.telephone
-                                            .toString()
-                                            .isNotEmpty
-                                        ? pw.TextSpan(
-                                            text: companySettings.telephone,
-                                            children: [
-                                                companySettings.mobile
-                                                        .toString()
-                                                        .isNotEmpty
-                                                    ? pw.TextSpan(
-                                                        text: ', ' +
-                                                            companySettings
-                                                                .mobile)
-                                                    : const pw.TextSpan(
-                                                        text: ' '),
-                                              ])
-                                        : const pw.TextSpan(
-                                            text: '\n',
-                                            style: pw.TextStyle(
-                                              fontSize: 5,
-                                            ),
-                                          ),
-                                  ]),
-                            ]))),
-                pw.Container(
-                    height: 80,
-                    padding: const pw.EdgeInsets.all(8),
-                    alignment: pw.Alignment.center,
-                    child: pw.Text(invoiceHead,
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold,
-                            fontSize: 15,
-                            decoration: pw.TextDecoration.underline))),
-                pw.Container(
-                  padding: const pw.EdgeInsets.all(10),
-                  alignment: pw.Alignment.center,
-                  height: 10,
-                  child: pw.GridView(
-                    crossAxisCount: 2,
+      maxPages: 100,
+      pageFormat: pw.PdfPageFormat.a4,
+      build: (pw.Context context) {
+        List<pw.Widget> widgets = [
+          pw.Container(
+            width: double.infinity,
+            padding:
+                const pw.EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+            decoration: pw.BoxDecoration(border: pw.Border.all()),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.center,
+              children: [
+                pw.Text(
+                  " ${companySettings.name}",
+                  style: pw.TextStyle(
+                      fontSize: 10, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(left: 7.0, top: 5),
+                  child: pw.Column(
                     children: [
-                      pw.Text('VoucherNo : ${information['entryNo']}',
-                          style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold,
-                            fontSize: 10,
-                          ),
-                          textAlign: pw.TextAlign.left),
-                      pw.Text('Date : ' + DateUtil.dateDMY(information['date']),
-                          style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold,
-                            fontSize: 10,
-                          ),
-                          textAlign: pw.TextAlign.right),
+                      companySettings.mobile.isNotEmpty
+                          ? pw.Text(
+                              companySettings.mobile,
+                              style: const pw.TextStyle(fontSize: 8),
+                            )
+                          : pw.Container(),
+                      companySettings.add1.isNotEmpty
+                          ? pw.Text(
+                              companySettings.add1,
+                              style: const pw.TextStyle(fontSize: 8),
+                            )
+                          : pw.Container(),
+                      companySettings.add2.isNotEmpty
+                          ? pw.Text(
+                              companySettings.add2,
+                              style: const pw.TextStyle(fontSize: 8),
+                            )
+                          : pw.Container(),
+                      companySettings.email.isNotEmpty
+                          ? pw.Text(
+                              companySettings.email,
+                              style: const pw.TextStyle(fontSize: 8),
+                            )
+                          : pw.Container(),
+                      companyTaxMode == 'INDIA'
+                          ? pw.Text(
+                              'GST No : ${ComSettings.getValue('GST-NO', settings)}',
+                              style: pw.TextStyle(
+                                  fontSize: 8, fontWeight: pw.FontWeight.bold),
+                            )
+                          : pw.Text(
+                              "TRN : ${ComSettings.getValue('GST-NO', settings)}",
+                              style: pw.TextStyle(
+                                  fontSize: 8, fontWeight: pw.FontWeight.bold),
+                            )
                     ],
                   ),
                 ),
                 pw.SizedBox(
+                  height: 30,
+                ),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text(
+                      "No: ${bill["entryNo"]}",
+                      style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold, fontSize: 10),
+                    ),
+                    pw.Column(
+                      children: [
+                        pw.Text(
+                          "Date: ${DateUtil.dateDMY(bill['date'])}",
+                          style: const pw.TextStyle(fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(
+                  height: 10,
+                ),
+                form == 'RECEIPT'
+                    ? pw.Text("RECEIPT VOUCHER",
+                        style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold,
+                          color: pw.PdfColor.fromInt(0xFF000000),
+                        ))
+                    : pw.Text("PAYMENT VOUCHER",
+                        style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold,
+                          color: pw.PdfColor.fromInt(0xFF000000),
+                        )),
+                pw.SizedBox(
+                  height: 10,
+                ),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Row(
+                      children: [
+                        pw.SizedBox(
+                            width: 180,
+                            child: form == 'RECEIPT'
+                                ? pw.Text(
+                                    "Recieved With Thanks From",
+                                    style: pw.TextStyle(fontSize: 10),
+                                  )
+                                : pw.Text(
+                                    "Paid To",
+                                    style: pw.TextStyle(fontSize: 10),
+                                  )),
+                        pw.SizedBox(
+                          width: 20,
+                        ),
+                        pw.Text(
+                          "${bill["name"]}",
+                          style: const pw.TextStyle(fontSize: 10),
+                        ),
+                      ],
+                    ),
+                    pw.Row(
+                      children: [
+                        pw.SizedBox(
+                          width: 180,
+                          child: pw.Text(
+                            "the sumof rupees",
+                            style: const pw.TextStyle(fontSize: 10),
+                          ),
+                        ),
+                        pw.SizedBox(
+                          width: 20,
+                        ),
+                        pw.Expanded(
+                          child: pw.Text(
+                            NumberToWord().convertDouble('en',
+                                double.tryParse(bill['total'].toString())),
+                            style: const pw.TextStyle(fontSize: 10),
+                          ),
+                        ),
+                      ],
+                    ),
+                    pw.Row(
+                      children: [
+                        pw.SizedBox(
+                          width: 180,
+                          child: pw.Text(
+                            "By Cash/Cheque/DD No",
+                            style: const pw.TextStyle(fontSize: 10),
+                          ),
+                        ),
+                        pw.SizedBox(
+                          width: 20,
+                        ),
+                        pw.Text(
+                          "",
+                          style: const pw.TextStyle(fontSize: 10),
+                        ),
+                      ],
+                    ),
+                    pw.Row(
+                      children: [
+                        pw.SizedBox(
+                          width: 180,
+                          child: pw.Text(
+                            "towards",
+                            style: const pw.TextStyle(fontSize: 10),
+                          ),
+                        ),
+                        pw.SizedBox(
+                          width: 20,
+                        ),
+                        pw.Text(
+                          dataParticulars[0]['narration'].toString(),
+                          style: const pw.TextStyle(fontSize: 10),
+                        ),
+                      ],
+                    ),
+                    pw.SizedBox(
+                      height: 10,
+                    ),
+                    pw.Container(
+                      height: 40,
+                      width: 180,
+                      decoration: pw.BoxDecoration(border: pw.Border.all()),
+                      child: pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Container(
+                              width: 50,
+                              color: const PdfColor.fromInt(0xFF000000)),
+                          pw.Text(
+                            "${bill["total"].toStringAsFixed(2)} ",
+                            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                    pw.SizedBox(
+                      height: 15,
+                    ),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text(
+                          "All Cheque/DD are subject to realisation",
+                          style: pw.TextStyle(fontSize: 8),
+                        ),
+                        pw.SizedBox(
+                          height: 15,
+                        ),
+                        oldBalance <= 0 && balance <= 0
+                            ? pw.Column(
+                                children: [
+                                  pw.SizedBox(
+                                    height: 50,
+                                  ),
+                                  pw.Text(
+                                    "Receiver Signature   ",
+                                    style: pw.TextStyle(fontSize: 8),
+                                  ),
+                                ],
+                              )
+                            : pw.Container(),
+                      ],
+                    ),
+                    oldBalance > 0 || balance > 0
+                        ? pw.Container(
+                            padding: pw.EdgeInsets.symmetric(horizontal: 10),
+                            height: 50,
+                            width: double.infinity,
+                            decoration:
+                                pw.BoxDecoration(border: pw.Border.all()),
+                            child: pw.Row(
+                              mainAxisAlignment:
+                                  pw.MainAxisAlignment.spaceBetween,
+                              children: [
+                                pw.Column(
+                                  crossAxisAlignment:
+                                      pw.CrossAxisAlignment.start,
+                                  mainAxisAlignment:
+                                      pw.MainAxisAlignment.center,
+                                  children: [
+                                    pw.Row(
+                                      children: [
+                                        pw.SizedBox(
+                                          width: 100,
+                                          child: pw.Text(
+                                            "Old Balance    :",
+                                            style: pw.TextStyle(fontSize: 11),
+                                          ),
+                                        ),
+                                        pw.Text(
+                                          "${oldBalance.toStringAsFixed(2)}",
+                                          style: pw.TextStyle(fontSize: 11),
+                                        )
+                                      ],
+                                    ),
+                                    pw.Row(
+                                      mainAxisAlignment:
+                                          pw.MainAxisAlignment.end,
+                                      children: [
+                                        pw.SizedBox(
+                                          width: 100,
+                                          child: pw.Text(
+                                            "Balance           :",
+                                            style: pw.TextStyle(fontSize: 11),
+                                          ),
+                                        ),
+                                        pw.Text(
+                                          "${balance.toStringAsFixed(2)}",
+                                          style: pw.TextStyle(fontSize: 11),
+                                        )
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                pw.Column(
+                                  mainAxisAlignment: pw.MainAxisAlignment.end,
+                                  children: [
+                                    pw.Text(
+                                      "Receiver Signature   ",
+                                      style: pw.TextStyle(fontSize: 8),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          )
+                        : pw.Container(),
+                  ],
+                ),
+                pw.SizedBox(
                   height: 5,
                 ),
-              ])),
-            ]),
-            if (context.pageNumber > 1) pw.SizedBox(height: 20)
-          ]),
-      build: (context) => [
-            /*customer*/
-            pw.Table(
-              border: pw.TableBorder.all(width: 0.2),
-              defaultColumnWidth: const pw.IntrinsicColumnWidth(),
-              children: [
-                pw.TableRow(children: [
-                  pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.center,
-                      mainAxisAlignment: pw.MainAxisAlignment.center,
-                      children: [
-                        pw.Text('Particulars',
-                            style: pw.TextStyle(
-                                fontSize: 9, fontWeight: pw.FontWeight.bold)),
-                        // pw.Divider(thickness: 1)
-                      ]),
-                  pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.center,
-                      mainAxisAlignment: pw.MainAxisAlignment.center,
-                      children: [
-                        pw.Text('Amount',
-                            style: pw.TextStyle(
-                                fontSize: 9, fontWeight: pw.FontWeight.bold)),
-                        // pw.Divider(thickness: 1)
-                      ]),
-                  pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.center,
-                      mainAxisAlignment: pw.MainAxisAlignment.center,
-                      children: [
-                        pw.Text('Discount',
-                            style: pw.TextStyle(
-                                fontSize: 9, fontWeight: pw.FontWeight.bold)),
-                        // pw.Divider(thickness: 1)
-                      ]),
-                  pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.center,
-                      mainAxisAlignment: pw.MainAxisAlignment.center,
-                      children: [
-                        pw.Text('Total',
-                            style: pw.TextStyle(
-                                fontSize: 9, fontWeight: pw.FontWeight.bold)),
-                        // pw.Divider(thickness: 1)
-                      ]),
-                ]),
-                // dataParticulars
-                pw.TableRow(children: [
-                  pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      mainAxisAlignment: pw.MainAxisAlignment.center,
-                      children: [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(2.0),
-                          child: pw.Text(
-                              information['name'] +
-                                  "\n" +
-                                  particular[0]['narration'].toString(),
-                              style: const pw.TextStyle(fontSize: 9)),
-                          // pw.Divider(thickness: 1)
-                        ),
-                      ]),
-                  pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      mainAxisAlignment: pw.MainAxisAlignment.center,
-                      children: [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(2.0),
-                          child: pw.Text(
-                              double.tryParse(
-                                      particular[0]['amount'].toString())!
-                                  .toStringAsFixed(2),
-                              style: const pw.TextStyle(fontSize: 9)),
-                          // pw.Divider(thickness: 1)
-                        )
-                      ]),
-                  pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      mainAxisAlignment: pw.MainAxisAlignment.center,
-                      children: [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(2.0),
-                          child: pw.Text(
-                              double.tryParse(
-                                      particular[0]['discount'].toString())!
-                                  .toStringAsFixed(2),
-                              style: const pw.TextStyle(fontSize: 9)),
-                          // pw.Divider(thickness: 1)
-                        )
-                      ]),
-                  pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      mainAxisAlignment: pw.MainAxisAlignment.center,
-                      children: [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(2.0),
-                          child: pw.Text(
-                              double.tryParse(
-                                      particular[0]['total'].toString())!
-                                  .toStringAsFixed(2),
-                              style: const pw.TextStyle(fontSize: 9)),
-                          // pw.Divider(thickness: 1)
-                        )
-                      ]),
-                ])
+                pw.Text(
+                  "${bill['message']}",
+                  style: pw.TextStyle(fontSize: 10),
+                )
               ],
             ),
-            pw.Container(
-                alignment: pw.Alignment.center,
-                child: pw.Text(
-                  ' Amount in Words: ${NumberToWord().convertDouble('en', double.tryParse(information['total'].toString()))}',
-                )),
-            pw.Column(children: [
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text(' Old Balance : ${oldBalance.toStringAsFixed(2)}',
-                      style: pw.TextStyle(
-                        fontWeight: pw.FontWeight.bold,
-                        fontSize: 10,
-                      ),
-                      textAlign: pw.TextAlign.left),
-                  pw.Text(' Balance : ${balance.toStringAsFixed(2)}',
-                      style: pw.TextStyle(
-                        fontWeight: pw.FontWeight.bold,
-                        fontSize: 10,
-                      ),
-                      textAlign: pw.TextAlign.right),
-                ],
-              )
-            ]),
-            pw.SizedBox(
-              height: 40.0,
-            ),
-            pw.Container(
-                alignment: pw.Alignment.center,
-                child: pw.Text(
-                    information['message'].toString().isNotEmpty
-                        ? information['message'].toString()
-                        : 'Thank you',
-                    textAlign: pw.TextAlign.center))
-          ],
-      footer: _buildFooter));
+          ),
+        ];
+        return widgets;
+      }));
+
   return pdf;
 }
 

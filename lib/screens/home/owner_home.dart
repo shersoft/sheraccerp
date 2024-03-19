@@ -59,8 +59,6 @@ class _OwnerHomeState extends State<OwnerHome> {
       firm = (prefs.getString('CompanyName') ?? "");
       firmCode = (prefs.getString('CustomerCode') ?? "");
       fId = (prefs.getString('fId') ?? "");
-      // /**Web only**/
-      // setApiV = (pref.getString('apiV') ?? "v13");
     });
   }
 
