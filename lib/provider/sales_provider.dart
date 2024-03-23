@@ -119,7 +119,7 @@ class SalesProvider with ChangeNotifier {
         .firstWhere((element) => element['LedName'] == 'CASH')['LedCode'];
     _acId =
         ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) - 1 >
-                _acId
+                0
             ? ComSettings.appSettings(
                     'int', 'key-dropdown-default-cash-ac', _acId) -
                 1

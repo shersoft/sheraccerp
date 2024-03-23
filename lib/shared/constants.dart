@@ -102,6 +102,14 @@ List otherRegSalesManList = [];
 List mainAccount = [];
 List cashAccount = [];
 List<String> taxCalculationList = ['MINUS', 'PLUS'];
+List<String> secondFontList = [
+  'ENGLISH',
+  'ARABIC',
+  'MALAYALAM',
+  'TAMIL',
+  'HINDI',
+  'PORTUGUESE'
+];
 DioService dioApi = DioService();
 
 String rateType = '';
@@ -110,6 +118,7 @@ String userRole = '';
 String saleAccount = '';
 String taxMethod = '';
 String companyTaxMode = '';
+String secondLanguage = 'es';
 List<dynamic> dataDynamic = [];
 var argumentsPass;
 Uint8List byteImageQr;
@@ -747,3 +756,7 @@ bool checkFinancialYear(String date) {
 }
 
 List<dynamic> tempCustomerData = [];
+
+String capitalize(String value) {
+  return "${value[0].toUpperCase()}${value.substring(1).toLowerCase()}";
+}

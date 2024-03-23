@@ -76,7 +76,6 @@ class _ProductRegisterState extends State<ProductRegister> {
 
   @override
   void initState() {
-    loadSettings();
     categoryDataList
         .addAll(DataJson.fromJsonListX(otherRegistrationList[0]['category']));
     categoryList.addAll(List<String>.from(categoryDataList
@@ -122,34 +121,36 @@ class _ProductRegisterState extends State<ProductRegister> {
     api.getProductData().then((value) {
       setState(() {
         productData = value.values.toList();
-        hsnList.addAll(List<String>.from(productData[0]['HSNCode']
-            .map((item) => (item['name']))
-            .toList()
-            .map((s) => s as String)
-            .toList()));
-        itemCodeList.addAll(List<String>.from(productData[0]['ItemCode']
-            .map((item) => (item['name']))
-            .toList()
-            .map((s) => s as String)
-            .toList()));
-        itemNameList.addAll(List<String>.from(productData[0]['ItemName']
-            .map((item) => (item['name']))
-            .toList()
-            .map((s) => s as String)
-            .toList()));
-        taxGroupDataList
-            .addAll(DataJson.fromJsonList(productData[0]['TaxGroup']));
+        if (productData[0].length > 0) {
+          hsnList.addAll(List<String>.from(productData[0]['HSNCode']
+              .map((item) => (item['name']))
+              .toList()
+              .map((s) => s as String)
+              .toList()));
+          itemCodeList.addAll(List<String>.from(productData[0]['ItemCode']
+              .map((item) => (item['name']))
+              .toList()
+              .map((s) => s as String)
+              .toList()));
+          itemNameList.addAll(List<String>.from(productData[0]['ItemName']
+              .map((item) => (item['name']))
+              .toList()
+              .map((s) => s as String)
+              .toList()));
+          taxGroupDataList
+              .addAll(DataJson.fromJsonList(productData[0]['TaxGroup']));
 
-        // productList.addAll(List<dynamic>.from(productData[0]['ItemName'])
-        //     .map((item) => (DataJson(id: item['id'], name: item['name']))));
+          // productList.addAll(List<dynamic>.from(productData[0]['ItemName'])
+          //     .map((item) => (DataJson(id: item['id'], name: item['name']))));
 
-        unitModel
-            .addAll(DataJson.fromJsonListX(otherRegistrationList[0]['unit']));
+          unitModel
+              .addAll(DataJson.fromJsonListX(otherRegistrationList[0]['unit']));
 
-        dropDownUnitPurchase = unitModel[0].id;
-        dropDownUnitSale = unitModel[0].id;
-        dropDownUnitData = unitModel[0].id;
-        dropDownRateData = rateTypeModelData[0].id;
+          dropDownUnitPurchase = unitModel[0].id;
+          dropDownUnitSale = unitModel[0].id;
+          dropDownUnitData = unitModel[0].id;
+          dropDownRateData = rateTypeModelData[0].id;
+        }
       });
     });
     api.getProductId().then((value) => {
@@ -159,6 +160,7 @@ class _ProductRegisterState extends State<ProductRegister> {
         });
 
     super.initState();
+    loadSettings();
   }
 
   CompanyInformation companySettings;
@@ -564,6 +566,25 @@ class _ProductRegisterState extends State<ProductRegister> {
                       controller: hsnController,
                     ),
                   ),
+                  const SizedBox(
+                    width: 5,
+                  ),
+                  Expanded(
+                    child: SimpleAutoCompleteTextField(
+                      key: keyItemCode,
+                      controller: itemCodeController,
+                      clearOnSubmit: false,
+                      suggestions: itemCodeList,
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(), labelText: 'Item Code'),
+                      textSubmitted: (data) {
+                        pItemCode = data;
+                        if (pItemCode.isNotEmpty) {
+                          findProductByCode(pItemCode);
+                        }
+                      },
+                    ),
+                  ),
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.settings, color: blue),
                     onSelected: (value) {
@@ -598,21 +619,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                   ),
                 ],
               ),
-              const Divider(),
-              SimpleAutoCompleteTextField(
-                key: keyItemCode,
-                controller: itemCodeController,
-                clearOnSubmit: false,
-                suggestions: itemCodeList,
-                decoration: const InputDecoration(
-                    border: OutlineInputBorder(), labelText: 'Item Code'),
-                textSubmitted: (data) {
-                  pItemCode = data;
-                  if (pItemCode.isNotEmpty) {
-                    findProductByCode(pItemCode);
-                  }
-                },
-              ),
+
               const Divider(),
               SimpleAutoCompleteTextField(
                 key: keyItemName,
@@ -627,19 +634,26 @@ class _ProductRegisterState extends State<ProductRegister> {
                     findProduct(pItemName);
                   }
                 },
-                textChanged: (data) {
-                  if (data.isNotEmpty && isGoogleTranslator) {
-                    api
-                        .translateText(data.trim())
-                        .then((value) => itemLocalNameController.text = value);
-                  }
-                },
               ),
               const Divider(),
               TextField(
                 controller: itemLocalNameController,
-                decoration: const InputDecoration(
-                    border: OutlineInputBorder(), labelText: 'Item Local Name'),
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  labelText: 'Item Local Name',
+                  suffixIcon: IconButton(
+                      onPressed: () {
+                        var data = itemNameController.text;
+                        if (data.isNotEmpty && isGoogleTranslator) {
+                          api.translateText(data.trim()).then(
+                              (value) => itemLocalNameController.text = value);
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.g_translate,
+                        color: kPrimaryColor,
+                      )),
+                ),
               ),
               const Divider(),
               DropdownSearch<dynamic>(

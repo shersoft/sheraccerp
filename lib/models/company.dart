@@ -118,6 +118,8 @@ class CompanyInformation {
   String eDate;
   String customerCode;
   String runningDate;
+  String sType;
+  String secondFont;
   CompanyInformation({
     this.name,
     this.add1,
@@ -137,29 +139,32 @@ class CompanyInformation {
     this.eDate,
     this.customerCode,
     this.runningDate,
+    this.sType,
+    this.secondFont,
   });
 
   factory CompanyInformation.fromJson(Map<String, dynamic> dataJson) =>
       CompanyInformation(
-        name: dataJson['name'] ?? '',
-        add1: dataJson['add1'] ?? '',
-        add2: dataJson['add2'] ?? '',
-        add3: dataJson['add3'] ?? '',
-        add4: dataJson['add4'] ?? '',
-        add5: dataJson['add5'] ?? '',
-        sName: dataJson['Sname'] ?? 'SHERACC',
-        telephone: dataJson['telephone'] ?? '',
-        email: dataJson['email'] ?? '',
-        mobile: dataJson['mobile'] ?? '',
-        tin: dataJson['tin'] ?? '',
-        pin: dataJson['pin'] ?? '',
-        taxCalculation: dataJson['TaxCalculation'] ?? 'MINUS',
-        sCurrency: dataJson['s_currency'] ?? '',
-        sDate: dataJson['sDate'] ?? '',
-        eDate: dataJson['eDate'] ?? '',
-        customerCode: dataJson['customerCode'] ?? '',
-        runningDate: dataJson['insDate'] ?? '',
-      );
+          name: dataJson['name'] ?? '',
+          add1: dataJson['add1'] ?? '',
+          add2: dataJson['add2'] ?? '',
+          add3: dataJson['add3'] ?? '',
+          add4: dataJson['add4'] ?? '',
+          add5: dataJson['add5'] ?? '',
+          sName: dataJson['Sname'] ?? 'SHERACC',
+          telephone: dataJson['telephone'] ?? '',
+          email: dataJson['email'] ?? '',
+          mobile: dataJson['mobile'] ?? '',
+          tin: dataJson['tin'] ?? '',
+          pin: dataJson['pin'] ?? '',
+          taxCalculation: dataJson['TaxCalculation'] ?? 'MINUS',
+          sCurrency: dataJson['s_currency'] ?? '',
+          sDate: dataJson['sDate'] ?? '',
+          eDate: dataJson['eDate'] ?? '',
+          customerCode: dataJson['customerCode'] ?? '',
+          runningDate: dataJson['insDate'] ?? '',
+          sType: dataJson['sType'] ?? '',
+          secondFont: dataJson['secondFont'] ?? '');
 
   Map<String, dynamic> toMap() {
     return {
@@ -181,6 +186,8 @@ class CompanyInformation {
       'eDate': eDate,
       'customerCode': customerCode,
       'runningDate': runningDate,
+      'sType': sType,
+      'secondFont': secondFont,
     };
   }
 
@@ -206,6 +213,8 @@ class CompanyInformation {
       eDate: map['eDate'] ?? '',
       customerCode: map['customerCode'] ?? '',
       runningDate: map['runningDate'] ?? '',
+      sType: map['sType'] ?? '',
+      secondFont: map['secondFont'] ?? '',
     );
   }
 }

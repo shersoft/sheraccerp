@@ -1,7 +1,6 @@
 // @dart = 2.11
 
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sheraccerp/models/company.dart';
@@ -49,6 +48,7 @@ mixin CompanyScopeModel on Model {
       if (response.statusCode == 200) {
         List<dynamic> _data = response.data;
         _company = CompanyInformation.fromJson(_data[0][0]);
+        secondLanguage = _company.secondFont ?? 'es';
         for (var data in _data[1]) {
           _settings.add(CompanySettings.fromJson(data));
         }

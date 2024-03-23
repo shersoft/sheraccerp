@@ -241,7 +241,7 @@ class _SaleState extends State<Sale> {
           .firstWhere((element) => element['LedName'] == cashAc)['LedCode'];
       acId = ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) -
                   1 >
-              acId
+              0
           ? ComSettings.appSettings(
                   'int', 'key-dropdown-default-cash-ac', acId) -
               1
@@ -3298,6 +3298,7 @@ class _SaleState extends State<Sale> {
           if (_focusNodeRate.hasFocus) {
             rate = double.tryParse(_rateController.text);
             // rate = double.tryParse(_rateController.text) * _conversion;
+            lastRateStatus = false;
           } else {
             //r = (saleRate * _conversion);
             rate = saleRate * _conversion;
@@ -3320,6 +3321,8 @@ class _SaleState extends State<Sale> {
     } else {
       if (_focusNodeRate.hasFocus) {
         rate = double.tryParse(_rateController.text);
+
+        lastRateStatus = false;
       } else if (saleRate > 0) {
         _rateController.text = saleRate.toStringAsFixed(decimal);
         rate = saleRate;
@@ -3546,6 +3549,7 @@ class _SaleState extends State<Sale> {
     unitValue = _conversion > 0 ? _conversion : 1;
   }
 
+  bool lastRateStatus = true;
   showAddMore(BuildContext context, StockProduct product) {
     List<UnitModel> unitListData = [];
     if (editItem) {
@@ -3569,7 +3573,7 @@ class _SaleState extends State<Sale> {
       uniqueCode = product.productId;
       cartModel.uniqueCode = uniqueCode;
       // cartModel.stock = product.quantity;
-      if (isLedgerWiseLastSRate) {
+      if (isLedgerWiseLastSRate && lastRateStatus) {
         lastRateOfLedger(product);
       }
       calculate(product);
@@ -3619,7 +3623,7 @@ class _SaleState extends State<Sale> {
       if (isSerialNoInStockVariant) {
         _serialNoController.text = product.serialNo;
       }
-      if (isLedgerWiseLastSRate) {
+      if (isLedgerWiseLastSRate && lastRateStatus) {
         lastRateOfLedger(product);
       }
     }

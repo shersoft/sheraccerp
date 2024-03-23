@@ -96,7 +96,7 @@ class _RPVoucherState extends State<RPVoucher> {
         .firstWhere((element) => element['LedName'] == cashAc)['LedCode'];
     acId = ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) -
                 1 >
-            acId
+            0
         ? ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', acId) -
             1
         : acId;
@@ -1162,5 +1162,9 @@ class _RPVoucherState extends State<RPVoucher> {
     );
   }
 
-  voucherParticularWidget(mode) {}
+  voucherParticularWidget(mode) {
+    return const Center(
+      child: Text('Coming soon'),
+    );
+  }
 }

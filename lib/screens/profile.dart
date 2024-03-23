@@ -9,6 +9,7 @@ import 'package:sheraccerp/screens/bussiness_card.dart';
 import 'package:sheraccerp/screens/settings/add_logo.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
+import 'package:sheraccerp/util/lang.dart';
 import 'package:sheraccerp/util/res_color.dart';
 
 class Profile extends StatefulWidget {
@@ -22,7 +23,7 @@ class _ProfileState extends State<Profile> {
   CompanyInformation companySettings;
   List<CompanySettings> settings;
   bool viewProfile = true;
-  String _dropDownTaxCalculation;
+  String _dropDownTaxCalculation, _dropDownSecondFont;
   String _taxNoHint = '';
   String _dropDownState = '';
   String _stateCode = '';
@@ -240,7 +241,7 @@ class _ProfileState extends State<Profile> {
   final TextEditingController _pinC = TextEditingController();
   final TextEditingController _sCurrencyC = TextEditingController();
   final TextEditingController _sNameC = TextEditingController();
-  final TextEditingController _telephoneC = TextEditingController();
+  // final TextEditingController _telephoneC = TextEditingController();
   final TextEditingController _tinC = TextEditingController();
   final TextEditingController _taxNoC = TextEditingController();
 
@@ -258,7 +259,9 @@ class _ProfileState extends State<Profile> {
     _sNameC.text = (companySettings.sName);
     _dropDownTaxCalculation =
         _dropDownTaxCalculation ?? (companySettings.taxCalculation);
-    _telephoneC.text = (companySettings.telephone);
+    _dropDownSecondFont = _dropDownSecondFont ??
+        LanguageList.getLanguage(companySettings.secondFont).name.toUpperCase();
+    // _telephoneC.text = (companySettings.telephone);
     _tinC.text = (companySettings.tin);
     _taxNoC.text = '${ComSettings.getValue('GST-NO', settings)}';
     _taxNoHint = companyTaxMode == 'INDIA' ? 'GSTNO ' : 'TRN ';
@@ -279,129 +282,243 @@ class _ProfileState extends State<Profile> {
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), labelText: 'Name'),
             ),
-            const Divider(),
+            const Divider(
+              height: 10,
+            ),
             TextField(
               controller: _add1C,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), labelText: 'Address 1'),
             ),
-            const Divider(),
+            const Divider(
+              height: 10,
+            ),
             TextField(
               controller: _add2C,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Address 2')),
             ),
-            const Divider(),
+            const Divider(
+              height: 10,
+            ),
             TextField(
               controller: _add3C,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Address 3')),
             ),
-            const Divider(),
+            const Divider(
+              height: 10,
+            ),
             TextField(
               controller: _add4C,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Address 4')),
             ),
-            const Divider(),
+            const Divider(
+              height: 10,
+            ),
             TextField(
               controller: _add5C,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Address 5')),
             ),
-            const Divider(),
+            const Divider(
+              height: 10,
+            ),
             TextField(
               controller: _taxNoC,
               decoration: InputDecoration(
-                  border: OutlineInputBorder(), label: Text(_taxNoHint)),
+                  border: const OutlineInputBorder(), label: Text(_taxNoHint)),
             ),
-            const Divider(),
+            const Divider(
+              height: 10,
+            ),
             TextField(
               controller: _emailC,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Mail Id')),
             ),
-            const Divider(),
+            const Divider(
+              height: 10,
+            ),
             TextField(
               controller: _mobileC,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Mobile No')),
             ),
-            const Divider(),
-            Row(
-              // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('State : '),
-                Expanded(
-                  child: DropdownButton<GSTStateModel>(
-                    items: gstStateModels
-                        .map<DropdownMenuItem<GSTStateModel>>((item) {
-                      return DropdownMenuItem<GSTStateModel>(
-                        value: item,
-                        child: Text(item.state),
-                      );
-                    }).toList(),
-                    onChanged: (item) {
-                      setState(() {
-                        _dropDownState = item.state;
-                        _stateCode = item.code;
-                        gstStateM = item;
-                      });
-                    },
-                    value: gstStateM,
+            Card(
+              elevation: 5,
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      Text('State'),
+                      Text('Code'),
+                    ],
                   ),
-                ),
-                const Text('Code : '),
-                Text(_stateCode),
-              ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(
+                        height: 40,
+                        width: MediaQuery.of(context).size.width - 60,
+                        child: DropdownButton<GSTStateModel>(
+                          items: gstStateModels
+                              .map<DropdownMenuItem<GSTStateModel>>((item) {
+                            return DropdownMenuItem<GSTStateModel>(
+                              value: item,
+                              child: Text(
+                                item.state,
+                                // style: const TextStyle(fontSize: 8),
+                                overflow: TextOverflow.fade,
+                                softWrap: true,
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (item) {
+                            setState(() {
+                              _dropDownState = item.state;
+                              _stateCode = item.code;
+                              gstStateM = item;
+                            });
+                          },
+                          value: gstStateM,
+                        ),
+                      ),
+                      Text(
+                        _stateCode,
+                        // overflow: TextOverflow.fade,
+                        // style: const TextStyle(fontSize: 8),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            const Divider(),
-            TextField(
-              controller: _pinC,
-              decoration: const InputDecoration(
-                  border: OutlineInputBorder(), label: Text('PinCode')),
+            const Divider(
+              height: 10,
             ),
-            const Divider(),
-            TextField(
-              controller: _sCurrencyC,
-              decoration: const InputDecoration(
-                  border: OutlineInputBorder(), label: Text('Currency')),
-            ),
-            const Divider(),
             TextField(
               controller: _sNameC,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text('Second Name')),
             ),
-            const Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                const Text('TaxCalculation : '),
-                DropdownButton<String>(
-                  items:
-                      taxCalculationList.map<DropdownMenuItem<String>>((item) {
-                    return DropdownMenuItem<String>(
-                      value: item,
-                      child: Text(item),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _dropDownTaxCalculation = value;
-                    });
-                  },
-                  value: _dropDownTaxCalculation,
-                ),
-              ],
+            Card(
+              elevation: 5,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  const Text('Second Font'),
+                  DropdownButton<String>(
+                    items: secondFontList.map<DropdownMenuItem<String>>((item) {
+                      return DropdownMenuItem<String>(
+                        value: item,
+                        child: Text(item),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _dropDownSecondFont = value;
+                      });
+                    },
+                    value: _dropDownSecondFont,
+                  ),
+                  const Text('Tax'),
+                  DropdownButton<String>(
+                    items: taxCalculationList
+                        .map<DropdownMenuItem<String>>((item) {
+                      return DropdownMenuItem<String>(
+                        value: item,
+                        child: Text(item),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _dropDownTaxCalculation = value;
+                      });
+                    },
+                    value: _dropDownTaxCalculation,
+                  ),
+                ],
+              ),
             ),
-            const Divider(),
-            TextField(
-              controller: _telephoneC,
-              decoration: const InputDecoration(
-                  border: OutlineInputBorder(), label: Text('Telephone')),
+            Card(
+              child: Row(
+                children: [
+                  // const Text(
+                  //   'Software Type :',
+                  //   style: TextStyle(fontSize: 10),
+                  // ),
+                  // DropdownButton<String>(
+                  //   hint: Text('Software Type'),
+                  //   items:
+                  //       ['SherAcc ERP'].map<DropdownMenuItem<String>>((item) {
+                  //     return DropdownMenuItem<String>(
+                  //       value: item,
+                  //       child: Text(item),
+                  //     );
+                  //   }).toList(),
+                  //   onChanged: (value) {
+                  //     // setState(() {
+                  //     //   _dropDownSecondFont = value;
+                  //     // });
+                  //   },
+                  //   value: 'SherAcc ERP', //_dropDownSecondFont,
+                  // ),
+                  Expanded(
+                    child: TextField(
+                      controller: _pinC,
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(), label: Text('PinCode')),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _sCurrencyC,
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          label: Text('Currency')),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const Divider(),
+            const Divider(
+              height: 10,
+            ),
+            // TextField(
+            //   controller: _telephoneC,
+            //   decoration: const InputDecoration(
+            //       border: OutlineInputBorder(), label: Text('Telephone')),
+            // ),
+            Card(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Bank Account'),
+                  DropdownButton<String>(
+                    hint: const Text('Bank Account'),
+                    items: [''].map<DropdownMenuItem<String>>((item) {
+                      return DropdownMenuItem<String>(
+                        value: item,
+                        child: Text(item),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      // setState(() {
+                      //   _dropDownSecondFont = value;
+                      // });
+                    },
+                    value: '', //_dropDownSecondFont,
+                  ),
+                ],
+              ),
+            ),
+            const Divider(
+              height: 10,
+            ),
             TextField(
               controller: _tinC,
               decoration: const InputDecoration(
@@ -420,6 +537,8 @@ class _ProfileState extends State<Profile> {
     String dbName = pref.getString('DBName') ?? "0";
     String taxDbName = pref.getString('DBNameT') ?? "0";
     String name = _nameC.text.trim().toUpperCase() ?? 'Company Name';
+    String _secondFont =
+        LanguageList.getLanguageByName(_dropDownSecondFont).code;
 
     var data = {
       'companyName': name,
@@ -431,7 +550,7 @@ class _ProfileState extends State<Profile> {
       'add4': _add4C.text.trim(),
       'add5': _add5C.text.trim(),
       'email': _emailC.text.trim(),
-      'telephone': _telephoneC.text.trim(),
+      'telephone': '', //_telephoneC.text.trim(),
       'mobile': _mobileC.text.trim(),
       'pinCode': _pinC.text.trim(),
       'currency': _sCurrencyC.text.trim(),
@@ -440,6 +559,7 @@ class _ProfileState extends State<Profile> {
       'stateCode': _stateCode.trim(),
       'tin': _tinC.text.trim(),
       'taxCalculation': _dropDownTaxCalculation.trim(),
+      'secondFont': _secondFont.trim(),
       'dbName': dbName,
       'taxDbName': taxDbName,
       'customerCode': companySettings.customerCode,
@@ -453,6 +573,19 @@ class _ProfileState extends State<Profile> {
         await pref.setString("CompanyName", name);
         var dataBase = isEstimateDataBase ? dbName : taxDbName;
         showInSnackBarAction(dataBase);
+        companySettings.add1 = _add1C.text.trim();
+        companySettings.add2 = _add2C.text.trim();
+        companySettings.add3 = _add3C.text.trim();
+        companySettings.add4 = _add4C.text.trim();
+        companySettings.add5 = _add5C.text.trim();
+        companySettings.email = _emailC.text.trim();
+        companySettings.mobile = _mobileC.text.trim();
+        companySettings.name = name.toUpperCase();
+        companySettings.pin = _pinC.text.trim();
+        companySettings.sCurrency = _sCurrencyC.text.trim();
+        companySettings.secondFont = _secondFont.trim();
+        companySettings.taxCalculation = _dropDownTaxCalculation.trim();
+        companySettings.tin = _tinC.text.trim();
       } else {
         showInSnackBar('error');
       }

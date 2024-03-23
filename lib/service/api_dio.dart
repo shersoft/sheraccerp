@@ -4765,7 +4765,7 @@ class DioService {
           data: json.encode(data),
           options: Options(headers: {'Content-Type': 'application/json'}));
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         return response.data > 0 ? true : false;
       } else {
         debugPrint('Failed to load data');
@@ -5097,7 +5097,6 @@ class DioService {
   Future<List<int>> getInvoiceDesignerPdfData(data) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     data.update('code', (value) => pref.getString('Code') ?? 'COM');
-
     try {
       final response = await dio.post(invoiceUrl,
           data: json.encode(data),
@@ -5112,7 +5111,7 @@ class DioService {
       if (value is DioError) {
         debugPrint(value.response.toString());
       }
-      debugPrint(value.toString());
+      // debugPrint(value.toString());
     }
     return null;
   }
@@ -6821,12 +6820,38 @@ class DioService {
     return _item;
   }
 
-  Future<String> translateText(String input) async {
+  Future<String> translateText(String sourceText) async {
     String translation = "";
+    String from = 'en'; //'auto' for default
+    String to = secondLanguage ?? 'en';
     try {
-      // String url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl={0}&tl={1}&dt=t&q={2}", "en", SherClass.TrLanguage, Uri.encodeComponent(input);
-      final response = ''; //await dio.get(url);
-      var d = response;
+      final parameters = {
+        'client': 'gtx',
+        'sl': from,
+        'tl': to,
+        'dt': 't',
+        'q': sourceText
+      };
+      String url = "https://translate.googleapis.com/translate_a/single";
+      final response = await dio.get(url, queryParameters: parameters);
+      if (response.statusCode == 200) {
+        List<dynamic> jsonData = response.data;
+        if (jsonData == null) {
+          debugPrint('Error: Can\'t parse json data');
+        }
+
+        final sb = StringBuffer();
+        for (var c = 0; c < jsonData[0].length; c++) {
+          sb.write(jsonData[0][c][0]);
+        }
+        if (from == 'auto' && from != to) {
+          from = jsonData[2] ?? from;
+          if (from == to) {
+            from = 'auto';
+          }
+        }
+        translation = sb.toString();
+      }
     } catch (ex) {
       ex.Message;
     }

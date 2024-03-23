@@ -5453,7 +5453,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                           ),
                           Container(
                             width: MediaQuery.of(context).size.width,
-                            height: 102,
+                            height: 108,
                             decoration: const BoxDecoration(
                               border: Border(
                                 // top: BorderSide(color: Colors.black, width: 2),
@@ -5548,6 +5548,12 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                       fontSize: 8,
                                                     ),
                                                   ),
+                                                  const Text(
+                                                    "Balance               :",
+                                                    style: TextStyle(
+                                                      fontSize: 8,
+                                                    ),
+                                                  ),
                                                   const SizedBox(
                                                     height: 5,
                                                   ),
@@ -5589,7 +5595,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                             FontWeight.bold),
                                                   ),
                                                   Text(
-                                                    "${dataInformation['BalanceAmount'].toStringAsFixed(2)} ",
+                                                    "${dataInformation['Balance'].toStringAsFixed(2)} ",
                                                     style: const TextStyle(
                                                         fontSize: 8,
                                                         fontWeight:
@@ -5597,6 +5603,13 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                   ),
                                                   Text(
                                                     "${dataInformation['CashReceived'].toStringAsFixed(2)} ",
+                                                    style: const TextStyle(
+                                                        fontSize: 8,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                  Text(
+                                                    "${(double.parse(dataInformation['GrandTotal'].toStringAsFixed(2)) + double.parse(dataInformation['Balance'].toStringAsFixed(2)) - double.parse(dataInformation['CashReceived'].toStringAsFixed(2))).toStringAsFixed(2)} ",
                                                     style: const TextStyle(
                                                         fontSize: 8,
                                                         fontWeight:
@@ -21164,15 +21177,21 @@ _buildEstimateFooter(pw.Context context, dataBankLedger, dataInformation,
                                       fontSize: 8,
                                     ),
                                   ),
-                                  pw.SizedBox(
-                                    height: 5,
-                                  ),
                                   pw.Text(
-                                    "NET AMOUNT    :",
-                                    style: pw.TextStyle(
-                                        fontSize: 8,
-                                        fontWeight: pw.FontWeight.bold),
-                                  )
+                                    "Balance            :",
+                                    style: const pw.TextStyle(
+                                      fontSize: 8,
+                                    ),
+                                  ),
+                                  // pw.SizedBox(
+                                  //   height: 5,
+                                  // ),
+                                  // pw.Text(
+                                  //   "NET AMOUNT    :",
+                                  //   style: pw.TextStyle(
+                                  //       fontSize: 8,
+                                  //       fontWeight: pw.FontWeight.bold),
+                                  // )
                                 ],
                               ),
                               pw.Column(
@@ -21198,7 +21217,7 @@ _buildEstimateFooter(pw.Context context, dataBankLedger, dataInformation,
                                         fontWeight: pw.FontWeight.bold),
                                   ),
                                   pw.Text(
-                                    "${dataInformation['BalanceAmount'].toStringAsFixed(2)} ",
+                                    "${dataInformation['Balance'].toStringAsFixed(2)} ",
                                     style: pw.TextStyle(
                                         fontSize: 8,
                                         fontWeight: pw.FontWeight.bold),
@@ -21209,15 +21228,21 @@ _buildEstimateFooter(pw.Context context, dataBankLedger, dataInformation,
                                         fontSize: 8,
                                         fontWeight: pw.FontWeight.bold),
                                   ),
-                                  pw.SizedBox(
-                                    height: 5,
-                                  ),
                                   pw.Text(
-                                    "${dataInformation['GrandTotal'].toStringAsFixed(2)} ",
+                                    "${(double.parse(dataInformation['GrandTotal'].toStringAsFixed(2)) + double.parse(dataInformation['Balance'].toStringAsFixed(2)) - double.parse(dataInformation['CashReceived'].toStringAsFixed(2))).toStringAsFixed(2)} ",
                                     style: pw.TextStyle(
                                         fontSize: 8,
                                         fontWeight: pw.FontWeight.bold),
-                                  )
+                                  ),
+                                  pw.SizedBox(
+                                    height: 5,
+                                  ),
+                                  // pw.Text(
+                                  //   "${dataInformation['GrandTotal'].toStringAsFixed(2)} ",
+                                  //   style: pw.TextStyle(
+                                  //       fontSize: 8,
+                                  //       fontWeight: pw.FontWeight.bold),
+                                  // )
                                 ],
                               )
                             ],
