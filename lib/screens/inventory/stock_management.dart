@@ -105,6 +105,7 @@ class _StockManagementState extends State<StockManagement> {
         });
   }
 
+  int lId = 0;
   loadSettings() {
     CompanyInformation companySettings =
         ScopedModel.of<MainModel>(context).getCompanySettings();
@@ -132,7 +133,9 @@ class _StockManagementState extends State<StockManagement> {
         ComSettings.getStatus('KEY LOCK SALES DISCOUNT', settings);
     isItemRateEditLocked =
         ComSettings.getStatus('KEY LOCK SALES RATE', settings);
-
+    lId = ComSettings.appSettings(
+            'int', 'key-dropdown-default-location-view', 2) -
+        1;
     locationData.clear();
     if (locationList.isNotEmpty) {
       locationData = locationList;
@@ -146,6 +149,7 @@ class _StockManagementState extends State<StockManagement> {
           locationData.insert(
               0, AppSettingsMap(key: 0, value: 'Select Branch'));
         }
+        locationFromId = lId.toString().trim().isNotEmpty ? lId : 0;
       } catch (ex) {
         debugPrint(ex.message.toString());
       }

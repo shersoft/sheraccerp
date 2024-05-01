@@ -709,3 +709,27 @@ var billJson = [
     "qrCode": ""
   }
 ];
+
+class SalesBill {
+  String name;
+  SalesBill({
+    required this.name,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+    };
+  }
+
+  factory SalesBill.fromMap(Map<String, dynamic> map) {
+    return SalesBill(
+      name: map['name'] ?? '',
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory SalesBill.fromJson(String source) =>
+      SalesBill.fromMap(json.decode(source));
+}

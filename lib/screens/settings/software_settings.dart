@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:sheraccerp/models/company.dart';
+import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/inventory/sales/sales_form_register.dart';
 import 'package:sheraccerp/screens/inventory/sales/sales_other_detail_register.dart';
@@ -96,6 +97,7 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
   FocusNode focusNodeKeySerialNoTitle = FocusNode();
   FocusNode focusNodeKeyEWayApi = FocusNode();
   FocusNode focusNodeKeyItemSPTitle = FocusNode();
+  SalesType? currentType;
 
   @override
   void dispose() {
@@ -139,11 +141,13 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
     if (salesTypeList.isNotEmpty) {
       toolBarSale = salesTypeList
           .firstWhere((element) => element.id.toString() == toolBarSaleId)
-          .name;
+          .type;
       controllerToolBarSales.text = toolBarSale;
+      currentType = salesTypeList
+          .firstWhere((element) => element.id.toString() == toolBarSaleId);
       setState(() {
         saleTypeListDisplay.addAll(List<String>.from(salesTypeList
-            .map((item) => (item.name))
+            .map((item) => (item.type))
             .toList()
             .map((s) => s)
             .toList()));
@@ -295,9 +299,11 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
                                     height: 40,
                                     child: SimpleAutoCompleteTextField(
                                       key: keySalesType,
-                                      controller: controllerCashAc,
+                                      controller: controllerToolBarSales,
                                       clearOnSubmit: false,
-                                      suggestions: stockValuationData,
+                                      suggestions: salesTypeList
+                                          .map((e) => e.type)
+                                          .toList(),
                                       decoration: const InputDecoration(
                                           border: OutlineInputBorder(),
                                           labelText: 'Select Sale'),
@@ -305,9 +311,11 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
                                         setState(() {
                                           toolBarSale = data;
                                           toolBarSaleId = salesTypeList
-                                              .firstWhere((element) =>
-                                                  element.id.toString() ==
-                                                  toolBarSale)
+                                              .firstWhere(
+                                                  (element) =>
+                                                      element.type.toString() ==
+                                                      toolBarSale,
+                                                  orElse: () => currentType)
                                               .id
                                               .toString();
                                         });
@@ -877,7 +885,7 @@ class _SoftwareSettingsState extends State<SoftwareSettings> {
 
   saveData() {
     final body = {
-      'toolBarSale': toolBarSale,
+      'toolBarSale': toolBarSaleId,
       'cashAC': cashAC,
       'stockValue': stockValue,
       'defaultLocation': defaultLocation,

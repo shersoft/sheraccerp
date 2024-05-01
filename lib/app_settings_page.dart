@@ -126,6 +126,7 @@ class AppSettings extends StatelessWidget {
                   },
                 ),
                 DropDownSettingsTileNew<int>(
+                  enabled: defaultSalesMan,
                   title: 'Default SalesMan',
                   settingKey: 'key-dropdown-default-salesman-view',
                   values: salesmanList.isNotEmpty
@@ -140,6 +141,7 @@ class AppSettings extends StatelessWidget {
                   },
                 ),
                 DropDownSettingsTileNew<int>(
+                  enabled: defaultBranch,
                   title: 'Default Branch',
                   settingKey: 'key-dropdown-default-location-view',
                   values: locationList.isNotEmpty
@@ -154,6 +156,7 @@ class AppSettings extends StatelessWidget {
                   },
                 ),
                 DropDownSettingsTileNew<int>(
+                  enabled: defaultCashAc,
                   title: 'Default CASH AC',
                   settingKey: 'key-dropdown-default-cash-ac',
                   values: cashAccount.isNotEmpty
@@ -167,6 +170,7 @@ class AppSettings extends StatelessWidget {
                   },
                 ),
                 DropDownSettingsTileNew<int>(
+                  enabled: defaultArea,
                   title: 'Default Area',
                   settingKey: 'key-dropdown-default-area-view',
                   values: areaList.isNotEmpty
@@ -180,6 +184,7 @@ class AppSettings extends StatelessWidget {
                   },
                 ),
                 DropDownSettingsTileNew<int>(
+                  enabled: defaultGroup,
                   title: 'Default Group',
                   settingKey: 'key-dropdown-default-group-view',
                   values: groupList.isNotEmpty
@@ -193,6 +198,7 @@ class AppSettings extends StatelessWidget {
                   },
                 ),
                 DropDownSettingsTileNew<int>(
+                  enabled: defaultRoute,
                   title: 'Default Route',
                   settingKey: 'key-dropdown-default-route-view',
                   values: routeList.isNotEmpty
@@ -840,8 +846,8 @@ class AppSettings extends StatelessWidget {
                   },
                 ),
                 DropDownSettingsTile<int>(
-                  title: 'Print Copy',
-                  settingKey: 'key-dropdown-print-copy-view',
+                  title: 'Paper Size',
+                  settingKey: 'key-dropdown-printer-paper-size',
                   values: const <int, String>{
                     2: '1',
                     3: '2',
@@ -849,11 +855,26 @@ class AppSettings extends StatelessWidget {
                     5: '4',
                     6: '5',
                   },
-                  selected: 2,
+                  selected: 4,
                   onChange: (value) {
-                    debugPrint('key-dropdown-print-copy-view: $value');
+                    debugPrint('key-dropdown-printer-paper-size: $value');
                   },
                 ),
+                // DropDownSettingsTile<int>(
+                //   title: 'Print Copy',
+                //   settingKey: 'key-dropdown-print-copy-view',
+                //   values: const <int, String>{
+                //     2: '1',
+                //     3: '2',
+                //     4: '3',
+                //     5: '4',
+                //     6: '5',
+                //   },
+                //   selected: 2,
+                //   onChange: (value) {
+                //     debugPrint('key-dropdown-print-copy-view: $value');
+                //   },
+                // ),
                 DropDownSettingsTile<int>(
                   title: 'Printer Model',
                   settingKey: 'key-dropdown-printer-model-view',

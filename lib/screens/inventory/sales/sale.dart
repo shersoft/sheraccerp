@@ -64,7 +64,7 @@ class _SaleState extends State<Sale> {
       isCustomForm = false,
       buttonEvent = false,
       isSerialNoInStockVariant = false;
-  // final bool _autoVariantSelect = true;
+  bool _autoVariantSelect = false;
   DioService api = DioService();
   Size deviceSize;
   var vehicleData;
@@ -236,20 +236,12 @@ class _SaleState extends State<Sale> {
 
     String cashAc =
         ComSettings.getValue('CASH A/C', settings).toString().trim() ?? 'CASH';
-    try {
-      acId = mainAccount
-          .firstWhere((element) => element['LedName'] == cashAc)['LedCode'];
-      acId = ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) -
-                  1 >
-              0
-          ? ComSettings.appSettings(
-                  'int', 'key-dropdown-default-cash-ac', acId) -
-              1
-          : acId;
-    } catch (e) {
-      e.toString();
-      acId = -1;
-    }
+    int cashId =
+        ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) - 1;
+    acId = cashId > 0
+        ? mainAccount.firstWhere((element) => element['LedCode'] == cashId,
+            orElse: () => {'LedName': cashAc, 'LedCode': acId})['LedCode']
+        : acId;
     taxMethod = companySettings.taxCalculation;
     enableMULTIUNIT = ComSettings.getStatus('ENABLE MULTI-UNIT', settings);
     if (!enableMULTIUNIT) {
@@ -522,7 +514,7 @@ class _SaleState extends State<Sale> {
                             }
                           } else {
                             Fluttertoast.showToast(
-                                msg: 'Invoice Date not equal\ncan`t edit');
+                                msg: 'Invoice Date not equal\ncan`t save');
                             setState(() {
                               buttonEvent = false;
                             });
@@ -545,23 +537,25 @@ class _SaleState extends State<Sale> {
                         return;
                       } else {
                         if (companyUserData.insertData) {
-                          if (totalItem > 0) {
-                            setState(() {
-                              _isLoading = true;
-                              buttonEvent = true;
-                            });
-                            _insert(
-                                'SAVE DateTime:$formattedDate $timeIs location:${lId.toString()} ledger:${ledgerModel.id} ' +
-                                    CartItem.encodeCartToJson(cartItem)
-                                        .toString(),
-                                0);
-                            saveSale();
-                          } else {
-                            Fluttertoast.showToast(
-                                msg: 'Please add at least one item');
-                            setState(() {
-                              buttonEvent = false;
-                            });
+                          if (!daysBefore) {
+                            if (totalItem > 0) {
+                              setState(() {
+                                _isLoading = true;
+                                buttonEvent = true;
+                              });
+                              _insert(
+                                  'SAVE DateTime:$formattedDate $timeIs location:${lId.toString()} ledger:${ledgerModel.id} ' +
+                                      CartItem.encodeCartToJson(cartItem)
+                                          .toString(),
+                                  0);
+                              saveSale();
+                            } else {
+                              Fluttertoast.showToast(
+                                  msg: 'Please add at least one item');
+                              setState(() {
+                                buttonEvent = false;
+                              });
+                            }
                           }
                         } else {
                           Fluttertoast.showToast(
@@ -1098,26 +1092,35 @@ class _SaleState extends State<Sale> {
         'particular': items,
         'serialNoData': json.encode(SerialNOModel.encodedToJson(serialNoData)),
       };
-      if (checkFinancialYear(DateUtil.dateYMD(formattedDate))) {
-        if (manualInvoiceNumberInSales) {
-          api.checkManualInvoiceNoStatus(invoiceNo).then((value) {
-            if (!value) {
-              postSale(body, otherAmount, order, saleFormType, saleFormId);
-            } else {
-              showErrorDialog(context, 'Duplicate Invoice No');
+      if (saleAccountId != '0') {
+        if (checkFinancialYear(DateUtil.dateYMD(formattedDate))) {
+          if (manualInvoiceNumberInSales) {
+            api.checkManualInvoiceNoStatus(invoiceNo).then((value) {
+              if (!value) {
+                postSale(body, otherAmount, order, saleFormType, saleFormId);
+              } else {
+                showErrorDialog(context, 'Duplicate Invoice No');
 
-              setState(() {
-                _isLoading = false;
-                buttonEvent = false;
-              });
-            }
-          });
+                setState(() {
+                  _isLoading = false;
+                  buttonEvent = false;
+                });
+              }
+            });
+          } else {
+            postSale(body, otherAmount, order, saleFormType, saleFormId);
+          }
         } else {
-          postSale(body, otherAmount, order, saleFormType, saleFormId);
+          showErrorDialog(
+              context, "Date Is Incompatible With This Financial Year");
+
+          setState(() {
+            _isLoading = false;
+            buttonEvent = false;
+          });
         }
       } else {
-        showErrorDialog(
-            context, "Date Is Incompatible With This Financial Year");
+        Fluttertoast.showToast(msg: "select SalesAccount");
 
         setState(() {
           _isLoading = false;
@@ -2206,7 +2209,9 @@ class _SaleState extends State<Sale> {
                                         Text(
                                           companyTaxMode == 'INDIA'
                                               ? 'GST No  :'
-                                              : 'VAT No  :',
+                                              : companyTaxMode == 'GULF'
+                                                  ? 'VAT No  :'
+                                                  : 'Tax No  :',
                                           style: const TextStyle(
                                               color: blue,
                                               fontWeight: FontWeight.bold),
@@ -2243,22 +2248,23 @@ class _SaleState extends State<Sale> {
                                   ),
                                 ),
                               )
-                            : Card(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Row(
-                                    children: [
-                                      const Text(
-                                        'Tax No : ',
-                                        style: TextStyle(
-                                            color: blue,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      Text(ledgerModel.taxNumber),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                            // : Card(
+                            //     child: Padding(
+                            //       padding: const EdgeInsets.all(8.0),
+                            //       child: Row(
+                            //         children: [
+                            //           const Text(
+                            //             'Tax No : ',
+                            //             style: TextStyle(
+                            //                 color: blue,
+                            //                 fontWeight: FontWeight.bold),
+                            //           ),
+                            //           Text(ledgerModel.taxNumber),
+                            //         ],
+                            //       ),
+                            //     ),
+                            //   ),
+                            : Container(),
                         const SizedBox(
                           height: 5,
                         ),
@@ -2587,6 +2593,8 @@ class _SaleState extends State<Sale> {
                           onTap: () {
                             setState(() {
                               productModel = itemDisplay[index - 1];
+                              // _autoVariantSelect =
+                              //     productModel.hasVariant ? true : false;
                               nextWidget = 3;
                             });
                           },
@@ -3086,17 +3094,17 @@ class _SaleState extends State<Sale> {
 
   bool isVariantSelected = false;
   int positionID = 0;
-  // List<StockProduct> _autoStockVariant = [];
-  // double _stockVariantQuantity = 0;
+  List<StockProduct> _autoStockVariant = [];
+  double _stockVariantQuantity = 0;
   showVariantDialog(int id, String name, String quantity) {
-    // _stockVariantQuantity = double.tryParse(quantity);
+    _stockVariantQuantity = double.tryParse(quantity);
     return FutureBuilder<List<StockProduct>>(
       future: api.fetchStockVariant(id),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
             // _autoStockVariant.clear();
-            // _autoStockVariant = _autoVariantSelect ? snapshot.data : [];
+            _autoStockVariant = _autoVariantSelect ? snapshot.data : [];
             return isVariantSelected
                 ? showAddMore(context, snapshot.data[positionID])
                 : keyItemsVariantStock
@@ -3301,7 +3309,8 @@ class _SaleState extends State<Sale> {
             lastRateStatus = false;
           } else {
             //r = (saleRate * _conversion);
-            rate = saleRate * _conversion;
+            // rate = saleRate * _conversion;
+            rate = editItem ? saleRate : (saleRate * _conversion);
             _rateController.text = rate.toStringAsFixed(decimal);
           }
           //rate = r;
@@ -3460,7 +3469,7 @@ class _SaleState extends State<Sale> {
         : 0;
 
     if (enableMULTIUNIT && rate > 0 && _conversion > 0) {
-      rate = rate * _conversion;
+      rate = rate; // * _conversion;
       pRate = product.buyingPrice * _conversion;
       rPRate = product.buyingPriceReal * _conversion;
     } else {
@@ -3719,52 +3728,6 @@ class _SaleState extends State<Sale> {
                                     ));
                                   } else {
                                     bool profitable = true;
-                                    // if (_autoVariantSelect) {
-                                    //   double qty = 0;
-                                    //   for (StockProduct product
-                                    //       in _autoStockVariant) {
-                                    //     if (qty == quantity) {
-                                    //       break;
-                                    //     }
-                                    //     qty += product.quantity;
-                                    //     addProduct(CartItem(
-                                    //         id: totalItem + 1,
-                                    //         itemId: product.itemId,
-                                    //         itemName: product.name,
-                                    //         quantity: product.quantity,
-                                    //         rate: rate,
-                                    //         rRate: rRate,
-                                    //         uniqueCode: product.productId,
-                                    //         gross: gross,
-                                    //         discount: discount,
-                                    //         discountPercent: discountPercent,
-                                    //         rDiscount: rDisc,
-                                    //         fCess: kfc,
-                                    //         serialNo: '',
-                                    //         tax: tax,
-                                    //         taxP: taxP,
-                                    //         unitId: _dropDownUnit,
-                                    //         unitValue: unitValue,
-                                    //         pRate: pRate,
-                                    //         rPRate: rPRate,
-                                    //         barcode: barcode,
-                                    //         expDate: expDate,
-                                    //         free: free,
-                                    //         fUnitId: fUnitId,
-                                    //         cdPer: cdPer,
-                                    //         cDisc: cDisc,
-                                    //         net: subTotal,
-                                    //         cess: cess,
-                                    //         total: total,
-                                    //         profitPer: profitPer,
-                                    //         fUnitValue: fUnitValue,
-                                    //         adCess: adCess,
-                                    //         iGST: iGST,
-                                    //         cGST: csGST,
-                                    //         sGST: csGST,
-                                    //         stock: product.quantity));
-                                    //   }
-                                    // } else {
                                     if (isEnableProfitlessSalesWarning) {
                                       if (profitPer > 0) {
                                         profitable = true;
@@ -3864,6 +3827,76 @@ class _SaleState extends State<Sale> {
                                               product.quantity;
                                           editItem = false;
                                         } else {
+                                          // if (!keyItemsVariantStock &&
+                                          //     _autoVariantSelect) {
+                                          //   double qty = 0,
+                                          //       tQty = 0,
+                                          //       balanceQty = 0;
+                                          //   for (StockProduct variantProduct
+                                          //       in _autoStockVariant) {
+                                          //     qty = (variantProduct.quantity) >
+                                          //             quantity
+                                          //         ? quantity
+                                          //         : variantProduct.quantity;
+                                          //     uniqueCode =
+                                          //         variantProduct.productId;
+                                          //     double addQuantity =
+                                          //         balanceQty > 0
+                                          //             ? (balanceQty == qty
+                                          //                 ? qty
+                                          //                 : (balanceQty >= qty
+                                          //                     ? qty
+                                          //                     : balanceQty))
+                                          //             : qty;
+                                          //     cartItem.add(CartItem(
+                                          //         id: totalItem + 1,
+                                          //         itemId: product.itemId,
+                                          //         itemName: product.name,
+                                          //         quantity: addQuantity,
+                                          //         rate: rate,
+                                          //         rRate: rRate,
+                                          //         uniqueCode: uniqueCode,
+                                          //         gross: gross,
+                                          //         discount: discount,
+                                          //         discountPercent:
+                                          //             discountPercent,
+                                          //         rDiscount: rDisc,
+                                          //         fCess: kfc,
+                                          //         serialNo:
+                                          //             _serialNoController.text,
+                                          //         tax: tax,
+                                          //         taxP: taxP,
+                                          //         unitId: _dropDownUnit,
+                                          //         unitValue: unitValue ?? 1,
+                                          //         pRate: pRate,
+                                          //         rPRate: rPRate,
+                                          //         barcode: barcode,
+                                          //         expDate: expDate,
+                                          //         free: freeQty,
+                                          //         fUnitId: fUnitId,
+                                          //         cdPer: cdPer,
+                                          //         cDisc: cDisc,
+                                          //         net: subTotal,
+                                          //         cess: cess,
+                                          //         total: total,
+                                          //         profitPer: profitPer,
+                                          //         fUnitValue: fUnitValue,
+                                          //         adCess: adCess,
+                                          //         iGST: iGST,
+                                          //         cGST: csGST,
+                                          //         sGST: csGST,
+                                          //         stock: product.quantity,
+                                          //         minimumRate:
+                                          //             product.minimumRate));
+
+                                          //     tQty += addQuantity;
+                                          //     balanceQty = quantity - qty;
+                                          //     if (tQty >= quantity ||
+                                          //         balanceQty == 0) {
+                                          //       break;
+                                          //     }
+                                          //   }
+                                          // } else {
                                           addProduct(
                                               CartItem(
                                                   id: totalItem + 1,
@@ -3906,6 +3939,7 @@ class _SaleState extends State<Sale> {
                                                   minimumRate:
                                                       product.minimumRate),
                                               -1);
+                                          // }
                                         }
                                       } else {
                                         ScaffoldMessenger.of(context)
@@ -4002,9 +4036,15 @@ class _SaleState extends State<Sale> {
                                 }
 
                                 outOfStock = isLockQtyOnlyInSales
-                                    ? (double.tryParse(value) * (unitValue) +
-                                                freeQty) >
-                                            product.quantity
+                                    ? (double.tryParse(value) * (unitValue) + freeQty) >
+                                            (_autoVariantSelect
+                                                ? _autoStockVariant.fold(
+                                                    0.0,
+                                                    (a, b) =>
+                                                        a +
+                                                        double.parse(b.quantity
+                                                            .toString()))
+                                                : product.quantity)
                                         ? true
                                         : cartQ
                                             ? true
@@ -4014,19 +4054,27 @@ class _SaleState extends State<Sale> {
                                         : salesTypeData.type == 'SALES-O' ||
                                                 salesTypeData.type == 'SALES-Q'
                                             ? isStockProductOnlyInSalesQO
-                                                ? (double.tryParse(value) *
-                                                                (unitValue) +
+                                                ? (double.tryParse(value) * (unitValue) +
                                                             freeQty) >
-                                                        product.quantity
+                                                        (_autoVariantSelect
+                                                            ? _autoStockVariant.fold(
+                                                                0.0,
+                                                                (a, b) =>
+                                                                    a +
+                                                                    double.parse(b.quantity
+                                                                        .toString()))
+                                                            : product.quantity)
                                                     ? true
                                                     : cartQ
                                                         ? true
                                                         : false
                                                 : false
-                                            : (double.tryParse(value) *
-                                                            (unitValue) +
+                                            : (double.tryParse(value) * (unitValue) +
                                                         freeQty) >
-                                                    product.quantity
+                                                    (_autoVariantSelect
+                                                        ? _autoStockVariant.fold(
+                                                            0.0, (a, b) => a + double.parse(b.quantity.toString()))
+                                                        : product.quantity)
                                                 ? true
                                                 : cartQ
                                                     ? true
@@ -4398,23 +4446,37 @@ class _SaleState extends State<Sale> {
                                           ProductRating(
                                               id: 0,
                                               name: 'MRP',
-                                              rate: product.sellingPrice),
+                                              rate: unitValue > 1
+                                                  ? (product.sellingPrice *
+                                                      unitValue)
+                                                  : (product.sellingPrice)),
                                           ProductRating(
                                               id: 1,
                                               name: 'Retail',
-                                              rate: product.retailPrice),
+                                              rate: unitValue > 1
+                                                  ? (product.retailPrice *
+                                                      unitValue)
+                                                  : (product.retailPrice)),
                                           ProductRating(
                                               id: 2,
                                               name: 'WsRate',
-                                              rate: product.wholeSalePrice),
+                                              rate: unitValue > 1
+                                                  ? (product.wholeSalePrice *
+                                                      unitValue)
+                                                  : (product.wholeSalePrice)),
                                           ProductRating(
                                               id: 2,
                                               name: labelSpRate,
-                                              rate: product.spRetailPrice),
+                                              rate: unitValue > 1
+                                                  ? (product.spRetailPrice *
+                                                      unitValue)
+                                                  : (product.spRetailPrice)),
                                           ProductRating(
                                               id: 3,
                                               name: 'Branch',
-                                              rate: product.branch)
+                                              rate: unitValue > 1
+                                                  ? (product.branch * unitValue)
+                                                  : (product.branch))
                                         ];
                               showDialog(
                                   context: context,
@@ -5003,6 +5065,9 @@ class _SaleState extends State<Sale> {
                                             position = index;
                                             cartModel =
                                                 cartItem.elementAt(position);
+                                            double _rated = cartModel.rate /
+                                                cartModel.unitValue;
+                                            saleRate = _rated;
                                             _rateController.text =
                                                 cartModel.rate.toString();
                                             _quantityController.text =
@@ -5016,6 +5081,7 @@ class _SaleState extends State<Sale> {
                                                     .toString();
                                             _serialNoController.text =
                                                 cartModel.serialNo;
+                                            _dropDownUnit = cartModel.unitId;
 
                                             nextWidget = 3;
                                           });
@@ -6035,8 +6101,18 @@ class _SaleState extends State<Sale> {
                       },
                     ),
                   ),
-                  Text(
-                      'Balance : ${ComSettings.appSettings('bool', 'key-round-off-amount', false) ? _balance.toStringAsFixed(decimal) : _balance.roundToDouble().toString()}'),
+                  Column(
+                    children: [
+                      Text(
+                        'Bill Balance : ${ComSettings.appSettings('bool', 'key-round-off-amount', false) ? _balance.toStringAsFixed(decimal) : _balance.roundToDouble().toString()}',
+                        // style: TextStyle(fontSize: 10),
+                      ),
+                      Text(
+                        'OB:${ledgerModel.balance}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  )
                 ],
               ),
             ),
@@ -6696,6 +6772,7 @@ class _SaleState extends State<Sale> {
         salesData = value;
         var information = value['Information'][0];
         var particulars = value['Particulars'];
+        taxable = information['TaxType'] == 'T' ? true : false;
         // var serialNO = value['SerialNO'];
         // var deliveryNoteDetails = value['DeliveryNote'];
         otherAmountList = value['otherAmount'];
@@ -6797,10 +6874,13 @@ class _SaleState extends State<Sale> {
                   rDiscount: double.tryParse(product['RDisc'].toString()),
                   fCess: double.tryParse(product['Fcess'].toString()),
                   serialNo: product['serialno'].toString(),
-                  tax: double.tryParse(product['CGST'].toString()) +
-                      double.tryParse(product['SGST'].toString()) +
-                      double.tryParse(product['IGST'].toString()),
-                  taxP: double.tryParse(product['igst'].toString()),
+                  tax: taxable
+                      ? (double.tryParse(product['CGST'].toString()) +
+                          double.tryParse(product['SGST'].toString()) +
+                          double.tryParse(product['IGST'].toString()))
+                      : 0,
+                  taxP:
+                      taxable ? double.tryParse(product['igst'].toString()) : 0,
                   unitId: product['Unit'],
                   unitValue: double.tryParse(product['UnitValue'].toString()),
                   pRate: double.tryParse(product['Prate'].toString()),

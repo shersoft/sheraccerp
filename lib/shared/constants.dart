@@ -54,7 +54,7 @@ String _sherSoftPassword = '';
 get sherSoftPassword => _sherSoftPassword;
 set sherSoftPassword(String value) => _sherSoftPassword = value;
 
-const String apiV = 'v22/';
+const String apiV = 'v23/';
 
 const currencySymbol = '₹';
 // const bool isVariant = false;
@@ -760,3 +760,10 @@ List<dynamic> tempCustomerData = [];
 String capitalize(String value) {
   return "${value[0].toUpperCase()}${value.substring(1).toLowerCase()}";
 }
+
+bool defaultSalesMan = false;
+bool defaultBranch = false;
+bool defaultCashAc = false;
+bool defaultArea = false;
+bool defaultGroup = false;
+bool defaultRoute = false;

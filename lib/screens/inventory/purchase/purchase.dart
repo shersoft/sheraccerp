@@ -3721,208 +3721,201 @@ class _PurchaseState extends State<Purchase> {
             child: Padding(
               padding: const EdgeInsets.only(bottom: 40),
               child: totalItem > 0
-                  ? Expanded(
+                  ? SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.48,
                       child: ListView.builder(
                         shrinkWrap: true,
-                        itemCount: cartItem.length,
+                        itemCount: cartItem.length + 1,
                         itemBuilder: (context, index) {
-                          return Card(
-                            color: blue.shade100,
-                            elevation: 5.0,
-                            child: Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  RichText(
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                    text: TextSpan(
-                                        text: '${cartItem[index].itemName}\n',
-                                        style: const TextStyle(
-                                            color: black,
-                                            fontWeight: FontWeight.bold)),
-                                  ),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: [
-                                      SizedBox(
-                                        width: 100,
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                          return cartItem.length == index
+                              ? addItemButtonWidget()
+                              : Card(
+                                  color: blue.shade100,
+                                  elevation: 5.0,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        RichText(
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                          text: TextSpan(
+                                              text:
+                                                  '${cartItem[index].itemName}\n',
+                                              style: const TextStyle(
+                                                  color: black,
+                                                  fontWeight: FontWeight.bold)),
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          mainAxisSize: MainAxisSize.max,
                                           children: [
-                                            RichText(
-                                              maxLines: 1,
-                                              text: TextSpan(
-                                                  text:
-                                                      '${cartItem[index].id}/',
-                                                  style: TextStyle(
-                                                      color: Colors
-                                                          .blueGrey.shade800,
-                                                      fontSize: 10.0),
-                                                  children: [
-                                                    TextSpan(
+                                            SizedBox(
+                                              width: 100,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  RichText(
+                                                    maxLines: 1,
+                                                    text: TextSpan(
                                                         text:
-                                                            '${cartItem[index].uniqueCode}/${cartItem[index].itemId}',
-                                                        style: const TextStyle(
-                                                            fontSize: 10.0,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold)),
-                                                  ]),
+                                                            '${cartItem[index].id}/',
+                                                        style: TextStyle(
+                                                            color: Colors
+                                                                .blueGrey
+                                                                .shade800,
+                                                            fontSize: 10.0),
+                                                        children: [
+                                                          TextSpan(
+                                                              text:
+                                                                  '${cartItem[index].uniqueCode}/${cartItem[index].itemId}',
+                                                              style: const TextStyle(
+                                                                  fontSize:
+                                                                      10.0,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold)),
+                                                        ]),
+                                                  ),
+                                                  RichText(
+                                                    maxLines: 1,
+                                                    text: TextSpan(
+                                                        text: 'Unit: ',
+                                                        style: TextStyle(
+                                                            color: Colors
+                                                                .blueGrey
+                                                                .shade800,
+                                                            fontSize: 12.0),
+                                                        children: [
+                                                          TextSpan(
+                                                              text:
+                                                                  '${UnitSettings.getUnitName(cartItem[index].unitId)}\n',
+                                                              style: const TextStyle(
+                                                                  fontSize:
+                                                                      12.0,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold)),
+                                                        ]),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            PlusMinusButtons(
+                                              addQuantity: () {
+                                                setState(() {
+                                                  updateProduct(
+                                                      cartItem[index],
+                                                      cartItem[index].quantity +
+                                                          1,
+                                                      index);
+                                                });
+                                              },
+                                              deleteQuantity: () {
+                                                setState(() {
+                                                  updateProduct(
+                                                      cartItem[index],
+                                                      cartItem[index].quantity -
+                                                          1,
+                                                      index);
+                                                });
+                                              },
+                                              text: cartItem[index]
+                                                  .quantity
+                                                  .toString(),
                                             ),
                                             RichText(
                                               maxLines: 1,
                                               text: TextSpan(
-                                                  text: 'Unit: ',
+                                                  text: 'Rate: ',
                                                   style: TextStyle(
                                                       color: Colors
                                                           .blueGrey.shade800,
-                                                      fontSize: 12.0),
+                                                      fontSize: 13.0),
                                                   children: [
                                                     TextSpan(
                                                         text:
-                                                            '${UnitSettings.getUnitName(cartItem[index].unitId)}\n',
+                                                            '${cartItem[index].rate}\n',
                                                         style: const TextStyle(
-                                                            fontSize: 12.0,
                                                             fontWeight:
-                                                                FontWeight
-                                                                    .bold)),
+                                                                FontWeight.bold,
+                                                            fontSize: 12.0)),
                                                   ]),
+                                            ),
+                                            PopUpMenuAction(
+                                              onDelete: () {
+                                                setState(() {
+                                                  cartItem.removeAt(index);
+                                                });
+                                              },
+                                              onEdit: () {
+                                                setState(() {
+                                                  editItem = true;
+                                                  position = index;
+                                                  cartModel = cartItem
+                                                      .elementAt(position);
+                                                  controllerRate.text =
+                                                      cartModel.rate.toString();
+                                                  controllerQuantity.text =
+                                                      cartModel.quantity
+                                                          .toString();
+                                                  controllerBranch.text =
+                                                      cartModel.branch
+                                                          .toString();
+                                                  controllerDiscount.text =
+                                                      cartModel.discount
+                                                          .toString();
+                                                  controllerDiscountPer.text =
+                                                      cartModel.discountPercent
+                                                          .toString();
+                                                  controllerFreeQuantity.text =
+                                                      cartModel.free.toString();
+                                                  controllerMrp.text =
+                                                      cartModel.mrp.toString();
+                                                  controllerRetail.text =
+                                                      cartModel.retail
+                                                          .toString();
+                                                  controllerSerialNo.text =
+                                                      cartModel.serialNo
+                                                          .toString();
+                                                  controllerWholeSale.text =
+                                                      cartModel.wholesale
+                                                          .toString();
+                                                  // controller.text = cartModel..toString();
+
+                                                  nextWidget = 4;
+                                                });
+                                              },
                                             ),
                                           ],
                                         ),
-                                      ),
-                                      PlusMinusButtons(
-                                        addQuantity: () {
-                                          setState(() {
-                                            updateProduct(
-                                                cartItem[index],
-                                                cartItem[index].quantity + 1,
-                                                index);
-                                          });
-                                        },
-                                        deleteQuantity: () {
-                                          setState(() {
-                                            updateProduct(
-                                                cartItem[index],
-                                                cartItem[index].quantity - 1,
-                                                index);
-                                          });
-                                        },
-                                        text:
-                                            cartItem[index].quantity.toString(),
-                                      ),
-                                      RichText(
-                                        maxLines: 1,
-                                        text: TextSpan(
-                                            text: 'Rate: ',
-                                            style: TextStyle(
-                                                color: Colors.blueGrey.shade800,
-                                                fontSize: 13.0),
-                                            children: [
-                                              TextSpan(
-                                                  text:
-                                                      '${cartItem[index].rate}\n',
-                                                  style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 12.0)),
-                                            ]),
-                                      ),
-                                      PopUpMenuAction(
-                                        onDelete: () {
-                                          setState(() {
-                                            cartItem.removeAt(index);
-                                          });
-                                        },
-                                        onEdit: () {
-                                          setState(() {
-                                            editItem = true;
-                                            position = index;
-                                            cartModel =
-                                                cartItem.elementAt(position);
-                                            controllerRate.text =
-                                                cartModel.rate.toString();
-                                            controllerQuantity.text =
-                                                cartModel.quantity.toString();
-                                            controllerBranch.text =
-                                                cartModel.branch.toString();
-                                            controllerDiscount.text =
-                                                cartModel.discount.toString();
-                                            controllerDiscountPer.text =
-                                                cartModel.discountPercent
-                                                    .toString();
-                                            controllerFreeQuantity.text =
-                                                cartModel.free.toString();
-                                            controllerMrp.text =
-                                                cartModel.mrp.toString();
-                                            controllerRetail.text =
-                                                cartModel.retail.toString();
-                                            controllerSerialNo.text =
-                                                cartModel.serialNo.toString();
-                                            controllerWholeSale.text =
-                                                cartModel.wholesale.toString();
-                                            // controller.text = cartModel..toString();
-
-                                            nextWidget = 4;
-                                          });
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                  RichText(
-                                    text: TextSpan(
-                                        text: 'Gross:',
-                                        style: TextStyle(
-                                            color: Colors.blueGrey.shade800,
-                                            fontSize: 12.0),
-                                        children: [
-                                          TextSpan(
-                                              text:
-                                                  '${cartItem[index].gross}    ',
-                                              style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 12.0)),
-                                          TextSpan(
-                                              text: 'Disc:',
-                                              style: const TextStyle(
+                                        RichText(
+                                          text: TextSpan(
+                                              text: 'Gross:',
+                                              style: TextStyle(
+                                                  color:
+                                                      Colors.blueGrey.shade800,
                                                   fontSize: 12.0),
                                               children: [
                                                 TextSpan(
                                                     text:
-                                                        '${cartItem[index].discountPercent}% ${cartItem[index].discount}    ',
+                                                        '${cartItem[index].gross}    ',
                                                     style: const TextStyle(
                                                         fontWeight:
                                                             FontWeight.bold,
                                                         fontSize: 12.0)),
-                                              ]),
-                                          TextSpan(
-                                              text: 'Net:',
-                                              style: const TextStyle(
-                                                  fontSize: 12.0),
-                                              children: [
                                                 TextSpan(
-                                                    text:
-                                                        '${cartItem[index].net}    ',
+                                                    text: 'Disc:',
                                                     style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 12.0)),
-                                              ]),
-                                          isTax
-                                              ? TextSpan(
-                                                  text:
-                                                      'Tax:${cartItem[index].taxP}% ',
-                                                  style: const TextStyle(
-                                                      fontSize: 12.0),
-                                                  children: [
+                                                        fontSize: 12.0),
+                                                    children: [
                                                       TextSpan(
                                                           text:
-                                                              '${cartItem[index].tax}    ',
+                                                              '${cartItem[index].discountPercent}% ${cartItem[index].discount}    ',
                                                           style:
                                                               const TextStyle(
                                                                   fontWeight:
@@ -3930,27 +3923,63 @@ class _PurchaseState extends State<Purchase> {
                                                                           .bold,
                                                                   fontSize:
                                                                       12.0)),
-                                                    ])
-                                              : const TextSpan(text: ''),
-                                          TextSpan(
-                                              text: 'Total:',
-                                              style: const TextStyle(
-                                                  fontSize: 12.0),
-                                              children: [
+                                                    ]),
                                                 TextSpan(
-                                                    text:
-                                                        '${cartItem[index].total}',
+                                                    text: 'Net:',
                                                     style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 12.0)),
+                                                        fontSize: 12.0),
+                                                    children: [
+                                                      TextSpan(
+                                                          text:
+                                                              '${cartItem[index].net}    ',
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  fontSize:
+                                                                      12.0)),
+                                                    ]),
+                                                isTax
+                                                    ? TextSpan(
+                                                        text:
+                                                            'Tax:${cartItem[index].taxP}% ',
+                                                        style: const TextStyle(
+                                                            fontSize: 12.0),
+                                                        children: [
+                                                            TextSpan(
+                                                                text:
+                                                                    '${cartItem[index].tax}    ',
+                                                                style: const TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    fontSize:
+                                                                        12.0)),
+                                                          ])
+                                                    : const TextSpan(text: ''),
+                                                TextSpan(
+                                                    text: 'Total:',
+                                                    style: const TextStyle(
+                                                        fontSize: 12.0),
+                                                    children: [
+                                                      TextSpan(
+                                                          text:
+                                                              '${cartItem[index].total}',
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  fontSize:
+                                                                      12.0)),
+                                                    ]),
                                               ]),
-                                        ]),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ],
-                              ),
-                            ),
-                          );
+                                );
                         },
                       ),
                     )
@@ -3970,7 +3999,7 @@ class _PurchaseState extends State<Purchase> {
                       ),
                     ),
             )),
-        totalItem > 0 ? addItemButtonWidget() : Container(),
+        // totalItem > 0 ? addItemButtonWidget() : Container(),
         const Divider(
           height: 2,
           thickness: 2,
@@ -4032,7 +4061,7 @@ class _PurchaseState extends State<Purchase> {
               children: [
                 Expanded(
                   child: SizedBox(
-                    // width: 30,
+                    width: 145,
                     height: 40,
                     child: TextField(
                       keyboardType:
@@ -4060,11 +4089,15 @@ class _PurchaseState extends State<Purchase> {
                     ),
                   ),
                 ),
-                const Text('Balance : '),
-                Text(ComSettings.appSettings(
-                        'bool', 'key-round-off-amount', false)
-                    ? _balance.toStringAsFixed(2)
-                    : _balance.roundToDouble().toString()),
+                Column(
+                  children: [
+                    Text(
+                        '               Balance : ${ComSettings.appSettings('bool', 'key-round-off-amount', false) ? _balance.toStringAsFixed(2) : _balance.roundToDouble().toString()}'),
+                    Text(
+                        '                             OB:${ledgerModel != null ? ledgerModel.balance : 0}',
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ],
+                )
               ],
             ),
           ],
@@ -4244,6 +4277,8 @@ class _PurchaseState extends State<Purchase> {
 
         formattedDate = DateUtil.dateDMY(information['DDate']);
         invDate = DateUtil.dateDMY(information['InvDate']);
+        entryNo = information['EntryNo'].toString();
+        invNoController.text = information['Sup_Inv'].toString();
 
         dataDynamic = [
           {
@@ -4277,6 +4312,9 @@ class _PurchaseState extends State<Purchase> {
             state: '',
             stateCode: '',
             taxNumber: '');
+        ledgerDataModel = cModel;
+        accountDataModel = cModel;
+        accountModel = ledgerModel;
         cartItem.clear();
         for (var product in particulars) {
           cartItem.add(CartItemP(

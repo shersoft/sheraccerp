@@ -18,6 +18,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:sheraccerp/service/blue_thermal.dart';
 import 'package:sunmi_printer_service/sunmi_printer_service.dart' as sum_mi;
 import 'package:sunmi_printer_service/sunmi_printer_service.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -121,13 +122,13 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
         eNo = int.tryParse(bill['entryNo'].toString()) ?? 0;
         dataParticulars = jsonDecode(bill['particular']);
         // dataParticulars = bill['particular'];
-        // var ledgerName = bill['name'];//oldBalance: 897823.00 Cr
-        var bal = bill['oldBalance'].toString().split(' ');
+        // var ledgerName = bill['name'];
+        var bal = bill['balance'].toString().split(' ');
         if (bal[1] == 'Dr') {
-          oldBalance = double.tryParse(bal[0].toString()) ?? 0;
+          oldBalance = double.tryParse(bill['oldBalance'].toString()) ?? 0;
           balance = oldBalance - bill['total'];
         } else {
-          oldBalance = (double.tryParse(bal[0].toString())! * (-1));
+          oldBalance = (double.tryParse(bill['oldBalance'].toString())! * (-1));
           balance = oldBalance - bill['total'];
         }
         invoiceHead = form == 'RECEIPT'
@@ -149,6 +150,8 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
             .then((value) => pdfPath = value);
       });
     }
+
+    loadAssets();
   }
 
   Future<void> requestBluetoothPermission() async {
@@ -220,20 +223,14 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
             IconButton(
                 icon: const Icon(Icons.print),
                 onPressed: () {
-                  _capturePng().then((value) => {
-                        setState(() {
-                          byteImage = value;
+                  // _capturePng().then((value) => {
+                  //       setState(() {
+                  //         byteImage = value;
 
-                          askPrintDevice(
-                              context,
-                              title + '_ref_${bill['entryNo']}',
-                              companySettings,
-                              settings,
-                              data,
-                              byteImage,
-                              '');
-                        })
-                      });
+                  askPrintDevice(context, title + '_ref_${bill['entryNo']}',
+                      companySettings, settings, data, byteImage, '');
+                  // })
+                  // });
                 })
           ],
         ),
@@ -700,6 +697,12 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
     setState(() {});
     return pngBytes;
   }
+
+  void loadAssets() {
+    rootBundle.load('assets/logo.png').then((ByteData bytes) {
+      byteImage = bytes.buffer.asUint8List();
+    });
+  }
 }
 
 previewWidget(
@@ -851,7 +854,7 @@ previewWidget(
                               width: 130,
                               child: form == 'RECEIPT'
                                   ? const Text(
-                                      "Recieved With Thanks From",
+                                      "Received With Thanks From",
                                       style: TextStyle(fontSize: 10),
                                     )
                                   : const Text(
@@ -1078,6 +1081,8 @@ askPrintDevice(
           context, title, companySettings, settings, data, byteImage);
     } else if (printerDevice == 6) {
       //                6: 'Thermal',
+      _selectBtThermalPrint(
+          context, title, companySettings, settings, data, byteImage, "4");
     } else if (printerDevice == 7) {
       //                7: 'RP_80',
     } else if (printerDevice == 8) {
@@ -1115,6 +1120,8 @@ askPrintDevice(
           context, title, companySettings, settings, data, byteImage);
     } else if (printerDevice == 6) {
       //                6: 'Thermal',
+      _selectBtThermalPrint(
+          context, title, companySettings, settings, data, byteImage, "4");
     } else if (printerDevice == 7) {
       //                7: 'RP_80',
     } else if (printerDevice == 8) {
@@ -1144,6 +1151,20 @@ askPrintDevice(
   } else {
     printDocument(title, companySettings, settings, data, customerModel);
   }
+}
+
+_selectBtThermalPrint(
+    BuildContext context,
+    String title,
+    CompanyInformation companySettings,
+    List<CompanySettings> settings,
+    data,
+    byteImage,
+    size) async {
+  var dataAll = [companySettings, settings, data, size, "RECEIPT"];
+  // dataAll.add('Settings[' + settings + ']');b
+  Navigator.push(context,
+      MaterialPageRoute(builder: (_) => BlueThermalPrint(dataAll, byteImage)));
 }
 
 List<String> newDataList = ["2", "3", "4"];
@@ -1246,7 +1267,7 @@ Future<dynamic> printBluetooth(
     data,
     byteImage,
     size) async {
-  var dataAll = [companySettings, settings, data, size, "SALE"];
+  var dataAll = [companySettings, settings, data, size, "RECEIPT"];
   // dataAll.add('Settings[' + settings + ']');b
   Navigator.push(
       context, MaterialPageRoute(builder: (_) => BtPrint(dataAll, byteImage)));
@@ -1845,12 +1866,13 @@ Future<pw.Document> makePDF(
   var bill = information;
   dataParticulars = jsonDecode(bill['particular']);
   //  var dataParticulars = bill['Particulars'];
-  var bal = information['oldBalance'].toString().split(' ');
+  var bal = information['balance'].toString().split(' ');
   if (bal[1] == 'Dr') {
-    oldBalance = double.tryParse(bal[0].toString()) ?? 0;
+    oldBalance = double.tryParse(information['oldBalance'].toString()) ?? 0;
     balance = oldBalance - information['total'];
   } else {
-    oldBalance = (double.tryParse(bal[0].toString())! * (-1));
+    oldBalance =
+        (double.tryParse(information['oldBalance'].toString())! * (-1));
     balance = oldBalance - information['total'];
   }
   final pdf = pw.Document();

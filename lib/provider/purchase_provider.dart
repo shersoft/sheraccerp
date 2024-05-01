@@ -26,13 +26,12 @@ class PurchaseProvider with ChangeNotifier {
         (element) => element['LedName'] == 'GENERAL SALES A/C')['LedCode'];
     _acId = mainAccount
         .firstWhere((element) => element['LedName'] == 'CASH')['LedCode'];
-    _acId =
-        ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) - 1 >
-                _acId
-            ? ComSettings.appSettings(
-                    'int', 'key-dropdown-default-cash-ac', _acId) -
-                1
-            : _acId;
+    int cashId =
+        ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) - 1;
+    _acId = cashId > 0
+        ? mainAccount.firstWhere((element) => element['LedCode'] == cashId,
+            orElse: () => {'LedName': 'CASH', 'LedCode': _acId})['LedCode']
+        : _acId;
 
     // fetchData();
   }

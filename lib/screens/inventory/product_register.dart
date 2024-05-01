@@ -213,7 +213,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                 maxOrderLevelController.text = '';
                 reOrderLevelController.text = '';
                 cessController.text = '';
-                addCessController.text = '';
+                additionalCessController.text = '';
                 isExist = false;
                 nextWidget = 0;
               });
@@ -311,11 +311,14 @@ class _ProductRegisterState extends State<ProductRegister> {
                                   ? double.tryParse(cessController.text.trim())
                                   : 0
                               : 0,
-                          'addCessPer': addCessController.text.trim().isNotEmpty
-                              ? double.tryParse(addCessController.text.trim()) >
+                          'addCessPer': additionalCessController.text
+                                  .trim()
+                                  .isNotEmpty
+                              ? double.tryParse(additionalCessController.text
+                                          .trim()) >
                                       0
                                   ? double.tryParse(
-                                      addCessController.text.trim())
+                                      additionalCessController.text.trim())
                                   : 0
                               : 0,
                           'mrp': mrpController.text.trim().isNotEmpty
@@ -435,11 +438,14 @@ class _ProductRegisterState extends State<ProductRegister> {
                                   ? double.tryParse(cessController.text.trim())
                                   : 0
                               : 0,
-                          'addCessPer': addCessController.text.trim().isNotEmpty
-                              ? double.tryParse(addCessController.text.trim()) >
+                          'addCessPer': additionalCessController.text
+                                  .trim()
+                                  .isNotEmpty
+                              ? double.tryParse(additionalCessController.text
+                                          .trim()) >
                                       0
                                   ? double.tryParse(
-                                      addCessController.text.trim())
+                                      additionalCessController.text.trim())
                                   : 0
                               : 0,
                           'mrp': mrpController.text.trim().isNotEmpty
@@ -543,7 +549,7 @@ class _ProductRegisterState extends State<ProductRegister> {
   TextEditingController maxOrderLevelController = TextEditingController();
   TextEditingController reOrderLevelController = TextEditingController();
   TextEditingController cessController = TextEditingController();
-  TextEditingController addCessController = TextEditingController();
+  TextEditingController additionalCessController = TextEditingController();
 
   formWidget() {
     return nextWidget == 0
@@ -1102,7 +1108,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                           allow: true, replacementString: '.')
                     ],
                     decoration: const InputDecoration(
-                      labelText: 'CESS',
+                      labelText: 'Cess',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -1112,7 +1118,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                 ),
                 Expanded(
                   child: TextFormField(
-                    controller: addCessController,
+                    controller: additionalCessController,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
@@ -1120,7 +1126,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                           allow: true, replacementString: '.')
                     ],
                     decoration: const InputDecoration(
-                      labelText: 'ADD CESS',
+                      labelText: 'Additional Cess',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -1431,7 +1437,7 @@ class _ProductRegisterState extends State<ProductRegister> {
         brandController.text = brand.name;
       }
       cessController.text = value.cess.toString();
-      addCessController.text = value.adcessper.toString();
+      additionalCessController.text = value.adcessper.toString();
       mrpController.text = value.mrp.toString();
       active = value.active == 1 ? true : false;
       wholeSaleController.text = value.wsrate.toString();

@@ -215,8 +215,7 @@ class _SalesFormRegisterState extends State<SalesFormRegister> {
                               salesType!.accounts = _accounts;
                               salesType!.eInvoice = _eInv;
                               salesType!.location = selectedLocationData.id;
-                              salesType!.name =
-                                  controlName.text.trim().toUpperCase();
+                              salesType!.name = controlName.text.trim();
                               salesType!.rateType = selectedRateType;
                               salesType!.sColor = '-1';
                               salesType!.stock = _stock;
@@ -236,7 +235,7 @@ class _SalesFormRegisterState extends State<SalesFormRegister> {
                                   eInvoice: _eInv,
                                   id: 0,
                                   location: selectedLocationData.id,
-                                  name: controlName.text.trim().toUpperCase(),
+                                  name: controlName.text.trim(),
                                   rateType: selectedRateType,
                                   sColor: '-1',
                                   stock: _stock,

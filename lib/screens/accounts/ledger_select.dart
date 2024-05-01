@@ -1,9 +1,12 @@
 // @dart = 2.11
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:scoped_model/scoped_model.dart';
+import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/customer_model.dart';
 import 'package:sheraccerp/models/ledger_parent.dart';
 import 'package:sheraccerp/models/other_registrations.dart';
+import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/screens/report_view.dart';
 import 'package:sheraccerp/service/api_dio.dart';
@@ -22,7 +25,12 @@ class _LedgerSelectState extends State<LedgerSelect> {
   List<dynamic> items = [];
   List<dynamic> itemDisplay = [];
   DioService api = DioService();
-  bool _loading = true, _showQty = false, _ob = true, _gAll = true, _0b = false;
+  bool _loading = true,
+      _showQty = false,
+      _ob = true,
+      _gAll = true,
+      isSalesManWiseLedger = false,
+      _0b = false;
   var _ledger, _id, locationId, _dropDownBranchId;
   String fromDate, toDate, sType = 'Summery', area = '0', route = '0';
   dynamic areaModel, routeModel;
@@ -35,9 +43,12 @@ class _LedgerSelectState extends State<LedgerSelect> {
   String selectedGroupValues = '', selectedStockValue = '';
   dynamic selectedItem;
 
+  List<CompanySettings> settings;
+
   @override
   void initState() {
     super.initState();
+    settings = ScopedModel.of<MainModel>(context).getSettings();
     fromDate = DateUtil.datePickerDMY(now);
     toDate = DateUtil.datePickerDMY(now);
     // final arguments = ModalRoute.of(context).settings.arguments as Map;
@@ -52,13 +63,22 @@ class _LedgerSelectState extends State<LedgerSelect> {
     groupId =
         ComSettings.appSettings('int', 'key-dropdown-default-group-view', 0) -
             1;
+    isSalesManWiseLedger =
+        ComSettings.getStatus('KEY SALESMAN WISE LEDGER', settings);
+    int salesManId = ComSettings.appSettings(
+            'int', 'key-dropdown-default-salesman-view', 1) -
+        1;
 
     if (arguments != null) {
       mode = arguments['mode'];
       if (mode == "ledger") {
         _loading = true;
         statement = 'Ledger_Report';
-        (groupId > 1 ? api.getLedgerByGroup(groupId) : api.getLedgerAll())
+        (isSalesManWiseLedger
+                ? api.getLedgerBySalesMan(salesManId)
+                : (groupId > 1
+                    ? api.getLedgerByGroup(groupId)
+                    : api.getLedgerAll()))
             .then((value) {
           setState(() {
             items.addAll(value);

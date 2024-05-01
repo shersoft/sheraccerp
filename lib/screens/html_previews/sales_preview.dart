@@ -41,6 +41,7 @@ import 'dart:ui' as ui;
 // ignore: avoid_web_libraries_in_flutter
 // import 'dart:html' as html;
 import 'package:sunmi_printer_service/sunmi_printer_service.dart' as sum_mi;
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:zxing2/qrcode.dart';
@@ -52,7 +53,12 @@ class SalesPreviewShow extends StatefulWidget {
   State createState() => _SalesPreviewShowState();
 }
 
-int pdfType = 0, pdfSize = 2, pdfModel = 2, pdfCopy = 1, pdfLineSpace = 0;
+int pdfType = 0,
+    pdfSize = 2,
+    pdfModel = 2,
+    pdfCopy = 1,
+    pdfLineSpace = 0,
+    paperSize = 3;
 
 class _SalesPreviewShowState extends State<SalesPreviewShow> {
   final GlobalKey _globalKey = GlobalKey();
@@ -115,7 +121,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
   }
 
   var labelSerialNo = 'SerialNo';
-  bool isItemSerialNo, isInvoiceDesigner = false;
+  bool isItemSerialNo, isInvoiceDesigner = false, balanceBeforeSales = false;
 
   @override
   void initState() {
@@ -132,6 +138,8 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
     companyTaxNo = ComSettings.getValue('GST-NO', settings);
     isQrCodeKSA = ComSettings.getStatus('KEY QRCODE KSA', settings);
     isEsQrCodeKSA = ComSettings.getStatus('KEY QRCODE KSA ON ES', settings);
+    balanceBeforeSales =
+        ComSettings.getStatus('KEY BALANCE BEFORE SALES', settings);
     printerType =
         ComSettings.appSettings('int', 'key-dropdown-printer-type-view', 0);
     printerDevice =
@@ -144,6 +152,9 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
     pdfType = ComSettings.appSettings('int', "key-dropdown-pdf-type-view", 0);
     pdfSize = ComSettings.appSettings('int', "key-dropdown-pdf-size-view", 0);
     pdfCopy = ComSettings.appSettings('int', "key-dropdown-pdf-copy-view", 0);
+    paperSize =
+        ComSettings.appSettings('int', "key-dropdown-printer-paper-size", 4) -
+            1;
     pdfModel = ComSettings.appSettings('int', "key-dropdown-pdf-model-view", 2);
     pdfLineSpace = ComSettings.appSettings('int', "key-dropdown-pdf-line", 0);
 
@@ -918,14 +929,14 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
       "mrpTotal": "0.00",
       "TenderType": " ",
       "CheckCardDetails": false,
-      "IRN": " ",
-      "SignInv": " ",
-      "SignQR": " ",
+      "IRN": dataInformation['IRNNO'].toString() ?? ' ',
+      "SignInv": dataInformation['SignedInvNo'].toString() ?? ' ',
+      "SignQR": dataInformation['SignedQrCode'].toString() ?? ' ',
       "upiurl": " ",
       "TcsAmount": "0.00",
       "TcsPer": "0",
-      "AckDate": " ",
-      "Ackno": " ",
+      "AckDate": dataInformation['AckDate'].toString() ?? ' ',
+      "Ackno": dataInformation['AckNo'].toString() ?? ' ',
       "SecondName": " ",
       "dtSalesDate": " ",
       "paymentTerms": " ",
@@ -1689,7 +1700,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                       children: [
                                         Container(
                                           padding: const EdgeInsets.all(10),
-                                          height: 110,
+                                          height: 115,
                                           width:
                                               MediaQuery.of(context).size.width,
                                           decoration: BoxDecoration(
@@ -1786,9 +1797,9 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                                         8),
                                                           ),
                                                         ),
-                                                        const SizedBox(
-                                                          height: 5,
-                                                        ),
+                                                        // const SizedBox(
+                                                        //   height: 5,
+                                                        // ),
                                                         Text(
                                                           "GST No : $companyTaxNo",
                                                           style: const TextStyle(
@@ -1797,13 +1808,13 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                                   FontWeight
                                                                       .w500),
                                                         ),
-                                                        const SizedBox(
-                                                          height: 10,
-                                                        ),
+                                                        // const SizedBox(
+                                                        //   height: 5,
+                                                        // ),
                                                         Text(
                                                           "State      : $companyState       $companyStateCode",
                                                           style: const TextStyle(
-                                                              fontSize: 10,
+                                                              fontSize: 7,
                                                               fontWeight:
                                                                   FontWeight
                                                                       .w500),
@@ -5557,13 +5568,13 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                   const SizedBox(
                                                     height: 5,
                                                   ),
-                                                  const Text(
-                                                    "NET AMOUNT    :",
-                                                    style: TextStyle(
-                                                        fontSize: 8,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  )
+                                                  // const Text(
+                                                  //   "NET AMOUNT    :",
+                                                  //   style: TextStyle(
+                                                  //       fontSize: 8,
+                                                  //       fontWeight:
+                                                  //           FontWeight.bold),
+                                                  // )
                                                 ],
                                               ),
                                               Column(
@@ -5618,13 +5629,13 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                   const SizedBox(
                                                     height: 5,
                                                   ),
-                                                  Text(
-                                                    "${(lineTotal - dataInformation['ReturnAmount'] + otherAmount.fold(0.0, (t, e) => t + double.parse(e['Symbol'] == '-' ? (e['Amount'] * -1).toString() : e['Amount'].toString()))).toStringAsFixed(2)} ",
-                                                    style: const TextStyle(
-                                                        fontSize: 8,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  ),
+                                                  // Text(
+                                                  //   "${(lineTotal - dataInformation['ReturnAmount'] + otherAmount.fold(0.0, (t, e) => t + double.parse(e['Symbol'] == '-' ? (e['Amount'] * -1).toString() : e['Amount'].toString()))).toStringAsFixed(2)} ",
+                                                  //   style: const TextStyle(
+                                                  //       fontSize: 8,
+                                                  //       fontWeight:
+                                                  //           FontWeight.bold),
+                                                  // ),
                                                 ],
                                               )
                                             ],
@@ -5834,8 +5845,13 @@ List<String> newDataList = ["2", "3", "4", "5"];
 
 _showPrinterSize(BuildContext context, title, companySettings, settings, data,
     byteImage) async {
-  _asyncSimpleDialog(context).then((value) => printBluetooth(
-      context, title, companySettings, settings, data, byteImage, value));
+  if (paperSize > 0) {
+    printBluetooth(context, title, companySettings, settings, data, byteImage,
+        paperSize.toString());
+  } else {
+    _asyncSimpleDialog(context).then((value) => printBluetooth(
+        context, title, companySettings, settings, data, byteImage, value));
+  }
   // return await showDialog(
   //   context: context,
   //   builder: (context) => AlertDialog(
@@ -6933,6 +6949,7 @@ Future<pw.Document> makePDF(
   bool isQrCodeKSA = ComSettings.getStatus('KEY QRCODE KSA', settings);
   bool isEsQrCodeKSA = ComSettings.getStatus('KEY QRCODE KSA ON ES', settings);
 
+  companyTaxMode = ComSettings.getValue('PACKAGE', settings);
   bool printHeaderOnES =
       ComSettings.appSettings('bool', 'key-print-header-es', false);
   var taxSale = salesTypeData.tax;
@@ -10171,7 +10188,7 @@ Future<pw.Document> makePDF(
     //     pw.Divider(),
     //     pw.Center(
     //       child: pw.Text(
-    //         'TAX INVOICE',
+    //         invoiceHead.isNotEmpty ?invoiceHead:'TAX INVOICE',
     //         style: const pw.TextStyle(
     //           fontSize: 15.0,
     //           // fontWeight: pw.FontWeight.bold,
@@ -11186,8 +11203,8 @@ Future<pw.Document> makePDF(
     pdf.addPage(pw.MultiPage(
       maxPages: 100,
       pageFormat: PdfPageFormat.a4,
-      header: (pw.Context context) => _buildHeaderModel4(
-          context, companySettings, dataLedger, dataInformation, settings),
+      header: (pw.Context context) => _buildHeaderModel4(context,
+          companySettings, dataLedger, dataInformation, settings, invoiceHead),
       footer: (pw.Context context) => _buildFooterModel4(context,
           dataBankLedger, dataInformation, companySettings, otherAmount),
       build: (pw.Context context) {
@@ -15625,7 +15642,7 @@ Future<pw.Document> makePDF(
                           totalRowCount - existingRowCount;
                       return pw.Column(children: [
                         _buildHeaderr(context, settings, companySettings,
-                            dataLedger, dataInformation),
+                            dataLedger, dataInformation, invoiceHead),
                         pw.Container(
                           decoration: pw.BoxDecoration(border: pw.Border.all()),
                           child: pw.Table(
@@ -16436,8 +16453,13 @@ Future<pw.Document> makePDF(
                 : pw.MultiPage(
                     maxPages: 100,
                     pageFormat: _pageFormat,
-                    header: (pw.Context context) => _buildHeaderr(context,
-                        settings, companySettings, dataLedger, dataInformation),
+                    header: (pw.Context context) => _buildHeaderr(
+                        context,
+                        settings,
+                        companySettings,
+                        dataLedger,
+                        dataInformation,
+                        invoiceHead),
                     footer: (pw.Context context) => _buildFooterr(
                         context,
                         dataBankLedger,
@@ -17390,7 +17412,7 @@ Future<pw.Document> makePDF(
 
                       return pw.Column(children: [
                         _buildHeaderTax(context, settings, companySettings,
-                            dataLedger, dataInformation),
+                            dataLedger, dataInformation, invoiceHead),
                         pw.Container(
                           decoration: pw.BoxDecoration(border: pw.Border.all()),
                           child: pw.Table(
@@ -17849,8 +17871,13 @@ Future<pw.Document> makePDF(
                 : pw.MultiPage(
                     maxPages: 100,
                     pageFormat: _pageFormat,
-                    header: (pw.Context context) => _buildHeaderTax(context,
-                        settings, companySettings, dataLedger, dataInformation),
+                    header: (pw.Context context) => _buildHeaderTax(
+                        context,
+                        settings,
+                        companySettings,
+                        dataLedger,
+                        dataInformation,
+                        invoiceHead),
                     footer: (pw.Context context) => _buildFooterTax(
                         context,
                         dataInformation,
@@ -20650,8 +20677,8 @@ _buildFooterTax(pw.Context context, dataInformation, dataParticulars, data,
   );
 }
 
-_buildHeaderTax(
-    pw.Context context, company, companySettings, ledger, dataInformation) {
+_buildHeaderTax(pw.Context context, company, companySettings, ledger,
+    dataInformation, String invoiceHead) {
   var companyState = ComSettings.getValue('COMP-STATE', company);
   var companyStateCode = ComSettings.getValue('COMP-STATECODE', company);
   var companyTaxNo = ComSettings.getValue('GST-NO', company);
@@ -20697,7 +20724,7 @@ _buildHeaderTax(
       ),
       child: pw.Center(
         child: pw.Text(
-          "TAX INVOICE",
+          invoiceHead.isNotEmpty ? invoiceHead : "TAX INVOICE",
           style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
         ),
       ),
@@ -21960,7 +21987,8 @@ _addOtherAmountNeww(List otherAmount) {
         );
 }
 
-_buildHeaderr(pw.Context context, company, csettings, ledger, info) {
+_buildHeaderr(
+    pw.Context context, company, csettings, ledger, info, String invoiceHead) {
   var companyState = ComSettings.getValue('COMP-STATE', company);
   var companyStateCode = ComSettings.getValue('COMP-STATECODE', company);
   var companyTaxNo = ComSettings.getValue('GST-NO', company);
@@ -22043,7 +22071,7 @@ _buildHeaderr(pw.Context context, company, csettings, ledger, info) {
       ),
       child: pw.Center(
         child: pw.Text(
-          "TAX INVOICE",
+          invoiceHead.isNotEmpty ? invoiceHead : "TAX INVOICE",
           style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
         ),
       ),
@@ -22427,7 +22455,7 @@ _buildHeaderr(pw.Context context, company, csettings, ledger, info) {
 }
 
 _buildHeaderModel4(pw.Context context, CompanyInformation csettings, ledger,
-    info, List<CompanySettings> settings) {
+    info, List<CompanySettings> settings, String invoiceHead) {
   return pw.Column(children: [
     pw.Container(
       padding: const pw.EdgeInsets.all(10),
@@ -22512,7 +22540,7 @@ _buildHeaderModel4(pw.Context context, CompanyInformation csettings, ledger,
       ),
       child: pw.Center(
         child: pw.Text(
-          "TAX INVOICE",
+          invoiceHead.isNotEmpty ? invoiceHead : "TAX INVOICE",
           style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
         ),
       ),

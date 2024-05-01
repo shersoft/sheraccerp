@@ -2028,6 +2028,47 @@ class DioService {
     }
   }
 
+  Future<List<LedgerModel>> getLedgerBySalesMan(salesManId) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    List<LedgerModel> _items = [];
+    try {
+      var _salesman = salesManId > 1 ? salesManId : 0,
+          _areaId = 0,
+          _routeId = 0,
+          _groupId = 0,
+          like = '';
+      final response = await dio.get(
+        pref.getString('api' ?? '127.0.0.1:80/api/') +
+            apiV +
+            'Ledger/getLedgerByParent/$dataBase',
+        queryParameters: {
+          'groupId': _groupId,
+          'areaId': _areaId,
+          'routeId': _routeId,
+          'salesman': _salesman,
+          'like': like
+        },
+      );
+      if (response.statusCode == 200) {
+        for (var data in response.data) {
+          _items.add(LedgerModel.fromJson(data));
+        }
+        return _items;
+      } else {
+        debugPrint('Failed to load data');
+        return _items;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return _items;
+    }
+  }
+
   Future<List<LedgerParent>> getLedgerGroupAll() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
@@ -3687,7 +3728,7 @@ class DioService {
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
               'sale/previous_bills/$dataBase',
-          queryParameters: {'id': ledger, 'fyId': currentFinancialYear.id});
+          queryParameters: {'id': ledger});
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
 
@@ -6859,6 +6900,44 @@ class DioService {
       translation = translation.substring(1);
     }
     return translation;
+  }
+
+  Future<String> getOldBalance(
+      int id, String statement, String type, String date, entryno) async {
+    //localhost:8090/api/v23/Ledger/getOldBalance/RAYANDETERG_24?Id=22826&statement=CustomerOB&type&date=2024-04-30&entryNo=324&fyId=1
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    String _items = '0';
+    try {
+      Response response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Ledger/getOldBalance/$dataBase',
+          queryParameters: {
+            'Id': id,
+            'statement': statement,
+            'type': type,
+            'date': date,
+            'entryNo': entryno,
+            'fyId': 1
+          });
+
+      if (response.statusCode == 200) {
+        var data = response.data;
+        if (data != null) {
+          _items = data['oldBalance'].toString();
+        }
+      } else {
+        debugPrint('Failed to load data');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
   }
 }
 

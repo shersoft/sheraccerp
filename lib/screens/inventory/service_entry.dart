@@ -76,20 +76,12 @@ class _ServiceEntryState extends State<ServiceEntry> {
 
     String cashAc =
         ComSettings.getValue('CASH A/C', settings).toString().trim() ?? 'CASH';
-    try {
-      acId = mainAccount
-          .firstWhere((element) => element['LedName'] == cashAc)['LedCode'];
-      acId = ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) -
-                  1 >
-              0
-          ? ComSettings.appSettings(
-                  'int', 'key-dropdown-default-cash-ac', acId) -
-              1
-          : acId;
-    } catch (e) {
-      e.toString();
-      acId = -1;
-    }
+    int cashId =
+        ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) - 1;
+    acId = cashId > 0
+        ? mainAccount.firstWhere((element) => element['LedCode'] == cashId,
+            orElse: () => {'LedName': cashAc, 'LedCode': acId})['LedCode']
+        : acId;
   }
 
   CompanyInformation companySettings;

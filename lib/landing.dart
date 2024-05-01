@@ -7,6 +7,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:scoped_model/scoped_model.dart';
@@ -14,6 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sheraccerp/models/api_error.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/company_user.dart';
+import 'package:sheraccerp/models/user_settings_model.dart';
 import 'package:sheraccerp/provider/app_provider.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api.dart';
@@ -933,6 +935,17 @@ class _LandingState extends State<Landing> {
             if (_userId != null) {
               getCompanyUserControlList(_userId).then((value) {
                 userControlData.addAll(value);
+                if (_user.userType.toUpperCase() == 'SALESMAN' ||
+                    _user.userType.toUpperCase() == 'DELIVERY') {
+                  loadUserSettings(_userId, _user.userType.toUpperCase());
+                } else {
+                  defaultRoute = (true);
+                  defaultGroup = (true);
+                  defaultArea = (true);
+                  defaultCashAc = (true);
+                  defaultBranch = (true);
+                  defaultSalesMan = (true);
+                }
                 if (_user.userType.toUpperCase() == 'ADMIN') {
                   Navigator.pushNamedAndRemoveUntil(context, '/admin_home',
                       ModalRoute.withName('/admin_home'),
@@ -1072,5 +1085,108 @@ class _LandingState extends State<Landing> {
         }
       },
     );
+  }
+
+  loadUserSettings(_userId, String type) {
+    getUserSettings(_userId).then((value) {
+      int salesManId = ComSettings.appSettings(
+          'int', 'key-dropdown-default-salesman-view', 0);
+      int locationId = ComSettings.appSettings(
+          'int', 'key-dropdown-default-location-view', 0);
+      int groupId =
+          ComSettings.appSettings('int', 'key-dropdown-default-group-view', 0);
+      int areaId =
+          ComSettings.appSettings('int', 'key-dropdown-default-area-view', 0);
+      int routeId =
+          ComSettings.appSettings('int', 'key-dropdown-default-route-view', 0);
+      int cashId =
+          ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0);
+      try {
+        if (value.isNotEmpty) {
+          UserSettingsModel data = value[0];
+          defaultRoute = (data.routeId > 0 ? false : true);
+          defaultGroup = (data.groupId > 0 ? false : true);
+          defaultArea = (data.areaId > 0 ? false : true);
+          defaultCashAc = (data.cashId > 0 ? false : true);
+          defaultBranch = (data.branchId > 0 ? false : true);
+          defaultSalesMan = (data.salesmanId > 0 ? false : true);
+          if (!defaultRoute) {
+            Settings.setValue<int>(
+                'key-dropdown-default-route-view', data.routeId + 1);
+          }
+          if (!defaultGroup) {
+            Settings.setValue<int>(
+                'key-dropdown-default-group-view', data.groupId + 1);
+          }
+          if (!defaultArea) {
+            Settings.setValue<int>(
+                'key-dropdown-default-area-view', data.areaId + 1);
+          }
+          if (!defaultCashAc) {
+            Settings.setValue<int>(
+                'key-dropdown-default-cash-ac', data.cashId + 1);
+          }
+          if (!defaultBranch) {
+            Settings.setValue<int>(
+                'key-dropdown-default-location-view', data.branchId + 1);
+          }
+          if (!defaultSalesMan) {
+            Settings.setValue<int>(
+                'key-dropdown-default-salesman-view', data.salesmanId + 1);
+          }
+          if (salesManId.toInt() > 0 ||
+              locationId.toInt() > 1 ||
+              groupId.toInt() > 0 ||
+              areaId.toInt() > 0 ||
+              routeId.toInt() > 0) {
+            if (data.routeId != groupId ||
+                data.groupId != groupId ||
+                data.areaId != areaId ||
+                data.cashId != cashId ||
+                data.branchId != locationId ||
+                data.salesmanId != salesManId) {
+              UserSettingsModel data = UserSettingsModel(
+                  userId: int.parse(_userId.toString()),
+                  salesmanId: salesManId,
+                  branchId: locationId,
+                  cashId: cashId,
+                  areaId: areaId,
+                  groupId: groupId,
+                  routeId: routeId);
+              setUserSettings(data);
+            }
+          }
+        } else {
+          defaultRoute = (true);
+          defaultGroup = (true);
+          defaultArea = (true);
+          defaultCashAc = (true);
+          defaultBranch = (true);
+          defaultSalesMan = (true);
+          if (salesManId.toInt() > 0 ||
+              locationId.toInt() > 0 ||
+              groupId.toInt() > 0 ||
+              areaId.toInt() > 0 ||
+              routeId.toInt() > 0) {
+            UserSettingsModel data = UserSettingsModel(
+                userId: int.parse(_userId.toString()),
+                salesmanId: salesManId,
+                branchId: locationId,
+                cashId: cashId,
+                areaId: areaId,
+                groupId: groupId,
+                routeId: routeId);
+            setUserSettings(data);
+          }
+        }
+      } catch (ex) {
+        ex.toString();
+      }
+    });
+  }
+
+  setUserSettings(UserSettingsModel data) {
+    editUserSettings(data)
+        .then((value) => debugPrint('user default settings done'));
   }
 }

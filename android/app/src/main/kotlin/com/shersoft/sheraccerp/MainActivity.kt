@@ -57,10 +57,34 @@ class MainActivity: FlutterActivity() {
                         result.success(false)
                     }
                 }
+                "sentPrintNative" -> {
+                    val content = call.argument<String>("content")
+                    printNativeService(content,result);
+                }
+                "PrinterAppInstalled" -> {
+                    val packageManager = packageManager
+                    if (isPackageInstalled("com.shersoft.erp_print", packageManager)) {
+                        result.success(true)
+                    } else {
+                        result.success(false)
+                    }
+                }
                 else -> {
                     result.notImplemented()
                 }
             }
+        }
+    }
+
+    private fun printNativeService(content: String?, result: MethodChannel.Result) {
+        try{
+            val intent = Intent()
+            intent.setClassName("com.shersoft.erp_print", "com.shersoft.erp_print.DatSunPrint")
+            intent.putExtra("data", content)
+            startService(intent)
+            result.success("print started")
+        } catch(ex:Exception){
+            ex.message
         }
     }
 
