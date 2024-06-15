@@ -23,7 +23,7 @@ class UserScreen extends StatefulWidget {
 
 class _UserScreenState extends State<UserScreen> {
   var regId = "";
-  bool nextWidget = false;
+  bool nextWidget = false, changes = false;
   CompanyUser userData;
   List<FormModel> form = [];
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -70,6 +70,19 @@ class _UserScreenState extends State<UserScreen> {
                                 const SnackBar(content: Text('Data Error')),
                               )
                       });
+                  var body = [
+                    {
+                      'id': userData.registrationId.toString(),
+                      'userId': userData.userId.toString(),
+                      'type': userData.userType,
+                      'insert': userData.insertData ? 1 : 0,
+                      'update': userData.updateData ? 1 : 0,
+                      'delete': userData.deleteData ? 1 : 0
+                    }
+                  ];
+                  if (changes) {
+                    editCompanyUser(body).then((value) => null);
+                  }
                 },
                 icon: const Icon(Icons.save)),
           )
@@ -296,6 +309,8 @@ class _UserScreenState extends State<UserScreen> {
                       onChanged: (value) {
                         setState(() {
                           role = value;
+                          user.userType = role;
+                          changes = true;
                         });
                       })
                 ],
@@ -314,11 +329,32 @@ class _UserScreenState extends State<UserScreen> {
                     width: 10,
                   ),
                   const Text('Save : '),
-                  Checkbox(value: user.insertData, onChanged: (value) {}),
+                  Checkbox(
+                      value: user.insertData,
+                      onChanged: (value) {
+                        setState(() {
+                          user.insertData = value;
+                          changes = true;
+                        });
+                      }),
                   const Text('Edit : '),
-                  Checkbox(value: user.insertData, onChanged: (value) {}),
+                  Checkbox(
+                      value: user.updateData,
+                      onChanged: (value) {
+                        setState(() {
+                          user.updateData = value;
+                          changes = true;
+                        });
+                      }),
                   const Text('Delete : '),
-                  Checkbox(value: user.insertData, onChanged: (value) {}),
+                  Checkbox(
+                      value: user.deleteData,
+                      onChanged: (value) {
+                        setState(() {
+                          user.deleteData = value;
+                          changes = true;
+                        });
+                      }),
                 ],
               ),
             ),

@@ -12,7 +12,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:sheraccerp/models/company.dart';
+import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
+import 'package:sheraccerp/screens/other_registration.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
@@ -30,12 +32,12 @@ class StockReport extends StatefulWidget {
 }
 
 class _StockReportState extends State<StockReport> {
-  bool isPageMode = true;
+  bool isPageMode = false;
   String fromDate;
   String toDate;
   var _data;
-  int menuId = 0;
-  bool loadReport = false, lockItemOptions = false;
+  int locationId = 1, menuId = 0;
+  bool loadReport = false, lockItemOptions = false, isAdminUser = false;
   bool stockValuation = false;
   DateTime now = DateTime.now();
   DioService api = DioService();
@@ -79,6 +81,25 @@ class _StockReportState extends State<StockReport> {
         ? lockItemOptions
         : false;
 
+    isAdminUser =
+        companyUserData.userType.toUpperCase() == 'ADMIN' ? true : false;
+    if (!isAdminUser) {
+      locationId = ComSettings.appSettings(
+              'int', 'key-dropdown-default-location-view', 2) -
+          1;
+      OtherRegistrationModel otherData = otherRegLocationList.firstWhere(
+          (element) => element.id == locationId,
+          orElse: () => OtherRegistrationModel(
+              add1: '',
+              add2: '',
+              add3: '',
+              description: '',
+              email: '',
+              id: locationId,
+              name: defaultLocation,
+              type: ''));
+      location = DataJson(id: otherData.id, name: otherData.name);
+    }
     api
         .getReportDesignByName('StockItemSummery')
         .then((value) => reportDesign = value);
@@ -95,7 +116,9 @@ class _StockReportState extends State<StockReport> {
                     onPressed: () {
                       setState(() {
                         loadReport = false;
-                        location = DataJson(id: 1, name: defaultLocation);
+                        location = isAdminUser
+                            ? DataJson(id: 1, name: defaultLocation)
+                            : location;
                         itemId = null;
                         itemName = null;
                         supplier = null;
@@ -816,16 +839,20 @@ class _StockReportState extends State<StockReport> {
               const Divider(),
               dropDownReportType(),
               const Divider(),
-              DropdownSearch<dynamic>(
-                maxHeight: 300,
-                onFind: (String filter) =>
-                    api.getSalesListData(filter, 'sales_list/location'),
-                dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), label: Text('Select Branch')),
-                onChanged: (dynamic data) {
-                  location = data;
-                },
-                showSearchBox: true,
+              Visibility(
+                visible: isAdminUser,
+                child: DropdownSearch<dynamic>(
+                  maxHeight: 300,
+                  onFind: (String filter) =>
+                      api.getSalesListData(filter, 'sales_list/location'),
+                  dropdownSearchDecoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      label: Text('Select Branch')),
+                  onChanged: (dynamic data) {
+                    location = data;
+                  },
+                  showSearchBox: true,
+                ),
               ),
               const Divider(),
               Row(
@@ -1028,16 +1055,20 @@ class _StockReportState extends State<StockReport> {
               const Divider(),
               dropDownLedgerReportType(),
               const Divider(),
-              DropdownSearch<dynamic>(
-                maxHeight: 300,
-                onFind: (String filter) =>
-                    api.getSalesListData(filter, 'sales_list/location'),
-                dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), label: Text("Select Branch")),
-                onChanged: (dynamic data) {
-                  location = data;
-                },
-                showSearchBox: true,
+              Visibility(
+                visible: isAdminUser,
+                child: DropdownSearch<dynamic>(
+                  maxHeight: 300,
+                  onFind: (String filter) =>
+                      api.getSalesListData(filter, 'sales_list/location'),
+                  dropdownSearchDecoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      label: Text("Select Branch")),
+                  onChanged: (dynamic data) {
+                    location = data;
+                  },
+                  showSearchBox: true,
+                ),
               ),
               const Divider(),
               Row(

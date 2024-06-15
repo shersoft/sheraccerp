@@ -534,10 +534,14 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                   Enu.Size.bold.val,
                   Enu.Align.right.val);
               line = "13";
-              bluetooth.printCustom(
-                  'Discount:${dataInformation['OtherDiscount']}',
-                  Enu.Size.bold.val,
-                  Enu.Align.right.val);
+              for (var i = 0; i < otherAmount.length; i++) {
+                if (otherAmount[i]['Amount'].toDouble() > 0) {
+                  bluetooth.printCustom(
+                      '${otherAmount[i]['LedName']} :${double.tryParse(otherAmount[i]['Amount'].toString()).toStringAsFixed(2)}',
+                      Enu.Size.bold.val,
+                      Enu.Align.right.val);
+                }
+              }
               line = "14";
               bluetooth.printCustom(
                   'NET TOTAL:${dataInformation['GrandTotal']}',
@@ -1050,10 +1054,14 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                     Enu.Size.bold.val,
                     Enu.Align.right.val);
                 line = "13";
-                bluetooth.printCustom(
-                    'Discount :     ${dataInformation['OtherDiscount'].toStringAsFixed(2)}',
-                    Enu.Size.bold.val,
-                    Enu.Align.right.val);
+                for (var i = 0; i < otherAmount.length; i++) {
+                  if (otherAmount[i]['Amount'].toDouble() > 0) {
+                    bluetooth.printCustom(
+                        '${otherAmount[i]['LedName']} :${double.tryParse(otherAmount[i]['Amount'].toString()).toStringAsFixed(2)}',
+                        Enu.Size.bold.val,
+                        Enu.Align.right.val);
+                  }
+                }
                 line = "14";
                 bluetooth.printCustom(
                     'Net Total : ${dataInformation['GrandTotal'].toStringAsFixed(2)}',
@@ -1193,10 +1201,14 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                     Enu.Size.bold.val,
                     Enu.Align.right.val);
                 line = "12";
-                bluetooth.printCustom(
-                    'Discount:${dataInformation['OtherDiscount'].toStringAsFixed(2)}',
-                    Enu.Size.bold.val,
-                    Enu.Align.right.val);
+                for (var i = 0; i < otherAmount.length; i++) {
+                  if (otherAmount[i]['Amount'].toDouble() > 0) {
+                    bluetooth.printCustom(
+                        '${otherAmount[i]['LedName']} :${double.tryParse(otherAmount[i]['Amount'].toString()).toStringAsFixed(2)}',
+                        Enu.Size.bold.val,
+                        Enu.Align.right.val);
+                  }
+                }
                 line = "13";
                 bluetooth.printCustom(
                     'Net Total : ${dataInformation['GrandTotal'].toStringAsFixed(2)}',

@@ -578,11 +578,70 @@ class AccountsReportMenu extends StatelessWidget {
             ),
           ),
           onTap: () {
-            argumentsPass = {'mode': 'InvoiceWiseBalanceSuppliers'};
             Navigator.pushNamed(
               context,
               '/select_ledger',
             );
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Icon(
+                    Icons.emoji_people,
+                    color: Colors.pink[300],
+                    size: 90.0,
+                  ),
+                  const Text(
+                    'SalesMan Report',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            argumentsPass = '';
+            Navigator.pushNamed(
+              context,
+              '/salesManReport',
+            );
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Icon(
+                    Icons.auto_stories,
+                    color: Colors.yellow[800],
+                    size: 90.0,
+                  ),
+                  const Text(
+                    'Verify Cash Book',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            // argumentsPass = {'mode': 'InvoiceWiseBalanceSuppliers'};
+            // Navigator.pushNamed(
+            //   context,
+            //   '/select_ledger',
+            // );
           },
         ),
       ],

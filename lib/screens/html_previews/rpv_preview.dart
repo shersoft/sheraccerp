@@ -111,43 +111,64 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
     var title = widget.title;
     var value = widget.dataAll;
     if (value != null) {
-      setState(() {
-        data = value;
-        // dataInformation = value['Information'][0];
-        // customerBalance = dataInformation['Balance'].toString();
-        // dataParticularsAll = value['Particulars'];
+      bill = widget.dataAll[0][0];
+      form = widget.dataAll[1];
+      eNo = int.tryParse(bill['entryNo'].toString()) ?? 0;
+      dataParticulars = jsonDecode(bill['particular']);
+      // dataParticulars = bill['particular'];
+      api
+          .getOldBalance(
+              dataParticulars[0]['Ledid'],
+              (form == 'PAYMENT' ? 'SupplierOB' : 'CustomerOB'),
+              form,
+              bill['date'],
+              eNo)
+          .then((value) {
+        setState(() {
+          data = value;
+          // dataInformation = value['Information'][0];
+          // customerBalance = dataInformation['Balance'].toString();
+          // dataParticularsAll = value['Particulars'];
 
-        bill = widget.dataAll[0][0];
-        form = widget.dataAll[1];
-        eNo = int.tryParse(bill['entryNo'].toString()) ?? 0;
-        dataParticulars = jsonDecode(bill['particular']);
-        // dataParticulars = bill['particular'];
-        // var ledgerName = bill['name'];
-        var bal = bill['balance'].toString().split(' ');
-        if (bal[1] == 'Dr') {
-          oldBalance = double.tryParse(bill['oldBalance'].toString()) ?? 0;
-          balance = oldBalance - bill['total'];
-        } else {
-          oldBalance = (double.tryParse(bill['oldBalance'].toString())! * (-1));
-          balance = oldBalance - bill['total'];
-        }
-        invoiceHead = form == 'RECEIPT'
-            ? Settings.getValue<String>('key-receipt-voucher-head', 'RECEIPT')
-                    .isNotEmpty
-                ? Settings.getValue<String>(
-                    'key-receipt-voucher-head', 'RECEIPT')
-                : 'Receipt Invoice'
-            : Settings.getValue<String>('key-payment-voucher-head', 'PAYMENT')
-                    .isNotEmpty
-                ? Settings.getValue<String>(
-                    'key-payment-voucher-head', 'PAYMENT')
-                : 'Payment Invoice';
+          // getOldBalance(
+          //     ledData.id,
+          //     '',
+          //     mode,
+          //     DateUtil.dateYMD(formattedDate),
+          //     information['EntryNo']);
 
-        _isLoading = false;
+          oldBalance = double.parse(value);
+          if (oldBalance > 0) {
+            bill['oldBalance'] = oldBalance;
+          }
 
-        _createPDF(title + '_ref_$eNo', companySettings, settings, bill,
-                dataParticulars, invoiceHead, form, dataParticulars)
-            .then((value) => pdfPath = value);
+          // var ledgerName = bill['name'];
+          var bal = bill['balance'].toString().split(' ');
+          if (bal[1] == 'Dr') {
+            // oldBalance = double.tryParse(bill['oldBalance'].toString()) ?? 0;
+            balance = oldBalance - bill['total'];
+          } else {
+            // oldBalance = (double.tryParse(bill['oldBalance'].toString())! * (-1));
+            balance = oldBalance - bill['total'];
+          }
+          invoiceHead = form == 'RECEIPT'
+              ? Settings.getValue<String>('key-receipt-voucher-head', 'RECEIPT')
+                      .isNotEmpty
+                  ? Settings.getValue<String>(
+                      'key-receipt-voucher-head', 'RECEIPT')
+                  : 'Receipt Invoice'
+              : Settings.getValue<String>('key-payment-voucher-head', 'PAYMENT')
+                      .isNotEmpty
+                  ? Settings.getValue<String>(
+                      'key-payment-voucher-head', 'PAYMENT')
+                  : 'Payment Invoice';
+
+          _isLoading = false;
+
+          _createPDF(title + '_ref_$eNo', companySettings, settings, bill,
+                  dataParticulars, invoiceHead, form, dataParticulars)
+              .then((value) => pdfPath = value);
+        });
       });
     }
 
@@ -954,88 +975,71 @@ previewWidget(
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
+                        children: const [
+                          Text(
                             "All Cheque/DD are subject to realisation",
                             style: TextStyle(fontSize: 8),
                           ),
-                          const SizedBox(
+                          SizedBox(
                             height: 15,
                           ),
-                          Visibility(
-                            visible: oldBalance <= 0 && balance <= 0,
-                            child: Column(
-                              children: const [
-                                SizedBox(
-                                  height: 50,
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        height: 50,
+                        width: MediaQuery.of(context).size.width,
+                        decoration: BoxDecoration(border: Border.all()),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Row(
+                                  children: [
+                                    const SizedBox(
+                                      width: 100,
+                                      child: Text(
+                                        "Old Balance    :",
+                                        style: TextStyle(fontSize: 11),
+                                      ),
+                                    ),
+                                    Text(
+                                      "${oldBalance.toStringAsFixed(2)}",
+                                      style: const TextStyle(fontSize: 11),
+                                    )
+                                  ],
                                 ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    const SizedBox(
+                                      width: 100,
+                                      child: Text(
+                                        "Balance           :",
+                                        style: TextStyle(fontSize: 11),
+                                      ),
+                                    ),
+                                    Text(
+                                      "${balance.toStringAsFixed(2)}",
+                                      style: const TextStyle(fontSize: 11),
+                                    )
+                                  ],
+                                ),
+                              ],
+                            ),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: const [
                                 Text(
                                   "Receiver Signature   ",
                                   style: TextStyle(fontSize: 8),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
-                      ),
-                      Visibility(
-                        visible: oldBalance > 0 || balance > 0,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          height: 50,
-                          width: MediaQuery.of(context).size.width,
-                          decoration: BoxDecoration(border: Border.all()),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Row(
-                                    children: [
-                                      const SizedBox(
-                                        width: 100,
-                                        child: Text(
-                                          "Old Balance    :",
-                                          style: TextStyle(fontSize: 11),
-                                        ),
-                                      ),
-                                      Text(
-                                        "${oldBalance.toStringAsFixed(2)}",
-                                        style: const TextStyle(fontSize: 11),
-                                      )
-                                    ],
-                                  ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      const SizedBox(
-                                        width: 100,
-                                        child: Text(
-                                          "Balance           :",
-                                          style: TextStyle(fontSize: 11),
-                                        ),
-                                      ),
-                                      Text(
-                                        "${balance.toStringAsFixed(2)}",
-                                        style: const TextStyle(fontSize: 11),
-                                      )
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: const [
-                                  Text(
-                                    "Receiver Signature   ",
-                                    style: TextStyle(fontSize: 8),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                          ],
                         ),
                       ),
                     ],
@@ -1866,15 +1870,15 @@ Future<pw.Document> makePDF(
   var bill = information;
   dataParticulars = jsonDecode(bill['particular']);
   //  var dataParticulars = bill['Particulars'];
-  var bal = information['balance'].toString().split(' ');
-  if (bal[1] == 'Dr') {
-    oldBalance = double.tryParse(information['oldBalance'].toString()) ?? 0;
-    balance = oldBalance - information['total'];
-  } else {
-    oldBalance =
-        (double.tryParse(information['oldBalance'].toString())! * (-1));
-    balance = oldBalance - information['total'];
-  }
+  // var bal = information['balance'].toString().split(' ');
+  // if (bal[1] == 'Dr') {
+  oldBalance = double.tryParse(information['oldBalance'].toString()) ?? 0;
+  balance = oldBalance - information['total'];
+  // } else {
+  // oldBalance =
+  //     (double.tryParse(information['oldBalance'].toString())! * (-1));
+  balance = oldBalance - information['total'];
+  // }
   final pdf = pw.Document();
 
   // pdf.addPage(pw.MultiPage(

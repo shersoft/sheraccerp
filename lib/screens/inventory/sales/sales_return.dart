@@ -209,7 +209,11 @@ class _SalesReturnState extends State<SalesReturn> {
           date1: date1, date2: date2, days: valueDaysBefore)) {
         if (companyUserData.userType.toUpperCase() != 'ADMIN') {
           daysBefore = true;
+        } else {
+          daysBefore = false;
         }
+      } else {
+        daysBefore = false;
       }
     }
   }

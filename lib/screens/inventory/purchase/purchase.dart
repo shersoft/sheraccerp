@@ -2368,7 +2368,7 @@ class _PurchaseState extends State<Purchase> {
                                     pUnit: snapshot.data[i].pUnit,
                                     sUnit: snapshot.data[i].sUnit,
                                     unit: snapshot.data[i].unit,
-                                    rate: snapshot.data[i].pRate));
+                                    rate: snapshot.data[i].rate));
                               }
                             }
                             return snapshot.data != null &&
@@ -5401,16 +5401,21 @@ class _PurchaseState extends State<Purchase> {
 
 showMore(context, purchaseState) {
   ConfirmAlertBox(
-      buttonColorForNo: Colors.white,
+      buttonColorForNo: Colors.red,
       buttonColorForYes: Colors.green,
       icon: Icons.check,
-      onPressedYes: () {
+      onPressedNo: () {
         Navigator.of(context).pop();
         Navigator.pushReplacementNamed(context, '/purchase');
       },
-      // buttonTextForNo: 'No',
-      buttonTextForYes: 'OK',
-      infoMessage: 'Purchase $purchaseState',
+      onPressedYes: () {
+        Navigator.of(context).pop();
+        Navigator.pushReplacementNamed(context, '/purchasePreviewShow',
+            arguments: {'title': 'Purchase'});
+      },
+      buttonTextForNo: 'No',
+      buttonTextForYes: 'Yes',
+      infoMessage: 'Do you want to Preview Purchase',
       title: 'SAVED',
       context: context);
 }

@@ -65,6 +65,7 @@ class _ReportViewState extends State<ReportView> {
   ];
 
   List<CompanySettings> settings;
+  List<ReportDesign> reportDesignList;
   List<ReportDesign> reportDesign;
   CompanyInformation companySettings;
   List<String> tableColumn = [];
@@ -96,8 +97,13 @@ class _ReportViewState extends State<ReportView> {
   loadSettings() {
     companySettings = ScopedModel.of<MainModel>(context).getCompanySettings();
     settings = ScopedModel.of<MainModel>(context).getSettings();
-    reportDesign = ScopedModel.of<MainModel>(context).getReportDesign();
+    reportDesignList = ScopedModel.of<MainModel>(context).getReportDesign();
     companyTaxNo = ComSettings.getValue('GST-NO', settings);
+
+    var form = widget.type == 'ledger'
+        ? 'Ledger Report'
+        : widget.statement; //'ReceivblesDebitOnly';
+    api.getReportDesignByName(form).then((value) => reportDesign = value);
   }
 
   @override
@@ -290,7 +296,7 @@ class _ReportViewState extends State<ReportView> {
             var data = snapshot.data;
             if (widget.statement == 'Ledger_Report_Qty') {
               var filterItems = data;
-              for (ReportDesign design in reportDesign) {
+              for (ReportDesign design in reportDesignList) {
                 if (!design.visibility) {
                   for (var item in filterItems) {
                     item.remove(design.caption.trim());
@@ -302,6 +308,15 @@ class _ReportViewState extends State<ReportView> {
               //     (element) => element.keys. =>  == singleItem.keys.first);
               debugPrint(filterItems.toString());
               data = filterItems;
+            } else {
+              var filterItems = data;
+              for (ReportDesign design in reportDesign) {
+                if (!design.visibility) {
+                  for (var item in filterItems) {
+                    item.remove(design.caption.trim());
+                  }
+                }
+              }
             }
             tableColumn = data[0].keys.toList();
             if (widget.type == 'Invoice Wise Balance Customers' ||

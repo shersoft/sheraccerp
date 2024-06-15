@@ -2298,7 +2298,7 @@ class _SalesReturnPreviewShowState extends State<SalesReturnPreviewShow> {
                                                   dataParticulars[i]
                                                       ['itemname'],
                                                   style: const TextStyle(
-                                                      fontSize: 4,
+                                                      fontSize: 5,
                                                       fontWeight:
                                                           FontWeight.bold),
                                                 ),
@@ -3634,7 +3634,7 @@ class _SalesReturnPreviewShowState extends State<SalesReturnPreviewShow> {
                                       child: Text(
                                         dataParticulars[i]['itemname'],
                                         style: const TextStyle(
-                                            fontSize: 6,
+                                            fontSize: 7,
                                             fontWeight: FontWeight.bold),
                                       ),
                                     ),
@@ -4460,7 +4460,7 @@ Future<dynamic> printBluetooth(
 //       ),
 //       PosColumn(
 //         text: dataParticulars[i]['itemname'],
-//         width: 6,
+//         width: 7,
 //         styles: PosStyles(align: PosAlign.center),
 //       ),
 //       PosColumn(
@@ -5913,7 +5913,7 @@ Future<pw.Document> makePDF(
   //                                       child: pw.Text(
   //                                           dataParticulars[i]['itemname'],
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 10)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -6133,7 +6133,7 @@ Future<pw.Document> makePDF(
   //                                       child: pw.Text(
   //                                           dataParticulars[i]['itemname'],
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 10)),
   //                                       // pw.Divider(thickness: 1)
   //                                     ),
   //                                   ]),
@@ -6644,7 +6644,7 @@ Future<pw.Document> makePDF(
   //                                     child: pw.Text(
   //                                         dataParticulars[i]['itemname'],
   //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                             const pw.TextStyle(fontSize: 10)),
   //                                     // pw.Divider(thickness: 1)
   //                                   ),
   //                                 ]),
@@ -6995,7 +6995,7 @@ Future<pw.Document> makePDF(
   //                                     child: pw.Text(
   //                                         dataParticulars[i]['itemname'],
   //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                             const pw.TextStyle(fontSize: 10)),
   //                                     // pw.Divider(thickness: 1)
   //                                   ),
   //                                 ]),
@@ -7671,7 +7671,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                             dataParticulars[i]['itemname'],
                                             style: const pw.TextStyle(
-                                                fontSize: 9)),
+                                                fontSize: 10)),
                                         // pw.Divider(thickness: 1)
                                       )
                                     ]),
@@ -7891,7 +7891,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                             dataParticulars[i]['itemname'],
                                             style: const pw.TextStyle(
-                                                fontSize: 9)),
+                                                fontSize: 10)),
                                         // pw.Divider(thickness: 1)
                                       ),
                                     ]),
@@ -8322,7 +8322,7 @@ Future<pw.Document> makePDF(
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(2.0),
                                   child: pw.Text(dataParticulars[i]['itemname'],
-                                      style: const pw.TextStyle(fontSize: 9)),
+                                      style: const pw.TextStyle(fontSize: 10)),
                                   // pw.Divider(thickness: 1)
                                 ),
                               ]),
@@ -8930,7 +8930,7 @@ Future<pw.Document> makePDF(
                       child: pw.Text(dataParticulars[i]['itemname'],
                           softWrap: true,
                           overflow: pw.TextOverflow.clip,
-                          style: const pw.TextStyle(fontSize: 8))),
+                          style: const pw.TextStyle(fontSize: 9))),
                   // pw.Divider(thickness: 1)
                 ),
                 // ]),
@@ -10077,7 +10077,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                             dataParticulars[i]['itemname'],
                                             style: const pw.TextStyle(
-                                                fontSize: 9)),
+                                                fontSize: 10)),
                                         // pw.Divider(thickness: 1)
                                       )
                                     ]),
@@ -10297,7 +10297,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                             dataParticulars[i]['itemname'],
                                             style: const pw.TextStyle(
-                                                fontSize: 9)),
+                                                fontSize: 10)),
                                         // pw.Divider(thickness: 1)
                                       ),
                                     ]),
@@ -10728,7 +10728,7 @@ Future<pw.Document> makePDF(
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(2.0),
                                   child: pw.Text(dataParticulars[i]['itemname'],
-                                      style: const pw.TextStyle(fontSize: 9)),
+                                      style: const pw.TextStyle(fontSize: 10)),
                                   // pw.Divider(thickness: 1)
                                 ),
                               ]),
@@ -11394,7 +11394,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                             dataParticulars[i]['itemname'],
                                             style: const pw.TextStyle(
-                                                fontSize: 9)),
+                                                fontSize: 10)),
                                         // pw.Divider(thickness: 1)
                                       )
                                     ]),
@@ -11614,7 +11614,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                             dataParticulars[i]['itemname'],
                                             style: const pw.TextStyle(
-                                                fontSize: 9)),
+                                                fontSize: 10)),
                                         // pw.Divider(thickness: 1)
                                       ),
                                     ]),
@@ -12045,7 +12045,7 @@ Future<pw.Document> makePDF(
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(2.0),
                                   child: pw.Text(dataParticulars[i]['itemname'],
-                                      style: const pw.TextStyle(fontSize: 9)),
+                                      style: const pw.TextStyle(fontSize: 10)),
                                   // pw.Divider(thickness: 1)
                                 ),
                               ]),
@@ -12711,7 +12711,7 @@ Future<pw.Document> makePDF(
         //                                 child: pw.Text(
         //                                     dataParticulars[i]['itemname'],
         //                                     style: const pw.TextStyle(
-        //                                         fontSize: 9)),
+        //                                         fontSize: 10)),
         //                                 // pw.Divider(thickness: 1)
         //                               )
         //                             ]),
@@ -12931,7 +12931,7 @@ Future<pw.Document> makePDF(
         //                                 child: pw.Text(
         //                                     dataParticulars[i]['itemname'],
         //                                     style: const pw.TextStyle(
-        //                                         fontSize: 9)),
+        //                                         fontSize: 10)),
         //                                 // pw.Divider(thickness: 1)
         //                               ),
         //                             ]),
@@ -13320,7 +13320,7 @@ Future<pw.Document> makePDF(
                             child: pw.Text(
                               dataParticulars[i]['itemname'],
                               style: pw.TextStyle(
-                                  fontSize: 5, fontWeight: pw.FontWeight.bold),
+                                  fontSize: 6, fontWeight: pw.FontWeight.bold),
                             ),
                           ),
                           pw.Padding(
@@ -14279,7 +14279,7 @@ Future<pw.Document> makePDF(
         //                               child: pw.Text(
         //                                   dataParticulars[i]['itemname'],
         //                                   style:
-        //                                       const pw.TextStyle(fontSize: 9)),
+        //                                       const pw.TextStyle(fontSize: 10)),
         //                               // pw.Divider(thickness: 1)
         //                             ),
         //                           ]),
@@ -14630,7 +14630,7 @@ Future<pw.Document> makePDF(
         //                           child: pw.Text(
         //                               dataParticulars[i]['itemname'],
         //                               style:
-        //                                   const pw.TextStyle(fontSize: 9)),
+        //                                   const pw.TextStyle(fontSize: 10)),
         //                           // pw.Divider(thickness: 1)
         //                         ),
         //                       ]),
@@ -14878,7 +14878,7 @@ Future<pw.Document> makePDF(
                             child: pw.Text(
                               dataParticulars[i]['itemname'],
                               style: pw.TextStyle(
-                                  fontSize: 6, fontWeight: pw.FontWeight.bold),
+                                  fontSize: 7, fontWeight: pw.FontWeight.bold),
                             ),
                           ),
                           pw.Padding(

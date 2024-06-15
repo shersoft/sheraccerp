@@ -73,7 +73,7 @@ class _JournalState extends State<Journal> {
         ? int.tryParse(ComSettings.getValue('DECIMAL', settings).toString())
         : 2;
 
-    api.getLedgerAll().then((value) => ledgerList.addAll(value));
+    loadLedgerData();
   }
 
   @override
@@ -355,6 +355,11 @@ class _JournalState extends State<Journal> {
         ));
   }
 
+  loadLedgerData() {
+    ledgerList.clear();
+    api.getLedgerAll().then((value) => ledgerList.addAll(value));
+  }
+
   final ScrollController _scrollController = ScrollController();
   bool isLoadingData = false;
   List dataDisplay = [];
@@ -429,6 +434,7 @@ class _JournalState extends State<Journal> {
   }
 
   previousBill() {
+    loadLedgerData();
     _getMoreData();
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==

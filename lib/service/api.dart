@@ -474,6 +474,30 @@ Future<bool> changeCompanyUserPassword(var body) async {
   return ret;
 }
 
+Future<bool> editCompanyUser(var body) async {
+  bool ret = false;
+  var dio = Dio(BaseOptions(maxRedirects: 5));
+  SharedPreferences pref = await SharedPreferences.getInstance();
+  try {
+    final response = await dio.put(
+        pref.getString('api' ?? '127.0.0.1:80/api/') +
+            apiV +
+            '/companyUser/editData',
+        data: json.encode(body),
+        options: Options(headers: {'Content-Type': 'application/json'}));
+
+    if (response.statusCode == 200) {
+      ret = true;
+    } else {
+      ret = false;
+    }
+  } catch (ex) {
+    debugPrint(ex.toString());
+    ret = false;
+  }
+  return ret;
+}
+
 Future<List<UserSettingsModel>> getUserSettings(String userId) async {
   var dio = Dio(BaseOptions(maxRedirects: 5));
   SharedPreferences pref = await SharedPreferences.getInstance();

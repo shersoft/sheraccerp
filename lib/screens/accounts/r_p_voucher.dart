@@ -57,6 +57,7 @@ class _RPVoucherState extends State<RPVoucher> {
       lastRecord = false,
       buttonEvent = false,
       isMultiRvPv = false,
+      keyLockCashAccount = false,
       isSalesManWiseLedger = false,
       keyEditAndDeleteAdminOnlyDaysBefore = false,
       daysBefore = false;
@@ -125,6 +126,8 @@ class _RPVoucherState extends State<RPVoucher> {
         ? int.tryParse(ComSettings.getValue('DECIMAL', settings).toString())
         : 2;
     isMultiRvPv = ComSettings.getStatus('KEY MULTI RV-PV', settings);
+    keyLockCashAccount =
+        ComSettings.getStatus('KEY LOCK CASH ACCOUNT', settings);
     groupId =
         ComSettings.appSettings('int', 'key-dropdown-default-group-view', 0) -
             1;
@@ -141,6 +144,7 @@ class _RPVoucherState extends State<RPVoucher> {
 
     isSalesManWiseLedger =
         ComSettings.getStatus('KEY SALESMAN WISE LEDGER', settings);
+    userDateCheck(DateUtil.dateYMD(formattedDate));
   }
 
   userDateCheck(String date) {
@@ -153,7 +157,11 @@ class _RPVoucherState extends State<RPVoucher> {
           date1: date1, date2: date2, days: valueDaysBefore)) {
         if (companyUserData.userType.toUpperCase() != 'ADMIN') {
           daysBefore = true;
+        } else {
+          daysBefore = false;
         }
+      } else {
+        daysBefore = false;
       }
     }
   }
@@ -673,7 +681,6 @@ class _RPVoucherState extends State<RPVoucher> {
                 }
               ]);
             }
-            clearData();
           });
         } else {
           var opr = operation == 'DELETE'
@@ -866,7 +873,17 @@ class _RPVoucherState extends State<RPVoucher> {
     if (accountId.isEmpty) {
       Fluttertoast.showToast(msg: 'Select Cash Account');
     } else {
-      if (amount <= 0 || ledData.id <= 0) {
+      bool state = false;
+      if (isMultiRvPv) {
+        if (particularList.isEmpty) {
+          state = true;
+        }
+      } else {
+        if (amount <= 0 || ledData.id <= 0) {
+          state = true;
+        }
+      }
+      if (state) {
         Fluttertoast.showToast(msg: 'Select Account and amount');
         setState(() {
           buttonEvent = false;
@@ -890,6 +907,7 @@ class _RPVoucherState extends State<RPVoucher> {
             _isLoading = false;
             buttonEvent = false;
             showInSnackBar('Deleted');
+            particularList = [];
             clearData();
           });
         } else {
@@ -937,6 +955,7 @@ class _RPVoucherState extends State<RPVoucher> {
         buttonColorForYes: Colors.green,
         icon: Icons.check,
         onPressedNo: () {
+          clearData();
           particularList = [];
           Navigator.of(context).pop();
         },
@@ -960,7 +979,9 @@ class _RPVoucherState extends State<RPVoucher> {
                   ']';
               data = [
                 {
-                  'entryNo': dataDynamic[0]['EntryNo'].toString(),
+                  'entryNo': oldVoucher
+                      ? dataDynamic[0]['EntryNo'].toString()
+                      : refNo.toString(),
                   'date': formatDMY(formattedDate),
                   'debitAccount': accountId,
                   'amount': partData.amount,
@@ -978,9 +999,11 @@ class _RPVoucherState extends State<RPVoucher> {
               ];
 
               particularList = [];
+              clearData();
               return sentToPreview(title, form, data);
             });
           } else {
+            clearData();
             return sentToPreview(title, form, data);
           }
         },
@@ -1103,7 +1126,8 @@ class _RPVoucherState extends State<RPVoucher> {
         );
       }).toList(),
       onChanged: (value) {
-        if (cashId <= 0) {
+        if (!keyLockCashAccount) {
+          // if (cashId <= 0) {
           setState(() {
             _dropDownValue = value;
             accountId = value.split('-')[0];
@@ -1122,6 +1146,7 @@ class _RPVoucherState extends State<RPVoucher> {
         lastDate: DateTime(2100));
     if (picked != null) {
       setState(() => {formattedDate = DateFormat('dd-MM-yyyy').format(picked)});
+      userDateCheck(DateUtil.dateYMD(formattedDate));
     }
   }
 
@@ -1163,7 +1188,7 @@ class _RPVoucherState extends State<RPVoucher> {
                         ' / EntryNo : ' +
                         dataDisplay[index]['Id'].toString()),
                     trailing: Text(
-                        'Total : ' + dataDisplay[index]['Total'].toString()),
+                        'Amount : ' + dataDisplay[index]['Total'].toString()),
                     onTap: () {
                       showEditDialog(context, dataDisplay[index], mode);
                     },
@@ -1269,13 +1294,16 @@ class _RPVoucherState extends State<RPVoucher> {
           total = double.tryParse(part1['Total'].toString());
           narration = part1['Narration'].toString();
         }
-        getOldBalance(
-            ledData.id,
-            (mode == 'Payment' ? 'SupplierOB' : 'CustomerOB'),
-            mode,
-            DateUtil.dateYMD(formattedDate),
-            information['EntryNo']);
-
+        if (isMultiRvPv) {
+          // particularList
+        } else {
+          getOldBalance(
+              ledData.id,
+              (mode == 'Payment' ? 'SupplierOB' : 'CustomerOB'),
+              mode,
+              DateUtil.dateYMD(formattedDate),
+              information['EntryNo']);
+        }
         userDateCheck(information['DDate']);
         setState(() {
           if (row > 0) {
@@ -1285,6 +1313,14 @@ class _RPVoucherState extends State<RPVoucher> {
             _controllerAmount.text = amount.toString();
             _controllerDiscount.text = discount > 0 ? discount.toString() : '';
             _controllerNarration.text = narration.toString();
+          } else {
+            ledData = LedgerModel(id: 0, name: '');
+            widgetID = false;
+            oldVoucher = true;
+            isSelected = true;
+            _controllerAmount.text = '';
+            _controllerDiscount.text = '';
+            _controllerNarration.text = '';
           }
         });
       }
@@ -1714,7 +1750,9 @@ class _RPVoucherState extends State<RPVoucher> {
                 trailing: IconButton(
                     onPressed: () {
                       setState(() {
-                        particularList.removeAt(index);
+                        if (companyUserData.deleteData) {
+                          particularList.removeAt(index);
+                        }
                       });
                     },
                     icon: const Icon(

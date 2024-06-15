@@ -180,7 +180,7 @@ class _PurchaseReturnPreviewShowState extends State<PurchaseReturnPreviewShow> {
       JsonTableColumn("Total", label: "Total")
     ];
     eNo = dataDynamic[0]['EntryNo'];
-    type = dataDynamic[0]['Type'];
+    type = int.parse(dataDynamic[0]['Type'].toString());
 
     if (printSettingsList != null) {
       if (printSettingsList.isNotEmpty) {
@@ -262,7 +262,8 @@ class _PurchaseReturnPreviewShowState extends State<PurchaseReturnPreviewShow> {
               Navigator.pushReplacementNamed(context, '/purchaseReturn');
             },
           ),
-          title: const Text('Purchase Return View'),
+          title: const Text('Purchase Return View',
+              style: TextStyle(fontSize: 16)),
           actions: [
             IconButton(
                 icon: const Icon(Icons.picture_as_pdf),

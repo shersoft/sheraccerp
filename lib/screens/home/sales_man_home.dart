@@ -832,6 +832,52 @@ class _SalesManHomeState extends State<SalesManHome> {
                             ),
                           ),
                         ),
+                        Visibility(
+                          visible: ComSettings.userControl('SALESMAN REPORT'),
+                          child: Card(
+                            elevation: 2,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('SalesMan Report',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
+                              onPressed: () {
+                                argumentsPass = 'SalesMan';
+                                Navigator.pushNamed(
+                                  context,
+                                  '/salesManReport',
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        Visibility(
+                          visible: ComSettings.userControl('PRICE LIST'),
+                          child: Card(
+                            elevation: 2,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('Price List',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/priceList');
+                              },
+                            ),
+                          ),
+                        ),
                         Card(
                           elevation: 2,
                           shape: const StadiumBorder(

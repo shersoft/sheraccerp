@@ -372,7 +372,8 @@ class _DamageEntryState extends State<DamageEntry> {
                                   text = text.toLowerCase();
                                   setState(() {
                                     ledgerDisplay = _ledger.where((item) {
-                                      var itemName = item.LedName.toLowerCase();
+                                      var itemName =
+                                          item['LedName'].toLowerCase();
                                       return itemName.contains(text);
                                     }).toList();
                                   });

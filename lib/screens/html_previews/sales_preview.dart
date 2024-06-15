@@ -121,7 +121,12 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
   }
 
   var labelSerialNo = 'SerialNo';
-  bool isItemSerialNo, isInvoiceDesigner = false, balanceBeforeSales = false;
+  bool isItemSerialNo,
+      isInvoiceDesigner = false,
+      balanceBeforeSales = false,
+      isQuantityBasedSerialNo = false,
+      isPrintSerialNoLineByLine = false,
+      isPrintSerialNoInSales = false;
 
   @override
   void initState() {
@@ -159,6 +164,12 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
     pdfLineSpace = ComSettings.appSettings('int', "key-dropdown-pdf-line", 0);
 
     isItemSerialNo = ComSettings.getStatus('KEY ITEM SERIAL NO', settings);
+    isPrintSerialNoInSales =
+        ComSettings.getStatus('SHOW SERIAL NO IN SALES PRINT', settings);
+    isPrintSerialNoLineByLine =
+        ComSettings.getStatus('PRINT SERIAL NO AS LINE BY LINE', settings);
+    isQuantityBasedSerialNo =
+        ComSettings.getStatus('ENABLE QUANTITY BASED SERIAL NO', settings);
     labelSerialNo =
         ComSettings.getValue('KEY ITEM SERIAL NO', settings).toString();
     labelSerialNo.isNotEmpty ?? 'SerialNo';
@@ -737,6 +748,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         subTotalDiscount = 0,
         subTotalGross = 0,
         subTotalMrp = 0;
+    bool serialNoIsEmpty = false;
     for (var item in dataParticulars) {
       subTotalQty += double.tryParse(item['Qty'].toString());
       subTotalRate += double.tryParse(item['Rate'].toString());
@@ -746,11 +758,14 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
       // subTotalIGST += double.tryParse(item['Disc'].toString());
       subTotalSGST += double.tryParse(item['SGST'].toString());
       subTotalGross += double.tryParse(item['GrossValue'].toString());
-
+      if (!serialNoIsEmpty) {
+        serialNoIsEmpty =
+            item['serialno'].toString().trim().isNotEmpty ? true : false;
+      }
       itemData.add({
         "Barcode": item['UniqueCode'].toString() ?? '0.00',
         "ItemCode": item['itemId'].toString() ?? '0',
-        "ItemName": item['itemname'].toString() ?? ' ',
+        "ItemName": item['itemname'].toString() ?? '',
         "Qty": item['Qty'].toString() ?? '0',
         "Rate": item['Rate'].toString() ?? '0.00',
         "RRate": item['RealRate'].toString() ?? '0.00',
@@ -775,19 +790,19 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         "ItemId": item['itemId'].toString() ?? '0',
         "SlNo": item['slno'].toString() ?? '0',
         "Mrp": item['Rate'].toString() ?? '0',
-        "Unit": ' ',
+        "Unit": '',
         "CessP": item['cessper'].toString() ?? '0',
         "Cess": item['cess'].toString() ?? '0',
         "Adcess": item['adcess'].toString() ?? '0',
         "AdcessP": item['adcessper'].toString() ?? '0',
-        "SerialNo": item['serialno'].toString() ?? ' ',
-        "HSN": item['hsncode'].toString() ?? ' ',
-        "AltQty": "ن" ?? '0',
-        "RegItemName": "ييب" ?? ' ',
-        "isRegItemName": "يلل" ?? ' ',
-        "QtyArabic": "ث" ?? '0',
-        "RateArabic": "ق" ?? '0',
-        "TotalArabic": "ف" ?? '0',
+        "SerialNo": item['serialno'].toString() ?? '',
+        "HSN": item['hsncode'].toString() ?? '',
+        "AltQty": '0', //arabic
+        "RegItemName": '', //arabic
+        "isRegItemName": '', //arabic
+        "QtyArabic": '0', //arabic
+        "RateArabic": '0', //arabic
+        "TotalArabic": '0', //arabic
         "MinQty": '0',
         "MaxQty": '0',
         "Branch": item['Rate'].toString() ?? '0',
@@ -795,18 +810,256 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         "TaxPer": item['igst'].toString() ?? '0',
         "UnitCost": '0',
         "FreeQty": item['freeQty'].toString() ?? '0',
-        "ScanBarcode": ' ',
+        "ScanBarcode": '',
         "TotalTax": '0',
         "MUltiUnitRate": '0',
-        "ItemMultiBarcode": ' ',
-        "EmpCode": ' ',
-        "UnitId": ' ',
+        "ItemMultiBarcode": '',
+        "EmpCode": '',
+        "UnitId": '',
         "UnitValue": item['UnitValue'].toString() ?? '1',
-        "Remark": item['serialno'].toString() ?? ' ',
+        "Remark": item['serialno'].toString() ?? '',
         "isRegName": false
       });
+
+      if (isPrintSerialNoInSales &&
+          serialNoIsEmpty &&
+          !isQuantityBasedSerialNo) {
+        for (var slItem in dataSerialNO) {
+          itemData.add({
+            "Barcode": '',
+            "ItemCode": '',
+            "ItemName": slItem['SerialNO'].toString() ?? '',
+            "Qty": '',
+            "Rate": '',
+            "RRate": '',
+            "Gross": '',
+            "Disc": '',
+            "DiscPer": '',
+            "RDisc": '',
+            "Net": '',
+            "CGST": '',
+            "CGSTP": '',
+            "SGST": '',
+            "SGSTP": '',
+            "IGST": '',
+            "IGSTP": '',
+            "KFC": '',
+            "KFCPer": '',
+            "Total": '',
+            "ItemId": '0',
+            "SlNo": '',
+            "Mrp": '',
+            "Unit": '',
+            "CessP": '',
+            "Cess": '',
+            "Adcess": '',
+            "AdcessP": '',
+            "SerialNo": '',
+            "HSN": '',
+            "AltQty": '',
+            "RegItemName": '',
+            "isRegItemName": '',
+            "QtyArabic": '',
+            "RateArabic": '',
+            "TotalArabic": '',
+            "MinQty": '',
+            "MaxQty": '',
+            "Branch": '',
+            "LC": '',
+            "TaxPer": '',
+            "UnitCost": '',
+            "FreeQty": '',
+            "ScanBarcode": '',
+            "TotalTax": '',
+            "MUltiUnitRate": '',
+            "ItemMultiBarcode": '',
+            "EmpCode": '',
+            "UnitId": '',
+            "UnitValue": '',
+            "Remark": '',
+            "isRegName": false
+          });
+        }
+      }
+      if (!isPrintSerialNoLineByLine) {
+        String slNoData = '';
+        for (var slItem in dataSerialNO) {
+          if (slItem['SerialNO'].toString().trim().isNotEmpty) {
+            slNoData += (slItem['SerialNO'].toString() ?? '') + ', ';
+          }
+        }
+        itemData.add({
+          "Barcode": '',
+          "ItemCode": '',
+          "ItemName": slNoData,
+          "Qty": '',
+          "Rate": '',
+          "RRate": '',
+          "Gross": '',
+          "Disc": '',
+          "DiscPer": '',
+          "RDisc": '',
+          "Net": '',
+          "CGST": '',
+          "CGSTP": '',
+          "SGST": '',
+          "SGSTP": '',
+          "IGST": '',
+          "IGSTP": '',
+          "KFC": '',
+          "KFCPer": '',
+          "Total": '',
+          "ItemId": '0',
+          "SlNo": '',
+          "Mrp": '',
+          "Unit": '',
+          "CessP": '',
+          "Cess": '',
+          "Adcess": '',
+          "AdcessP": '',
+          "SerialNo": '',
+          "HSN": '',
+          "AltQty": '',
+          "RegItemName": '',
+          "isRegItemName": '',
+          "QtyArabic": '',
+          "RateArabic": '',
+          "TotalArabic": '',
+          "MinQty": '',
+          "MaxQty": '',
+          "Branch": '',
+          "LC": '',
+          "TaxPer": '',
+          "UnitCost": '',
+          "FreeQty": '',
+          "ScanBarcode": '',
+          "TotalTax": '',
+          "MUltiUnitRate": '',
+          "ItemMultiBarcode": '',
+          "EmpCode": '',
+          "UnitId": '',
+          "UnitValue": '',
+          "Remark": '',
+          "isRegName": false
+        });
+      } else {
+        if (dataSerialNO.isNotEmpty) {
+          for (var slItem in dataSerialNO) {
+            itemData.add({
+              "Barcode": '',
+              "ItemCode": '',
+              "ItemName": slItem['SerialNO'].toString() ?? '',
+              "Qty": '',
+              "Rate": '',
+              "RRate": '',
+              "Gross": '',
+              "Disc": '',
+              "DiscPer": '',
+              "RDisc": '',
+              "Net": '',
+              "CGST": '',
+              "CGSTP": '',
+              "SGST": '',
+              "SGSTP": '',
+              "IGST": '',
+              "IGSTP": '',
+              "KFC": '',
+              "KFCPer": '',
+              "Total": '',
+              "ItemId": item['itemId'].toString() ?? '0',
+              "SlNo": '',
+              "Mrp": '',
+              "Unit": '',
+              "CessP": '',
+              "Cess": '',
+              "Adcess": '',
+              "AdcessP": '',
+              "SerialNo": '',
+              "HSN": '',
+              "AltQty": '',
+              "RegItemName": '',
+              "isRegItemName": '',
+              "QtyArabic": '',
+              "RateArabic": '',
+              "TotalArabic": '',
+              "MinQty": '',
+              "MaxQty": '',
+              "Branch": '',
+              "LC": '',
+              "TaxPer": '',
+              "UnitCost": '',
+              "FreeQty": '',
+              "ScanBarcode": '',
+              "TotalTax": '',
+              "MUltiUnitRate": '',
+              "ItemMultiBarcode": '',
+              "EmpCode": '',
+              "UnitId": '',
+              "UnitValue": '',
+              "Remark": '',
+              "isRegName": false
+            });
+          }
+        } else {
+          itemData.add({
+            "Barcode": '',
+            "ItemCode": '',
+            "ItemName": item['serialno'].toString() ?? '',
+            "Qty": '',
+            "Rate": '',
+            "RRate": '',
+            "Gross": '',
+            "Disc": '',
+            "DiscPer": '',
+            "RDisc": '',
+            "Net": '',
+            "CGST": '',
+            "CGSTP": '',
+            "SGST": '',
+            "SGSTP": '',
+            "IGST": '',
+            "IGSTP": '',
+            "KFC": '',
+            "KFCPer": '',
+            "Total": '',
+            "ItemId": item['itemId'].toString() ?? '0',
+            "SlNo": '',
+            "Mrp": '',
+            "Unit": '',
+            "CessP": '',
+            "Cess": '',
+            "Adcess": '',
+            "AdcessP": '',
+            "SerialNo": '',
+            "HSN": '',
+            "AltQty": '',
+            "RegItemName": '',
+            "isRegItemName": '',
+            "QtyArabic": '',
+            "RateArabic": '',
+            "TotalArabic": '',
+            "MinQty": '',
+            "MaxQty": '',
+            "Branch": '',
+            "LC": '',
+            "TaxPer": '',
+            "UnitCost": '',
+            "FreeQty": '',
+            "ScanBarcode": '',
+            "TotalTax": '',
+            "MUltiUnitRate": '',
+            "ItemMultiBarcode": '',
+            "EmpCode": '',
+            "UnitId": '',
+            "UnitValue": '',
+            "Remark": '',
+            "isRegName": false
+          });
+        }
+      }
     }
-    var data = {
+
+    var dataMap = {
       "fileName":
           ComSettings.removeInvDesignFilePath(printSettingsModel.filePath) ??
               ' ',
@@ -980,7 +1233,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
     // }
 
     return FutureBuilder<List<int>>(
-      future: api.getInvoiceDesignerPdfData(data),
+      future: api.getInvoiceDesignerPdfData(dataMap),
       builder: (context, AsyncSnapshot<List<int>> snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data != null) {
@@ -6068,7 +6321,7 @@ Future<dynamic> printPOS(
 //       ),
 //       PosColumn(
 //         text: dataParticulars[i]['itemname'],
-//         width: 6,
+//         width: 7,
 //         styles: PosStyles(align: PosAlign.center),
 //       ),
 //       PosColumn(
@@ -7538,7 +7791,7 @@ Future<pw.Document> makePDF(
   //                                       child: pw.Text(
   //                                           dataParticulars[i]['itemname'],
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 10)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -7758,7 +8011,7 @@ Future<pw.Document> makePDF(
   //                                       child: pw.Text(
   //                                           dataParticulars[i]['itemname'],
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 10)),
   //                                       // pw.Divider(thickness: 1)
   //                                     ),
   //                                   ]),
@@ -8269,7 +8522,7 @@ Future<pw.Document> makePDF(
   //                                     child: pw.Text(
   //                                         dataParticulars[i]['itemname'],
   //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                             const pw.TextStyle(fontSize: 10)),
   //                                     // pw.Divider(thickness: 1)
   //                                   ),
   //                                 ]),
@@ -8620,7 +8873,7 @@ Future<pw.Document> makePDF(
   //                                     child: pw.Text(
   //                                         dataParticulars[i]['itemname'],
   //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                             const pw.TextStyle(fontSize: 10)),
   //                                     // pw.Divider(thickness: 1)
   //                                   ),
   //                                 ]),
@@ -9296,7 +9549,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                             dataParticulars[i]['itemname'],
                                             style: const pw.TextStyle(
-                                                fontSize: 9)),
+                                                fontSize: 10)),
                                         // pw.Divider(thickness: 1)
                                       )
                                     ]),
@@ -9516,7 +9769,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                             dataParticulars[i]['itemname'],
                                             style: const pw.TextStyle(
-                                                fontSize: 9)),
+                                                fontSize: 10)),
                                         // pw.Divider(thickness: 1)
                                       ),
                                     ]),
@@ -9947,7 +10200,7 @@ Future<pw.Document> makePDF(
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(2.0),
                                   child: pw.Text(dataParticulars[i]['itemname'],
-                                      style: const pw.TextStyle(fontSize: 9)),
+                                      style: const pw.TextStyle(fontSize: 10)),
                                   // pw.Divider(thickness: 1)
                                 ),
                               ]),
@@ -10556,7 +10809,7 @@ Future<pw.Document> makePDF(
     //                   child: pw.Text(dataParticulars[i]['itemname'],
     //                       softWrap: true,
     //                       overflow: pw.TextOverflow.clip,
-    //                       style: const pw.TextStyle(fontSize: 8))),
+    //                       style: const pw.TextStyle(fontSize: 10))),
     //               // pw.Divider(thickness: 1)
     //             ),
     //             // ]),
@@ -11272,7 +11525,7 @@ Future<pw.Document> makePDF(
                       child: pw.Text(
                         dataParticulars[i]['itemname'],
                         style: pw.TextStyle(
-                            fontSize: 5, fontWeight: pw.FontWeight.bold),
+                            fontSize: 6, fontWeight: pw.FontWeight.bold),
                       ),
                     ),
                     pw.Padding(
@@ -12449,7 +12702,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                             dataParticulars[i]['itemname'],
                                             style: const pw.TextStyle(
-                                                fontSize: 9)),
+                                                fontSize: 10)),
                                         // pw.Divider(thickness: 1)
                                       )
                                     ]),
@@ -12669,7 +12922,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                             dataParticulars[i]['itemname'],
                                             style: const pw.TextStyle(
-                                                fontSize: 9)),
+                                                fontSize: 10)),
                                         // pw.Divider(thickness: 1)
                                       ),
                                     ]),
@@ -13100,7 +13353,7 @@ Future<pw.Document> makePDF(
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(2.0),
                                   child: pw.Text(dataParticulars[i]['itemname'],
-                                      style: const pw.TextStyle(fontSize: 9)),
+                                      style: const pw.TextStyle(fontSize: 10)),
                                   // pw.Divider(thickness: 1)
                                 ),
                               ]),
@@ -13766,7 +14019,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                             dataParticulars[i]['itemname'],
                                             style: const pw.TextStyle(
-                                                fontSize: 9)),
+                                                fontSize: 10)),
                                         // pw.Divider(thickness: 1)
                                       )
                                     ]),
@@ -13986,7 +14239,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                             dataParticulars[i]['itemname'],
                                             style: const pw.TextStyle(
-                                                fontSize: 9)),
+                                                fontSize: 10)),
                                         // pw.Divider(thickness: 1)
                                       ),
                                     ]),
@@ -14417,7 +14670,7 @@ Future<pw.Document> makePDF(
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(2.0),
                                   child: pw.Text(dataParticulars[i]['itemname'],
-                                      style: const pw.TextStyle(fontSize: 9)),
+                                      style: const pw.TextStyle(fontSize: 10)),
                                   // pw.Divider(thickness: 1)
                                 ),
                               ]),
@@ -15083,7 +15336,7 @@ Future<pw.Document> makePDF(
         //                                 child: pw.Text(
         //                                     dataParticulars[i]['itemname'],
         //                                     style: const pw.TextStyle(
-        //                                         fontSize: 9)),
+        //                                         fontSize: 10)),
         //                                 // pw.Divider(thickness: 1)
         //                               )
         //                             ]),
@@ -15303,7 +15556,7 @@ Future<pw.Document> makePDF(
         //                                 child: pw.Text(
         //                                     dataParticulars[i]['itemname'],
         //                                     style: const pw.TextStyle(
-        //                                         fontSize: 9)),
+        //                                         fontSize: 10)),
         //                                 // pw.Divider(thickness: 1)
         //                               ),
         //                             ]),
@@ -15691,7 +15944,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       dataParticulars[i]['itemname'],
                                       style: pw.TextStyle(
-                                          fontSize: 5,
+                                          fontSize: 6,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -16584,7 +16837,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       dataParticulars[i]['itemname'],
                                       style: pw.TextStyle(
-                                          fontSize: 5,
+                                          fontSize: 6,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -17458,7 +17711,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       dataParticulars[i]['itemname'],
                                       style: pw.TextStyle(
-                                          fontSize: 5,
+                                          fontSize: 6,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -18003,7 +18256,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       dataParticulars[i]['itemname'],
                                       style: pw.TextStyle(
-                                          fontSize: 5,
+                                          fontSize: 6,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -18790,7 +19043,7 @@ Future<pw.Document> makePDF(
         //                           child: pw.Text(
         //                               dataParticulars[i]['itemname'],
         //                               style:
-        //                                   const pw.TextStyle(fontSize: 9)),
+        //                                   const pw.TextStyle(fontSize: 10)),
         //                           // pw.Divider(thickness: 1)
         //                         ),
         //                       ]),
@@ -19141,7 +19394,7 @@ Future<pw.Document> makePDF(
         //                           child: pw.Text(
         //                               dataParticulars[i]['itemname'],
         //                               style:
-        //                                   const pw.TextStyle(fontSize: 9)),
+        //                                   const pw.TextStyle(fontSize: 10)),
         //                           // pw.Divider(thickness: 1)
         //                         ),
         //                       ]),
@@ -19379,7 +19632,7 @@ Future<pw.Document> makePDF(
                                 child: pw.Text(
                                   dataParticulars[i]['itemname'],
                                   style: pw.TextStyle(
-                                      fontSize: 6,
+                                      fontSize: 7,
                                       fontWeight: pw.FontWeight.bold),
                                 ),
                               ),
@@ -19793,7 +20046,7 @@ Future<pw.Document> makePDF(
                                 child: pw.Text(
                                   dataParticulars[i]['itemname'],
                                   style: pw.TextStyle(
-                                      fontSize: 6,
+                                      fontSize: 7,
                                       fontWeight: pw.FontWeight.bold),
                                 ),
                               ),
@@ -20181,7 +20434,7 @@ Future<pw.Document> makePDF(
 //                       child: pw.Text(
 //                         dataParticulars[i]['itemname'],
 //                         style: pw.TextStyle(
-//                             fontSize: 6, fontWeight: pw.FontWeight.bold),
+//                             fontSize: 7, fontWeight: pw.FontWeight.bold),
 //                       ),
 //                     ),
 //                     pw.Padding(

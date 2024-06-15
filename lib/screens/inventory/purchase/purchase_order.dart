@@ -803,7 +803,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
 
   bool _isPrize = false;
   itemDetails() {
-    int id = productModel['slno'];
+    int id = productModel.slNo;
     dio.fetchProductPrize(id).then((value) {
       productModelPrize = value[0];
       setState(() {
@@ -875,10 +875,10 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
 
   itemDetailWidget() {
     if (editItem) {
-      // adCessPer = double.tryParse(productModel['adcessper'].toString());
-      // cessPer = double.tryParse(productModel['cessper'].toString());
+      // adCessPer = double.tryParse(productModel.adCessPer.toString());
+      // cessPer = double.tryParse(productModel.cessPer.toString());
       taxP = cartItem.elementAt(position).taxP;
-      // kfcP = double.tryParse(productModel['KFC'].toString());
+      // kfcP = double.tryParse(productModel.KFC.toString());
       quantity = cartItem[position].quantity;
       if (quantity > 0 && !editableQuantity) {
         controllerQuantity.text = quantity.toString();
@@ -928,10 +928,10 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
       }
       total = cartItem.elementAt(position).total;
     } else {
-      adCessPer = double.tryParse(productModel['adcessper'].toString());
-      cessPer = double.tryParse(productModel['cessper'].toString());
-      taxP = double.tryParse(productModel['tax'].toString());
-      kfcP = double.tryParse(productModel['KFC'].toString());
+      adCessPer = double.tryParse(productModel.adCessPer.toString());
+      cessPer = double.tryParse(productModel.cessPer.toString());
+      taxP = double.tryParse(productModel.tax.toString());
+      // kfcP = double.tryParse(productModel.KFC.toString());
       rate = double.tryParse(productModelPrize['prate'].toString());
       if (rate > 0 && !editableRate) {
         controllerRate.text = rate.toString();
@@ -1058,7 +1058,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
             Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                    'Item : ${editItem ? cartItem.elementAt(position).itemName : productModel['itemname']}')),
+                    'Item : ${editItem ? cartItem.elementAt(position).itemName : productModel.itemName}')),
             Row(
               children: [
                 Expanded(
@@ -1135,8 +1135,8 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                         cartItem[position].gross = subTotal;
                         cartItem[position].iGST = iGST;
                         // cartItem[position].id = cartItem.length + 1;
-                        // cartItem[position].itemId = productModel['slno'];
-                        // cartItem[position].itemName = productModel['itemname'];
+                        // cartItem[position].itemId = productModel.slNo;
+                        // cartItem[position].itemName = productModel.itemName;
                         // cartItem[position].location = locationId;
                         cartItem[position].mrp = mrp;
                         cartItem[position].mrpPer = mrpPer;
@@ -1181,8 +1181,8 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                             gross: subTotal,
                             iGST: iGST,
                             id: cartItem.length + 1,
-                            itemId: productModel['slno'],
-                            itemName: productModel['itemname'],
+                            itemId: productModel.slNo,
+                            itemName: productModel.itemName,
                             location: locationId,
                             mrp: mrp,
                             mrpPer: mrpPer,
@@ -1882,16 +1882,21 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
 
 showMore(context, purchaseState) {
   ConfirmAlertBox(
-      buttonColorForNo: Colors.white,
+      buttonColorForNo: Colors.red,
       buttonColorForYes: Colors.green,
       icon: Icons.check,
-      onPressedYes: () {
+      onPressedNo: () {
         Navigator.of(context).pop();
         Navigator.pushReplacementNamed(context, '/purchaseOrder');
       },
-      // buttonTextForNo: 'No',
-      buttonTextForYes: 'OK',
-      infoMessage: 'Purchase Order $purchaseState',
-      title: 'SAVED',
+      onPressedYes: () {
+        Navigator.of(context).pop();
+        Navigator.pushReplacementNamed(context, '/purchasePreviewShow',
+            arguments: {'title': 'PurchaseOrder'});
+      },
+      buttonTextForNo: 'No',
+      buttonTextForYes: 'Yes',
+      infoMessage: 'Do you want to Preview Purchase Order',
+      title: purchaseState.toString().toUpperCase(),
       context: context);
 }

@@ -19,6 +19,7 @@ import 'package:sheraccerp/models/customer_model.dart';
 import 'package:sheraccerp/models/ledger_name_model.dart';
 import 'package:sheraccerp/models/option_rate_type.dart';
 import 'package:sheraccerp/models/order.dart';
+import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/models/sales_model.dart';
 import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/models/stock_item.dart';
@@ -224,6 +225,7 @@ class _SaleState extends State<Sale> {
         cashBankACList.addAll(_dataTemp);
       });
     });
+    userDateCheck(DateUtil.dateYMD(formattedDate));
   }
 
   CompanyInformation companySettings;
@@ -238,10 +240,14 @@ class _SaleState extends State<Sale> {
         ComSettings.getValue('CASH A/C', settings).toString().trim() ?? 'CASH';
     int cashId =
         ComSettings.appSettings('int', 'key-dropdown-default-cash-ac', 0) - 1;
-    acId = cashId > 0
+    acId = mainAccount.firstWhere((element) => element['LedName'] == cashAc,
+        orElse: () => {'LedName': cashAc, 'LedCode': acId})['LedCode'];
+    var acModel = cashId > 0
         ? mainAccount.firstWhere((element) => element['LedCode'] == cashId,
-            orElse: () => {'LedName': cashAc, 'LedCode': acId})['LedCode']
-        : acId;
+            orElse: () => {'LedName': cashAc, 'LedCode': acId})
+        : {'LedName': cashAc, 'LedCode': acId};
+    acId = cashId > 0 ? acModel['LedCode'] : acId;
+    cashAc = cashId > 0 ? acModel['LedName'] : cashAc;
     taxMethod = companySettings.taxCalculation;
     enableMULTIUNIT = ComSettings.getStatus('ENABLE MULTI-UNIT', settings);
     if (!enableMULTIUNIT) {
@@ -327,7 +333,11 @@ class _SaleState extends State<Sale> {
           date1: date1, date2: date2, days: valueDaysBefore)) {
         if (companyUserData.userType.toUpperCase() != 'ADMIN') {
           daysBefore = true;
+        } else {
+          daysBefore = false;
         }
+      } else {
+        daysBefore = false;
       }
     }
   }
@@ -514,7 +524,7 @@ class _SaleState extends State<Sale> {
                             }
                           } else {
                             Fluttertoast.showToast(
-                                msg: 'Invoice Date not equal\ncan`t save');
+                                msg: 'Invoice Date not equal\ncan`t edit');
                             setState(() {
                               buttonEvent = false;
                             });
@@ -556,6 +566,12 @@ class _SaleState extends State<Sale> {
                                 buttonEvent = false;
                               });
                             }
+                          } else {
+                            Fluttertoast.showToast(
+                                msg: 'Voucher Date not equal\ncan`t save');
+                            setState(() {
+                              buttonEvent = false;
+                            });
                           }
                         } else {
                           Fluttertoast.showToast(
@@ -1093,26 +1109,35 @@ class _SaleState extends State<Sale> {
         'serialNoData': json.encode(SerialNOModel.encodedToJson(serialNoData)),
       };
       if (saleAccountId != '0') {
-        if (checkFinancialYear(DateUtil.dateYMD(formattedDate))) {
-          if (manualInvoiceNumberInSales) {
-            api.checkManualInvoiceNoStatus(invoiceNo).then((value) {
-              if (!value) {
-                postSale(body, otherAmount, order, saleFormType, saleFormId);
-              } else {
-                showErrorDialog(context, 'Duplicate Invoice No');
+        if (order.cashAC != '0') {
+          if (checkFinancialYear(DateUtil.dateYMD(formattedDate))) {
+            if (manualInvoiceNumberInSales) {
+              api.checkManualInvoiceNoStatus(invoiceNo).then((value) {
+                if (!value) {
+                  postSale(body, otherAmount, order, saleFormType, saleFormId);
+                } else {
+                  showErrorDialog(context, 'Duplicate Invoice No');
 
-                setState(() {
-                  _isLoading = false;
-                  buttonEvent = false;
-                });
-              }
-            });
+                  setState(() {
+                    _isLoading = false;
+                    buttonEvent = false;
+                  });
+                }
+              });
+            } else {
+              postSale(body, otherAmount, order, saleFormType, saleFormId);
+            }
           } else {
-            postSale(body, otherAmount, order, saleFormType, saleFormId);
+            showErrorDialog(
+                context, "Date Is Incompatible With This Financial Year");
+
+            setState(() {
+              _isLoading = false;
+              buttonEvent = false;
+            });
           }
         } else {
-          showErrorDialog(
-              context, "Date Is Incompatible With This Financial Year");
+          Fluttertoast.showToast(msg: "set CashAccount");
 
           setState(() {
             _isLoading = false;
@@ -2595,6 +2620,8 @@ class _SaleState extends State<Sale> {
                               productModel = itemDisplay[index - 1];
                               // _autoVariantSelect =
                               //     productModel.hasVariant ? true : false;
+                              lastRateStatus = true;
+                              lastRateSelected = false;
                               nextWidget = 3;
                             });
                           },
@@ -3283,7 +3310,7 @@ class _SaleState extends State<Sale> {
       kfcP = 0,
       kfc = 0,
       unitValue = 1,
-      _conversion = 0,
+      _conversion = 1,
       freeQty = 0,
       fUnitValue = 0,
       cdPer = 0,
@@ -3307,6 +3334,7 @@ class _SaleState extends State<Sale> {
             rate = double.tryParse(_rateController.text);
             // rate = double.tryParse(_rateController.text) * _conversion;
             lastRateStatus = false;
+            lastRateSelected = false;
           } else {
             //r = (saleRate * _conversion);
             // rate = saleRate * _conversion;
@@ -3332,6 +3360,7 @@ class _SaleState extends State<Sale> {
         rate = double.tryParse(_rateController.text);
 
         lastRateStatus = false;
+        lastRateSelected = false;
       } else if (saleRate > 0) {
         _rateController.text = saleRate.toStringAsFixed(decimal);
         rate = saleRate;
@@ -3558,7 +3587,7 @@ class _SaleState extends State<Sale> {
     unitValue = _conversion > 0 ? _conversion : 1;
   }
 
-  bool lastRateStatus = true;
+  bool lastRateStatus = true, lastRateSelected = false, rateEdited = false;
   showAddMore(BuildContext context, StockProduct product) {
     List<UnitModel> unitListData = [];
     if (editItem) {
@@ -3599,25 +3628,36 @@ class _SaleState extends State<Sale> {
               ? kfcPer
               : 0
           : 0;
-      if (rateTypeItem == null) {
-        if (salesTypeData.rateType.toUpperCase() == 'RETAIL') {
-          saleRate = product.retailPrice;
-        } else if (salesTypeData.rateType.toUpperCase() == 'WHOLESALE') {
-          saleRate = product.wholeSalePrice;
-        } else if (salesTypeData.rateType.toUpperCase() == 'BRANCH') {
-          saleRate = product.branch;
-        } else {
-          saleRate = product.sellingPrice;
-        }
+      if (lastRateSelected) {
+        saleRate = rate / _conversion;
       } else {
-        if (rateTypeItem.name.toUpperCase() == 'RETAIL') {
-          saleRate = product.retailPrice;
-        } else if (rateTypeItem.name.toUpperCase() == 'WHOLESALE') {
-          saleRate = product.wholeSalePrice;
-        } else if (rateTypeItem.name.toUpperCase() == 'BRANCH') {
-          saleRate = product.branch;
+        if (rateEdited) {
+          saleRate = _rateController.text.isNotEmpty
+              ? double.parse(_rateController.text)
+              : 0;
+          rate = saleRate;
         } else {
-          saleRate = product.sellingPrice;
+          if (rateTypeItem == null) {
+            if (salesTypeData.rateType.toUpperCase() == 'RETAIL') {
+              saleRate = product.retailPrice;
+            } else if (salesTypeData.rateType.toUpperCase() == 'WHOLESALE') {
+              saleRate = product.wholeSalePrice;
+            } else if (salesTypeData.rateType.toUpperCase() == 'BRANCH') {
+              saleRate = product.branch;
+            } else {
+              saleRate = product.sellingPrice;
+            }
+          } else {
+            if (rateTypeItem.name.toUpperCase() == 'RETAIL') {
+              saleRate = product.retailPrice;
+            } else if (rateTypeItem.name.toUpperCase() == 'WHOLESALE') {
+              saleRate = product.wholeSalePrice;
+            } else if (rateTypeItem.name.toUpperCase() == 'BRANCH') {
+              saleRate = product.branch;
+            } else {
+              saleRate = product.sellingPrice;
+            }
+          }
         }
       }
       if (saleRate > 0 &&
@@ -3658,6 +3698,7 @@ class _SaleState extends State<Sale> {
                             onPressed: () {
                               setState(() {
                                 editItem = false;
+                                rateEdited = false;
                                 nextWidget = 2;
                                 isVariantSelected = false;
                                 clearValue();
@@ -3673,6 +3714,7 @@ class _SaleState extends State<Sale> {
                         MaterialButton(
                           onPressed: () {
                             setState(() {
+                              rateEdited = false;
                               editItem = false;
                               isVariantSelected = false;
                               nextWidget = 4;
@@ -3940,6 +3982,8 @@ class _SaleState extends State<Sale> {
                                                       product.minimumRate),
                                               -1);
                                           // }
+
+                                          rateEdited = false;
                                         }
                                       } else {
                                         ScaffoldMessenger.of(context)
@@ -4023,7 +4067,9 @@ class _SaleState extends State<Sale> {
                                   for (var element in cartItem) {
                                     if (element.uniqueCode ==
                                         product.productId) {
-                                      cartQt += element.quantity + element.free;
+                                      cartQt += (element.quantity *
+                                              element.unitValue) +
+                                          element.free;
                                       cartS = element.stock;
                                     }
                                   }
@@ -4119,8 +4165,9 @@ class _SaleState extends State<Sale> {
                                     for (var element in cartItem) {
                                       if (element.uniqueCode ==
                                           product.productId) {
-                                        cartQt +=
-                                            element.quantity + element.free;
+                                        cartQt += (element.quantity *
+                                                element.unitValue) +
+                                            element.free;
                                         cartS = element.stock;
                                       }
                                     }
@@ -4251,7 +4298,9 @@ class _SaleState extends State<Sale> {
                                                                         : rateType ==
                                                                                 '3'
                                                                             ? product.wholeSalePrice
-                                                                            : rate;
+                                                                            : rateType == '8'
+                                                                                ? product.wholeSalePrice
+                                                                                : rate;
                                                 if (_unit.rate.isNotEmpty) {
                                                   rateTypeItem = rateTypeList
                                                       .firstWhere((element) =>
@@ -4275,9 +4324,11 @@ class _SaleState extends State<Sale> {
                                                         in cartItem) {
                                                       if (element.uniqueCode ==
                                                           product.productId) {
-                                                        cartQt +=
-                                                            element.quantity +
-                                                                element.free;
+                                                        cartQt += (element
+                                                                    .quantity *
+                                                                element
+                                                                    .unitValue) +
+                                                            element.free;
                                                         cartS = element.stock;
                                                       }
                                                     }
@@ -4350,16 +4401,16 @@ class _SaleState extends State<Sale> {
                                         onChanged: (value) {
                                           setState(() {
                                             _dropDownUnit = int.tryParse(value);
-                                            // for (var i = 0;
-                                            //     i < unitListData.length;
-                                            //     i++) {
-                                            //   UnitModel _unit = unitListData[i];
-                                            //   if (_unit.unit ==
-                                            //       int.tryParse(value)) {
-                                            //     _conversion = _unit.conversion;
-                                            //     break;
-                                            //   }
-                                            // }
+                                            for (var i = 0;
+                                                i < unitListData.length;
+                                                i++) {
+                                              UnitModel _unit = unitListData[i];
+                                              if (_unit.unit ==
+                                                  int.tryParse(value)) {
+                                                _conversion = _unit.conversion;
+                                                break;
+                                              }
+                                            }
                                             // calculate();
                                           });
                                         },
@@ -4406,6 +4457,7 @@ class _SaleState extends State<Sale> {
                                 hintText: '0.0'),
                             onChanged: (value) {
                               if (value.isNotEmpty) {
+                                rateEdited = true;
                                 if (isMinimumRate) {
                                   double minRate = product.minimumRate ?? 0;
                                   if (double.tryParse(_rateController.text) >=
@@ -4815,8 +4867,9 @@ class _SaleState extends State<Sale> {
                                                     if (element.itemId ==
                                                         cartItem[index]
                                                             .itemId) {
-                                                      cartQt +=
-                                                          element.quantity;
+                                                      cartQt += (element
+                                                              .quantity *
+                                                          element.unitValue);
                                                       cartS = element.stock;
                                                     }
                                                   }
@@ -4899,7 +4952,8 @@ class _SaleState extends State<Sale> {
                                                 for (var element in cartItem) {
                                                   if (element.itemId ==
                                                       cartItem[index].itemId) {
-                                                    cartQt += element.quantity;
+                                                    cartQt += element.quantity *
+                                                        element.unitValue;
                                                     cartS = element.stock;
                                                   }
                                                 }
@@ -5082,6 +5136,8 @@ class _SaleState extends State<Sale> {
                                             _serialNoController.text =
                                                 cartModel.serialNo;
                                             _dropDownUnit = cartModel.unitId;
+                                            _conversion = cartModel.unitValue;
+                                            unitValue = _conversion;
 
                                             nextWidget = 3;
                                           });
@@ -5211,7 +5267,7 @@ class _SaleState extends State<Sale> {
                       //                 for (var element in cartItem) {
                       //                   if (element.itemId ==
                       //                       cartItem[index].itemId) {
-                      //                     cartQt += element.quantity;
+                      //                     cartQt += element.quantity*element.unitValue;
                       //                     cartS = element.stock;
                       //                   }
                       //                 }
@@ -5294,7 +5350,7 @@ class _SaleState extends State<Sale> {
                       //               for (var element in cartItem) {
                       //                 if (element.itemId ==
                       //                     cartItem[index].itemId) {
-                      //                   cartQt += element.quantity;
+                      //                   cartQt += element.quantity*element.unitValue;
                       //                   cartS = element.stock;
                       //                 }
                       //               }
@@ -5604,7 +5660,18 @@ class _SaleState extends State<Sale> {
                           Navigator.of(context).pop();
                           setState(() {
                             rate = data[index]['Rate'].toDouble();
-                            saleRate = data[index]['Rate'].toDouble();
+                            // if (ledgerModel.name != data[index]['Supplier']) {
+                            //   if (_dropDownUnit > 0) {
+                            //     if (_dropDownUnit ==
+                            //         data[index]['Unit'].toInt()) {
+                            //       rate = data[index]['Unit'].toDouble() > 0
+                            //           ? (data[index]['Rate'].toDouble() /
+                            //               data[index]['UnitValue'].toDouble())
+                            //           : data[index]['Rate'].toDouble();
+                            //     }
+                            //   }
+                            // }
+                            saleRate = rate;
                             _rateController.text = saleRate.toStringAsFixed(2);
                             calculate(product);
                           });
@@ -5694,9 +5761,17 @@ class _SaleState extends State<Sale> {
           orElse: () => {});
       if (item != null && item.isNotEmpty) {
         setState(() {
+          lastRateStatus = false;
+          lastRateSelected = true;
           rate = item['Rate'].toDouble();
+          _dropDownUnit = item['Unit'];
           saleRate = item['Rate'].toDouble();
           _rateController.text = saleRate.toStringAsFixed(2);
+          _conversion = item['UnitValue'].toDouble();
+          if (_conversion > 1) {
+            rate = rate / _conversion;
+            saleRate = rate;
+          }
           calculate(product);
         });
       }
@@ -6727,6 +6802,7 @@ class _SaleState extends State<Sale> {
         lastDate: DateTime(2100));
     if (picked != null) {
       setState(() => {formattedDate = DateFormat('dd-MM-yyyy').format(picked)});
+      userDateCheck(DateUtil.dateYMD(formattedDate));
     }
   }
 
@@ -6795,44 +6871,42 @@ class _SaleState extends State<Sale> {
         returnBillId = information['ReturnNo'];
         controllerNarration.text = information['Narration'];
 
-        if (apiV != 'v19/') {
-          String _bankLedgerName = information['BankName'] != null
-              ? information['BankName'].toString()
-              : 0;
-          double _bankLedgerAmount = information['bankamount'] != null
-              ? double.tryParse(information['bankamount'].toString())
-              : 0;
-          if (_bankLedgerAmount > 0) {
-            bankAmountController.text = _bankLedgerAmount.toString();
-            bankLedgerData = cashBankACList.firstWhere((element) =>
-                element.name.toLowerCase() == _bankLedgerName.toLowerCase());
-            bankLedgerName = bankLedgerData.name;
-          } else {
-            bankAmountController.text = '';
-            bankLedgerData = null;
-            bankLedgerName = '';
-          }
-
-          int _commissionLedgerAc = information['CareOff'] != null
-              ? int.tryParse(information['CareOff'].toString())
-              : 0;
-          double _commissionLedgerAmount = information['CareOffAmount'] != null
-              ? double.tryParse(information['CareOffAmount'].toString())
-              : 0;
-
-          if (_commissionLedgerAmount > 0) {
-            commissionAmountController.text =
-                _commissionLedgerAmount.toString();
-            commissionAccount = _commissionLedgerAc;
-            api.getCustomerDetail(_commissionLedgerAc).then((ledgerData) =>
-                commissionLedgerData = LedgerModel(
-                    id: _commissionLedgerAc, name: ledgerData.name));
-          } else {
-            commissionAmountController.text = '';
-            commissionLedgerData = null;
-            commissionAccount = 0;
-          }
+        String _bankLedgerName = information['BankName'] != null
+            ? information['BankName'].toString()
+            : 0;
+        double _bankLedgerAmount = information['bankamount'] != null
+            ? double.tryParse(information['bankamount'].toString())
+            : 0;
+        if (_bankLedgerAmount > 0) {
+          bankAmountController.text = _bankLedgerAmount.toString();
+          bankLedgerData = cashBankACList.firstWhere((element) =>
+              element.name.toLowerCase() == _bankLedgerName.toLowerCase());
+          bankLedgerName = bankLedgerData.name;
+        } else {
+          bankAmountController.text = '';
+          bankLedgerData = null;
+          bankLedgerName = '';
         }
+
+        int _commissionLedgerAc = information['CareOff'] != null
+            ? int.tryParse(information['CareOff'].toString())
+            : 0;
+        double _commissionLedgerAmount = information['CareOffAmount'] != null
+            ? double.tryParse(information['CareOffAmount'].toString())
+            : 0;
+
+        if (_commissionLedgerAmount > 0) {
+          commissionAmountController.text = _commissionLedgerAmount.toString();
+          commissionAccount = _commissionLedgerAc;
+          api.getCustomerDetail(_commissionLedgerAc).then((ledgerData) =>
+              commissionLedgerData =
+                  LedgerModel(id: _commissionLedgerAc, name: ledgerData.name));
+        } else {
+          commissionAmountController.text = '';
+          commissionLedgerData = null;
+          commissionAccount = 0;
+        }
+
         CustomerModel cModel = CustomerModel(
             id: information['Customer'],
             name: information['ToName'],
@@ -6894,7 +6968,7 @@ class _SaleState extends State<Sale> {
                   net: double.tryParse(product['Net'].toString()), //subTotal,
                   cess: double.tryParse(product['cess'].toString()), //cess,
                   total: double.tryParse(product['Total'].toString()), //total,
-                  profitPer: 0, //product['']profitPer,
+                  profitPer: double.tryParse(product['Profit'].toString()),
                   fUnitValue: double.tryParse(
                       product['FValue'].toString()), //fUnitValue,
                   adCess:
@@ -7039,52 +7113,52 @@ class _SaleState extends State<Sale> {
 
   salesManVehicle() {
     return salesmanAsVehicle
-        ? Row(
-            children: [
-              // const Text('Vehicle No'),
-              SizedBox(
-                width: 120,
-                // child: Expanded(
-                //   child: TextField(
-                //     decoration: const InputDecoration(
-                //       border: OutlineInputBorder(),
-                //       label: Text('No'),
-                //     ),
-                //     onChanged: (value) {
-                //       setState(() {
-                //         // customerName =
-                //         //     value.isNotEmpty ? value.toUpperCase() : 'CASH';
-                //       });
-                //     },
-                //   ),
-                // ),
-                child: DropdownSearch<dynamic>(
-                  maxHeight: 300,
-                  onFind: (String filter) => getSalesManListData(filter),
-                  dropdownSearchDecoration: const InputDecoration(
-                      border: OutlineInputBorder(), labelText: 'V No'),
-                  onChanged: (dynamic data) {
-                    vehicleData = otherRegSalesManList.firstWhere((element) =>
-                        element['Auto'].toString() == data.id.toString());
-                    vehicleName = vehicleData['Name'];
-                  },
-                  showSearchBox: true,
-                ),
-              ),
-              const SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: TextField(
-                  // enabled: false,
-                  readOnly: true,
-                  decoration: InputDecoration(
-                    border: const OutlineInputBorder(),
-                    label: Text(vehicleName),
-                  ),
-                ),
-              ),
-            ],
+        ? // Row(
+        //     children: [
+        // const Text('Vehicle No'),
+        SizedBox(
+            // width: 120,
+            // child: Expanded(
+            //   child: TextField(
+            //     decoration: const InputDecoration(
+            //       border: OutlineInputBorder(),
+            //       label: Text('No'),
+            //     ),
+            //     onChanged: (value) {
+            //       setState(() {
+            //         // customerName =
+            //         //     value.isNotEmpty ? value.toUpperCase() : 'CASH';
+            //       });
+            //     },
+            //   ),
+            // ),
+            child: DropdownSearch<dynamic>(
+              maxHeight: 300,
+              onFind: (String filter) => getSalesManListData(filter),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(), labelText: 'Vehicle No'),
+              onChanged: (dynamic data) {
+                vehicleData = otherRegSalesManList.firstWhere((element) =>
+                    element['Auto'].toString() == data.id.toString());
+                vehicleName = vehicleData['Name'];
+              },
+              showSearchBox: true,
+            ),
+            // ),
+            // const SizedBox(
+            //   width: 10,
+            // ),
+            // Expanded(
+            //   child: TextField(
+            //     // enabled: false,
+            //     readOnly: true,
+            //     decoration: InputDecoration(
+            //       border: const OutlineInputBorder(),
+            //       label: Text(vehicleName),
+            //     ),
+            //   ),
+            // ),
+            // ],
           )
         : SimpleAutoCompleteTextField(
             key: keyVehicleName,
@@ -7107,9 +7181,8 @@ class _SaleState extends State<Sale> {
             .toList();
     List<DataJson> dataResult = [];
     for (var data in dd) {
-      dataResult.add(DataJson(
-          id: data['Auto'],
-          name: data['Name'].trim().split(' ')[0].toString()));
+      dataResult.add(
+          DataJson(id: data['Auto'], name: data['Name'].trim().toString()));
     }
     return dataResult;
   }

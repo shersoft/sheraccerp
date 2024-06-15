@@ -173,6 +173,21 @@ class ComSettings {
     api.fetchOtherRegList().then((value) {
       if (value != null && value.isNotEmpty) {
         otherRegistrationList = value;
+        if (otherRegistrationList.isNotEmpty) {
+          locationList.clear();
+          otherRegUnitList.clear();
+          areaList.clear();
+          otherRegAreaList.clear();
+          salesmanList.clear();
+          otherRegSalesManList.clear();
+          routeList.clear();
+          otherRegRouteList.clear();
+          brandList.clear();
+          categoryList.clear();
+          mfrList.clear();
+          modelList.clear();
+          subCategoryList.clear();
+        }
         Map<String, dynamic> map = value[0];
         if (map['location'].length > 0) {
           if (map['location'][0]['Auto'] == 1) {
