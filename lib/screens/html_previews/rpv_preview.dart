@@ -123,7 +123,7 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
               form,
               bill['date'],
               eNo)
-          .then((value) {
+          .then((obValue) {
         setState(() {
           data = value;
           // dataInformation = value['Information'][0];
@@ -137,7 +137,7 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
           //     DateUtil.dateYMD(formattedDate),
           //     information['EntryNo']);
 
-          oldBalance = double.parse(value);
+          oldBalance = double.parse(obValue);
           if (oldBalance > 0) {
             bill['oldBalance'] = oldBalance;
           }

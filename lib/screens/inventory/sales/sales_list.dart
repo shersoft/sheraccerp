@@ -43,7 +43,8 @@ class _SalesListState extends State<SalesList> {
       stockValuation = false,
       isType = false,
       classic = true,
-      newMode = false;
+      newMode = false,
+      isAdminUser = false;
   List<String> tableColumn = [];
   DateTime now = DateTime.now();
   DioService api = DioService();
@@ -100,6 +101,7 @@ class _SalesListState extends State<SalesList> {
   int valueType = 1;
   String area = '0', route = '0';
   dynamic areaModel, routeModel;
+  DataJson location;
 
   @override
   void initState() {
@@ -114,6 +116,26 @@ class _SalesListState extends State<SalesList> {
     //       .first;
     // }
     salesTypeDataList = salesTypeList;
+
+    isAdminUser =
+        companyUserData.userType.toUpperCase() == 'ADMIN' ? true : false;
+    if (!isAdminUser) {
+      locationId = ComSettings.appSettings(
+              'int', 'key-dropdown-default-location-view', 2) -
+          1;
+      OtherRegistrationModel otherData = otherRegLocationList.firstWhere(
+          (element) => element.id == locationId,
+          orElse: () => OtherRegistrationModel(
+              add1: '',
+              add2: '',
+              add3: '',
+              description: '',
+              email: '',
+              id: locationId,
+              name: defaultLocation,
+              type: ''));
+      location = DataJson(id: otherData.id, name: otherData.name);
+    }
   }
 
   void itemChange(bool val, int index) {
@@ -300,10 +322,14 @@ class _SalesListState extends State<SalesList> {
       return _saleListData('SalesList', dataSType, title);
     } else {
       var locationData = [];
-      for (var data in locationList) {
-        if (data.value.toString().isNotEmpty) {
-          locationData.add({'id': data.key});
+      if (isAdminUser) {
+        for (var data in locationList) {
+          if (data.value.toString().isNotEmpty) {
+            locationData.add({'id': data.key});
+          }
         }
+      } else {
+        locationData.add({'id': location.id});
       }
       String areaId = area.isNotEmpty ? area : '0';
       String routeId = route.isNotEmpty ? route : '0';
@@ -795,6 +821,10 @@ class _SalesListState extends State<SalesList> {
         List tempList = [];
 
         // statement, page, '1', salesTypeData.id.toString(), ' ', ' '
+        var _location = '0';
+        if (location != null) {
+          _location = location.id.toString() ?? '0';
+        }
 
         var dataJsonS = '[' +
             json.encode({
@@ -806,7 +836,7 @@ class _SalesListState extends State<SalesList> {
               'mfr': mfr != null ? mfr.id : '0',
               'category': category != null ? category.id : '0',
               'subcategory': subCategory != null ? subCategory.id : '0',
-              'location': locationId != null ? locationId.id : '0',
+              'location': _location,
               'project': project != null ? project.id : '0',
               'salesman': salesMan != null ? salesMan.id : '0',
               'salesType': dataSType != null
@@ -1216,16 +1246,19 @@ class _SalesListState extends State<SalesList> {
               //     },
               //   ),
               // ),
-              DropdownSearch<dynamic>(
-                maxHeight: 300,
-                onFind: (String filter) =>
-                    api.getSalesListData(filter, 'sales_list/location'),
-                dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), labelText: 'Select Branch'),
-                onChanged: (dynamic data) {
-                  locationId = data;
-                },
-                showSearchBox: true,
+              Visibility(
+                visible: isAdminUser,
+                child: DropdownSearch<dynamic>(
+                  maxHeight: 300,
+                  onFind: (String filter) =>
+                      api.getSalesListData(filter, 'sales_list/location'),
+                  dropdownSearchDecoration: const InputDecoration(
+                      border: OutlineInputBorder(), labelText: 'Select Branch'),
+                  onChanged: (dynamic data) {
+                    locationId = data;
+                  },
+                  showSearchBox: true,
+                ),
               ),
               isType
                   ? Row(
@@ -1254,6 +1287,9 @@ class _SalesListState extends State<SalesList> {
                 onPressed: () {
                   setState(() {
                     loadReport = true;
+                    location = isAdminUser
+                        ? DataJson(id: 1, name: defaultLocation)
+                        : location;
                   });
                 },
                 child: const Text('Show'),

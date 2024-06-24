@@ -716,11 +716,11 @@ class _GenerateE_InvoiceState extends State<GenerateE_Invoice> {
     }
   }
 
-  var _username = '';
-  var _password = '';
-  var _clientId = '';
-  var _clientSecret = '';
-  final _gstIn = '29AABCT1332L000';
+  var _username = gstCommonUserName;
+  var _password = gstCommonPassword;
+  var _clientId = gstCommonClientId;
+  var _clientSecret = gstCommonClientSecret;
+  final _gstIn = gstCommonGstNo;
 
   void generateEInvoice() {
     if (companySettings.pin.isEmpty) {

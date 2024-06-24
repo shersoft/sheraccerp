@@ -260,22 +260,16 @@ class AccountsMenu extends StatelessWidget {
                       arguments: {'voucher': 'Receipt Invoice'});
                 },
               ),
-              // SimpleDialogOption(
-              //   child: Card(
-              //       color: blue.shade50,
-              //       child: const ListTile(title: Text('Consignment Receipt'))),
-              //   onPressed: () {
-              //     Navigator.of(context).pop();
-              //   },
-              // ),
-              // SimpleDialogOption(
-              //   child: Card(
-              //       color: blue.shade50,
-              //       child: const ListTile(title: Text('Casual Receipt'))),
-              //   onPressed: () {
-              //     Navigator.of(context).pop();
-              //   },
-              // ),
+              SimpleDialogOption(
+                child: Card(
+                    color: blue.shade50,
+                    child: const ListTile(title: Text('Receipt Order'))),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.pushNamed(context, '/RPVoucher',
+                      arguments: {'voucher': 'Receipt Order'});
+                },
+              ),
             ],
           );
         });
@@ -321,17 +315,11 @@ class AccountsMenu extends StatelessWidget {
               // SimpleDialogOption(
               //   child: Card(
               //       color: blue.shade50,
-              //       child: const ListTile(title: Text('Consignment Payment'))),
+              //       child: const ListTile(title: Text('Payment Order'))),
               //   onPressed: () {
               //     Navigator.of(context).pop();
-              //   },
-              // ),
-              // SimpleDialogOption(
-              //   child: Card(
-              //       color: blue.shade50,
-              //       child: const ListTile(title: Text('Casual Payment'))),
-              //   onPressed: () {
-              //     Navigator.of(context).pop();
+              //     Navigator.pushNamed(context, '/RPVoucher',
+              //         arguments: {'voucher': 'Payment Order'});
               //   },
               // ),
             ],

@@ -7513,7 +7513,7 @@ Future<pw.Document> makePDF(
   //                                     pw.MainAxisAlignment.center,
   //                                 children: [
   //                                   pw.Text(tableHeaders[0],
-  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                       style: const pw.TextStyle(fontSize: 8)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
   //                             pw.Column(
@@ -7523,7 +7523,7 @@ Future<pw.Document> makePDF(
   //                                     pw.MainAxisAlignment.center,
   //                                 children: [
   //                                   pw.Text(tableHeaders[1],
-  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                       style: const pw.TextStyle(fontSize: 8)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
   //                             pw.Column(
@@ -7533,7 +7533,7 @@ Future<pw.Document> makePDF(
   //                                     pw.MainAxisAlignment.center,
   //                                 children: [
   //                                   pw.Text(tableHeaders[2],
-  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                       style: const pw.TextStyle(fontSize: 8)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
   //                             pw.Column(
@@ -7543,7 +7543,7 @@ Future<pw.Document> makePDF(
   //                                     pw.MainAxisAlignment.center,
   //                                 children: [
   //                                   pw.Text(tableHeaders[3],
-  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                       style: const pw.TextStyle(fontSize: 8)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
   //                             pw.Column(
@@ -7553,7 +7553,7 @@ Future<pw.Document> makePDF(
   //                                     pw.MainAxisAlignment.center,
   //                                 children: [
   //                                   pw.Text(tableHeaders[4],
-  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                       style: const pw.TextStyle(fontSize: 8)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
   //                             pw.Column(
@@ -7563,7 +7563,7 @@ Future<pw.Document> makePDF(
   //                                     pw.MainAxisAlignment.center,
   //                                 children: [
   //                                   pw.Text(tableHeaders[5],
-  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                       style: const pw.TextStyle(fontSize: 8)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
   //                             pw.Column(
@@ -7573,7 +7573,7 @@ Future<pw.Document> makePDF(
   //                                     pw.MainAxisAlignment.center,
   //                                 children: [
   //                                   pw.Text(tableHeaders[6],
-  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                       style: const pw.TextStyle(fontSize: 8)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
   //                             pw.Column(
@@ -7583,7 +7583,7 @@ Future<pw.Document> makePDF(
   //                                     pw.MainAxisAlignment.center,
   //                                 children: [
   //                                   pw.Text(tableHeaders[7],
-  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                       style: const pw.TextStyle(fontSize: 8)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
   //                             pw.Column(
@@ -7593,7 +7593,7 @@ Future<pw.Document> makePDF(
   //                                     pw.MainAxisAlignment.center,
   //                                 children: [
   //                                   pw.Text(tableHeaders[8],
-  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                       style: const pw.TextStyle(fontSize: 8)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
   //                             pw.Column(
@@ -7603,7 +7603,7 @@ Future<pw.Document> makePDF(
   //                                     pw.MainAxisAlignment.center,
   //                                 children: [
   //                                   pw.Text(tableHeaders[9],
-  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                       style: const pw.TextStyle(fontSize: 8)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
   //                             pw.Column(
@@ -7613,7 +7613,7 @@ Future<pw.Document> makePDF(
   //                                     pw.MainAxisAlignment.center,
   //                                 children: [
   //                                   pw.Text(tableHeaders[10],
-  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                       style: const pw.TextStyle(fontSize: 8)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
   //                             pw.Column(
@@ -7623,7 +7623,7 @@ Future<pw.Document> makePDF(
   //                                     pw.MainAxisAlignment.center,
   //                                 children: [
   //                                   pw.Text(tableHeaders[11],
-  //                                       style: const pw.TextStyle(fontSize: 9)),
+  //                                       style: const pw.TextStyle(fontSize: 8)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
   //                           ])
@@ -7636,7 +7636,7 @@ Future<pw.Document> makePDF(
   //                                 children: [
   //                                   pw.Text(tableHeaders[0],
   //                                       style: pw.TextStyle(
-  //                                           fontSize: 9,
+  //                                           fontSize: 8,
   //                                           fontWeight: pw.FontWeight.bold)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
@@ -7648,7 +7648,7 @@ Future<pw.Document> makePDF(
   //                                 children: [
   //                                   pw.Text(tableHeaders[1],
   //                                       style: pw.TextStyle(
-  //                                           fontSize: 9,
+  //                                           fontSize: 8,
   //                                           fontWeight: pw.FontWeight.bold)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
@@ -7660,7 +7660,7 @@ Future<pw.Document> makePDF(
   //                                 children: [
   //                                   pw.Text(tableHeaders[2],
   //                                       style: pw.TextStyle(
-  //                                           fontSize: 9,
+  //                                           fontSize: 8,
   //                                           fontWeight: pw.FontWeight.bold)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
@@ -7672,7 +7672,7 @@ Future<pw.Document> makePDF(
   //                                 children: [
   //                                   pw.Text(tableHeaders[3],
   //                                       style: pw.TextStyle(
-  //                                           fontSize: 9,
+  //                                           fontSize: 8,
   //                                           fontWeight: pw.FontWeight.bold)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
@@ -7684,7 +7684,7 @@ Future<pw.Document> makePDF(
   //                                 children: [
   //                                   pw.Text(tableHeaders[4],
   //                                       style: pw.TextStyle(
-  //                                           fontSize: 9,
+  //                                           fontSize: 8,
   //                                           fontWeight: pw.FontWeight.bold)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
@@ -7696,7 +7696,7 @@ Future<pw.Document> makePDF(
   //                                 children: [
   //                                   pw.Text(tableHeaders[5],
   //                                       style: pw.TextStyle(
-  //                                           fontSize: 9,
+  //                                           fontSize: 8,
   //                                           fontWeight: pw.FontWeight.bold)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
@@ -7708,7 +7708,7 @@ Future<pw.Document> makePDF(
   //                                 children: [
   //                                   pw.Text(tableHeaders[6],
   //                                       style: pw.TextStyle(
-  //                                           fontSize: 9,
+  //                                           fontSize: 8,
   //                                           fontWeight: pw.FontWeight.bold)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
@@ -7720,7 +7720,7 @@ Future<pw.Document> makePDF(
   //                                 children: [
   //                                   pw.Text(tableHeaders[7],
   //                                       style: pw.TextStyle(
-  //                                           fontSize: 9,
+  //                                           fontSize: 8,
   //                                           fontWeight: pw.FontWeight.bold)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
@@ -7732,7 +7732,7 @@ Future<pw.Document> makePDF(
   //                                 children: [
   //                                   pw.Text(tableHeaders[8],
   //                                       style: pw.TextStyle(
-  //                                           fontSize: 9,
+  //                                           fontSize: 8,
   //                                           fontWeight: pw.FontWeight.bold)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
@@ -7744,7 +7744,7 @@ Future<pw.Document> makePDF(
   //                                 children: [
   //                                   pw.Text(tableHeaders[9],
   //                                       style: pw.TextStyle(
-  //                                           fontSize: 9,
+  //                                           fontSize: 8,
   //                                           fontWeight: pw.FontWeight.bold)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
@@ -7756,7 +7756,7 @@ Future<pw.Document> makePDF(
   //                                 children: [
   //                                   pw.Text(tableHeaders[10],
   //                                       style: pw.TextStyle(
-  //                                           fontSize: 9,
+  //                                           fontSize: 8,
   //                                           fontWeight: pw.FontWeight.bold)),
   //                                   // pw.Divider(thickness: 1)
   //                                 ]),
@@ -7776,7 +7776,7 @@ Future<pw.Document> makePDF(
   //                                       child: pw.Text(
   //                                           '${dataParticulars[i]['slno']}',
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -7806,7 +7806,7 @@ Future<pw.Document> makePDF(
   //                                       child: pw.Text(
   //                                           dataParticulars[i]['hsncode'],
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -7824,7 +7824,7 @@ Future<pw.Document> makePDF(
   //                                                   .toString())
   //                                               .toStringAsFixed(decimal),
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -7839,7 +7839,7 @@ Future<pw.Document> makePDF(
   //                                       child: pw.Text(
   //                                           '${dataParticulars[i]['Qty']}',
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -7857,7 +7857,7 @@ Future<pw.Document> makePDF(
   //                                                 dataParticulars[i]['serialno']
   //                                                     .toString(),
   //                                                 style: const pw.TextStyle(
-  //                                                     fontSize: 9)),
+  //                                                     fontSize: 8)),
   //                                             // pw.Divider(thickness: 1)
   //                                           )
   //                                         ])
@@ -7874,7 +7874,7 @@ Future<pw.Document> makePDF(
   //                                                 dataParticulars[i]['unitName']
   //                                                     .toString(),
   //                                                 style: const pw.TextStyle(
-  //                                                     fontSize: 9)),
+  //                                                     fontSize: 8)),
   //                                             // pw.Divider(thickness: 1)
   //                                           )
   //                                         ]),
@@ -7892,7 +7892,7 @@ Future<pw.Document> makePDF(
   //                                                   .toString())
   //                                               .toStringAsFixed(decimal),
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -7910,7 +7910,7 @@ Future<pw.Document> makePDF(
   //                                                   .toString())
   //                                               .toStringAsFixed(decimal),
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -7925,7 +7925,7 @@ Future<pw.Document> makePDF(
   //                                       child: pw.Text(
   //                                           '${dataParticulars[i]['igst']} %',
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -7943,7 +7943,7 @@ Future<pw.Document> makePDF(
   //                                                   .toString())
   //                                               .toStringAsFixed(decimal),
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -7961,7 +7961,7 @@ Future<pw.Document> makePDF(
   //                                                   .toString())
   //                                               .toStringAsFixed(decimal),
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -7979,7 +7979,7 @@ Future<pw.Document> makePDF(
   //                                                   .toString())
   //                                               .toStringAsFixed(decimal),
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -7996,7 +7996,7 @@ Future<pw.Document> makePDF(
   //                                       child: pw.Text(
   //                                           '${dataParticulars[i]['slno']}',
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     ),
   //                                   ]),
@@ -8026,7 +8026,7 @@ Future<pw.Document> makePDF(
   //                                       child: pw.Text(
   //                                           dataParticulars[i]['hsncode'],
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -8044,7 +8044,7 @@ Future<pw.Document> makePDF(
   //                                                   .toString())
   //                                               .toStringAsFixed(decimal),
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -8059,7 +8059,7 @@ Future<pw.Document> makePDF(
   //                                       child: pw.Text(
   //                                           '${dataParticulars[i]['Qty']}',
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -8077,7 +8077,7 @@ Future<pw.Document> makePDF(
   //                                                 dataParticulars[i]['serialno']
   //                                                     .toString(),
   //                                                 style: const pw.TextStyle(
-  //                                                     fontSize: 9)),
+  //                                                     fontSize: 8)),
   //                                             // pw.Divider(thickness: 1)
   //                                           )
   //                                         ])
@@ -8094,7 +8094,7 @@ Future<pw.Document> makePDF(
   //                                                 dataParticulars[i]['unitName']
   //                                                     .toString(),
   //                                                 style: const pw.TextStyle(
-  //                                                     fontSize: 9)),
+  //                                                     fontSize: 8)),
   //                                             // pw.Divider(thickness: 1)
   //                                           )
   //                                         ]),
@@ -8112,7 +8112,7 @@ Future<pw.Document> makePDF(
   //                                                   .toString())
   //                                               .toStringAsFixed(decimal),
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -8130,7 +8130,7 @@ Future<pw.Document> makePDF(
   //                                                   .toString())
   //                                               .toStringAsFixed(decimal),
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -8145,7 +8145,7 @@ Future<pw.Document> makePDF(
   //                                       child: pw.Text(
   //                                           '${dataParticulars[i]['igst']} %',
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -8163,7 +8163,7 @@ Future<pw.Document> makePDF(
   //                                                   .toString())
   //                                               .toStringAsFixed(decimal),
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -8181,7 +8181,7 @@ Future<pw.Document> makePDF(
   //                                                   .toString())
   //                                               .toStringAsFixed(decimal),
   //                                           style: const pw.TextStyle(
-  //                                               fontSize: 9)),
+  //                                               fontSize: 8)),
   //                                       // pw.Divider(thickness: 1)
   //                                     )
   //                                   ]),
@@ -8446,7 +8446,7 @@ Future<pw.Document> makePDF(
   //                               mainAxisAlignment: pw.MainAxisAlignment.center,
   //                               children: [
   //                                 pw.Text(tableHeaders[0],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                     style: const pw.TextStyle(fontSize: 8)),
   //                                 // pw.Divider(thickness: 1)
   //                               ]),
   //                           pw.Column(
@@ -8455,7 +8455,7 @@ Future<pw.Document> makePDF(
   //                               mainAxisAlignment: pw.MainAxisAlignment.center,
   //                               children: [
   //                                 pw.Text(tableHeaders[1],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                     style: const pw.TextStyle(fontSize: 8)),
   //                                 // pw.Divider(thickness: 1)
   //                               ]),
   //                           pw.Column(
@@ -8464,7 +8464,7 @@ Future<pw.Document> makePDF(
   //                               mainAxisAlignment: pw.MainAxisAlignment.center,
   //                               children: [
   //                                 pw.Text(tableHeaders[2],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                     style: const pw.TextStyle(fontSize: 8)),
   //                                 // pw.Divider(thickness: 1)
   //                               ]),
   //                           pw.Column(
@@ -8473,7 +8473,7 @@ Future<pw.Document> makePDF(
   //                               mainAxisAlignment: pw.MainAxisAlignment.center,
   //                               children: [
   //                                 pw.Text(tableHeaders[3],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                     style: const pw.TextStyle(fontSize: 8)),
   //                                 // pw.Divider(thickness: 1)
   //                               ]),
   //                           pw.Column(
@@ -8482,7 +8482,7 @@ Future<pw.Document> makePDF(
   //                               mainAxisAlignment: pw.MainAxisAlignment.center,
   //                               children: [
   //                                 pw.Text(tableHeaders[4],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                     style: const pw.TextStyle(fontSize: 8)),
   //                                 // pw.Divider(thickness: 1)
   //                               ]),
   //                           pw.Column(
@@ -8491,7 +8491,7 @@ Future<pw.Document> makePDF(
   //                               mainAxisAlignment: pw.MainAxisAlignment.center,
   //                               children: [
   //                                 pw.Text(tableHeaders[5],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                     style: const pw.TextStyle(fontSize: 8)),
   //                                 // pw.Divider(thickness: 1)
   //                               ]),
   //                         ]),
@@ -8507,7 +8507,7 @@ Future<pw.Document> makePDF(
   //                                     child: pw.Text(
   //                                         '${dataParticulars[i]['slno']}',
   //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                             const pw.TextStyle(fontSize: 8)),
   //                                     // pw.Divider(thickness: 1)
   //                                   ),
   //                                 ]),
@@ -8539,7 +8539,7 @@ Future<pw.Document> makePDF(
   //                                                 .toString())
   //                                             .toStringAsFixed(decimal),
   //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                             const pw.TextStyle(fontSize: 8)),
   //                                     // pw.Divider(thickness: 1)
   //                                   )
   //                                 ]),
@@ -8554,7 +8554,7 @@ Future<pw.Document> makePDF(
   //                                         dataParticulars[i]['Qty']
   //                                             .toStringAsFixed(decimal),
   //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                             const pw.TextStyle(fontSize: 8)),
   //                                     // pw.Divider(thickness: 1)
   //                                   )
   //                                 ]),
@@ -8572,7 +8572,7 @@ Future<pw.Document> makePDF(
   //                                               dataParticulars[i]['serialno']
   //                                                   .toString(),
   //                                               style: const pw.TextStyle(
-  //                                                   fontSize: 9)),
+  //                                                   fontSize: 8)),
   //                                           // pw.Divider(thickness: 1)
   //                                         )
   //                                       ])
@@ -8589,7 +8589,7 @@ Future<pw.Document> makePDF(
   //                                               dataParticulars[i]['unitName']
   //                                                   .toString(),
   //                                               style: const pw.TextStyle(
-  //                                                   fontSize: 9)),
+  //                                                   fontSize: 8)),
   //                                           // pw.Divider(thickness: 1)
   //                                         )
   //                                       ]),
@@ -8606,7 +8606,7 @@ Future<pw.Document> makePDF(
   //                                                 .toString())
   //                                             .toStringAsFixed(decimal),
   //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                             const pw.TextStyle(fontSize: 8)),
   //                                     // pw.Divider(thickness: 1)
   //                                   )
   //                                 ]),
@@ -8797,7 +8797,7 @@ Future<pw.Document> makePDF(
   //                               mainAxisAlignment: pw.MainAxisAlignment.center,
   //                               children: [
   //                                 pw.Text(tableHeaders[0],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                     style: const pw.TextStyle(fontSize: 8)),
   //                                 // pw.Divider(thickness: 1)
   //                               ]),
   //                           pw.Column(
@@ -8806,7 +8806,7 @@ Future<pw.Document> makePDF(
   //                               mainAxisAlignment: pw.MainAxisAlignment.center,
   //                               children: [
   //                                 pw.Text(tableHeaders[1],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                     style: const pw.TextStyle(fontSize: 8)),
   //                                 // pw.Divider(thickness: 1)
   //                               ]),
   //                           pw.Column(
@@ -8815,7 +8815,7 @@ Future<pw.Document> makePDF(
   //                               mainAxisAlignment: pw.MainAxisAlignment.center,
   //                               children: [
   //                                 pw.Text(tableHeaders[2],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                     style: const pw.TextStyle(fontSize: 8)),
   //                                 // pw.Divider(thickness: 1)
   //                               ]),
   //                           pw.Column(
@@ -8824,7 +8824,7 @@ Future<pw.Document> makePDF(
   //                               mainAxisAlignment: pw.MainAxisAlignment.center,
   //                               children: [
   //                                 pw.Text(tableHeaders[3],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                     style: const pw.TextStyle(fontSize: 8)),
   //                                 // pw.Divider(thickness: 1)
   //                               ]),
   //                           pw.Column(
@@ -8833,7 +8833,7 @@ Future<pw.Document> makePDF(
   //                               mainAxisAlignment: pw.MainAxisAlignment.center,
   //                               children: [
   //                                 pw.Text(tableHeaders[4],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                     style: const pw.TextStyle(fontSize: 8)),
   //                                 // pw.Divider(thickness: 1)
   //                               ]),
   //                           pw.Column(
@@ -8842,7 +8842,7 @@ Future<pw.Document> makePDF(
   //                               mainAxisAlignment: pw.MainAxisAlignment.center,
   //                               children: [
   //                                 pw.Text(tableHeaders[5],
-  //                                     style: const pw.TextStyle(fontSize: 9)),
+  //                                     style: const pw.TextStyle(fontSize: 8)),
   //                                 // pw.Divider(thickness: 1)
   //                               ]),
   //                         ]),
@@ -8858,7 +8858,7 @@ Future<pw.Document> makePDF(
   //                                     child: pw.Text(
   //                                         '${dataParticulars[i]['slno']}',
   //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                             const pw.TextStyle(fontSize: 8)),
   //                                     // pw.Divider(thickness: 1)
   //                                   ),
   //                                 ]),
@@ -8890,7 +8890,7 @@ Future<pw.Document> makePDF(
   //                                                 .toString())
   //                                             .toStringAsFixed(decimal),
   //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                             const pw.TextStyle(fontSize: 8)),
   //                                     // pw.Divider(thickness: 1)
   //                                   )
   //                                 ]),
@@ -8905,7 +8905,7 @@ Future<pw.Document> makePDF(
   //                                         dataParticulars[i]['Qty']
   //                                             .toStringAsFixed(decimal),
   //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                             const pw.TextStyle(fontSize: 8)),
   //                                     // pw.Divider(thickness: 1)
   //                                   )
   //                                 ]),
@@ -8923,7 +8923,7 @@ Future<pw.Document> makePDF(
   //                                               dataParticulars[i]['serialno']
   //                                                   .toString(),
   //                                               style: const pw.TextStyle(
-  //                                                   fontSize: 9)),
+  //                                                   fontSize: 8)),
   //                                           // pw.Divider(thickness: 1)
   //                                         )
   //                                       ])
@@ -8940,7 +8940,7 @@ Future<pw.Document> makePDF(
   //                                               dataParticulars[i]['unitName']
   //                                                   .toString(),
   //                                               style: const pw.TextStyle(
-  //                                                   fontSize: 9)),
+  //                                                   fontSize: 8)),
   //                                           // pw.Divider(thickness: 1)
   //                                         )
   //                                       ]),
@@ -8957,7 +8957,7 @@ Future<pw.Document> makePDF(
   //                                                 .toString())
   //                                             .toStringAsFixed(decimal),
   //                                         style:
-  //                                             const pw.TextStyle(fontSize: 9)),
+  //                                             const pw.TextStyle(fontSize: 8)),
   //                                     // pw.Divider(thickness: 1)
   //                                   )
   //                                 ]),
@@ -9271,7 +9271,7 @@ Future<pw.Document> makePDF(
                                       pw.MainAxisAlignment.center,
                                   children: [
                                     pw.Text(tableHeaders[0],
-                                        style: const pw.TextStyle(fontSize: 9)),
+                                        style: const pw.TextStyle(fontSize: 8)),
                                     // pw.Divider(thickness: 1)
                                   ]),
                               pw.Column(
@@ -9281,7 +9281,7 @@ Future<pw.Document> makePDF(
                                       pw.MainAxisAlignment.center,
                                   children: [
                                     pw.Text(tableHeaders[1],
-                                        style: const pw.TextStyle(fontSize: 9)),
+                                        style: const pw.TextStyle(fontSize: 8)),
                                     // pw.Divider(thickness: 1)
                                   ]),
                               pw.Column(
@@ -9291,7 +9291,7 @@ Future<pw.Document> makePDF(
                                       pw.MainAxisAlignment.center,
                                   children: [
                                     pw.Text(tableHeaders[2],
-                                        style: const pw.TextStyle(fontSize: 9)),
+                                        style: const pw.TextStyle(fontSize: 8)),
                                     // pw.Divider(thickness: 1)
                                   ]),
                               pw.Column(
@@ -9301,7 +9301,7 @@ Future<pw.Document> makePDF(
                                       pw.MainAxisAlignment.center,
                                   children: [
                                     pw.Text(tableHeaders[3],
-                                        style: const pw.TextStyle(fontSize: 9)),
+                                        style: const pw.TextStyle(fontSize: 8)),
                                     // pw.Divider(thickness: 1)
                                   ]),
                               pw.Column(
@@ -9311,7 +9311,7 @@ Future<pw.Document> makePDF(
                                       pw.MainAxisAlignment.center,
                                   children: [
                                     pw.Text(tableHeaders[4],
-                                        style: const pw.TextStyle(fontSize: 9)),
+                                        style: const pw.TextStyle(fontSize: 8)),
                                     // pw.Divider(thickness: 1)
                                   ]),
                               pw.Column(
@@ -9321,7 +9321,7 @@ Future<pw.Document> makePDF(
                                       pw.MainAxisAlignment.center,
                                   children: [
                                     pw.Text(tableHeaders[5],
-                                        style: const pw.TextStyle(fontSize: 9)),
+                                        style: const pw.TextStyle(fontSize: 8)),
                                     // pw.Divider(thickness: 1)
                                   ]),
                               pw.Column(
@@ -9331,7 +9331,7 @@ Future<pw.Document> makePDF(
                                       pw.MainAxisAlignment.center,
                                   children: [
                                     pw.Text(tableHeaders[6],
-                                        style: const pw.TextStyle(fontSize: 9)),
+                                        style: const pw.TextStyle(fontSize: 8)),
                                     // pw.Divider(thickness: 1)
                                   ]),
                               pw.Column(
@@ -9341,7 +9341,7 @@ Future<pw.Document> makePDF(
                                       pw.MainAxisAlignment.center,
                                   children: [
                                     pw.Text(tableHeaders[7],
-                                        style: const pw.TextStyle(fontSize: 9)),
+                                        style: const pw.TextStyle(fontSize: 8)),
                                     // pw.Divider(thickness: 1)
                                   ]),
                               pw.Column(
@@ -9351,7 +9351,7 @@ Future<pw.Document> makePDF(
                                       pw.MainAxisAlignment.center,
                                   children: [
                                     pw.Text(tableHeaders[8],
-                                        style: const pw.TextStyle(fontSize: 9)),
+                                        style: const pw.TextStyle(fontSize: 8)),
                                     // pw.Divider(thickness: 1)
                                   ]),
                               pw.Column(
@@ -9361,7 +9361,7 @@ Future<pw.Document> makePDF(
                                       pw.MainAxisAlignment.center,
                                   children: [
                                     pw.Text(tableHeaders[9],
-                                        style: const pw.TextStyle(fontSize: 9)),
+                                        style: const pw.TextStyle(fontSize: 8)),
                                     // pw.Divider(thickness: 1)
                                   ]),
                               pw.Column(
@@ -9371,7 +9371,7 @@ Future<pw.Document> makePDF(
                                       pw.MainAxisAlignment.center,
                                   children: [
                                     pw.Text(tableHeaders[10],
-                                        style: const pw.TextStyle(fontSize: 9)),
+                                        style: const pw.TextStyle(fontSize: 8)),
                                     // pw.Divider(thickness: 1)
                                   ]),
                               pw.Column(
@@ -9381,7 +9381,7 @@ Future<pw.Document> makePDF(
                                       pw.MainAxisAlignment.center,
                                   children: [
                                     pw.Text(tableHeaders[11],
-                                        style: const pw.TextStyle(fontSize: 9)),
+                                        style: const pw.TextStyle(fontSize: 8)),
                                     // pw.Divider(thickness: 1)
                                   ]),
                             ])
@@ -9394,7 +9394,7 @@ Future<pw.Document> makePDF(
                                   children: [
                                     pw.Text(tableHeaders[0],
                                         style: pw.TextStyle(
-                                            fontSize: 9,
+                                            fontSize: 8,
                                             fontWeight: pw.FontWeight.bold)),
                                     // pw.Divider(thickness: 1)
                                   ]),
@@ -9406,7 +9406,7 @@ Future<pw.Document> makePDF(
                                   children: [
                                     pw.Text(tableHeaders[1],
                                         style: pw.TextStyle(
-                                            fontSize: 9,
+                                            fontSize: 8,
                                             fontWeight: pw.FontWeight.bold)),
                                     // pw.Divider(thickness: 1)
                                   ]),
@@ -9418,7 +9418,7 @@ Future<pw.Document> makePDF(
                                   children: [
                                     pw.Text(tableHeaders[2],
                                         style: pw.TextStyle(
-                                            fontSize: 9,
+                                            fontSize: 8,
                                             fontWeight: pw.FontWeight.bold)),
                                     // pw.Divider(thickness: 1)
                                   ]),
@@ -9430,7 +9430,7 @@ Future<pw.Document> makePDF(
                                   children: [
                                     pw.Text(tableHeaders[3],
                                         style: pw.TextStyle(
-                                            fontSize: 9,
+                                            fontSize: 8,
                                             fontWeight: pw.FontWeight.bold)),
                                     // pw.Divider(thickness: 1)
                                   ]),
@@ -9442,7 +9442,7 @@ Future<pw.Document> makePDF(
                                   children: [
                                     pw.Text(tableHeaders[4],
                                         style: pw.TextStyle(
-                                            fontSize: 9,
+                                            fontSize: 8,
                                             fontWeight: pw.FontWeight.bold)),
                                     // pw.Divider(thickness: 1)
                                   ]),
@@ -9454,7 +9454,7 @@ Future<pw.Document> makePDF(
                                   children: [
                                     pw.Text(tableHeaders[5],
                                         style: pw.TextStyle(
-                                            fontSize: 9,
+                                            fontSize: 8,
                                             fontWeight: pw.FontWeight.bold)),
                                     // pw.Divider(thickness: 1)
                                   ]),
@@ -9466,7 +9466,7 @@ Future<pw.Document> makePDF(
                                   children: [
                                     pw.Text(tableHeaders[6],
                                         style: pw.TextStyle(
-                                            fontSize: 9,
+                                            fontSize: 8,
                                             fontWeight: pw.FontWeight.bold)),
                                     // pw.Divider(thickness: 1)
                                   ]),
@@ -9478,7 +9478,7 @@ Future<pw.Document> makePDF(
                                   children: [
                                     pw.Text(tableHeaders[7],
                                         style: pw.TextStyle(
-                                            fontSize: 9,
+                                            fontSize: 8,
                                             fontWeight: pw.FontWeight.bold)),
                                     // pw.Divider(thickness: 1)
                                   ]),
@@ -9490,7 +9490,7 @@ Future<pw.Document> makePDF(
                                   children: [
                                     pw.Text(tableHeaders[8],
                                         style: pw.TextStyle(
-                                            fontSize: 9,
+                                            fontSize: 8,
                                             fontWeight: pw.FontWeight.bold)),
                                     // pw.Divider(thickness: 1)
                                   ]),
@@ -9502,7 +9502,7 @@ Future<pw.Document> makePDF(
                                   children: [
                                     pw.Text(tableHeaders[9],
                                         style: pw.TextStyle(
-                                            fontSize: 9,
+                                            fontSize: 8,
                                             fontWeight: pw.FontWeight.bold)),
                                     // pw.Divider(thickness: 1)
                                   ]),
@@ -9514,7 +9514,7 @@ Future<pw.Document> makePDF(
                                   children: [
                                     pw.Text(tableHeaders[10],
                                         style: pw.TextStyle(
-                                            fontSize: 9,
+                                            fontSize: 8,
                                             fontWeight: pw.FontWeight.bold)),
                                     // pw.Divider(thickness: 1)
                                   ]),
@@ -9534,7 +9534,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                             '${dataParticulars[i]['slno']}',
                                             style: const pw.TextStyle(
-                                                fontSize: 9)),
+                                                fontSize: 8)),
                                         // pw.Divider(thickness: 1)
                                       )
                                     ]),
@@ -9549,7 +9549,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                             dataParticulars[i]['itemname'],
                                             style: const pw.TextStyle(
-                                                fontSize: 10)),
+                                                fontSize: 9)),
                                         // pw.Divider(thickness: 1)
                                       )
                                     ]),
@@ -11515,7 +11515,7 @@ Future<pw.Document> makePDF(
                           child: pw.Text(
                             dataParticulars[i]['slno'],
                             style: pw.TextStyle(
-                                fontSize: 5, fontWeight: pw.FontWeight.bold),
+                                fontSize: 9, fontWeight: pw.FontWeight.bold),
                           ),
                         ),
                       ],
@@ -11525,7 +11525,7 @@ Future<pw.Document> makePDF(
                       child: pw.Text(
                         dataParticulars[i]['itemname'],
                         style: pw.TextStyle(
-                            fontSize: 6, fontWeight: pw.FontWeight.bold),
+                            fontSize: 9, fontWeight: pw.FontWeight.bold),
                       ),
                     ),
                     pw.Padding(
@@ -11533,7 +11533,7 @@ Future<pw.Document> makePDF(
                       child: pw.Text(
                         dataParticulars[i]['hsncode'],
                         style: pw.TextStyle(
-                            fontSize: 5, fontWeight: pw.FontWeight.bold),
+                            fontSize: 9, fontWeight: pw.FontWeight.bold),
                       ),
                     ),
                     pw.Row(
@@ -11544,7 +11544,7 @@ Future<pw.Document> makePDF(
                           child: pw.Text(
                             dataParticulars[i]['Qty'].toStringAsFixed(2),
                             style: pw.TextStyle(
-                                fontSize: 5, fontWeight: pw.FontWeight.bold),
+                                fontSize: 9, fontWeight: pw.FontWeight.bold),
                           ),
                         ),
                       ],
@@ -11554,7 +11554,7 @@ Future<pw.Document> makePDF(
                       child: pw.Text(
                         dataParticulars[i]['unitName'],
                         style: pw.TextStyle(
-                            fontSize: 5, fontWeight: pw.FontWeight.bold),
+                            fontSize: 9, fontWeight: pw.FontWeight.bold),
                       ),
                     ),
                     pw.Row(
@@ -11565,7 +11565,7 @@ Future<pw.Document> makePDF(
                           child: pw.Text(
                             dataParticulars[i]['RealRate'].toStringAsFixed(2),
                             style: pw.TextStyle(
-                                fontSize: 5, fontWeight: pw.FontWeight.bold),
+                                fontSize: 9, fontWeight: pw.FontWeight.bold),
                           ),
                         ),
                       ],
@@ -11578,7 +11578,7 @@ Future<pw.Document> makePDF(
                           child: pw.Text(
                             '${dataParticulars[i]['Net']}',
                             style: pw.TextStyle(
-                                fontSize: 5, fontWeight: pw.FontWeight.bold),
+                                fontSize: 9, fontWeight: pw.FontWeight.bold),
                           ),
                         ),
                       ],
@@ -11592,7 +11592,7 @@ Future<pw.Document> makePDF(
                             child: pw.Text(
                               '${dataParticulars[i]['igst'] / 2}%',
                               style: pw.TextStyle(
-                                  fontSize: 5, fontWeight: pw.FontWeight.bold),
+                                  fontSize: 9, fontWeight: pw.FontWeight.bold),
                             ),
                           ),
                         ),
@@ -11606,7 +11606,7 @@ Future<pw.Document> makePDF(
                           child: pw.Text(
                             dataParticulars[i]['CGST'].toStringAsFixed(2),
                             style: pw.TextStyle(
-                                fontSize: 5, fontWeight: pw.FontWeight.bold),
+                                fontSize: 9, fontWeight: pw.FontWeight.bold),
                           ),
                         ),
                       ],
@@ -11620,7 +11620,7 @@ Future<pw.Document> makePDF(
                             child: pw.Text(
                               '${dataParticulars[i]['igst'] / 2}%',
                               style: pw.TextStyle(
-                                  fontSize: 5, fontWeight: pw.FontWeight.bold),
+                                  fontSize: 9, fontWeight: pw.FontWeight.bold),
                             ),
                           ),
                         ),
@@ -11634,7 +11634,7 @@ Future<pw.Document> makePDF(
                           child: pw.Text(
                             dataParticulars[i]['SGST'].toStringAsFixed(2),
                             style: pw.TextStyle(
-                                fontSize: 5, fontWeight: pw.FontWeight.bold),
+                                fontSize: 9, fontWeight: pw.FontWeight.bold),
                           ),
                         ),
                       ],
@@ -11648,7 +11648,7 @@ Future<pw.Document> makePDF(
                             child: pw.Text(
                               '0%',
                               style: pw.TextStyle(
-                                  fontSize: 5, fontWeight: pw.FontWeight.bold),
+                                  fontSize: 9, fontWeight: pw.FontWeight.bold),
                             ),
                           ),
                         ),
@@ -11662,7 +11662,7 @@ Future<pw.Document> makePDF(
                           child: pw.Text(
                             dataParticulars[i]['IGST'].toStringAsFixed(2),
                             style: pw.TextStyle(
-                                fontSize: 5, fontWeight: pw.FontWeight.bold),
+                                fontSize: 9, fontWeight: pw.FontWeight.bold),
                           ),
                         ),
                       ],
@@ -11675,7 +11675,7 @@ Future<pw.Document> makePDF(
                           child: pw.Text(
                             dataParticulars[i]['Total'].toStringAsFixed(2),
                             style: pw.TextStyle(
-                                fontSize: 6,
+                                fontSize: 9,
                                 color: const PdfColor.fromInt(0xFF000000),
                                 fontWeight: pw.FontWeight.bold),
                           ),
@@ -12062,7 +12062,7 @@ Future<pw.Document> makePDF(
                     child: pw.Text(
                       " Total ",
                       style: pw.TextStyle(
-                          fontSize: 7, fontWeight: pw.FontWeight.bold),
+                          fontSize: 9, fontWeight: pw.FontWeight.bold),
                     ),
                   ),
                 ),
@@ -12079,7 +12079,7 @@ Future<pw.Document> makePDF(
                         child: pw.Text(
                           totalQuantity.toStringAsFixed(2),
                           style: pw.TextStyle(
-                              fontSize: 5, fontWeight: pw.FontWeight.bold),
+                              fontSize: 9, fontWeight: pw.FontWeight.bold),
                         ),
                       ),
                     ],
@@ -12093,7 +12093,7 @@ Future<pw.Document> makePDF(
                     child: pw.Center(
                       child: pw.Text(
                         " ",
-                        style: const pw.TextStyle(fontSize: 5),
+                        style: const pw.TextStyle(fontSize: 9),
                       ),
                     )),
                 pw.Container(
@@ -12109,7 +12109,7 @@ Future<pw.Document> makePDF(
                         child: pw.Text(
                           totalTaxablevalue.toStringAsFixed(2),
                           style: pw.TextStyle(
-                              fontSize: 5, fontWeight: pw.FontWeight.bold),
+                              fontSize: 9, fontWeight: pw.FontWeight.bold),
                         ),
                       ),
                     ],
@@ -12128,7 +12128,7 @@ Future<pw.Document> makePDF(
                         child: pw.Text(
                           '${dataInformation['CGST'].toStringAsFixed(2)}',
                           style: pw.TextStyle(
-                              fontSize: 5, fontWeight: pw.FontWeight.bold),
+                              fontSize: 9, fontWeight: pw.FontWeight.bold),
                         ),
                       ),
                     ],
@@ -12147,7 +12147,7 @@ Future<pw.Document> makePDF(
                         child: pw.Text(
                           '${dataInformation['SGST'].toStringAsFixed(2)}',
                           style: pw.TextStyle(
-                              fontSize: 5, fontWeight: pw.FontWeight.bold),
+                              fontSize: 9, fontWeight: pw.FontWeight.bold),
                         ),
                       ),
                     ],
@@ -12166,7 +12166,7 @@ Future<pw.Document> makePDF(
                         child: pw.Text(
                           '${dataInformation['IGST'].toStringAsFixed(2)}',
                           style: pw.TextStyle(
-                              fontSize: 5, fontWeight: pw.FontWeight.bold),
+                              fontSize: 9, fontWeight: pw.FontWeight.bold),
                         ),
                       ),
                     ],
@@ -12185,7 +12185,7 @@ Future<pw.Document> makePDF(
                             child: pw.Text(
                               totalAmount.toStringAsFixed(2),
                               style: pw.TextStyle(
-                                  fontSize: 5, fontWeight: pw.FontWeight.bold),
+                                  fontSize: 9, fontWeight: pw.FontWeight.bold),
                             )),
                       ],
                     ),
@@ -15933,7 +15933,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                           dataParticulars[i]['slno'],
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 8,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -15944,7 +15944,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       dataParticulars[i]['itemname'],
                                       style: pw.TextStyle(
-                                          fontSize: 6,
+                                          fontSize: 8,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -15953,7 +15953,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       dataParticulars[i]['hsncode'],
                                       style: pw.TextStyle(
-                                          fontSize: 5,
+                                          fontSize: 8,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -15966,7 +15966,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['Qty']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 8,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -15977,7 +15977,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       dataParticulars[i]['unitName'],
                                       style: pw.TextStyle(
-                                          fontSize: 5,
+                                          fontSize: 8,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -15990,7 +15990,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['RealRate']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 8,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -16004,7 +16004,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                           '${dataParticulars[i]['Net']}',
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 8,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -16020,7 +16020,7 @@ Future<pw.Document> makePDF(
                                           child: pw.Text(
                                             '${dataParticulars[i]['igst'] / 2}%',
                                             style: pw.TextStyle(
-                                                fontSize: 5,
+                                                fontSize: 8,
                                                 fontWeight: pw.FontWeight.bold),
                                           ),
                                         ),
@@ -16036,7 +16036,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['CGST']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 8,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -16052,7 +16052,7 @@ Future<pw.Document> makePDF(
                                           child: pw.Text(
                                             '${dataParticulars[i]['igst'] / 2}%',
                                             style: pw.TextStyle(
-                                                fontSize: 5,
+                                                fontSize: 8,
                                                 fontWeight: pw.FontWeight.bold),
                                           ),
                                         ),
@@ -16068,7 +16068,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['SGST']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 8,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -16084,7 +16084,7 @@ Future<pw.Document> makePDF(
                                           child: pw.Text(
                                             '0%',
                                             style: pw.TextStyle(
-                                                fontSize: 5,
+                                                fontSize: 8,
                                                 fontWeight: pw.FontWeight.bold),
                                           ),
                                         ),
@@ -16099,7 +16099,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                           '0.00',
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 8,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -16114,7 +16114,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['Total']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 6,
+                                              fontSize: 8,
                                               color: const pw.PdfColor.fromInt(
                                                   0xFF000000),
                                               fontWeight: pw.FontWeight.bold),
@@ -16545,7 +16545,7 @@ Future<pw.Document> makePDF(
                                   child: pw.Text(
                                     " Total ",
                                     style: pw.TextStyle(
-                                        fontSize: 7,
+                                        fontSize: 8,
                                         fontWeight: pw.FontWeight.bold),
                                   ),
                                 ),
@@ -16564,7 +16564,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         totalQuantity.toStringAsFixed(2),
                                         style: pw.TextStyle(
-                                            fontSize: 5,
+                                            fontSize: 8,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -16580,7 +16580,7 @@ Future<pw.Document> makePDF(
                                   child: pw.Center(
                                     child: pw.Text(
                                       " ",
-                                      style: const pw.TextStyle(fontSize: 5),
+                                      style: const pw.TextStyle(fontSize: 8),
                                     ),
                                   )),
                               pw.Container(
@@ -16597,7 +16597,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         totalTaxablevalue.toStringAsFixed(2),
                                         style: pw.TextStyle(
-                                            fontSize: 5,
+                                            fontSize: 8,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -16618,7 +16618,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         totalCGST.toStringAsFixed(2),
                                         style: pw.TextStyle(
-                                            fontSize: 5,
+                                            fontSize: 8,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -16639,7 +16639,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         totalSGST.toStringAsFixed(2),
                                         style: pw.TextStyle(
-                                            fontSize: 5,
+                                            fontSize: 8,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -16660,7 +16660,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         "0.00",
                                         style: pw.TextStyle(
-                                            fontSize: 5,
+                                            fontSize: 8,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -16682,7 +16682,7 @@ Future<pw.Document> makePDF(
                                           child: pw.Text(
                                             totalAmount.toStringAsFixed(2),
                                             style: pw.TextStyle(
-                                                fontSize: 5,
+                                                fontSize: 8,
                                                 fontWeight: pw.FontWeight.bold),
                                           )),
                                     ],
@@ -16826,7 +16826,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                           dataParticulars[i]['slno'],
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 8,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -16837,7 +16837,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       dataParticulars[i]['itemname'],
                                       style: pw.TextStyle(
-                                          fontSize: 6,
+                                          fontSize: 8,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -16846,7 +16846,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       dataParticulars[i]['hsncode'],
                                       style: pw.TextStyle(
-                                          fontSize: 5,
+                                          fontSize: 9,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -16859,7 +16859,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['Qty']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -16870,7 +16870,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       dataParticulars[i]['unitName'],
                                       style: pw.TextStyle(
-                                          fontSize: 5,
+                                          fontSize: 9,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -16883,7 +16883,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['RealRate']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -16897,7 +16897,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                           '${dataParticulars[i]['Net']}',
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -16913,7 +16913,7 @@ Future<pw.Document> makePDF(
                                           child: pw.Text(
                                             '${dataParticulars[i]['igst'] / 2}%',
                                             style: pw.TextStyle(
-                                                fontSize: 5,
+                                                fontSize: 9,
                                                 fontWeight: pw.FontWeight.bold),
                                           ),
                                         ),
@@ -16929,7 +16929,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['CGST']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -16945,7 +16945,7 @@ Future<pw.Document> makePDF(
                                           child: pw.Text(
                                             '${dataParticulars[i]['igst'] / 2}%',
                                             style: pw.TextStyle(
-                                                fontSize: 5,
+                                                fontSize: 9,
                                                 fontWeight: pw.FontWeight.bold),
                                           ),
                                         ),
@@ -16961,7 +16961,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['SGST']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -16977,7 +16977,7 @@ Future<pw.Document> makePDF(
                                           child: pw.Text(
                                             '0%',
                                             style: pw.TextStyle(
-                                                fontSize: 5,
+                                                fontSize: 9,
                                                 fontWeight: pw.FontWeight.bold),
                                           ),
                                         ),
@@ -16992,7 +16992,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                           '0.00',
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -17007,7 +17007,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['Total']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 6,
+                                              fontSize: 9,
                                               color: const pw.PdfColor.fromInt(
                                                   0xFF000000),
                                               fontWeight: pw.FontWeight.bold),
@@ -17438,7 +17438,7 @@ Future<pw.Document> makePDF(
                                   child: pw.Text(
                                     " Total ",
                                     style: pw.TextStyle(
-                                        fontSize: 7,
+                                        fontSize: 9,
                                         fontWeight: pw.FontWeight.bold),
                                   ),
                                 ),
@@ -17457,7 +17457,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         totalQuantity.toStringAsFixed(2),
                                         style: pw.TextStyle(
-                                            fontSize: 5,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -17473,7 +17473,7 @@ Future<pw.Document> makePDF(
                                   child: pw.Center(
                                     child: pw.Text(
                                       " ",
-                                      style: const pw.TextStyle(fontSize: 5),
+                                      style: const pw.TextStyle(fontSize: 9),
                                     ),
                                   )),
                               pw.Container(
@@ -17490,7 +17490,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         totalTaxablevalue.toStringAsFixed(2),
                                         style: pw.TextStyle(
-                                            fontSize: 5,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -17511,7 +17511,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         totalCGST.toStringAsFixed(2),
                                         style: pw.TextStyle(
-                                            fontSize: 5,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -17532,7 +17532,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         totalSGST.toStringAsFixed(2),
                                         style: pw.TextStyle(
-                                            fontSize: 5,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -17553,7 +17553,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         "0.00",
                                         style: pw.TextStyle(
-                                            fontSize: 5,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -17575,7 +17575,7 @@ Future<pw.Document> makePDF(
                                           child: pw.Text(
                                             totalAmount.toStringAsFixed(2),
                                             style: pw.TextStyle(
-                                                fontSize: 5,
+                                                fontSize: 9,
                                                 fontWeight: pw.FontWeight.bold),
                                           )),
                                     ],
@@ -17700,7 +17700,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                           dataParticulars[i]['slno'],
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -17711,7 +17711,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       dataParticulars[i]['itemname'],
                                       style: pw.TextStyle(
-                                          fontSize: 6,
+                                          fontSize: 9,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -17724,7 +17724,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['Qty']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -17739,7 +17739,7 @@ Future<pw.Document> makePDF(
                                           child: pw.Text(
                                             dataParticulars[i]['unitName'],
                                             style: pw.TextStyle(
-                                                fontSize: 5,
+                                                fontSize: 9,
                                                 fontWeight: pw.FontWeight.bold),
                                           ),
                                         ),
@@ -17753,7 +17753,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['RealRate']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -17768,7 +17768,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['GrossValue']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -17783,7 +17783,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['DiscPersent']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -17798,7 +17798,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['Net']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -17813,7 +17813,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['igst']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -17828,7 +17828,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['IGST']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -17843,7 +17843,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['Total']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 6,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -18035,7 +18035,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         "Total",
                                         style: pw.TextStyle(
-                                            fontSize: 6,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -18050,7 +18050,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         totalQuantity?.toStringAsFixed(2),
                                         style: pw.TextStyle(
-                                            fontSize: 3,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -18062,7 +18062,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       '',
                                       style: pw.TextStyle(
-                                          fontSize: 4,
+                                          fontSize: 9,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -18075,7 +18075,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         totalTaxablevalue?.toStringAsFixed(2),
                                         style: pw.TextStyle(
-                                            fontSize: 4,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -18091,7 +18091,7 @@ Future<pw.Document> makePDF(
                                           // "${totalSGST?.toStringAsFixed(2)}",
                                           totalVAt.toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 4,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -18106,7 +18106,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         '${dataInformation['Total'].toStringAsFixed(2)}',
                                         style: pw.TextStyle(
-                                            fontSize: 4,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -18245,7 +18245,7 @@ Future<pw.Document> makePDF(
                                         child: pw.Text(
                                           dataParticulars[i]['slno'],
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -18256,7 +18256,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       dataParticulars[i]['itemname'],
                                       style: pw.TextStyle(
-                                          fontSize: 6,
+                                          fontSize: 9,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -18269,7 +18269,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['Qty']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -18284,7 +18284,7 @@ Future<pw.Document> makePDF(
                                           child: pw.Text(
                                             dataParticulars[i]['unitName'],
                                             style: pw.TextStyle(
-                                                fontSize: 5,
+                                                fontSize: 9,
                                                 fontWeight: pw.FontWeight.bold),
                                           ),
                                         ),
@@ -18298,7 +18298,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['RealRate']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -18313,7 +18313,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['GrossValue']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -18328,7 +18328,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['DiscPersent']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -18343,7 +18343,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['Net']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -18358,7 +18358,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['igst']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -18373,7 +18373,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['IGST']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 5,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -18388,7 +18388,7 @@ Future<pw.Document> makePDF(
                                           dataParticulars[i]['Total']
                                               .toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 6,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -18713,7 +18713,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         "Total",
                                         style: pw.TextStyle(
-                                            fontSize: 6,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -18728,7 +18728,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         totalQuantity?.toStringAsFixed(2),
                                         style: pw.TextStyle(
-                                            fontSize: 3,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -18740,7 +18740,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       '',
                                       style: pw.TextStyle(
-                                          fontSize: 4,
+                                          fontSize: 9,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -18753,7 +18753,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         totalTaxablevalue?.toStringAsFixed(2),
                                         style: pw.TextStyle(
-                                            fontSize: 4,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -18769,7 +18769,7 @@ Future<pw.Document> makePDF(
                                           // "${totalSGST?.toStringAsFixed(2)}",
                                           totalVAt.toStringAsFixed(2),
                                           style: pw.TextStyle(
-                                              fontSize: 4,
+                                              fontSize: 9,
                                               fontWeight: pw.FontWeight.bold),
                                         ),
                                       ),
@@ -18784,7 +18784,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         '${dataInformation['Total'].toStringAsFixed(2)}',
                                         style: pw.TextStyle(
-                                            fontSize: 4,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -19621,7 +19621,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       dataParticulars[i]['slno'],
                                       style: pw.TextStyle(
-                                          fontSize: 6,
+                                          fontSize: 9,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -19632,7 +19632,7 @@ Future<pw.Document> makePDF(
                                 child: pw.Text(
                                   dataParticulars[i]['itemname'],
                                   style: pw.TextStyle(
-                                      fontSize: 7,
+                                      fontSize: 9,
                                       fontWeight: pw.FontWeight.bold),
                                 ),
                               ),
@@ -19643,7 +19643,7 @@ Future<pw.Document> makePDF(
                                     dataParticulars[i]['Qty']
                                         .toStringAsFixed(2),
                                     style: pw.TextStyle(
-                                        fontSize: 6,
+                                        fontSize: 9,
                                         fontWeight: pw.FontWeight.bold),
                                   ),
                                 ),
@@ -19657,7 +19657,7 @@ Future<pw.Document> makePDF(
                                     pw.Text(
                                       dataParticulars[i]['unitName'].toString(),
                                       style: pw.TextStyle(
-                                          fontSize: 6,
+                                          fontSize: 9,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ],
@@ -19672,7 +19672,7 @@ Future<pw.Document> makePDF(
                                       dataParticulars[i]['Rate']
                                           .toStringAsFixed(2),
                                       style: pw.TextStyle(
-                                          fontSize: 6,
+                                          fontSize: 9,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ],
@@ -19687,7 +19687,7 @@ Future<pw.Document> makePDF(
                                       dataParticulars[i]['Total']
                                           .toStringAsFixed(2),
                                       style: pw.TextStyle(
-                                          fontSize: 6,
+                                          fontSize: 9,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ],
@@ -19705,7 +19705,7 @@ Future<pw.Document> makePDF(
                                       child: pw.Text(
                                         '\n',
                                         style: pw.TextStyle(
-                                            fontSize: 6,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ),
@@ -19716,7 +19716,7 @@ Future<pw.Document> makePDF(
                                   child: pw.Text(
                                     '',
                                     style: pw.TextStyle(
-                                        fontSize: 6,
+                                        fontSize: 9,
                                         fontWeight: pw.FontWeight.bold),
                                   ),
                                 ),
@@ -19726,7 +19726,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       '',
                                       style: pw.TextStyle(
-                                          fontSize: 6,
+                                          fontSize: 9,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -19739,7 +19739,7 @@ Future<pw.Document> makePDF(
                                       pw.Text(
                                         '',
                                         style: pw.TextStyle(
-                                            fontSize: 6,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ],
@@ -19753,7 +19753,7 @@ Future<pw.Document> makePDF(
                                       pw.Text(
                                         '',
                                         style: pw.TextStyle(
-                                            fontSize: 6,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ],
@@ -19767,7 +19767,7 @@ Future<pw.Document> makePDF(
                                       pw.Text(
                                         '',
                                         style: pw.TextStyle(
-                                            fontSize: 6,
+                                            fontSize: 9,
                                             fontWeight: pw.FontWeight.bold),
                                       ),
                                     ],
@@ -19889,7 +19889,7 @@ Future<pw.Document> makePDF(
                                   child: pw.Text(
                                     '',
                                     style: pw.TextStyle(
-                                        fontSize: 6,
+                                        fontSize: 9,
                                         fontWeight: pw.FontWeight.bold),
                                   ),
                                 ),
@@ -19901,7 +19901,7 @@ Future<pw.Document> makePDF(
                                 child: pw.Text(
                                   'Total',
                                   style: pw.TextStyle(
-                                      fontSize: 6,
+                                      fontSize: 9,
                                       fontWeight: pw.FontWeight.bold),
                                 ),
                               ),
@@ -19912,7 +19912,7 @@ Future<pw.Document> makePDF(
                                 child: pw.Text(
                                   '${calculateEstTotalQuantity(dataParticulars)}',
                                   style: pw.TextStyle(
-                                      fontSize: 6,
+                                      fontSize: 9,
                                       fontWeight: pw.FontWeight.bold),
                                 ),
                               ),
@@ -19923,7 +19923,7 @@ Future<pw.Document> makePDF(
                                 child: pw.Text(
                                   '',
                                   style: pw.TextStyle(
-                                      fontSize: 6,
+                                      fontSize: 9,
                                       fontWeight: pw.FontWeight.bold),
                                 ),
                               ),
@@ -19934,7 +19934,7 @@ Future<pw.Document> makePDF(
                                 child: pw.Text(
                                   '',
                                   style: pw.TextStyle(
-                                      fontSize: 6,
+                                      fontSize: 9,
                                       fontWeight: pw.FontWeight.bold),
                                 ),
                               ),
@@ -19947,7 +19947,7 @@ Future<pw.Document> makePDF(
                                   pw.Text(
                                     '${calculateEstTotalAmount(dataParticulars).toStringAsFixed(2)} ',
                                     style: pw.TextStyle(
-                                        fontSize: 6,
+                                        fontSize: 9,
                                         fontWeight: pw.FontWeight.bold),
                                   ),
                                 ],
@@ -20035,7 +20035,7 @@ Future<pw.Document> makePDF(
                                     child: pw.Text(
                                       dataParticulars[i]['slno'],
                                       style: pw.TextStyle(
-                                          fontSize: 6,
+                                          fontSize: 9,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ),
@@ -20046,7 +20046,7 @@ Future<pw.Document> makePDF(
                                 child: pw.Text(
                                   dataParticulars[i]['itemname'],
                                   style: pw.TextStyle(
-                                      fontSize: 7,
+                                      fontSize: 9,
                                       fontWeight: pw.FontWeight.bold),
                                 ),
                               ),
@@ -20057,7 +20057,7 @@ Future<pw.Document> makePDF(
                                     dataParticulars[i]['Qty']
                                         .toStringAsFixed(2),
                                     style: pw.TextStyle(
-                                        fontSize: 6,
+                                        fontSize: 9,
                                         fontWeight: pw.FontWeight.bold),
                                   ),
                                 ),
@@ -20071,7 +20071,7 @@ Future<pw.Document> makePDF(
                                     pw.Text(
                                       dataParticulars[i]['unitName'].toString(),
                                       style: pw.TextStyle(
-                                          fontSize: 6,
+                                          fontSize: 9,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ],
@@ -20086,7 +20086,7 @@ Future<pw.Document> makePDF(
                                       dataParticulars[i]['Rate']
                                           .toStringAsFixed(2),
                                       style: pw.TextStyle(
-                                          fontSize: 6,
+                                          fontSize: 9,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ],
@@ -20101,7 +20101,7 @@ Future<pw.Document> makePDF(
                                       dataParticulars[i]['Total']
                                           .toStringAsFixed(2),
                                       style: pw.TextStyle(
-                                          fontSize: 6,
+                                          fontSize: 9,
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                   ],
@@ -20315,7 +20315,7 @@ Future<pw.Document> makePDF(
                                 child: pw.Text(
                                   'Total',
                                   style: pw.TextStyle(
-                                      fontSize: 6,
+                                      fontSize: 9,
                                       fontWeight: pw.FontWeight.bold),
                                 ),
                               ),
@@ -20326,7 +20326,7 @@ Future<pw.Document> makePDF(
                                 child: pw.Text(
                                   '${calculateEstTotalQuantity(dataParticulars)}',
                                   style: pw.TextStyle(
-                                      fontSize: 6,
+                                      fontSize: 9,
                                       fontWeight: pw.FontWeight.bold),
                                 ),
                               ),
@@ -20361,7 +20361,7 @@ Future<pw.Document> makePDF(
                                   pw.Text(
                                     '${calculateEstTotalAmount(dataParticulars).toStringAsFixed(2)} ',
                                     style: pw.TextStyle(
-                                        fontSize: 6,
+                                        fontSize: 9,
                                         fontWeight: pw.FontWeight.bold),
                                   ),
                                 ],
@@ -22579,7 +22579,7 @@ _buildHeaderr(
                     pw.Border(right: pw.BorderSide(), left: pw.BorderSide())),
             child: pw.Center(
               child: pw.Text(
-                " No ",
+                "No",
                 style: const pw.TextStyle(fontSize: 6),
               ),
             ),
@@ -22594,7 +22594,7 @@ _buildHeaderr(
             child: pw.Center(
               child: pw.Text(
                 " Description of goods",
-                style: const pw.TextStyle(fontSize: 6),
+                style: const pw.TextStyle(fontSize: 8),
               ),
             ),
           ),
@@ -22605,8 +22605,8 @@ _buildHeaderr(
                 border: pw.Border(right: pw.BorderSide())),
             child: pw.Center(
               child: pw.Text(
-                "Hsn code",
-                style: const pw.TextStyle(fontSize: 6),
+                "HSN",
+                style: const pw.TextStyle(fontSize: 8),
               ),
             ),
           ),
@@ -22618,7 +22618,7 @@ _buildHeaderr(
             child: pw.Center(
               child: pw.Text(
                 "Qty",
-                style: const pw.TextStyle(fontSize: 6),
+                style: const pw.TextStyle(fontSize: 8),
               ),
             ),
           ),
@@ -22630,7 +22630,7 @@ _buildHeaderr(
               child: pw.Center(
                 child: pw.Text(
                   "UOM",
-                  style: const pw.TextStyle(fontSize: 6),
+                  style: const pw.TextStyle(fontSize: 8),
                 ),
               )),
           pw.Container(
@@ -22641,7 +22641,7 @@ _buildHeaderr(
               child: pw.Center(
                 child: pw.Text(
                   "Unit price",
-                  style: const pw.TextStyle(fontSize: 6),
+                  style: const pw.TextStyle(fontSize: 8),
                 ),
               )),
           pw.Container(
@@ -22652,7 +22652,7 @@ _buildHeaderr(
               child: pw.Center(
                 child: pw.Text(
                   "Taxable value",
-                  style: const pw.TextStyle(fontSize: 6),
+                  style: const pw.TextStyle(fontSize: 8),
                 ),
               )),
           pw.Container(
@@ -22663,7 +22663,7 @@ _buildHeaderr(
             child: pw.Center(
               child: pw.Text(
                 "CGST",
-                style: const pw.TextStyle(fontSize: 6),
+                style: const pw.TextStyle(fontSize: 8),
               ),
             ),
           ),
@@ -22675,7 +22675,7 @@ _buildHeaderr(
               child: pw.Center(
                 child: pw.Text(
                   "SGST",
-                  style: const pw.TextStyle(fontSize: 6),
+                  style: const pw.TextStyle(fontSize: 8),
                 ),
               )),
           pw.Container(
@@ -22686,7 +22686,7 @@ _buildHeaderr(
               child: pw.Center(
                 child: pw.Text(
                   "IGST",
-                  style: const pw.TextStyle(fontSize: 6),
+                  style: const pw.TextStyle(fontSize: 8),
                 ),
               )),
           pw.Expanded(
@@ -22697,7 +22697,7 @@ _buildHeaderr(
                 child: pw.Center(
                   child: pw.Text(
                     "Total Amount",
-                    style: const pw.TextStyle(fontSize: 6),
+                    style: const pw.TextStyle(fontSize: 8),
                   ),
                 )),
           ),

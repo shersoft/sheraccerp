@@ -1,5 +1,4 @@
 // @dart = 2.11
-import 'dart:convert';
 import 'dart:io';
 // ignore: avoid_web_libraries_in_flutter
 // import 'dart:html' as html;
@@ -14,7 +13,6 @@ import 'package:scoped_model/scoped_model.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
-import 'package:sheraccerp/screens/other_registration.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
@@ -474,7 +472,7 @@ class _StockReportState extends State<StockReport> {
                             reportTypeLedgerList[6].id
                         ? 'StockLedger_Wop'
                         : 'StockLedger_Summery';
-    var _location = '',
+    var _location = '0',
         _itemCode = '',
         _itemName = '',
         _supplier = '',

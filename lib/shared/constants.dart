@@ -42,8 +42,12 @@ const geoApiFy =
 const eWayAuthApi = "/ewaybillapi/v1.03/authenticate";
 const eWayBillApi = "/ewayapi/genewaybill";
 const eWayBillCancelApi = "/ewaybillapi/v1.03/ewayapi/canewb";
-//05AAACH6188F1ZM
-//mastergst	Malli#123	29AABCT1332L000
+const gstCommonUserName = 'mastergst';
+const gstCommonPassword = 'Malli#123';
+const gstCommonMailId = 'shersoftware@gmail.com';
+const gstCommonGstNo = '29AABCT1332L000';
+const gstCommonClientId = 'ce357943-5598-4af5-8d7f-7119ef5dd2b3';
+const gstCommonClientSecret = '2dbffc02-86b9-4a48-9782-03727edad504';
 
 bool isDarkTheme = false;
 bool isUsingHive = true;
@@ -163,10 +167,12 @@ class ComSettings {
       }
     });
     api.getSalesTypeList().then((value) {
+      salesTypeList.clear();
       salesTypeList.addAll(value);
     });
 
     api.getVoucherTypeList().then((value) {
+      voucherTypeList.clear();
       voucherTypeList.addAll(value);
     });
 

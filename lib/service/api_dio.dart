@@ -6931,7 +6931,6 @@ class DioService {
 
   Future<String> getOldBalance(
       int id, String statement, String type, String date, entryno) async {
-    //localhost:8090/api/v23/Ledger/getOldBalance/RAYANDETERG_24?Id=22826&statement=CustomerOB&type&date=2024-04-30&entryNo=324&fyId=1
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
@@ -6993,6 +6992,44 @@ class DioService {
       debugPrint(errorMessage.toString());
       return [];
     }
+  }
+
+  Future<bool> validateGstNo(String taxNumber) async {
+    var _ip = await getPublicIp();
+    var result = false;
+    var authResponse = await authenticateGSTPortal(
+        gstCommonUserName,
+        gstCommonPassword,
+        _ip,
+        gstCommonClientId,
+        gstCommonClientSecret,
+        gstCommonGstNo);
+    if (authResponse != null) {
+      AuthClass authData = authResponse;
+      if (authData.status_cd.toString() != "Sucess") {
+        result = false;
+      } else {
+        await getGstResult(
+                'SHERSOFT',
+                taxNumber,
+                gstCommonUserName,
+                _ip,
+                gstCommonClientId,
+                gstCommonClientSecret,
+                authData.data.AuthToken,
+                gstCommonGstNo)
+            .then((resultResponse) {
+          if (resultResponse.status_cd == '1') {
+            result = true;
+          } else {
+            result = false;
+          }
+        });
+      }
+    } else {
+      result = false;
+    }
+    return result;
   }
 }
 

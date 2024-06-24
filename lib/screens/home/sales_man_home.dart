@@ -492,6 +492,37 @@ class _SalesManHomeState extends State<SalesManHome> {
                           ),
                         ),
                         Visibility(
+                          visible: ComSettings.userControl('RECEIPT ORDER'),
+                          child: Card(
+                            elevation: 5,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('RECEIPT ORDER',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
+                              onPressed: () {
+                                args.active == "false"
+                                    ? _commonService.getTrialPeriod(args.atDate)
+                                        ? Navigator.pushNamed(
+                                            context, '/RPVoucher', arguments: {
+                                            'voucher': 'Receipt Order'
+                                          })
+                                        : _expire(args, context)
+                                    : Navigator.pushNamed(context, '/RPVoucher',
+                                        arguments: {
+                                            'voucher': 'Receipt Order'
+                                          });
+                              },
+                            ),
+                          ),
+                        ),
+                        Visibility(
                           visible: ComSettings.userControl('PAYMENT'),
                           child: Card(
                             elevation: 5,

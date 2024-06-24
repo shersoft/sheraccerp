@@ -179,7 +179,13 @@ class _RPVoucherState extends State<RPVoucher> {
           : title == 'Receipt'
               ? voucherTypeList.firstWhere(
                   (element) => element.voucher.toLowerCase() == 'receipt')
-              : VoucherType.emptyData();
+              : title == 'Receipt Order'
+                  ? voucherTypeList.firstWhere((element) =>
+                      element.voucher.toLowerCase() == 'receipt order')
+                  : title == 'Payment Order'
+                      ? voucherTypeList.firstWhere((element) =>
+                          element.voucher.toLowerCase() == 'Payment order')
+                      : VoucherType.emptyData();
     }
     return WillPopScope(
         onWillPop: _onWillPop,
