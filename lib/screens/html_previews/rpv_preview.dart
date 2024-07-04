@@ -117,7 +117,7 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
       dataParticulars = jsonDecode(bill['particular']);
       // dataParticulars = bill['particular'];
       api
-          .getOldBalance(
+          .getBalance(
               dataParticulars[0]['Ledid'],
               (form == 'PAYMENT' ? 'SupplierOB' : 'CustomerOB'),
               form,
@@ -137,20 +137,24 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
           //     DateUtil.dateYMD(formattedDate),
           //     information['EntryNo']);
 
-          oldBalance = double.parse(obValue);
+          oldBalance = double.parse(obValue['oldBalance'].toString());
           if (oldBalance > 0) {
             bill['oldBalance'] = oldBalance;
           }
-
-          // var ledgerName = bill['name'];
-          var bal = bill['balance'].toString().split(' ');
-          if (bal[1] == 'Dr') {
-            // oldBalance = double.tryParse(bill['oldBalance'].toString()) ?? 0;
-            balance = oldBalance - bill['total'];
-          } else {
-            // oldBalance = (double.tryParse(bill['oldBalance'].toString())! * (-1));
-            balance = oldBalance - bill['total'];
+          balance = double.parse(obValue['balance'].toString());
+          if (balance > 0) {
+            bill['oldBalance'] = oldBalance;
           }
+
+          // // var ledgerName = bill['name'];
+          // var bal = bill['balance'].toString().split(' ');
+          // if (bal[1] == 'Dr') {
+          //   // oldBalance = double.tryParse(bill['oldBalance'].toString()) ?? 0;
+          //   balance = oldBalance - bill['total'];
+          // } else {
+          //   // oldBalance = (double.tryParse(bill['oldBalance'].toString())! * (-1));
+          //   balance = oldBalance - bill['total'];
+          // }
           invoiceHead = form == 'RECEIPT'
               ? Settings.getValue<String>('key-receipt-voucher-head', 'RECEIPT')
                       .isNotEmpty
@@ -1866,7 +1870,7 @@ Future<pw.Document> makePDF(
     String invoiceHead,
     form,
     dataParticulars) async {
-  double oldBalance = 0, balance = 0, a = 0;
+  double oldBalance = 0, balance = 0;
   var bill = information;
   dataParticulars = jsonDecode(bill['particular']);
   //  var dataParticulars = bill['Particulars'];
@@ -2209,12 +2213,12 @@ Future<pw.Document> makePDF(
                     ? pw.Text("RECEIPT VOUCHER",
                         style: pw.TextStyle(
                           fontWeight: pw.FontWeight.bold,
-                          color: pw.PdfColor.fromInt(0xFF000000),
+                          color: const pw.PdfColor.fromInt(0xFF000000),
                         ))
                     : pw.Text("PAYMENT VOUCHER",
                         style: pw.TextStyle(
                           fontWeight: pw.FontWeight.bold,
-                          color: pw.PdfColor.fromInt(0xFF000000),
+                          color: const pw.PdfColor.fromInt(0xFF000000),
                         )),
                 pw.SizedBox(
                   height: 10,
@@ -2228,12 +2232,12 @@ Future<pw.Document> makePDF(
                             width: 180,
                             child: form == 'RECEIPT'
                                 ? pw.Text(
-                                    "Recieved With Thanks From",
-                                    style: pw.TextStyle(fontSize: 10),
+                                    "Received With Thanks From",
+                                    style: const pw.TextStyle(fontSize: 10),
                                   )
                                 : pw.Text(
                                     "Paid To",
-                                    style: pw.TextStyle(fontSize: 10),
+                                    style: const pw.TextStyle(fontSize: 10),
                                   )),
                         pw.SizedBox(
                           width: 20,
@@ -2329,7 +2333,7 @@ Future<pw.Document> makePDF(
                       children: [
                         pw.Text(
                           "All Cheque/DD are subject to realisation",
-                          style: pw.TextStyle(fontSize: 8),
+                          style: const pw.TextStyle(fontSize: 8),
                         ),
                         pw.SizedBox(
                           height: 15,
@@ -2342,7 +2346,7 @@ Future<pw.Document> makePDF(
                                   ),
                                   pw.Text(
                                     "Receiver Signature   ",
-                                    style: pw.TextStyle(fontSize: 8),
+                                    style: const pw.TextStyle(fontSize: 8),
                                   ),
                                 ],
                               )
@@ -2351,7 +2355,8 @@ Future<pw.Document> makePDF(
                     ),
                     oldBalance > 0 || balance > 0
                         ? pw.Container(
-                            padding: pw.EdgeInsets.symmetric(horizontal: 10),
+                            padding:
+                                const pw.EdgeInsets.symmetric(horizontal: 10),
                             height: 50,
                             width: double.infinity,
                             decoration:
@@ -2372,12 +2377,14 @@ Future<pw.Document> makePDF(
                                           width: 100,
                                           child: pw.Text(
                                             "Old Balance    :",
-                                            style: pw.TextStyle(fontSize: 11),
+                                            style: const pw.TextStyle(
+                                                fontSize: 11),
                                           ),
                                         ),
                                         pw.Text(
-                                          "${oldBalance.toStringAsFixed(2)}",
-                                          style: pw.TextStyle(fontSize: 11),
+                                          oldBalance.toStringAsFixed(2),
+                                          style:
+                                              const pw.TextStyle(fontSize: 11),
                                         )
                                       ],
                                     ),
@@ -2389,12 +2396,14 @@ Future<pw.Document> makePDF(
                                           width: 100,
                                           child: pw.Text(
                                             "Balance           :",
-                                            style: pw.TextStyle(fontSize: 11),
+                                            style: const pw.TextStyle(
+                                                fontSize: 11),
                                           ),
                                         ),
                                         pw.Text(
-                                          "${balance.toStringAsFixed(2)}",
-                                          style: pw.TextStyle(fontSize: 11),
+                                          balance.toStringAsFixed(2),
+                                          style:
+                                              const pw.TextStyle(fontSize: 11),
                                         )
                                       ],
                                     ),
@@ -2405,7 +2414,7 @@ Future<pw.Document> makePDF(
                                   children: [
                                     pw.Text(
                                       "Receiver Signature   ",
-                                      style: pw.TextStyle(fontSize: 8),
+                                      style: const pw.TextStyle(fontSize: 8),
                                     ),
                                   ],
                                 ),
@@ -2420,7 +2429,7 @@ Future<pw.Document> makePDF(
                 ),
                 pw.Text(
                   "${bill['message']}",
-                  style: pw.TextStyle(fontSize: 10),
+                  style: const pw.TextStyle(fontSize: 10),
                 )
               ],
             ),

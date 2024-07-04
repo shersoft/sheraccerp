@@ -3226,7 +3226,7 @@ class _PurchaseState extends State<Purchase> {
     double billTotal = 0, billCash = 0;
     String narration = ' ';
 
-    api.fetchPurchaseInvoiceSp(data['Id'], 'P_Find').then((value) {
+    api.fetchPurchaseInvoiceSp(data['Id'], 'P_Find', 0).then((value) {
       if (value != null) {
         var information = value['Information'][0];
         var particulars = value['Particulars'];
@@ -3351,7 +3351,7 @@ class _PurchaseState extends State<Purchase> {
   }
 
   deleteData() {
-    api.deletePurchase(dataDynamic[0]['EntryNo'], 'P_Delete').then((value) {
+    api.deletePurchase(dataDynamic[0]['EntryNo'], 'P_Delete', 0).then((value) {
       setState(() {
         _isLoading = false;
       });

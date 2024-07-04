@@ -11,6 +11,7 @@ import 'package:sheraccerp/models/cart_item.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/product_register_model.dart';
 import 'package:sheraccerp/models/sales_model.dart';
+import 'package:sheraccerp/models/voucher_type_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
@@ -38,6 +39,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
   TextEditingController invNoController = TextEditingController();
   double _balance = 0;
   List<dynamic> otherAmountList = [];
+  VoucherType voucherTypeData;
   bool isTax = true,
       _isCashBill = false,
       otherAmountLoaded = false,
@@ -102,6 +104,8 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
     decimal = ComSettings.getValue('DECIMAL', settings).toString().isNotEmpty
         ? int.tryParse(ComSettings.getValue('DECIMAL', settings).toString())
         : 2;
+    voucherTypeData = voucherTypeList.firstWhere(
+        (element) => element.voucher.toLowerCase() == 'purchase order');
   }
 
   @override
@@ -201,7 +205,9 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                           'adCess': totalAdCess,
                           'Salesman': salesManId,
                           'location': locationId,
-                          'statementtype': stType
+                          'statementtype': stType,
+                          'fyId': currentFinancialYear.id,
+                          'frmId': voucherTypeData.id
                         }) +
                         ']';
 
@@ -269,7 +275,9 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                           'adCess': totalAdCess,
                           'Salesman': salesManId,
                           'location': locationId,
-                          'statementtype': stType
+                          'statementtype': stType,
+                          'fyId': currentFinancialYear.id,
+                          'frmId': voucherTypeData.id
                         }) +
                         ']';
 
@@ -1739,7 +1747,9 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
     double billTotal = 0, billCash = 0;
     String narration = ' ';
 
-    api.fetchPurchaseInvoiceSp(data['Id'], 'PO_Find').then((value) {
+    api
+        .fetchPurchaseInvoiceSp(data['Id'], 'PO_Find', voucherTypeData.id)
+        .then((value) {
       if (value != null) {
         var information = value['Information'][0];
         var particulars = value['Particulars'];
@@ -1849,7 +1859,10 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
   }
 
   deleteData() {
-    dio.deletePurchase(dataDynamic[0]['EntryNo'], 'PO_Delete').then((value) {
+    dio
+        .deletePurchase(
+            dataDynamic[0]['EntryNo'], 'PO_Delete', voucherTypeData.id)
+        .then((value) {
       setState(() {
         _isLoading = false;
       });

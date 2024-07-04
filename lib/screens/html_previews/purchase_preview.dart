@@ -22,6 +22,7 @@ import 'package:sheraccerp/models/print_settings_model.dart';
 import 'package:sheraccerp/models/sales_bill.dart';
 import 'package:sheraccerp/models/sales_model.dart';
 import 'package:sheraccerp/models/sales_type.dart';
+import 'package:sheraccerp/models/voucher_type_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/blue_thermal.dart';
@@ -66,6 +67,7 @@ class _PurchasePreviewShowState extends State<PurchasePreviewShow> {
   var companyTaxMode = '';
   List<JsonTableColumn> columnsVAT, columnsGST, columns;
   CompanyInformation companySettings;
+  VoucherType voucherTypeData;
   var customerBalance = '0';
   List<CompanySettings> settings;
   var dataInformation,
@@ -192,7 +194,13 @@ class _PurchasePreviewShowState extends State<PurchasePreviewShow> {
       }
     }
 
-    api.fetchPurchaseInvoice(dataDynamic[0]['EntryNo'], '1').then((value) {
+    voucherTypeData = voucherTypeList
+        .firstWhere((element) => element.voucher.toLowerCase() == 'purchase');
+
+    api
+        .fetchPurchaseInvoice(
+            dataDynamic[0]['EntryNo'], '1', voucherTypeData.id)
+        .then((value) {
       if (value != null) {
         setState(() {
           data = value;

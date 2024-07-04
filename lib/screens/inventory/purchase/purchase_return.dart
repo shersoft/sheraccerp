@@ -11,6 +11,7 @@ import 'package:sheraccerp/models/cart_item.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/stock_item.dart';
 import 'package:sheraccerp/models/stock_product.dart';
+import 'package:sheraccerp/models/voucher_type_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
@@ -41,6 +42,7 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
   TextEditingController invNoController = TextEditingController();
   double _balance = 0;
   List<dynamic> otherAmountList = [];
+  VoucherType voucherTypeData;
   bool isTax = true,
       _isCashBill = false,
       otherAmountLoaded = false,
@@ -109,6 +111,9 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
         : 2;
     keyItemsVariantStock =
         ComSettings.getStatus('KEY LOCK SALES DISCOUNT', settings);
+
+    voucherTypeData = voucherTypeList.firstWhere(
+        (element) => element.voucher.toLowerCase() == 'purchase return');
   }
 
   @override
@@ -209,6 +214,7 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                           'location': locationId,
                           'statementtype': stType,
                           'fyId': currentFinancialYear.id,
+                          'frmId': voucherTypeData.id
                         }) +
                         ']';
 
@@ -276,6 +282,7 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                           'location': locationId,
                           'statementtype': stType,
                           'fyId': currentFinancialYear.id,
+                          'frmId': voucherTypeData.id
                         }) +
                         ']';
 
@@ -1879,7 +1886,9 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
     double billTotal = 0, billCash = 0;
     String narration = ' ';
 
-    api.fetchPurchaseInvoiceSp(data['Id'], 'Pr_Find').then((value) {
+    api
+        .fetchPurchaseInvoiceSp(data['Id'], 'Pr_Find', voucherTypeData.id)
+        .then((value) {
       if (value != null) {
         var information = value['Information'][0];
         var particulars = value['Particulars'];
@@ -1989,7 +1998,10 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
   }
 
   deleteData() {
-    dio.deletePurchase(dataDynamic[0]['EntryNo'], 'Pr_Delete').then((value) {
+    dio
+        .deletePurchase(
+            dataDynamic[0]['EntryNo'], 'Pr_Delete', voucherTypeData.id)
+        .then((value) {
       setState(() {
         _isLoading = false;
       });

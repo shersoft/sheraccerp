@@ -806,6 +806,16 @@ class _SaleState extends State<Sale> {
                                             .withOpacity(0.44),
                                       ),
                                     ),
+                                    Visibility(
+                                        visible: checkRefId(dataDisplay[index]),
+                                        child: Text(
+                                          '/${getRefId(dataDisplay[index])}',
+                                          maxLines: 1,
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            color: Colors.green,
+                                          ),
+                                        ))
                                   ],
                                 ),
                               ],
@@ -7798,6 +7808,26 @@ class _SaleState extends State<Sale> {
           hintText: 'Mobile',
           labelText: 'Mobile'),
     );
+  }
+
+  checkRefId(map) {
+    if (map.containsKey('refId')) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  String getRefId(map) {
+    if (map.containsKey('refId')) {
+      if (map['refId'].toString().trim() != '0') {
+        return map['refId'].toString();
+      } else {
+        return '';
+      }
+    } else {
+      return '';
+    }
   }
 }
 

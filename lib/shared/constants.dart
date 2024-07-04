@@ -23,6 +23,8 @@ import 'package:sheraccerp/service/api_dio.dart';
 import 'package:intl/intl.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
 
+const String apiV = 'v24/';
+
 const gstBaseApi = "https://api.mastergst.com";
 const gstApi = "https://api.mastergst.com/einvoice/authenticate"; //get
 const gstAuthApi = "/einvoice/authenticate"; //get
@@ -47,7 +49,8 @@ const gstCommonPassword = 'Malli#123';
 const gstCommonMailId = 'shersoftware@gmail.com';
 const gstCommonGstNo = '29AABCT1332L000';
 const gstCommonClientId = 'ce357943-5598-4af5-8d7f-7119ef5dd2b3';
-const gstCommonClientSecret = '2dbffc02-86b9-4a48-9782-03727edad504';
+const gstCommonClientSecret =
+    '2dbffc02-86b9-4a48-9782-03727edad504'; //8584 4584 7004
 
 bool isDarkTheme = false;
 bool isUsingHive = true;
@@ -57,8 +60,6 @@ const softwarePassword = 'SHERSOFT';
 String _sherSoftPassword = '';
 get sherSoftPassword => _sherSoftPassword;
 set sherSoftPassword(String value) => _sherSoftPassword = value;
-
-const String apiV = 'v23/';
 
 const currencySymbol = '₹';
 // const bool isVariant = false;

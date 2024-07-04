@@ -349,7 +349,7 @@ class _SalesListState extends State<SalesList> {
             'subcategory': subCategory != null ? subCategory.id : '0',
             'location': locationId != null
                 ? jsonEncode([
-                    {'id': locationId.id}
+                    {'id': locationId}
                   ])
                 : jsonEncode(locationData),
             'project': project != null ? project.id : '0',
@@ -1006,9 +1006,9 @@ class _SalesListState extends State<SalesList> {
                                       salesTypeData = SalesType(
                                           id: sData.id,
                                           accounts: sData.accounts,
-                                          location: locationId != null
-                                              ? locationId.id
-                                              : sData.location,
+                                          location: (locationId != null
+                                              ? locationId
+                                              : sData.location),
                                           name: sData.name,
                                           rateType: sData.rateType,
                                           stock: sData.stock,
@@ -1114,7 +1114,7 @@ class _SalesListState extends State<SalesList> {
                                       id: sData.id,
                                       accounts: sData.accounts,
                                       location: locationId != null
-                                          ? locationId.id
+                                          ? locationId
                                           : sData.location,
                                       name: sData.name,
                                       rateType: sData.rateType,
@@ -1255,7 +1255,7 @@ class _SalesListState extends State<SalesList> {
                   dropdownSearchDecoration: const InputDecoration(
                       border: OutlineInputBorder(), labelText: 'Select Branch'),
                   onChanged: (dynamic data) {
-                    locationId = data;
+                    location = data;
                   },
                   showSearchBox: true,
                 ),

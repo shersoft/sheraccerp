@@ -889,6 +889,56 @@ class _SalesManHomeState extends State<SalesManHome> {
                           ),
                         ),
                         Visibility(
+                          visible: ComSettings.userControl('RECEIPT REPORT'),
+                          child: Card(
+                            elevation: 5,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('Receipt List',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
+                              onPressed: () {
+                                argumentsPass = {'mode': 'ReceiptList'};
+                                Navigator.pushNamed(
+                                  context,
+                                  '/select_ledger',
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        Visibility(
+                          visible: ComSettings.userControl('PAYMENT REPORT'),
+                          child: Card(
+                            elevation: 5,
+                            shape: const StadiumBorder(
+                                side: BorderSide(
+                              color: blue,
+                              width: 2.0,
+                            )),
+                            child: TextButton(
+                              child: const Text('Payment List',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  )),
+                              onPressed: () {
+                                argumentsPass = {'mode': 'PaymentList'};
+                                Navigator.pushNamed(
+                                  context,
+                                  '/select_ledger',
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        Visibility(
                           visible: ComSettings.userControl('PRICE LIST'),
                           child: Card(
                             elevation: 2,

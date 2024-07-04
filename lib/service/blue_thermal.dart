@@ -456,10 +456,7 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                   Enu.Size.bold.val,
                   Enu.Align.left.val);
               line = "6";
-              var bal = double.tryParse(dataInformation['Balance'].toString()) +
-                  (double.tryParse(dataInformation['GrandTotal'].toString()) -
-                      double.tryParse(
-                          dataInformation['CashReceived'].toString()));
+              var bal = double.tryParse(dataInformation['Balance'].toString());
               // bluetooth.printLeftRight(
               //   'Party Name:${dataInformation['ToName']}',
               //   'Party Balance:${bal.toStringAsFixed(2)}',
@@ -731,11 +728,8 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
               if (Settings.getValue<bool>('key-print-balance', false)) {
                 //
               } else {
-                var bal = double.tryParse(
-                        dataInformation['Balance'].toString()) +
-                    (double.tryParse(dataInformation['GrandTotal'].toString()) -
-                        double.tryParse(
-                            dataInformation['CashReceived'].toString()));
+                var bal =
+                    double.tryParse(dataInformation['Balance'].toString());
                 bluetooth.printNewLine();
                 bluetooth.printCustom(
                     'Party Balance: ${bal.toStringAsFixed(2)}',
@@ -752,10 +746,7 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
               //bluetooth.drawerPin2(); // or you can use bluetooth.drawerPin5();
               // }else{}
             } else if (printerModel == 8) {
-              var bal = double.tryParse(dataInformation['Balance'].toString()) +
-                  (double.tryParse(dataInformation['GrandTotal'].toString()) -
-                      double.tryParse(
-                          dataInformation['CashReceived'].toString()));
+              var bal = double.tryParse(dataInformation['Balance'].toString());
               if (isLogo) {
                 bluetooth.printNewLine();
                 if (file != null) {
@@ -1251,16 +1242,11 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                     Enu.Size.bold.val);
                 bluetooth.printLeftRight(
                     "Old Balance : ",
-                    "${dataInformation['Balance'].toStringAsFixed(2)}",
+                    "${dataInformation['LedgerBalance'].toStringAsFixed(2)}",
                     Enu.Size.bold.val);
                 bluetooth.printLeftRight(
                     "Balance : ",
-                    ((double.tryParse(dataInformation['Balance'].toString())) +
-                            (double.tryParse(
-                                    dataInformation['GrandTotal'].toString()) -
-                                double.tryParse(dataInformation['CashReceived']
-                                    .toString())))
-                        .toStringAsFixed(2),
+                    "${dataInformation['Balance'].toStringAsFixed(2)}",
                     Enu.Size.bold.val);
               }
               bluetooth.printNewLine();
@@ -1382,8 +1368,7 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                   Enu.Size.bold.val,
                   Enu.Align.left.val);
               line = "6";
-              var bal = double.tryParse(dataInformation['Balance'].toString()) -
-                  double.tryParse(dataInformation['GrandTotal'].toString());
+              var bal = double.tryParse(dataInformation['Balance'].toString());
               // bluetooth.printLeftRight(
               //   'Party Name:${dataInformation['ToName']}',
               //   'Party Balance:${bal.toStringAsFixed(2)}',
@@ -1647,9 +1632,8 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
               if (Settings.getValue<bool>('key-print-balance', false)) {
                 //
               } else {
-                var bal = double.tryParse(
-                        dataInformation['Balance'].toString()) -
-                    double.tryParse(dataInformation['GrandTotal'].toString());
+                var bal =
+                    double.tryParse(dataInformation['Balance'].toString());
                 bluetooth.printNewLine();
                 bluetooth.printCustom(
                     'Party Balance: ${bal.toStringAsFixed(2)}',
@@ -1779,8 +1763,9 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                   format: "%-18s %-4s %20s %n");
             } else {
               if (bill['name'] != 'CASH') {
-                var bal = bill['oldBalance'].toString().split(' ')[0];
-                double oldBalance = double.tryParse(bal.toString());
+                // var bal = bill['oldBalance'].toString().split(' ')[0];
+                double oldBalance =
+                    double.tryParse(bill['oldBalance'].toString());
                 bluetooth.print3Column(
                     "Total    : ",
                     " ",
@@ -1794,12 +1779,7 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                     Enu.Align.center.val);
                 bluetooth.printLeftRight("Old Balance : ",
                     oldBalance.toStringAsFixed(2), Enu.Size.bold.val);
-                double balance = oldBalance > 0
-                    ? oldBalance > double.tryParse(bill['total'].toString())
-                        ? (oldBalance -
-                            double.tryParse(bill['total'].toString()))
-                        : double.tryParse(bill['total'].toString()) - oldBalance
-                    : double.tryParse(bill['total'].toString());
+                double balance = double.tryParse(bill['balance'].toString());
                 bluetooth.printLeftRight("Balance : ",
                     balance.toStringAsFixed(2), Enu.Size.bold.val);
               } else {
@@ -1929,8 +1909,9 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                   format: "%-18s %-4s %20s %n");
             } else {
               if (bill['name'] != 'CASH') {
-                var bal = bill['oldBalance'].toString().split(' ')[0];
-                double oldBalance = double.tryParse(bal.toString());
+                // var bal = bill['oldBalance'].toString().split(' ')[0];
+                double oldBalance =
+                    double.tryParse(bill['oldBalance'].toString());
                 bluetooth.print3Column(
                     "Total    : ",
                     " ",
@@ -1944,12 +1925,7 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                     Enu.Align.center.val);
                 bluetooth.printLeftRight("Old Balance : ",
                     oldBalance.toStringAsFixed(2), Enu.Size.bold.val);
-                double balance = oldBalance > 0
-                    ? oldBalance > double.tryParse(bill['total'].toString())
-                        ? (oldBalance -
-                            double.tryParse(bill['total'].toString()))
-                        : double.tryParse(bill['total'].toString()) - oldBalance
-                    : double.tryParse(bill['total'].toString());
+                double balance = double.tryParse(bill['balance'].toString());
                 bluetooth.printLeftRight("Balance : ",
                     balance.toStringAsFixed(2), Enu.Size.bold.val);
               } else {

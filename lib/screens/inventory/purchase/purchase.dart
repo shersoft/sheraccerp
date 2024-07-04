@@ -15,6 +15,7 @@ import 'package:sheraccerp/models/customer_model.dart';
 import 'package:sheraccerp/models/product_register_model.dart';
 import 'package:sheraccerp/models/sales_model.dart';
 import 'package:sheraccerp/models/unit_model.dart';
+import 'package:sheraccerp/models/voucher_type_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
@@ -46,6 +47,7 @@ class _PurchaseState extends State<Purchase> {
   DateTime now = DateTime.now();
   String formattedDate, invDate = '';
   double _balance = 0;
+  VoucherType voucherTypeData;
   List<dynamic> otherAmountList = [];
   bool isTax = true,
       _isCashBill = false,
@@ -141,6 +143,9 @@ class _PurchaseState extends State<Purchase> {
       fetchPurchase(context, dataDynamic[0]);
       _isLoading = false;
     }
+
+    voucherTypeData = voucherTypeList
+        .firstWhere((element) => element.voucher.toLowerCase() == 'purchase');
   }
 
   setCursorPosition() {
@@ -298,6 +303,7 @@ class _PurchaseState extends State<Purchase> {
                                 'location': locationId,
                                 'statementtype': stType,
                                 'fyId': currentFinancialYear.id,
+                                'frmId': voucherTypeData.id
                               }) +
                               ']';
 
@@ -392,6 +398,7 @@ class _PurchaseState extends State<Purchase> {
                                 'location': locationId,
                                 'statementtype': stType,
                                 'fyId': currentFinancialYear.id,
+                                'frmId': voucherTypeData.id
                               }) +
                               ']';
 
@@ -1486,6 +1493,7 @@ class _PurchaseState extends State<Purchase> {
                           TextButton(
                               onPressed: () {
                                 setState(() {
+                                  lockItemDetails = false;
                                   nextWidget = 3;
                                 });
                               },
@@ -1947,6 +1955,7 @@ class _PurchaseState extends State<Purchase> {
                       editItem = false;
                       nextWidget = 3;
                       clearValue();
+                      lockItemDetails = false;
                     });
                   },
                   child: const Text("Back"),
@@ -1962,6 +1971,7 @@ class _PurchaseState extends State<Purchase> {
                       editItem = false;
                       nextWidget = 5;
                       clearValue();
+                      lockItemDetails = false;
                     });
                   },
                   child: const Text("Cancel"),
@@ -2117,6 +2127,7 @@ class _PurchaseState extends State<Purchase> {
                           editItem = false;
                           nextWidget = 5;
                           clearValue();
+                          lockItemDetails = false;
                         }
                       });
                     } else if (total > 0) {
@@ -2247,6 +2258,7 @@ class _PurchaseState extends State<Purchase> {
                           editItem = false;
                           nextWidget = 5;
                           clearValue();
+                          lockItemDetails = false;
                         }
                       });
                     } else {
@@ -4263,7 +4275,9 @@ class _PurchaseState extends State<Purchase> {
     double billTotal = 0, billCash = 0;
     String narration = ' ';
 
-    api.fetchPurchaseInvoiceSp(data['Id'], 'P_Find').then((value) {
+    api
+        .fetchPurchaseInvoiceSp(data['Id'], 'P_Find', voucherTypeData.id)
+        .then((value) {
       if (value != null) {
         var information = value['Information'][0];
         var particulars = value['Particulars'];
@@ -4409,7 +4423,10 @@ class _PurchaseState extends State<Purchase> {
   }
 
   deleteData() {
-    api.deletePurchase(dataDynamic[0]['EntryNo'], 'P_Delete').then((value) {
+    api
+        .deletePurchase(
+            dataDynamic[0]['EntryNo'], 'P_Delete', voucherTypeData.id)
+        .then((value) {
       setState(() {
         _isLoading = false;
       });

@@ -4120,7 +4120,7 @@ class DioService {
     return data;
   }
 
-  Future<dynamic> fetchPurchaseInvoiceSp(int id, String type) async {
+  Future<dynamic> fetchPurchaseInvoiceSp(int id, String type, var frmId) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
@@ -4135,7 +4135,8 @@ class DioService {
           queryParameters: {
             'id': id,
             'statement': type,
-            'fyId': currentFinancialYear.id
+            'fyId': currentFinancialYear.id,
+            'frmId': frmId
           });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
@@ -4151,7 +4152,7 @@ class DioService {
     return _items;
   }
 
-  Future<dynamic> fetchPurchaseInvoice(int id, String type) async {
+  Future<dynamic> fetchPurchaseInvoice(int id, String type, var frmId) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
@@ -4166,7 +4167,8 @@ class DioService {
           queryParameters: {
             'id': id,
             'type': type,
-            'fyId': currentFinancialYear.id
+            'fyId': currentFinancialYear.id,
+            'frmId': frmId
           });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
@@ -4213,7 +4215,8 @@ class DioService {
     return _items;
   }
 
-  Future<dynamic> fetchPurchaseReturnInvoice(int id, String type) async {
+  Future<dynamic> fetchPurchaseReturnInvoice(
+      int id, String type, var frmId) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
@@ -4228,7 +4231,8 @@ class DioService {
           queryParameters: {
             'id': id,
             'type': type,
-            'fyId': currentFinancialYear.id
+            'fyId': currentFinancialYear.id,
+            'frmId': frmId
           });
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
@@ -4244,7 +4248,7 @@ class DioService {
     return _items;
   }
 
-  Future<bool> deletePurchase(entryNo, type) async {
+  Future<bool> deletePurchase(entryNo, type, frmId) async {
     bool ret = false;
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
@@ -4259,7 +4263,8 @@ class DioService {
         queryParameters: {
           'entryNo': entryNo,
           'type': type,
-          'fyId': currentFinancialYear.id
+          'fyId': currentFinancialYear.id,
+          'frmId': frmId
         },
       );
       if (response.statusCode == 200) {
@@ -6929,32 +6934,32 @@ class DioService {
     return translation;
   }
 
-  Future<String> getOldBalance(
-      int id, String statement, String type, String date, entryno) async {
+  Future<dynamic> getBalance(
+      int id, String statement, String type, String date, entryNo) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
-    String _items = '0';
+    dynamic _items = '0';
     try {
       Response response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'Ledger/getOldBalance/$dataBase',
+              'Ledger/getBalance/$dataBase',
           queryParameters: {
             'Id': id,
             'statement': statement,
             'type': type,
             'date': date,
-            'entryNo': entryno,
-            'fyId': 1
+            'entryNo': entryNo,
+            'fyId': currentFinancialYear.id
           });
 
       if (response.statusCode == 200) {
         var data = response.data;
         if (data != null) {
-          _items = data['oldBalance'].toString();
+          _items = data;
         }
       } else {
         debugPrint('Failed to load data');

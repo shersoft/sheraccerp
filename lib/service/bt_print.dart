@@ -732,7 +732,8 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
               PosColumn(
-                  text: double.tryParse(dataInformation['Balance'].toString())
+                  text: double.tryParse(
+                          dataInformation['LedgerBalance'].toString())
                       .toStringAsFixed(2),
                   width: 6,
                   styles: const PosStyles(
@@ -789,13 +790,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
               PosColumn(
-                  text: (double.tryParse(
-                              dataInformation['Balance'].toString()) +
-                          (double.tryParse(
-                                  dataInformation['GrandTotal'].toString()) -
-                              double.tryParse(
-                                  dataInformation['CashReceived'].toString())))
-                      .toStringAsFixed(2),
+                  text: dataInformation['Balance'].toStringAsFixed(2),
                   width: 6,
                   styles: const PosStyles(
                       align: PosAlign.right,
@@ -1810,7 +1805,8 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
               PosColumn(
-                  text: double.tryParse(dataInformation['Balance'].toString())
+                  text: double.tryParse(
+                          dataInformation['LedgerBalance'].toString())
                       .toStringAsFixed(2),
                   width: 6,
                   styles: const PosStyles(
@@ -1867,13 +1863,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
               PosColumn(
-                  text: (double.tryParse(
-                              dataInformation['Balance'].toString()) +
-                          (double.tryParse(
-                                  dataInformation['GrandTotal'].toString()) -
-                              double.tryParse(
-                                  dataInformation['CashReceived'].toString())))
-                      .toStringAsFixed(2),
+                  text: dataInformation['Balance'].toStringAsFixed(2),
                   width: 6,
                   styles: const PosStyles(
                       align: PosAlign.right,
@@ -1981,7 +1971,7 @@ class _BtPrintState extends State<BtPrint> {
                 styles: const PosStyles(align: PosAlign.left)),
             PosColumn(
                 text:
-                    'Party Balance:${double.tryParse(dataInformation['Balance'].toString()) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))}',
+                    'Party Balance:${dataInformation['Balance'].toStringAsFixed()}',
                 width: 6,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
@@ -2171,7 +2161,7 @@ class _BtPrintState extends State<BtPrint> {
                 styles: const PosStyles(align: PosAlign.left)),
             PosColumn(
                 text:
-                    'Party Balance:${double.tryParse(dataInformation['Balance'].toString()) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))}',
+                    'Party Balance:${dataInformation['Balance'].toStringAsFixed()}',
                 width: 6,
                 styles: const PosStyles(align: PosAlign.right)),
           ]);
@@ -2787,8 +2777,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
               PosColumn(
-                  text: double.tryParse(dataInformation['Balance'].toString())
-                      .toStringAsFixed(2),
+                  text: dataInformation['LedgerBalance'].toStringAsFixed(2),
                   width: 6,
                   styles: const PosStyles(
                       // height: PosTextSize.size2, width: PosTextSize.size2,
@@ -2844,13 +2833,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
               PosColumn(
-                  text: (double.tryParse(
-                              dataInformation['Balance'].toString()) +
-                          (double.tryParse(
-                                  dataInformation['GrandTotal'].toString()) -
-                              double.tryParse(
-                                  dataInformation['CashReceived'].toString())))
-                      .toStringAsFixed(2),
+                  text: dataInformation['Balance'].toStringAsFixed(2),
                   width: 6,
                   styles: const PosStyles(
                       align: PosAlign.right,
@@ -3533,13 +3516,13 @@ class _BtPrintState extends State<BtPrint> {
           ]);
           bytes += ticket.row([
             PosColumn(
-                text: 'Old Balance : ${dataInformation['Balance']}',
+                text: 'Old Balance : ${dataInformation['LedgerBalance']}',
                 width: 6,
                 styles: const PosStyles(
                     align: PosAlign.center, height: PosTextSize.size2)),
             PosColumn(
                 text:
-                    'Balance : ${(double.tryParse(dataInformation['Balance'].toString())) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))}',
+                    'Balance : ${dataInformation['Balance'].toStringAsFixed()}',
                 width: 6,
                 styles: const PosStyles(
                     align: PosAlign.center, height: PosTextSize.size2)),
@@ -4082,8 +4065,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
               PosColumn(
-                  text: double.tryParse(dataInformation['Balance'].toString())
-                      .toStringAsFixed(2),
+                  text: dataInformation['LedgerBalance'].toStringAsFixed(2),
                   width: 6,
                   styles: const PosStyles(
                       // height: PosTextSize.size2, width: PosTextSize.size2,
@@ -4139,13 +4121,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
               PosColumn(
-                  text: (double.tryParse(
-                              dataInformation['Balance'].toString()) +
-                          (double.tryParse(
-                                  dataInformation['GrandTotal'].toString()) -
-                              double.tryParse(
-                                  dataInformation['CashReceived'].toString())))
-                      .toStringAsFixed(2),
+                  text: dataInformation['Balance'].toStringAsFixed(2),
                   width: 6,
                   styles: const PosStyles(
                       align: PosAlign.right,
@@ -4635,13 +4611,13 @@ class _BtPrintState extends State<BtPrint> {
           ]);
           bytes += ticket.row([
             PosColumn(
-                text: 'Old Balance : ${dataInformation['Balance']}',
+                text: 'Old Balance : ${dataInformation['LedgerBalance']}',
                 width: 6,
                 styles: const PosStyles(
                     align: PosAlign.center, height: PosTextSize.size2)),
             PosColumn(
                 text:
-                    'Balance : ${(double.tryParse(dataInformation['Balance'].toString())) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))}',
+                    'Balance : ${dataInformation['Balance'].toStringAsFixed()}',
                 width: 6,
                 styles: const PosStyles(
                     align: PosAlign.center, height: PosTextSize.size2)),
@@ -4771,9 +4747,7 @@ class _BtPrintState extends State<BtPrint> {
     // var dataSerialNO = bill['SerialNO'];,
     // var dataDeliveryNote = bill['DeliveryNote'];
     // var otherAmount = bill['otherAmount'];
-    var BalanceAmount = bill['balance'] == 'null'
-        ? '0'
-        : bill['balance'].toString().split(' ')[0].toString();
+    var BalanceAmount = bill['Balance'].toString();
     var ledgerName = mainAccount
         .firstWhere(
           (element) =>
@@ -5202,7 +5176,7 @@ class _BtPrintState extends State<BtPrint> {
                       bold: true,
                       align: PosAlign.right)),
               PosColumn(
-                  text: double.tryParse(BalanceAmount.toString())
+                  text: double.tryParse(bill['LedgerBalance'].toString())
                       .toStringAsFixed(2),
                   width: 6,
                   styles: const PosStyles(
@@ -5889,8 +5863,8 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         } else {
           if (ledgerName != 'CASH') {
-            var bal = bill['oldBalance'].toString().split(' ')[0];
-            double oldBalance = double.tryParse(bal.toString());
+            // var bal = bill['oldBalance'].toString().split(' ')[0];
+            double oldBalance = double.tryParse(bill['oldBalance'].toString());
             bytes += ticket.row([
               PosColumn(
                   text: 'Total :',
@@ -5930,8 +5904,7 @@ class _BtPrintState extends State<BtPrint> {
                 bold: true,
               ),
             );
-            double balance =
-                oldBalance - double.tryParse(bill['total'].toString());
+            double balance = double.tryParse(bill['balance'].toString());
             bytes += ticket.row([
               PosColumn(
                   text: 'Balance :',
@@ -6091,8 +6064,8 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         } else {
           if (bill['name'] != 'CASH') {
-            var bal = bill['oldBalance'].toString().split(' ')[0];
-            double oldBalance = double.tryParse(bal.toString());
+            // var bal = bill['oldBalance'].toString().split(' ')[0];
+            double oldBalance = double.tryParse(bill['oldBalance'].toString());
             bytes += ticket.row([
               PosColumn(
                   text: 'Total :',
@@ -6132,11 +6105,7 @@ class _BtPrintState extends State<BtPrint> {
                 bold: true,
               ),
             );
-            double balance = oldBalance > 0
-                ? oldBalance > double.tryParse(bill['total'].toString())
-                    ? (oldBalance - double.tryParse(bill['total'].toString()))
-                    : double.tryParse(bill['total'].toString()) - oldBalance
-                : double.tryParse(bill['total'].toString());
+            double balance = double.tryParse(bill['balance'].toString());
             bytes += ticket.row([
               PosColumn(
                   text: 'Balance :',
@@ -6317,8 +6286,8 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         } else {
           if (ledgerName != 'CASH') {
-            var bal = bill['oldBalance'].toString().split(' ')[0];
-            double oldBalance = double.tryParse(bal.toString());
+            // var bal = bill['oldBalance'].toString().split(' ')[0];
+            double oldBalance = double.tryParse(bill['oldBalance'].toString());
             bytes += ticket.row([
               PosColumn(
                   text: 'Total :',
@@ -6358,10 +6327,7 @@ class _BtPrintState extends State<BtPrint> {
                 bold: true,
               ),
             );
-            double balance =
-                oldBalance > double.tryParse(bill['total'].toString())
-                    ? (oldBalance - double.tryParse(bill['total'].toString()))
-                    : double.tryParse(bill['total'].toString());
+            double balance = double.tryParse(bill['balance'].toString());
             bytes += ticket.row([
               PosColumn(
                   text: 'Balance :',
@@ -6521,8 +6487,8 @@ class _BtPrintState extends State<BtPrint> {
           ]);
         } else {
           if (bill['name'] != 'CASH') {
-            var bal = bill['oldBalance'].toString().split(' ')[0];
-            double oldBalance = double.tryParse(bal.toString());
+            // var bal = bill['oldBalance'].toString().split(' ')[0];
+            double oldBalance = double.tryParse(bill['oldBalance'].toString());
             bytes += ticket.row([
               PosColumn(
                   text: 'Total :',
@@ -6562,10 +6528,7 @@ class _BtPrintState extends State<BtPrint> {
                 bold: true,
               ),
             );
-            double balance =
-                oldBalance > double.tryParse(bill['total'].toString())
-                    ? (oldBalance - double.tryParse(bill['total'].toString()))
-                    : double.tryParse(bill['total'].toString());
+            double balance = double.tryParse(bill['balance'].toString());
             bytes += ticket.row([
               PosColumn(
                   text: 'Balance :',

@@ -287,7 +287,7 @@ class _SalesReturnPreviewShowState extends State<SalesReturnPreviewShow> {
           dataSerialNO = data['SerialNO'];
           dataDeliveryNote = data['DeliveryNote'];
           otherAmount = data['otherAmount'];
-          customerBalance = '0'; //data['BalanceAmount'].toString();
+          customerBalance = dataInformation['Balance'].toString();
           dataLedger = data['ledger'];
           dataBankLedger = data['bankLedger'];
           loadAsset();
@@ -504,242 +504,6 @@ class _SalesReturnPreviewShowState extends State<SalesReturnPreviewShow> {
     //           subject: title,
     //           text: 'this is ' + title,
     //         )));
-  }
-
-  webView() {
-    var taxInvoice = dataInformation != null
-        ? dataInformation['TaxType'] == 'T'
-            ? true
-            : false
-        : false;
-    var invoiceHead =
-        Settings.getValue<String>('key-sales-return-head', 'SALES RETURN');
-
-    return _isLoading
-        ? const Loading()
-        : Column(children: [
-            Expanded(
-                child: RepaintBoundary(
-              key: _globalKey,
-              child: WebView(
-                  initialUrl: '',
-                  javascriptMode: JavascriptMode.unrestricted,
-                  onWebViewCreated: (contr) {
-                    String dataHtml = taxInvoice
-                        ? '''
-                        <style>
-                        .total-value {
-                            font-size:14px;font-weight: bold
-                        }
-                        .total-value1 {
-                            font-size:16px;font-weight: bold
-                        }
-                        .total-line{
-                          font-size:14px;font-weight: bold
-                        }
-                        </style>
-
-                            <h2 align="center" >${companySettings.name}</h2>
-                            <table align="center" width="100%" >
-                              <tr><td width="16.7%" align="center">${companySettings.add1}</td></tr>
-                              <tr><td width="16.7%" align="center">${companySettings.add2}</td></tr>
-                              <tr><td width="16.7%" align="center">Tel : ${companySettings.telephone + ',' + companySettings.mobile}</td></tr>
-                              <tr><td width="16.7%" align="center">${companyTaxMode == 'INDIA' ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}' : 'TRN : ${ComSettings.getValue('GST-NO', settings)}'}</td></tr>
-                            </table>
-                            <table width="100%">
-                              <tr>
-                      <th align="center"><u>$invoiceHead</u></th>
-                              </tr>
-                            </table>
-                            <table width="100%">
-                      <tr>
-                      <p><td align="left">Invoice No : ${dataInformation['InvoiceNo']}<td align="right">Date : ${DateUtil.dateDMY(dataInformation['DDate'])}</p>
-                      </tr>
-                            </table>
-                            <h4>Bill To : ${dataInformation['ToName']}</h4>
-                            <h5>${companyTaxMode == 'INDIA' ? dataInformation['Add1'] : 'T-No :' + dataInformation['gstno']}<h5/>
-                            <hr size="1" width="100%">
-                            <table id="items">
-                        
-                        ''' +
-                            _itemHeader(companyTaxMode) +
-                            _item(taxInvoice) +
-                            '''<tr>
-                          <td colspan="4" class="blank"><hr></hr></td>
-                      </tr>
-                            </table>
-                            <table width="100%" id="line_total">
-                              <tr>
-                        <td width="64%" align="center">Total : </td>
-                        <td width="8%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                        <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
-                        <td width="10%" align="right">${double.tryParse(dataInformation['Total'].toString()).toStringAsFixed(decimal)}</td>
-                              </tr>
-                            </table>
-                            <hr></hr>
-                            <table width="100%" id="item_total">
-                              <tr>
-                      <td colspan="3" class="blank"></td>
-                      <td colspan="2" class="total-line" align="right">Total :</td>
-                      <td class="total-value" align="right">${double.tryParse(dataInformation['NetAmount'].toString()).toStringAsFixed(decimal)}</td>
-                              </tr>
-                              <tr>
-                        <td colspan="3" class="blank"> </td>
-                        <td colspan="2" class="total-line" align="right">Tax :</td>
-                        <td class="total-value" align="right">${(double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString()) + double.tryParse(dataInformation['IGST'].toString())).toStringAsFixed(decimal)}</td>
-                              </tr>
-                              <tr>
-                        ''' +
-                            _otherAmount() +
-                            '''
-                              </tr>
-                              <tr>
-                      <td colspan="3" class="blank"></td>
-                      <td colspan="2" class="total-value1" align="right">Net Total(Inclusive of all taxes) :</td>
-                          <td class="total-value" align="right">${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}</td>
-                              </tr>
-                            </table>
-                            <table width="100%">
-                      <tr>
-                          <td style="font-size:10px;">${NumberToWord().convertDouble('en', double.tryParse(dataInformation['GrandTotal'].toString()))}</td>
-                        </tr>
-                        </table>
-                          <hr></hr>
-                            <table width="100%">
-                        <tr>
-                        <td style="font-size:12px;" align="left"> Cash Received : ${double.tryParse(dataInformation['CashReceived'].toString()).toStringAsFixed(decimal)}</td>
-                        <td style="font-size:12px;" align="right"> Bill Balance : ${(double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString())).toStringAsFixed(decimal)}</td>
-                        </tr>
-                            </table>
-                            <hr></hr>
-                            <table align="center" width="100%" >
-                      <tr>
-                        <td style="font-size:12px;" align="left"> Old Balance : ${double.tryParse(customerBalance.toString()).toStringAsFixed(decimal)}</td>
-                        <td style="font-size:12px;" align="right"> Balance : ${(double.tryParse(customerBalance) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toStringAsFixed(decimal)}</td>
-                        </tr>
-                            </table>
-                            <hr></hr>
-                            <table align="center" width="100%" >
-                      <tr>
-                          <td width="16.7%" align="center" style="font-size:10px;">${data['message']}</td>
-                        </tr>
-                            </table>
-                        '''
-                        : '''
-                        <style>
-                        .total-value {
-                            font-size:14px;font-weight: bold
-                        }
-                        .total-value1 {
-                            font-size:16px;font-weight: bold
-                        }
-                        .total-line{
-                          font-size:14px;font-weight: bold
-                        }
-                        </style>
-                        <table width="100%">
-                              <tr>
-                      <th align="center"><u>$invoiceHead</u></th>
-                              </tr>
-                            </table>
-                            <table width="100%">
-                      <tr>
-                      <p><td align="left">Invoice No : ${dataInformation['InvoiceNo']}<td align="right">Date : ${DateUtil.dateDMY(dataInformation['DDate'])}</p>
-                      </tr>
-                            </table>
-                            <h4>Bill To : ${dataInformation['ToName']}</h4>
-                            <hr size="1" width="100%">
-                            <table id="items">
-                        <tr> ''' +
-                            _itemHeader1() +
-                            _item(taxInvoice) +
-                            '''<tr>
-                          <td colspan="4" class="blank"><hr></hr></td>
-                      </tr>
-                            </table>
-                            <table width="100%" id="line_total">
-                              <tr>
-                        <td width="64%" align="center">Total : </td>
-                        <td width="8%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                        <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
-                        <td width="10%" align="right">${double.tryParse(dataInformation['Total'].toString()).toStringAsFixed(decimal)}</td>
-                              </tr>
-                            </table>
-                            <hr></hr>
-                            <table width="100%" id="item_total">
-                              <tr>
-                      <td colspan="3" class="blank"></td>
-                      <td colspan="2" class="total-line" align="right">Total :</td>
-                      <td class="total-value" align="right">${double.tryParse(dataInformation['NetAmount'].toString()).toStringAsFixed(decimal)}</td>
-                              </tr>
-                              <tr>
-                        <td colspan="3" class="blank"> </td>
-                              </tr>
-                              ''' +
-                            _otherAmount() +
-                            '''
-                              <tr>
-                                <td colspan="3" class="blank"></td>
-                                <td colspan="2" class="total-value1" align="right">Tax :</td>
-                                    <td class="total-value" align="right">${(double.tryParse(dataInformation['CGST'].toString()) + double.tryParse(dataInformation['SGST'].toString()) + double.tryParse(dataInformation['IGST'].toString()) + double.tryParse(dataInformation['cess'].toString()) + double.tryParse(dataInformation['TCS'].toString())).toStringAsFixed(decimal)}</td>
-                              </tr>
-                              <tr>
-                      <td colspan="3" class="blank"></td>
-                      <td colspan="2" class="total-value1" align="right">Net Total :</td>
-                          <td class="total-value" align="right">${double.tryParse(dataInformation['GrandTotal'].toString()).toStringAsFixed(decimal)}</td>
-                              </tr>
-                            </table>
-                            <table width="100%">
-                      <tr>
-                          <td style="font-size:10px;"> Amount in Words: ${NumberToWord().convertDouble('en', double.tryParse(dataInformation['GrandTotal'].toString()))}</td>
-                        </tr>
-                        </table>
-                        <hr></hr>
-                            <table width="100%">
-                        <tr>
-                        <td style="font-size:10px;" align="left"> Cash Received : ${double.tryParse(dataInformation['CashReceived'].toString()).toStringAsFixed(decimal)}</td>
-                        <td style="font-size:10px;" align="right"> Bill Balance : ${(double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString())).toStringAsFixed(decimal)}</td>
-                        </tr>
-                            </table>
-                            <hr></hr>
-                            <table width="100%" >
-                            <tr>
-                        <td style="font-size:10px;" align="left"> Old Balance : ${double.tryParse(customerBalance.toString()).toStringAsFixed(decimal)}</td>
-                        <td style="font-size:10px;" align="right"> Balance : ${((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toStringAsFixed(decimal)}</td>
-                        </tr>
-                            </table>
-                            <hr></hr>
-                            <table align="center" width="80%" >
-                        <tr>
-                          <td width="16.7%" align="center" style="font-size:9px;">${data['message']}</td>
-                        </tr>
-                            ''';
-
-                    /*********************QR Code**********************/
-                    if (isQrCodeKSA) {
-                      if (taxInvoice) {
-                        String html =
-                            "<img src='{IMAGE_PLACEHOLDER}' style=\"float:center;margin-left:132px;width:80px;height:80px;\">\n";
-                        String image = uint8ListTob64(byteImageQr);
-                        html = html.replaceAll("{IMAGE_PLACEHOLDER}", image);
-                        dataHtml += html;
-                      } else if (isEsQrCodeKSA) {
-                        String html =
-                            "<img src='{IMAGE_PLACEHOLDER}' style=\"float:center;margin-left:132px;width:80px;height:80px;\">\n";
-                        String image = uint8ListTob64(byteImageQr);
-                        html = html.replaceAll("{IMAGE_PLACEHOLDER}", image);
-                        dataHtml += html;
-                      }
-                    }
-                    dataHtml += '''
-                            </table>
-                        ''';
-                    contr.loadUrl(Uri.dataFromString(dataHtml,
-                            mimeType: 'text/html', encoding: utf8)
-                        .toString());
-                  }),
-            )),
-          ]);
   }
 
   invoiceGenerate(context) {
@@ -1581,15 +1345,9 @@ class _SalesReturnPreviewShowState extends State<SalesReturnPreviewShow> {
         0, (total, particular) => total + particular['Net'].toDouble());
     double lineTotal = dataParticulars.fold(
         0, (total, particular) => total + particular['Total'].toDouble());
-    double oldBalance = double.tryParse(customerBalance).toDouble();
-
-    double cBalance = double.tryParse(customerBalance).toDouble() ?? 0.00;
-    double grandTotal =
-        _isLoading ? 0 : dataInformation['GrandTotal'].toDouble() ?? 0.00;
-    double cashReceived =
-        _isLoading ? 0 : dataInformation['CashReceived'].toDouble() ?? 0.00;
-
-    double balance = cBalance + grandTotal - cashReceived;
+    double oldBalance =
+        double.tryParse(dataInformation['LedgerBalance'].toString()).toDouble();
+    double balance = double.tryParse(customerBalance).toDouble() ?? 0.00;
     return taxSale
         ? SafeArea(
             child: Padding(
@@ -3062,7 +2820,7 @@ class _SalesReturnPreviewShowState extends State<SalesReturnPreviewShow> {
                                                                             ),
                                                                           ),
                                                                           Text(
-                                                                            double.tryParse(customerBalance).toStringAsFixed(decimal),
+                                                                            double.tryParse(dataInformation['LedgerBalance'].toString()).toStringAsFixed(decimal),
                                                                             style:
                                                                                 const TextStyle(fontSize: 6),
                                                                           )
@@ -3078,7 +2836,7 @@ class _SalesReturnPreviewShowState extends State<SalesReturnPreviewShow> {
                                                                             ),
                                                                           ),
                                                                           Text(
-                                                                            (double.tryParse(customerBalance) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toStringAsFixed(decimal),
+                                                                            customerBalance,
                                                                             style:
                                                                                 const TextStyle(fontSize: 6),
                                                                           )
@@ -4024,7 +3782,7 @@ class _SalesReturnPreviewShowState extends State<SalesReturnPreviewShow> {
                                                             FontWeight.bold),
                                                   ),
                                                   Text(
-                                                    "${dataInformation['BalanceAmount'].toStringAsFixed(2)} ",
+                                                    "${dataInformation['LedgerBalance'].toStringAsFixed(2)} ",
                                                     style: const TextStyle(
                                                         fontSize: 8,
                                                         fontWeight:
@@ -4691,16 +4449,10 @@ void printSunmiV1(dataAll) async {
     );
     await SPrinter.lineWrap();
     await SPrinter.setFontSize(22);
-    var balance = (double.tryParse(inf['Balance'].toString()) -
-                double.tryParse(inf['GrandTotal'].toString())) >
-            0
-        ? (double.tryParse(inf['Balance'].toString()) -
-                double.tryParse(inf['GrandTotal'].toString()))
-            .toString()
-        : '0';
+    var balance = inf['Balance'].toString();
     await SPrinter.lineWrap();
     await SPrinter.text(
-        'Received : ${inf['CashReceived']} / Balance : ${(double.tryParse(balance)) + (double.tryParse(inf['GrandTotal'].toString()) - double.tryParse(inf['CashReceived'].toString()))}');
+        'Received : ${inf['CashReceived']} / Balance : ${double.tryParse(balance)}');
     await SPrinter.lineWrap();
     await SPrinter.setAlign(sum_mi.Align.center);
     await SPrinter.setFontSize(20);
@@ -4817,13 +4569,7 @@ void printSunmiV2(dataAll) async {
   await SPrinter.text("GrandTotal : " + inf['GrandTotal'].toString());
   await SPrinter.lineWrap();
   await SPrinter.setFontSize(22);
-  var balance = (double.tryParse(inf['Balance'].toString()) -
-              double.tryParse(inf['GrandTotal'].toString())) >
-          0
-      ? (double.tryParse(inf['Balance'].toString()) -
-              double.tryParse(inf['GrandTotal'].toString()))
-          .toString()
-      : '0';
+  var balance = inf['Balance'].toString();
   await SPrinter.lineWrap();
   // await SPrinter.columnsText([
   //   'Received : ${inf['CashReceived']}'
@@ -4836,7 +4582,7 @@ void printSunmiV2(dataAll) async {
   //   2
   // ]);
   await SPrinter.text(
-      'Received : ${inf['CashReceived']} / Balance : ${(double.tryParse(balance)) + (double.tryParse(inf['GrandTotal'].toString()) - double.tryParse(inf['CashReceived'].toString()))}');
+      'Received : ${inf['CashReceived']} / Balance : ${double.tryParse(balance)}');
   await SPrinter.lineWrap();
   await SPrinter.setAlign(sum_mi.Align.center);
   await SPrinter.setFontSize(20);
@@ -4871,13 +4617,7 @@ void printUrovo(dataAll) async {
   //   await lineWrap(14, posPrinter);
   // }
   if (result) {
-    String balance = (double.tryParse(inf['Balance'].toString()) -
-                double.tryParse(inf['GrandTotal'].toString())) >
-            0
-        ? (double.tryParse(inf['Balance'].toString()) -
-                double.tryParse(inf['GrandTotal'].toString()))
-            .toString()
-        : '0';
+    String balance = inf['Balance'].toString();
     String qrCode = isQrCodeKSA
         ? taxSale
             ? SaudiConversion.getBase64(
@@ -4995,7 +4735,7 @@ void printUrovo(dataAll) async {
                   double.tryParse(inf["ReturnAmount"].toString()) ?? 0,
               returnNo: inf["ReturnNo"],
               balanceAmount:
-                  double.tryParse(inf["BalanceAmount"].toString()) ?? 0,
+                  double.tryParse(inf["LedgerBalance"].toString()) ?? 0,
               balance: double.tryParse(inf["Balance"].toString()) ?? 0,
               gstno: inf["gstno"])
         ],
@@ -8132,14 +7872,14 @@ Future<pw.Document> makePDF(
                       pw.Row(
                         children: [
                           pw.Text(
-                            'Old Balance : ${double.tryParse(customerBalance.toString()).toStringAsFixed(decimal)}',
+                            'Old Balance : ${double.tryParse(dataInformation['LedgerBalance'].toString()).toStringAsFixed(decimal)}',
                           ),
                         ],
                       ),
                       pw.Row(
                         children: [
                           pw.Text(
-                            'Balance : ${double.tryParse(((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toString()).toStringAsFixed(decimal)}',
+                            'Balance : ${(double.tryParse(customerBalance)).toStringAsFixed(decimal)}',
                           ),
                         ],
                       ),
@@ -8466,14 +8206,14 @@ Future<pw.Document> makePDF(
                       pw.Row(
                         children: [
                           pw.Text(
-                            'Old Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
+                            'Old Balance : ${double.tryParse(dataInformation['LedgerBalance'].toString()).toStringAsFixed(decimal)}',
                           ),
                         ],
                       ),
                       pw.Row(
                         children: [
                           pw.Text(
-                            'Balance : ${((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toStringAsFixed(decimal)}',
+                            'Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
                           ),
                         ],
                       ),
@@ -10538,14 +10278,14 @@ Future<pw.Document> makePDF(
                       pw.Row(
                         children: [
                           pw.Text(
-                            'Old Balance : ${double.tryParse(customerBalance.toString()).toStringAsFixed(decimal)}',
+                            'Old Balance : ${double.tryParse(dataInformation['LedgerBalance'].toString()).toStringAsFixed(decimal)}',
                           ),
                         ],
                       ),
                       pw.Row(
                         children: [
                           pw.Text(
-                            'Balance : ${double.tryParse(((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toString()).toStringAsFixed(decimal)}',
+                            'Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
                           ),
                         ],
                       ),
@@ -10872,14 +10612,14 @@ Future<pw.Document> makePDF(
                       pw.Row(
                         children: [
                           pw.Text(
-                            'Old Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
+                            'Old Balance : ${double.tryParse(dataInformation['LedgerBalance'].toString()).toStringAsFixed(decimal)}',
                           ),
                         ],
                       ),
                       pw.Row(
                         children: [
                           pw.Text(
-                            'Balance : ${((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toStringAsFixed(decimal)}',
+                            'Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
                           ),
                         ],
                       ),
@@ -11855,14 +11595,14 @@ Future<pw.Document> makePDF(
                       pw.Row(
                         children: [
                           pw.Text(
-                            'Old Balance : ${double.tryParse(customerBalance.toString()).toStringAsFixed(decimal)}',
+                            'Old Balance : ${double.tryParse(dataInformation['LedgerBalance'].toString()).toStringAsFixed(decimal)}',
                           ),
                         ],
                       ),
                       pw.Row(
                         children: [
                           pw.Text(
-                            'Balance : ${double.tryParse(((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toString()).toStringAsFixed(decimal)}',
+                            'Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
                           ),
                         ],
                       ),
@@ -12189,14 +11929,14 @@ Future<pw.Document> makePDF(
                       pw.Row(
                         children: [
                           pw.Text(
-                            'Old Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
+                            'Old Balance : ${double.tryParse(dataInformation['LedgerBalance'].toString()).toStringAsFixed(decimal)}',
                           ),
                         ],
                       ),
                       pw.Row(
                         children: [
                           pw.Text(
-                            'Balance : ${((double.tryParse(customerBalance)) + (double.tryParse(dataInformation['GrandTotal'].toString()) - double.tryParse(dataInformation['CashReceived'].toString()))).toStringAsFixed(decimal)}',
+                            'Balance : ${double.tryParse(customerBalance).toStringAsFixed(decimal)}',
                           ),
                         ],
                       ),

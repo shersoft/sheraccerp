@@ -1757,7 +1757,7 @@ class _OpeningStockState extends State<OpeningStock> {
     double billTotal = 0, billCash = 0;
     String narration = ' ';
 
-    api.fetchPurchaseInvoiceSp(data['Id'], 'OP_Find').then((value) {
+    api.fetchPurchaseInvoiceSp(data['Id'], 'OP_Find', 0).then((value) {
       if (value != null) {
         var information = value['Information'][0];
         var particulars = value['Particulars'];
@@ -1865,7 +1865,7 @@ class _OpeningStockState extends State<OpeningStock> {
   }
 
   deleteData() {
-    dio.deletePurchase(dataDynamic[0]['EntryNo'], 'OP_Delete').then((value) {
+    dio.deletePurchase(dataDynamic[0]['EntryNo'], 'OP_Delete', 0).then((value) {
       setState(() {
         _isLoading = false;
       });

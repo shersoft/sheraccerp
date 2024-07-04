@@ -468,8 +468,8 @@ class _RPVoucherState extends State<RPVoucher> {
   }
 
   getOldBalance(int Id, String statement, String type, String date, entryno) {
-    api.getOldBalance(Id, statement, type, date, entryno).then((value) {
-      oldBalance = double.parse(value);
+    api.getBalance(Id, statement, type, date, entryno).then((value) {
+      oldBalance = double.parse(value['oldBalance'].toString());
     });
   }
 
@@ -652,8 +652,7 @@ class _RPVoucherState extends State<RPVoucher> {
                         .replaceFirst("#NetBalance#", balance.toString())
                         .replaceFirst(
                             "#GrandTotal#", billAmount.toStringAsFixed(2))
-                        .replaceFirst(
-                            "#Narration#", billAmount.toStringAsFixed(2));
+                        .replaceFirst("#Narration#", ledData.narration);
 
                     if (ledData.phone.toString().trim().isNotEmpty) {
                       if (ledData.phone.toString().trim().length == 10) {
@@ -697,7 +696,7 @@ class _RPVoucherState extends State<RPVoucher> {
           showInSnackBar(opr);
         }
       } else {
-        if (amount <= 0 || ledData.id <= 0) {
+        if (total <= 0 || ledData.id <= 0) {
           Fluttertoast.showToast(msg: 'Select Account and amount');
           setState(() {
             buttonEvent = false;
@@ -843,8 +842,7 @@ class _RPVoucherState extends State<RPVoucher> {
                         .replaceFirst("#NetBalance#", balance.toString())
                         .replaceFirst(
                             "#GrandTotal#", billAmount.toStringAsFixed(2))
-                        .replaceFirst(
-                            "#Narration#", billAmount.toStringAsFixed(2));
+                        .replaceFirst("#Narration#", narration);
 
                     if (ledgerData.phone.toString().trim().isNotEmpty) {
                       if (ledgerData.phone.toString().trim().length == 10) {

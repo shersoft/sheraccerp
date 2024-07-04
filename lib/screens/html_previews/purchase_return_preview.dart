@@ -22,6 +22,7 @@ import 'package:sheraccerp/models/print_settings_model.dart';
 import 'package:sheraccerp/models/sales_bill.dart';
 import 'package:sheraccerp/models/sales_model.dart';
 import 'package:sheraccerp/models/sales_type.dart';
+import 'package:sheraccerp/models/voucher_type_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/html_previews/sales_preview.dart';
 import 'package:sheraccerp/screens/html_previews/sales_return_preview.dart';
@@ -71,6 +72,7 @@ class _PurchaseReturnPreviewShowState extends State<PurchaseReturnPreviewShow> {
   CompanyInformation companySettings;
   var customerBalance = '0';
   List<CompanySettings> settings;
+  VoucherType voucherTypeData;
   var dataInformation,
       dataParticularsAll = [],
       dataParticulars = [],
@@ -195,8 +197,12 @@ class _PurchaseReturnPreviewShowState extends State<PurchaseReturnPreviewShow> {
       }
     }
 
+    voucherTypeData = voucherTypeList.firstWhere(
+        (element) => element.voucher.toLowerCase() == 'purchase return');
+
     api
-        .fetchPurchaseReturnInvoice(dataDynamic[0]['EntryNo'], '1')
+        .fetchPurchaseReturnInvoice(
+            dataDynamic[0]['EntryNo'], '1', voucherTypeData.id)
         .then((value) {
       if (value != null) {
         setState(() {

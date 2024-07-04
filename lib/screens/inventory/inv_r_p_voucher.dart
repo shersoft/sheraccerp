@@ -775,7 +775,7 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
               'invoiceNo': _invoiceData['invoiceNo'].toString(),
               'date': operation == 'UPDATE' || operation == 'DELETE'
                   ? _invoiceData['Ddate']
-                  : DateUtil.dateYMD1(_invoiceData['Ddate'].toString()),
+                  : _invoiceData['Ddate'].toString(),
               'amount': amount,
               'discount': discount,
               'total': total,
