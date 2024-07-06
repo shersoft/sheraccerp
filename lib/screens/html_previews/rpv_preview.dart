@@ -138,13 +138,13 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
           //     information['EntryNo']);
 
           oldBalance = double.parse(obValue['oldBalance'].toString());
-          if (oldBalance > 0) {
-            bill['oldBalance'] = oldBalance;
-          }
+          // if (oldBalance > 0) {
+          bill['oldBalance'] = oldBalance;
+          // }
           balance = double.parse(obValue['balance'].toString());
-          if (balance > 0) {
-            bill['oldBalance'] = oldBalance;
-          }
+          // if (balance > 0) {
+          bill['balance'] = balance;
+          // }
 
           // // var ledgerName = bill['name'];
           // var bal = bill['balance'].toString().split(' ');

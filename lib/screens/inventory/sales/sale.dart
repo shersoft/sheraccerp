@@ -4596,10 +4596,18 @@ class _SaleState extends State<Sale> {
                                                   onTap: () {
                                                     Navigator.of(context).pop();
                                                     setState(() {
-                                                      rate =
-                                                          rateData[index].rate;
-                                                      saleRate =
-                                                          rateData[index].rate;
+                                                      var rated = _conversion !=
+                                                              null
+                                                          ? _conversion > 0
+                                                              ? (rateData[index]
+                                                                      .rate /
+                                                                  _conversion)
+                                                              : rateData[index]
+                                                                  .rate
+                                                          : rateData[index]
+                                                              .rate;
+                                                      rate = rated;
+                                                      saleRate = rated;
                                                       _rateController.text =
                                                           saleRate
                                                               .toStringAsFixed(

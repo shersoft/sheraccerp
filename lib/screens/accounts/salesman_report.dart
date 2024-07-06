@@ -217,7 +217,7 @@ class _SalesManReportState extends State<SalesManReport> {
             for (ReportDesign design in reportDesign) {
               if (!design.visibility) {
                 for (var item in filterItems!) {
-                  item.remove(design.caption.trim());
+                  item.remove(design.caption.replaceAll(' ', '').trim());
                 }
               }
             }

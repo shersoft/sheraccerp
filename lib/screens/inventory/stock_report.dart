@@ -98,9 +98,11 @@ class _StockReportState extends State<StockReport> {
               type: ''));
       location = DataJson(id: otherData.id, name: otherData.name);
     }
-    api
-        .getReportDesignByName('StockItemSummery')
-        .then((value) => reportDesign = value);
+    loadDesignColumns('SimpleSummery');
+  }
+
+  loadDesignColumns(String formName) {
+    api.getReportDesignByName(formName).then((value) => reportDesign = value);
   }
 
   @override
@@ -576,16 +578,14 @@ class _StockReportState extends State<StockReport> {
           if (snapshot.data.isNotEmpty) {
             var data = snapshot.data;
             var filterItems = data;
-            if (lockItemOptions) {
-              for (ReportDesign design in reportDesign) {
-                if (!design.visibility) {
-                  for (var item in filterItems) {
-                    item.remove(design.caption.trim());
-                  }
+            for (ReportDesign design in reportDesign) {
+              if (!design.visibility) {
+                for (var item in filterItems) {
+                  item.remove(design.caption.replaceAll(' ', '').trim());
                 }
               }
-              data = filterItems;
             }
+            data = filterItems;
             tableColumn = data[0].keys.toList();
             var col = tableColumn;
             Map<String, dynamic> totalData = {};
@@ -1267,6 +1267,21 @@ class _StockReportState extends State<StockReport> {
             onChanged: (DataJson data) {
               setState(() {
                 dropdownValueLedgerReportType = data;
+
+                String formName = dropdownValueLedgerReportType.id ==
+                        reportTypeLedgerList[0].id
+                    ? 'StockLedger_Summery'
+                    : dropdownValueLedgerReportType.id ==
+                            reportTypeLedgerList[1].id
+                        ? 'StockLedger_BatchWise'
+                        : dropdownValueLedgerReportType.id ==
+                                reportTypeLedgerList[2].id
+                            ? 'StockLedger_Summery_Daily'
+                            : dropdownValueLedgerReportType.id ==
+                                    reportTypeLedgerList[6].id
+                                ? 'StockLedger_Wop'
+                                : 'StockLedger_Summery';
+                loadDesignColumns(formName);
               });
             },
             items: reportTypeLedgerList
@@ -1295,6 +1310,31 @@ class _StockReportState extends State<StockReport> {
             onChanged: (DataJson data) {
               setState(() {
                 dropdownValueReportType = data;
+                var fName = stockValuation
+                    ? 'LastRate_StockValuation'
+                    : dropdownValueReportType.id == reportTypeList[0].id
+                        ? 'SimpleSummery'
+                        : dropdownValueReportType.id == reportTypeList[1].id
+                            ? 'Stock Profit'
+                            : dropdownValueReportType.id == reportTypeList[2].id
+                                ? 'Category_Wise'
+                                : dropdownValueReportType.id ==
+                                        reportTypeList[3].id
+                                    ? 'ZeroStockItems'
+                                    : dropdownValueReportType.id ==
+                                            reportTypeList[4].id
+                                        ? 'Stock_Ageing'
+                                        : dropdownValueReportType.id ==
+                                                reportTypeList[5].id
+                                            ? 'LocationComparison'
+                                            : dropdownValueReportType.id ==
+                                                    reportTypeList[6].id
+                                                ? 'SerialNo Report'
+                                                : dropdownValueReportType.id ==
+                                                        reportTypeList[7].id
+                                                    ? 'ReOrderLevelList'
+                                                    : 'SimpleSummery';
+                loadDesignColumns(fName);
               });
             },
             items: reportTypeList
