@@ -3742,37 +3742,37 @@ class _BtPrintState extends State<BtPrint> {
                 styles: const PosStyles(align: PosAlign.right, bold: true)),
           ]);
           double totalQty = 0, totalRate = 0;
-          // for (var i = 0; i < dataParticulars.length; i++) {
-          //   if (double.tryParse(dataParticulars[i]['igst'].toString()) > 0) {
-          //     taxPercentages = dataParticulars[i]['igst'].toString() + ' %';
-          //     // if (taxPercentages.contains(
-          //     //     '@' + dataParticulars[i]['igst'].toString() + ' %')) {
-          //   } else {
-          //     taxPercentages = '0 %';
-          //   }
-          //   // }
-          //   var itemName = dataParticulars[i]['itemname'].toString();
-          //   bytes += ticket.text(itemName,
-          //       styles: const PosStyles(align: PosAlign.left, bold: true));
+          for (var i = 0; i < dataParticulars.length; i++) {
+            if (double.tryParse(dataParticulars[i]['igst'].toString()) > 0) {
+              taxPercentages = dataParticulars[i]['igst'].toString() + ' %';
+              // if (taxPercentages.contains(
+              //     '@' + dataParticulars[i]['igst'].toString() + ' %')) {
+            } else {
+              taxPercentages = '0 %';
+            }
+            // }
+            var itemName = dataParticulars[i]['itemname'].toString();
+            bytes += ticket.text(itemName,
+                styles: const PosStyles(align: PosAlign.left, bold: true));
 
-          //   bytes += ticket.row([
-          //     PosColumn(text: '', width: 2),
-          //     PosColumn(
-          //         text:
-          //             '${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}',
-          //         width: 1),
-          //     PosColumn(
-          //         text: '${dataParticulars[i]['Rate']}',
-          //         width: 2,
-          //         styles: const PosStyles(align: PosAlign.right, bold: true)),
-          //     PosColumn(
-          //         text: '${dataParticulars[i]['Total']}',
-          //         width: 2,
-          //         styles: const PosStyles(align: PosAlign.right, bold: true)),
-          //   ]);
-          //   totalQty += dataParticulars[i]['Qty'];
-          //   totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
-          // }
+            bytes += ticket.row([
+              PosColumn(text: '', width: 2),
+              PosColumn(
+                  text:
+                      '${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}',
+                  width: 2),
+              PosColumn(
+                  text: '${dataParticulars[i]['Rate']}',
+                  width: 4,
+                  styles: const PosStyles(align: PosAlign.right, bold: true)),
+              PosColumn(
+                  text: '${dataParticulars[i]['Total']}',
+                  width: 4,
+                  styles: const PosStyles(align: PosAlign.right, bold: true)),
+            ]);
+            totalQty += dataParticulars[i]['Qty'];
+            totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
+          }
           bytes += ticket.hr();
           bytes += ticket.row([
             PosColumn(

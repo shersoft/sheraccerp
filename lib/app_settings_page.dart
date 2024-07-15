@@ -617,8 +617,8 @@ class AppSettings extends StatelessWidget {
                 DropDownSettingsTile<int>(
                   title: 'Item Default Unit',
                   settingKey: 'key-dropdown-item-default-sku-view',
-                  values: unitList.isNotEmpty
-                      ? {for (var e in unitList) e.key + 1: e.value}
+                  values: unitListSettings.isNotEmpty
+                      ? {for (var e in unitListSettings) e.key + 1: e.value}
                       : {
                           2: '',
                         },

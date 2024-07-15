@@ -77,6 +77,8 @@ class _PurchaseState extends State<Purchase> {
       useUniqueCodeAaBarcode = false,
       useOldBarcode = false,
       buttonEvent = false,
+      itemCodeVise = false,
+      itemCodeViseChecked = false,
       enableBarcode = false;
   int locationId = 1, salesManId = 0, decimal = 2;
   String labelSerialNo = 'SerialNo';
@@ -120,6 +122,8 @@ class _PurchaseState extends State<Purchase> {
         ComSettings.getStatus('REAL PRATE BASED PROFIT PERCENTAGE', settings);
     mrpBasedProfit = ComSettings.getStatus('ENABLE MRP BASED PROFIT', settings);
     enableBarcode = ComSettings.getStatus('ENABLE BARCODE OPTION', settings);
+    itemCodeVise = ComSettings.appSettings('bool', 'key-item-by-code', false);
+    itemCodeViseChecked = itemCodeVise;
     isItemSerialNo = ComSettings.getStatus('KEY ITEM SERIAL NO', settings);
     labelSerialNo =
         ComSettings.getValue('KEY ITEM SERIAL NO', settings).toString();
@@ -1201,48 +1205,70 @@ class _PurchaseState extends State<Purchase> {
                       return index == 0
                           ? Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: Row(
+                              child: Column(
                                 children: [
-                                  Flexible(
-                                    child: TextField(
-                                      decoration: const InputDecoration(
-                                        border: OutlineInputBorder(),
-                                        label: Text('Search...'),
+                                  Row(
+                                    children: [
+                                      Visibility(
+                                        visible: itemCodeVise,
+                                        child: Checkbox(
+                                          value: itemCodeViseChecked,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              itemCodeViseChecked =
+                                                  value ? true : false;
+                                            });
+                                          },
+                                        ),
                                       ),
-                                      onChanged: (text) {
-                                        text = text.toLowerCase();
-                                        setState(() {
-                                          itemDisplay = items.where((item) {
-                                            var itemName =
-                                                item.itemName.toLowerCase();
-                                            return itemName.contains(text);
-                                          }).toList();
-                                        });
-                                      },
-                                    ),
+                                      Flexible(
+                                        child: TextField(
+                                          decoration: const InputDecoration(
+                                            border: OutlineInputBorder(),
+                                            label: Text('Search...'),
+                                          ),
+                                          onChanged: (text) {
+                                            text = text.toLowerCase();
+                                            setState(() {
+                                              itemDisplay = items.where((item) {
+                                                var itemName =
+                                                    itemCodeViseChecked
+                                                        ? item.itemCode
+                                                            .toLowerCase()
+                                                        : item.itemName
+                                                            .toLowerCase();
+                                                return itemName.contains(text);
+                                              }).toList();
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.add_circle,
+                                          color: kPrimaryColor,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            items = [];
+                                            itemDisplay = [];
+                                            isItemData = false;
+                                          });
+                                          Navigator.pushNamed(
+                                              context, '/product');
+                                        },
+                                      )
+                                    ],
                                   ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.add_circle,
-                                      color: kPrimaryColor,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        items = [];
-                                        itemDisplay = [];
-                                        isItemData = false;
-                                      });
-                                      Navigator.pushNamed(context, '/product');
-                                    },
-                                  )
                                 ],
                               ),
                             )
                           : InkWell(
                               child: Card(
                                 child: ListTile(
-                                    title:
-                                        Text(itemDisplay[index - 1].itemName)),
+                                    title: Text(itemCodeViseChecked
+                                        ? itemDisplay[index - 1].itemCode
+                                        : itemDisplay[index - 1].itemName)),
                               ),
                               onTap: () {
                                 setState(() {
@@ -1271,7 +1297,9 @@ class _PurchaseState extends State<Purchase> {
                                 text = text.toLowerCase();
                                 setState(() {
                                   itemDisplay = items.where((item) {
-                                    var itemName = item.itemName.toLowerCase();
+                                    var itemName = itemCodeViseChecked
+                                        ? item.itemCode.toLowerCase()
+                                        : item.itemName.toLowerCase();
                                     return itemName.contains(text);
                                   }).toList();
                                 });
@@ -2428,7 +2456,7 @@ class _PurchaseState extends State<Purchase> {
                                         ? UnitSettings.getUnitName(
                                             _dropDownUnit)
                                         : 'Unit'),
-                                    items: unitList
+                                    items: unitListSettings
                                         .map<DropdownMenuItem<String>>((item) {
                                       return DropdownMenuItem<String>(
                                         value: item.key.toString(),

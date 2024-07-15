@@ -49,8 +49,7 @@ const gstCommonPassword = 'Malli#123';
 const gstCommonMailId = 'shersoftware@gmail.com';
 const gstCommonGstNo = '29AABCT1332L000';
 const gstCommonClientId = 'ce357943-5598-4af5-8d7f-7119ef5dd2b3';
-const gstCommonClientSecret =
-    '2dbffc02-86b9-4a48-9782-03727edad504'; //8584 4584 7004
+const gstCommonClientSecret = '2dbffc02-86b9-4a48-9782-03727edad504';
 
 bool isDarkTheme = false;
 bool isUsingHive = true;
@@ -82,7 +81,7 @@ set setToDay(String day) => _toDay = day;
 CustomerModel tempLedgerData;
 
 List<UnitModel> unitData = [];
-List unitList = [];
+List unitListSettings = [];
 List locationList = [];
 List areaList = [];
 List salesmanList = [];
@@ -156,14 +155,15 @@ class ComSettings {
     DioService api = DioService();
     api.fetchUnitList(0).then((value) {
       unitData = value;
-      if (unitList.isEmpty) {
-        unitList.add(AppSettingsMap(key: 1, value: ''));
+      if (unitListSettings.isEmpty) {
+        unitListSettings.add(AppSettingsMap(key: 1, value: ''));
       }
       for (var data in unitData) {
-        var exist = unitList.firstWhere((element) => element.value == data.name,
+        var exist = unitListSettings.firstWhere(
+            (element) => element.value == data.name,
             orElse: () => null);
         if (exist == null) {
-          unitList.add(AppSettingsMap(key: data.id, value: data.name));
+          unitListSettings.add(AppSettingsMap(key: data.id, value: data.name));
         }
       }
     });
@@ -567,8 +567,8 @@ int printLines;
 class UnitSettings {
   static getUnitName(int id) {
     String name = '';
-    if (unitList.isNotEmpty) {
-      var exist = unitList.firstWhere((element) => element.key == id,
+    if (unitListSettings.isNotEmpty) {
+      var exist = unitListSettings.firstWhere((element) => element.key == id,
           orElse: () => null);
       if (exist != null) {
         name = exist.value;
@@ -579,8 +579,8 @@ class UnitSettings {
 
   static getUnitId(String name) {
     int id = 0;
-    if (unitList.isNotEmpty) {
-      var exist = unitList.firstWhere((element) => element.name == name,
+    if (unitListSettings.isNotEmpty) {
+      var exist = unitListSettings.firstWhere((element) => element.name == name,
           orElse: () => null);
       if (exist != null) {
         id = exist.id;

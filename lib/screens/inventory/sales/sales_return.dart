@@ -79,6 +79,7 @@ class _SalesReturnState extends State<SalesReturn> {
   List<dynamic> _ledger = [];
   List<ProductPurchaseModel> itemDisplay = [];
   List<ProductPurchaseModel> items = [];
+  List<UnitModel> unitList = [];
   int saleAccount = 0;
   int lId = 0, groupId = 0, acId = 0;
   var salesManId = 0;
@@ -1656,7 +1657,6 @@ class _SalesReturnState extends State<SalesReturn> {
         rate = saleRate;
       }
       uniqueCode = productModelPrize['uniquecode'];
-      List<UnitModel> unitList = [];
     } else {
       pRate = double.tryParse(productModelPrize['prate'].toString());
       rPRate = double.tryParse(productModelPrize['realprate'].toString());
@@ -1685,7 +1685,6 @@ class _SalesReturnState extends State<SalesReturn> {
         rate = saleRate;
       }
       uniqueCode = productModelPrize['uniquecode'];
-      List<UnitModel> unitList = [];
     }
     calculate() {
       if (enableMULTIUNIT) {

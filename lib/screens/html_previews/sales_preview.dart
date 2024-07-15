@@ -236,53 +236,6 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         loadAsset();
         _isLoading = false;
 
-        List itemIdList = [];
-        // for (var u in dataParticularsAll) {
-        //   if (itemIdList.contains(u["itemId"].toString().trim())) {
-        //     int index = dataParticulars.indexWhere((i) =>
-        //         i['itemId'].toString().trim() == u['itemId'].toString().trim());
-        //     double qty =
-        //         double.tryParse(dataParticulars[index]['Qty'].toString()) +
-        //             double.tryParse(u['Qty'].toString());
-        //     // dataParticulars[index]['hsncode'] = hsncode;
-        //     dataParticulars[index]['Qty'] = qty;
-        //     dataParticulars[index]['Net'] = qty *
-        //         double.tryParse(dataParticulars[index]['RealRate'].toString());
-        //     dataParticulars[index]['CGST'] =
-        //         double.tryParse(dataParticulars[index]['CGST'].toString()) +
-        //             double.tryParse(u['CGST'].toString());
-        //     dataParticulars[index]['SGST'] =
-        //         double.tryParse(dataParticulars[index]['SGST'].toString()) +
-        //             double.tryParse(u['SGST'].toString());
-        //     dataParticulars[index]['IGST'] =
-        //         double.tryParse(dataParticulars[index]['IGST'].toString()) +
-        //             double.tryParse(u['IGST'].toString());
-        //     dataParticulars[index]['Total'] =
-        //         double.tryParse(dataParticulars[index]['Total'].toString()) +
-        //             double.tryParse(u['Total'].toString());
-        //     dataParticulars[index]['GrossValue'] = double.tryParse(
-        //             dataParticulars[index]['GrossValue'].toString()) +
-        //         double.tryParse(u['GrossValue'].toString());
-        //     dataParticulars[index]['cess'] =
-        //         double.tryParse(dataParticulars[index]['cess'].toString()) +
-        //             double.tryParse(u['cess'].toString());
-        //     dataParticulars[index]['adcess'] =
-        //         double.tryParse(dataParticulars[index]['adcess'].toString()) +
-        //             double.tryParse(u['adcess'].toString());
-        //     dataParticulars[index]['Disc'] =
-        //         double.tryParse(dataParticulars[index]['Disc'].toString()) +
-        //             double.tryParse(u['Disc'].toString());
-        //     dataParticulars[index]['DiscPersent'] = double.tryParse(
-        //             dataParticulars[index]['DiscPersent'].toString()) +
-        //         double.tryParse(u['DiscPersent'].toString());
-        //     dataParticulars[index]['Fcess'] =
-        //         double.tryParse(dataParticulars[index]['Fcess'].toString()) +
-        //             double.tryParse(u['Fcess'].toString());
-        //   } else {
-        //     itemIdList.add(u['itemId'].toString().trim());
-        //     dataParticulars.add(u);
-        //   }
-        // }
         dataParticulars.addAll(dataParticularsAll);
 
         data['Particulars'] = dataParticulars;
@@ -338,15 +291,6 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                 onPressed: () {
                   setState(
                     () {
-                      // Future.delayed(const Duration(milliseconds: 1000), () {
-                      // _createPDF(
-                      //         title +
-                      //             '_ref_${dataInformation['RealEntryNo']}',
-                      //         companySettings,
-                      //         settings,
-                      //         data,
-                      //         customerBalance)
-                      //     .then((value) =>
                       Navigator.of(context).push(MaterialPageRoute(
                           builder: (_) => PDFScreen(
                                 pathPDF: pdfPath,
@@ -383,21 +327,6 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                     '/select_ledger',
                   );
                 }),
-            // IconButton(
-            //     icon: const Icon(Icons.picture_in_picture),
-            //     onPressed: () {
-            //       sample image for test
-            //       _capturePng().then((value) async {
-            //         // Path tempDir = await getTemporaryDirectzory();
-            //         var tempDir = await getTemporaryDirectory();
-            //         var path = '${tempDir.path}/image.png';
-            //         var iss = await File(path).exists();
-            //         if (iss)
-            //           OpenFile.open(path);
-            //         File files = await File(path).create();
-            //         await files.writeAsBytesSync(value);
-            //       });
-            //     }),
             IconButton(
                 icon: const Icon(Icons.print),
                 onPressed: () {
@@ -475,22 +404,6 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
   }
 
   var pdfPath = '';
-  generatepdfWidget(title) {
-    // return Container(child: pw.PdfPreview(
-    //     maxPageWidth: 700,
-    //     build: (format) => examples[_tab].builder(format, _data),
-    //     actions: actions,
-    //     onPrinted: _showPrintedToast,
-    //     onShared: _showSharedToast,
-    //   ),);
-
-    // Navigator.of(context).push(MaterialPageRoute(
-    //     builder: (_) => PDFScreen(
-    //           pathPDF: value,
-    //           subject: title,
-    //           text: 'this is ' + title,
-    //         )));
-  }
 
   invoiceGenerate(context) {
     bool isLoading = false;
@@ -833,7 +746,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
       "decimalPoint": decimal ?? 2,
       "CurrencyFormat": "##0.00",
       "printCaption": invoiceHead ?? ' ',
-      "obTotal": "0.00",
+      "obTotal": dataInformation['Balance'].toString(),
       "obNetBalance": "0.00",
       "checkob": true,
       "bankifsc": ' ',
@@ -902,7 +815,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
       "ServiceCharge": "0.00",
       "GrandTotal": dataInformation['GrandTotal'].toString() ?? '0',
       "cashpaid": dataInformation['CashReceived'].toString() ?? '0',
-      "ledgerOpeningBalance": "0.00",
+      "ledgerOpeningBalance": dataInformation['LedgerBalance'].toString(),
       "Roundoff": dataInformation['Roundoff'].toString() ?? '0',
       "Time":
           DateUtil.timeHMSA(dataInformation['BTime'].toString()) ?? '00:00:000',
@@ -1262,47 +1175,6 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                               color: Colors.black,
                               fontSize: 25,
                               fontWeight: FontWeight.bold)),
-                      // /*company*/
-                      // Row(
-                      //   children: [
-                      //     Text(companySettings.name'],
-                      //         style: TextStyle(
-                      //             color: Colors.black,
-                      //             fontSize: 22,
-                      //             fontWeight: FontWeight.bold)),
-                      //   ],
-                      // ),
-                      // Row(
-                      //   children: [
-                      //     Text(companySettings.add1'] +
-                      //         ',' +
-                      //         companySettings.add2']),
-                      //   ],
-                      // ),
-                      // Row(
-                      //   children: [
-                      //     Text(companySettings.telephone'] +
-                      //         ',' +
-                      //         companySettings.mobile']),
-                      //   ],
-                      // ),
-                      // Row(
-                      //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      //   children: [
-                      //     Text(Settings.getValue('GST-NO', settings)),
-                      //     Text('Date : ' + DateUtil.dateDMY(dataInformation['DDate'])),
-                      //   ],
-                      // ),
-                      // Row(
-                      //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      //   children: [
-                      //     Text(companySettings.pin']),
-                      //     Text('Invoice : ' + dataInformation['InvoiceNo']),
-                      //   ],
-                      // ),
-                      /*customer*/
-                      // Container(child: Text(' ')
-                      // ),
                       Row(
                         children: [
                           const Text('BILL To :- ',
@@ -1373,239 +1245,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                 ));
   }
 
-  _itemHeader(String tType) {
-    var str = '';
-    str += tType == 'INDIA'
-        ? '''
-    <tr>
-                            <th width="64%" align="center"><b>Description</b></th>
-                            <th width="8%" align="center"><b>HSN</b></th>
-                            <th width="8%" align="center"><b>Qty</b></th>
-                            <th width="10%" align="center"><b>Rate</b></th>
-                            <th width="10%" align="center"><b>Tax%</b></th>
-                            <th width="10%" align="center"><b>CGST</b></th>
-                            <th width="10%" align="center"><b>SGST</b></th>
-                            <th width="10%" align="center"><b>Total</b></th>
-                            '''
-        : '''<tr>
-                            <th width="64%" align="center"><b>Description</b></th>
-                            <th width="8%" align="center"><b>HSN</b></th>
-                            <th width="8%" align="center"><b>Qty</b></th>
-                            <th width="10%" align="center"><b>Rate</b></th>
-                            <th width="10%" align="center"><b>Tax%</b></th>
-                            <th width="10%" align="center"><b>Vat</b></th>
-                            <th width="10%" align="center"><b>Total</b></th>''';
-    return str;
-  }
-
-  _itemHeader1() {
-    var str = '';
-    str += isItemSerialNo
-        ? '''
-                            <th width="50%" align="center"><b>Description</b></th>
-                            <th width="8%" align="center"><b>''' +
-            labelSerialNo +
-            '''</b></th>
-                            <th width="8%" align="center"><b>Qty</b></th>
-                            <th width="10%" align="center"><b>Rate</b></th>
-                            <th width="10%" align="center"><b>Total</b></th>
-                        '''
-        : '''
-                            <th width="64%" align="center"><b>Description</b></th>
-                            <th width="8%" align="center"><b>Qty</b></th>
-                            <th width="10%" align="center"><b>Rate</b></th>
-                            <th width="10%" align="center"><b>Total</b></th>
-                        ''';
-    return str;
-  }
-
-  _item(bool taxIn) {
-    var str = '';
-    for (var i = 0; i < dataParticulars.length; i++) {
-      str += taxIn
-          ? companyTaxMode == 'INDIA'
-              ? isItemSerialNo
-                  ? '''
-                    </tr>
-                      <tr class="item-row">
-                      <td width="50%" align="left">${dataParticulars[i]['itemname']} ${dataParticulars[i]['serialno'].toString()}</td>
-                      <td width="6%" align="left">${dataParticulars[i]['hsncode']}</td>
-                      <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
-                      <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
-                      <td width="3%" align="right">${double.tryParse(dataParticulars[i]['igst'].toString()).toStringAsFixed(decimal)}</td>
-                      <td width="10%" align="right">${double.tryParse(dataParticulars[i]['CGST'].toString()).toStringAsFixed(decimal)}</td>
-                      <td width="10%" align="right">${double.tryParse(dataParticulars[i]['SGST'].toString()).toStringAsFixed(decimal)}</td>
-                      <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
-                    </tr>
-                    '''
-                  : '''
-                  </tr>
-                    <tr class="item-row">
-                    <td width="50%" align="left">${dataParticulars[i]['itemname']}</td>
-                    <td width="6%" align="left">${dataParticulars[i]['hsncode']}</td>
-                    <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
-                    <td width="3%" align="right">${double.tryParse(dataParticulars[i]['igst'].toString()).toStringAsFixed(decimal)}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['CGST'].toString()).toStringAsFixed(decimal)}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['SGST'].toString()).toStringAsFixed(decimal)}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
-                  </tr>
-                  '''
-              : isItemSerialNo
-                  ? '''
-                  </tr>
-                    <tr class="item-row">
-                    <td width="50%" align="left">${dataParticulars[i]['itemname']} ${dataParticulars[i]['serialno'].toString()}</td>
-                    <td width="6%" align="left">${dataParticulars[i]['hsncode']}</td>
-                    <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
-                    <td width="3%" align="right">${double.tryParse(dataParticulars[i]['igst'].toString()).toStringAsFixed(decimal)}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['IGST'].toString()).toStringAsFixed(decimal)}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
-                  </tr>
-                  '''
-                  : '''
-                  </tr>
-                    <tr class="item-row">
-                    <td width="50%" align="left">${dataParticulars[i]['itemname']}</td>
-                    <td width="6%" align="left">${dataParticulars[i]['hsncode']}</td>
-                    <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
-                    <td width="3%" align="right">${double.tryParse(dataParticulars[i]['igst'].toString()).toStringAsFixed(decimal)}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['IGST'].toString()).toStringAsFixed(decimal)}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
-                  </tr>
-                '''
-          : isItemSerialNo
-              ? '''
-                  </tr>
-                    <tr class="item-row">
-                    <td width="64%" align="left">${dataParticulars[i]['itemname']} ${dataParticulars[i]['serialno'].toString()}</td>
-                    <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
-                    <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
-                  </tr>
-                '''
-              : '''
-                </tr>
-                  <tr class="item-row">
-                  <td width="64%" align="left">${dataParticulars[i]['itemname']}</td>
-                  <td width="6%" align="right">${dataParticulars[i]['unitName'].toString().isNotEmpty ? dataParticulars[i]['Qty'].toString() + ' (' + dataParticulars[i]['unitName'] + ')' : dataParticulars[i]['Qty']}</td>
-                  <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Rate'].toString()).toStringAsFixed(decimal)}</td>
-                  <td width="10%" align="right">${double.tryParse(dataParticulars[i]['Total'].toString()).toStringAsFixed(decimal)}</td>
-                </tr>
-                ''';
-      totalQty += double.tryParse(dataParticulars[i]['Qty'].toString());
-      totalRate += double.tryParse(dataParticulars[i]['Rate'].toString());
-    }
-    strLine = taxIn
-        ? companyTaxMode == 'INDIA'
-            ? '8'
-            : '7'
-        : '4';
-    return str;
-  }
-
   var strLine = "4";
-
-  String subTotal(bool taxIn) {
-    // var str = '''
-    //                     <td width="64%" align="center">Total : </td>
-    //                     <td width="8%" align="right">${totalQty.toStringAsFixed(0)}</td>
-    //                     <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
-    //                     <td width="10%" align="right">${double.tryParse(dataInformation['Total'].toString()).toStringAsFixed(decimal)}</td>
-    //                     ''';
-    var str = taxIn
-        ? companyTaxMode == 'INDIA'
-            ? isItemSerialNo
-                ? '''
-                    </tr>
-                      <tr class="item-row">
-                      <td width="55%" align="center">Total : </td>
-                      <td width="6%" align="left"></td>
-                      <td width="6%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                      <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
-                      <td width="3%" align="right"></td>
-                      <td width="10%" align="right"></td>
-                      <td width="10%" align="right"></td>
-                      <td width="10%" align="right">${double.tryParse(dataInformation['Total'].toString()).toStringAsFixed(decimal)}</td>
-                    </tr>
-                    '''
-                : '''
-                  </tr>
-                    <tr class="item-row">
-                    <td width="55%" align="center">Total : </td>
-                    <td width="6%" align="left"></td>
-                    <td width="6%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                    <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
-                    <td width="3%" align="right"></td>
-                    <td width="10%" align="right"></td>
-                    <td width="10%" align="right"></td>
-                    <td width="10%" align="right">${double.tryParse(dataInformation['Total'].toString()).toStringAsFixed(decimal)}</td>
-                  </tr>
-                  '''
-            : isItemSerialNo
-                ? '''
-                  </tr>
-                    <tr class="item-row">
-                    <td width="55%" align="center">Total : </td>
-                    <td width="6%" align="left"></td>
-                    <td width="6%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                    <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
-                    <td width="3%" align="right"></td>
-                    <td width="10%" align="right"></td>
-                    <td width="10%" align="right">${double.tryParse(dataInformation['Total'].toString()).toStringAsFixed(decimal)}</td>
-                  </tr>
-                  '''
-                : '''
-                  </tr>
-                    <tr class="item-row">
-                    <td width="55%" align="center">Total : </td>
-                    <td width="6%" align="left"></td>
-                    <td width="6%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                    <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
-                    <td width="3%" align="right"></td>
-                    <td width="10%" align="right"></td>
-                    <td width="10%" align="right">${double.tryParse(dataInformation['Total'].toString()).toStringAsFixed(decimal)}</td>
-                  </tr>
-                '''
-        : isItemSerialNo
-            ? '''
-                  </tr>
-                    <tr class="item-row">
-                    <td width="68%" align="center">Total : </td>
-                    <td width="6%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                    <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
-                    <td width="10%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                  </tr>
-                '''
-            : '''
-                </tr>
-                    <tr class="item-row">
-                    <td width="68%" align="center">Total : </td>
-                    <td width="6%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                    <td width="10%" align="right">${totalRate.toStringAsFixed(decimal)}</td>
-                    <td width="10%" align="right">${totalQty.toStringAsFixed(0)}</td>
-                  </tr>
-                ''';
-    return str;
-  }
-
-  _otherAmount() {
-    var str = ''; //Auto,symbol,LedName,Amount
-    for (var i = 0; i < otherAmount.length; i++) {
-      if (otherAmount[i]['Amount'].toDouble() > 0) {
-        str += '''
-      <tr>
-        <td colspan="3" class="blank"> </td>
-        <td colspan="2" class="total-line" align="right">${otherAmount[i]['LedName']} :</td>
-        <td class="total-value" align="right">${otherAmount[i]['Amount']}</td>
-      </tr>
-      ''';
-      }
-    }
-    return str;
-  }
 
   Future<Uint8List> _captureQr() async {
     // print('inside');
@@ -1727,7 +1367,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                             mainAxisAlignment:
                                                 MainAxisAlignment.center,
                                             crossAxisAlignment:
-                                                CrossAxisAlignment.center,
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Padding(
                                                   padding:
@@ -5645,13 +5285,6 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                   const SizedBox(
                                                     height: 5,
                                                   ),
-                                                  // Text(
-                                                  //   "${(lineTotal - dataInformation['ReturnAmount'] + otherAmount.fold(0.0, (t, e) => t + double.parse(e['Symbol'] == '-' ? (e['Amount'] * -1).toString() : e['Amount'].toString()))).toStringAsFixed(2)} ",
-                                                  //   style: const TextStyle(
-                                                  //       fontSize: 8,
-                                                  //       fontWeight:
-                                                  //           FontWeight.bold),
-                                                  // ),
                                                 ],
                                               )
                                             ],
@@ -5755,10 +5388,11 @@ askPrintDevice(
     //
   } else if (printerType == 4) {
     // 4: 'Document',
-    if (printModel == 4)
+    if (printModel == 4) {
       savePrintPDF(documentPDF);
-    else
+    } else {
       printDocument(title, companySettings, settings, data, customerModel);
+    }
   } else if (printerType == 5) {
     // 5: 'POS',
     if (printerDevice == 2) {
@@ -5803,10 +5437,11 @@ askPrintDevice(
     // 8: 'USB,
     //
   } else {
-    if (printModel == 4)
+    if (printModel == 4) {
       savePrintPDF(documentPDF);
-    else
+    } else {
       printDocument(title, companySettings, settings, data, customerModel);
+    }
   }
 }
 
@@ -5868,51 +5503,6 @@ _showPrinterSize(BuildContext context, title, companySettings, settings, data,
     _asyncSimpleDialog(context).then((value) => printBluetooth(
         context, title, companySettings, settings, data, byteImage, value));
   }
-  // return await showDialog(
-  //   context: context,
-  //   builder: (context) => AlertDialog(
-  //     title: const Text('Printer Size'),
-  //     // content: const Text('Do you want to logout'),
-  //     // return showDialog(
-  //     //     context: context,
-  //     //     builder: (context) {
-  //     //       return AlertDialog(
-  //     //         title: const Text('Printer Size'),
-  //     content: SizedBox(
-  //         width: double.minPositive,
-  //         child: Expanded(
-  //           child: ListView.builder(
-  //             shrinkWrap: true,
-  //             itemCount: newDataList == null ? 0 : newDataList.length,
-  //             itemBuilder: (BuildContext context, int index) {
-  //               return ListTile(
-  //                   title: Text(newDataList[index]),
-  //                   onTap: () {
-  //                     var bill = data['Information'][0];
-  //                     var ledgerName = mainAccount
-  //                         .firstWhere(
-  //                           (element) =>
-  //                               element['LedCode'].toString() ==
-  //                               bill['Customer'].toString(),
-  //                           orElse: () => {'LedName': bill['ToName']},
-  //                         )['LedName']
-  //                         .toString();
-  //                     if (ledgerName != 'CASH') {
-  //                       var a = 'Not a cash bill';
-  //                       debugPrint('**************************$a');
-  //                     } else {
-  //                       var b = 'cash bill';
-  //                       debugPrint('**************************$b');
-  //                     }
-
-  //                     printBluetooth(context, title, companySettings, settings,
-  //                         data, byteImage, newDataList[index]);
-  //                   });
-  //             },
-  //           ),
-  //         )),
-  //   ),
-  // );
 }
 
 Future<String> _asyncSimpleDialog(BuildContext context) async {
@@ -20485,7 +20075,6 @@ Future<pw.Document> makePDF(
 //         return widgets;
 //       },
 //     ));
-
   }
   documentPDF = pdf;
   return pdf;

@@ -64,7 +64,13 @@ mixin CompanyScopeModel on Model {
         defaultLocation = defL.isNotEmpty ? defL : defaultLocation;
         var lockSettings =
             ComSettings.getValue('KEY LOCK SETTINGS', _settings).toString();
-        sherSoftPassword = lockSettings.isNotEmpty ? lockSettings : '';
+        bool secureAppSettings =
+            ComSettings.getStatus('KEY LOCK SETTINGS', _settings);
+        sherSoftPassword = secureAppSettings
+            ? lockSettings.isNotEmpty
+                ? lockSettings
+                : ''
+            : '';
         final settingsData = await DioService().getSoftwareSettings();
         if (settingsData != null) {
           _settings = settingsData;

@@ -4401,7 +4401,7 @@ class _SaleState extends State<Sale> {
                                             ? UnitSettings.getUnitName(
                                                 _dropDownUnit)
                                             : 'Unit'),
-                                        items: unitList
+                                        items: unitListSettings
                                             .map<DropdownMenuItem<String>>(
                                                 (item) {
                                           return DropdownMenuItem<String>(

@@ -88,6 +88,7 @@ class _SaleState extends State<Sale> {
       previewData = false,
       oldBill = false,
       itemCodeVise = false,
+      itemCodeViseChecked = false,
       itemStockAll = false,
       isItemRateEditLocked = false,
       isMinimumRate = false,
@@ -126,6 +127,7 @@ class _SaleState extends State<Sale> {
   final taxNoControl = TextEditingController();
   final mobileNoControl = TextEditingController();
   final FocusNode _focusNodeCashReceived = FocusNode();
+  String oldBalance = '0';
 
   int page = 1, pageTotal = 0, totalRecords = 0, valueDaysBefore = 0;
   int saleAccount = 0, acId = 0, decimal = 2;
@@ -193,6 +195,7 @@ class _SaleState extends State<Sale> {
 
     ledgerScanner = ComSettings.appSettings('bool', 'key-customer-scan', false);
     itemCodeVise = ComSettings.appSettings('bool', 'key-item-by-code', false);
+    itemCodeViseChecked = itemCodeVise;
     itemStockAll = ComSettings.appSettings('bool', 'key-item-stock-all', false);
     keyItemsVariantStock =
         ComSettings.appSettings('bool', 'key-items-variant-stock', false);
@@ -320,6 +323,18 @@ class _SaleState extends State<Sale> {
 
     api.getVehicleNameList().then((value) {
       vehicleNameListDisplay.addAll(value);
+    });
+  }
+
+  getOldBalance(int id, String type, String entryNo) {
+    api
+        .getBalance(
+            id, 'CustomerOB', type, DateUtil.dateYMD(formattedDate), entryNo)
+        .then((obValue) {
+      setState(() {
+        oldBalance = obValue['oldBalance'].toString();
+        // balance = double.parse(obValue['balance'].toString());
+      });
     });
   }
 
@@ -2006,6 +2021,7 @@ class _SaleState extends State<Sale> {
               siteNameControl.text =
                   snapshot.data.address3 + " " + snapshot.data.address4;
               customerNameControl.text = ledgerModel.name;
+              oldBalance = ledgerModel.balance;
             }
             return Padding(
               padding: const EdgeInsets.all(10.0),
@@ -2544,41 +2560,93 @@ class _SaleState extends State<Sale> {
                   return index == 0
                       ? Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: TextField(
-                            decoration: InputDecoration(
-                                suffixIcon: Visibility(
-                                  visible: enableBarcode,
-                                  child: IconButton(
-                                      onPressed: () {
-                                        searchProductBarcode();
-                                      },
-                                      icon: const Icon(Icons.document_scanner)),
+                          child: Row(
+                            children: [
+                              Visibility(
+                                visible: itemCodeVise,
+                                child: SizedBox(
+                                  // height: 20,
+                                  width: 80,
+                                  child: DropdownSearch<dynamic>(
+                                    maxHeight: 300,
+                                    onFind: (String filter) =>
+                                        api.getSalesListData(
+                                            filter, 'sales_list/ItemCode'),
+                                    dropdownSearchDecoration:
+                                        const InputDecoration(
+                                            border: OutlineInputBorder(),
+                                            labelText: 'Code'),
+                                    onChanged: (dynamic data) {
+                                      String itemId = data.name;
+                                      api
+                                          .fetchStockItem(int.tryParse(itemId))
+                                          .then((responds) {
+                                        var res = responds[0];
+                                        setState(() {
+                                          productModel = StockItem(
+                                              code: itemId,
+                                              hasVariant: false,
+                                              id: res.productId,
+                                              name: res.name,
+                                              quantity: res.quantity);
+                              
+                                          lastRateStatus = true;
+                                          lastRateSelected = false;
+                                          nextWidget = 3;
+                                        });
+                                      });
+                                      // setState(() {
+                                      //   productModel = itemDisplay[index - 1];
+                                      //   // _autoVariantSelect =
+                                      //   //     productModel.hasVariant ? true : false;
+                                      //   lastRateStatus = true;
+                                      //   lastRateSelected = false;
+                                      //   nextWidget = 3;
+                                      // });
+                                    },
+                                    showSearchBox: true,
+                                  ),
                                 ),
-                                border: const OutlineInputBorder(),
-                                label: const Text('Search...')),
-                            onChanged: (text) {
-                              text = text.toLowerCase();
-                              setState(() {
-                                itemLike = text.toLowerCase();
+                              ),
+                              Flexible(
+                                child: TextField(
+                                  decoration: InputDecoration(
+                                      suffixIcon: Visibility(
+                                        visible: enableBarcode,
+                                        child: IconButton(
+                                            onPressed: () {
+                                              searchProductBarcode();
+                                            },
+                                            icon: const Icon(
+                                                Icons.document_scanner)),
+                                      ),
+                                      border: const OutlineInputBorder(),
+                                      label: const Text('Search...')),
+                                  onChanged: (text) {
+                                    text = text.toLowerCase();
+                                    setState(() {
+                                      itemLike = text.toLowerCase();
 
-                                //   itemDisplay = items.where((item) {
-                                //     // var itemName = itemCodeVise
-                                //     //     ? item.code.toString().toLowerCase() +
-                                //     //         ' ' +
-                                //     //         item.name.toLowerCase()
-                                //     //     : item.name.toLowerCase();
-                                //     // return itemName.contains(text);
-                                //   }).toList();
-                              });
-                            },
-                            autofocus: true,
+                                      //   itemDisplay = items.where((item) {
+                                      //     // var itemName = itemCodeVise
+                                      //     //     ? item.code.toString().toLowerCase() +
+                                      //     //         ' ' +
+                                      //     //         item.name.toLowerCase()
+                                      //     //     : item.name.toLowerCase();
+                                      //     // return itemName.contains(text);
+                                      //   }).toList();
+                                    });
+                                  },
+                                  autofocus: true,
+                                ),
+                              ),
+                            ],
                           ),
                         )
                       : InkWell(
                           child: Card(
                             child: ListTile(
-                              title: Text(
-                                  'Name : ${itemCodeVise ? itemDisplay[index - 1].code.toString() + ' ' + itemDisplay[index - 1].name : itemDisplay[index - 1].name}'),
+                              title: Text('${itemDisplay[index - 1].name}'),
                               subtitle: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -2763,30 +2831,46 @@ class _SaleState extends State<Sale> {
                   return index == 0
                       ? Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: TextField(
-                            decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                label: Text('Search...')),
-                            onChanged: (text) {
-                              text = text.toLowerCase();
-                              setState(() {
-                                itemDisplay = items.where((item) {
-                                  var itemName = itemCodeVise
-                                      ? item.code.toString().toLowerCase() +
-                                          ' ' +
-                                          item.name.toLowerCase()
-                                      : item.name.toLowerCase();
-                                  return itemName.contains(text);
-                                }).toList();
-                              });
-                            },
+                          child: Row(
+                            children: [
+                              Visibility(
+                                visible: itemCodeVise,
+                                child: Checkbox(
+                                  value: itemCodeViseChecked,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      itemCodeViseChecked =
+                                          value ? true : false;
+                                    });
+                                  },
+                                ),
+                              ),
+                              Flexible(
+                                child: TextField(
+                                  decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      label: Text('Search...')),
+                                  onChanged: (text) {
+                                    text = text.toLowerCase();
+                                    setState(() {
+                                      itemDisplay = items.where((item) {
+                                        var itemName = itemCodeViseChecked
+                                            ? item.code.toString().toLowerCase()
+                                            : item.name.toLowerCase();
+                                        return itemName.contains(text);
+                                      }).toList();
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
                         )
                       : InkWell(
                           child: Card(
                             child: ListTile(
                               title: Text(
-                                  'Name : ${itemCodeVise ? itemDisplay[index - 1].code.toString() + ' ' + itemDisplay[index - 1].name : itemDisplay[index - 1].name}'),
+                                  '${itemCodeViseChecked ? itemDisplay[index - 1].code.toString() + ' ' + itemDisplay[index - 1].name : itemDisplay[index - 1].name}'),
                               subtitle: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -4411,7 +4495,7 @@ class _SaleState extends State<Sale> {
                                             ? UnitSettings.getUnitName(
                                                 _dropDownUnit)
                                             : 'Unit'),
-                                        items: unitList
+                                        items: unitListSettings
                                             .map<DropdownMenuItem<String>>(
                                                 (item) {
                                           return DropdownMenuItem<String>(
@@ -6212,7 +6296,7 @@ class _SaleState extends State<Sale> {
                         // style: TextStyle(fontSize: 10),
                       ),
                       Text(
-                        'OB:${ledgerModel.balance}',
+                        'OB:$oldBalance',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ],
@@ -6789,12 +6873,12 @@ class _SaleState extends State<Sale> {
         icon: Icons.check,
         onPressedNo: () {
           Navigator.of(context).pop();
-          Navigator.pushReplacementNamed(
-              context,
-              ComSettings.appSettings('bool', 'key-simple-sales', false)
-                  ? '/SimpleSale'
-                  : '/sales',
-              arguments: Sale(thisSale: thisSale, oldSale: true));
+          widgetID = true;
+          dataDisplay = [];
+          nextWidget = 0;
+          // totalRecords = 0;
+          // isLoadingData = false;
+          setState(() {});
         },
         onPressedYes: () {
           Navigator.of(context).pop();
@@ -6954,9 +7038,8 @@ class _SaleState extends State<Sale> {
         ledgerModel = cModel;
         addressControl.text = cModel.address1;
         siteNameControl.text = cModel.address2;
-        // api
-        //     .getCustomerDetail(ledgerModel.id)
-        //     .then((ledgerData) => accountModel = ledgerData);
+        getOldBalance(ledgerModel.id, salesTypeData.type,
+            information['EntryNo'].toString());
         ScopedModel.of<MainModel>(context).addCustomer(cModel);
         for (var product in particulars) {
           addProduct(

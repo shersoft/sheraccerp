@@ -2419,7 +2419,7 @@ class _PurchaseState extends State<Purchase> {
                                 hint: Text(_dropDownUnit > 0
                                     ? UnitSettings.getUnitName(_dropDownUnit)
                                     : 'SKU'),
-                                items: unitList
+                                items: unitListSettings
                                     .map<DropdownMenuItem<String>>((item) {
                                   return DropdownMenuItem<String>(
                                     value: item.key.toString(),

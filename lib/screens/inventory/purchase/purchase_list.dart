@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_awesome_alert_box/flutter_awesome_alert_box.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:sheraccerp/models/voucher_type_model.dart';
 import 'package:sheraccerp/screens/inventory/purchase/purchase.dart';
 import 'package:sheraccerp/screens/inventory/sales/sales_list.dart';
 import 'package:sheraccerp/service/api_dio.dart';
@@ -38,23 +39,13 @@ class _PurchaseListState extends State<PurchaseList> {
   int menuId = 0;
   bool loadReport = false;
   DateTime now = DateTime.now();
-  List<dynamic> purchaseTypeList = [
-    {'id': 0, 'name': 'All'},
-    {'id': 1, 'name': 'Purchase'},
-    {'id': 2, 'name': 'Return'},
-    {'id': 3, 'name': 'Order'}
-  ];
   List<TypeItem> dropdownItemsType = [
-    TypeItem(1, 'All Summary'),
+    TypeItem(1, 'Summery'),
     TypeItem(2, 'Daily'),
-    TypeItem(3, 'Purchase Summary'),
-    TypeItem(4, 'Return Summary'),
-    TypeItem(5, 'Order Summary'),
-    TypeItem(6, 'ItemWise'),
-    TypeItem(7, 'Return ItemWise'),
-    TypeItem(8, 'Order ItemWise'),
-    TypeItem(9, 'UnRegistered Summery'),
-    TypeItem(10, 'UnRegistered ItemWise')
+    TypeItem(3, 'ItemWise'),
+    TypeItem(4, 'Capital Summery'),
+    TypeItem(5, 'Expense Summery'),
+    TypeItem(6, 'ItemWise Comparison Stock Rate')
   ];
   int valueType = 1;
   DioService api = DioService();
@@ -157,33 +148,27 @@ class _PurchaseListState extends State<PurchaseList> {
 
   reportView(statement) {
     controller.addListener(onScroll);
-    List<dynamic> dataSType = [];
+    List<dynamic> dataPType = [];
+
+    VoucherType voucherTypeData = voucherTypeList
+        .firstWhere((element) => element.voucher.toLowerCase() == 'purchase');
+    dataPType.add({'id': voucherTypeData.id});
 
     statement = dropdownItemsType
         .where((TypeItem element) => element.id == valueType)
         .map((e) => e.name)
         .first;
-    var statementType = statement == 'All Summary'
-        ? 'All_Summery'
-        : statement == 'Purchase Summary'
-            ? 'P_Summery'
-            : statement == 'Return Summary'
-                ? 'Pr_Summery'
-                : statement == 'Order Summary'
-                    ? 'PO_Summery'
-                    : statement == 'ItemWise'
-                        ? 'P_ItemWise'
-                        : statement == 'Return ItemWise'
-                            ? 'Pr_ItemWise'
-                            : statement == 'Order ItemWise'
-                                ? 'PO_ItemWise'
-                                : statement == 'UnRegistered Summery'
-                                    ? 'UnP_Summery'
-                                    : statement == 'UnRegistered ItemWise'
-                                        ? 'UnP_ItemWise'
-                                        : statement == 'Daily'
-                                            ? 'P_Summery'
-                                            : 'All_Summery';
+    var statementType = statement == 'Summery'
+        ? 'P_Summery'
+        : statement == 'ItemWise'
+            ? 'P_ItemWise'
+            : statement == 'Capital Summery'
+                ? 'Capital_Summery'
+                : statement == 'Expense Summery'
+                    ? 'Expense_Summery'
+                    : statement == 'ItemWise Comparison Stock Rate'
+                        ? 'ItemWise Comparison Stock Rate'
+                        : 'P_Summery';
     var sDate = fromDate.isEmpty ? '2021-01-011' : formatYMD(fromDate);
     var eDate = toDate.isEmpty ? '2021-01-011' : formatYMD(toDate);
     var itemsId = itemId != null ? itemId['id'] : '0';
@@ -210,22 +195,32 @@ class _PurchaseListState extends State<PurchaseList> {
           subcategoryId,
           salesManId,
           taxGroupId,
-          dataSType);
+          dataPType);
     } else {
+      var dataJson = '[' +
+          json.encode({
+            'sDate': sDate,
+            'eDate': eDate,
+            'branchId': locationsId,
+            'statementType': statementType,
+            'supplierId': supplierId,
+            'project': projectId,
+            'itemId': itemsId,
+            'mfr': mfrId,
+            'category': categoryId,
+            'subcategory': subcategoryId,
+            'salesman': salesManId,
+            'taxGroup': taxGroupId,
+            'type': '',
+            'taxType': '',
+            'purchaseType': dataPType != null
+                ? jsonEncode(dataPType)
+                : jsonEncode({'id': 0}),
+          }) +
+          ']';
+
       return FutureBuilder<List<dynamic>>(
-        future: api.getPurchaseReport(
-            locationsId,
-            statementType,
-            sDate,
-            eDate,
-            supplierId,
-            projectId,
-            itemsId,
-            mfrId,
-            categoryId,
-            subcategoryId,
-            salesManId,
-            taxGroupId),
+        future: api.getPurchaseReport(dataJson),
         builder: (ctx, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data.isNotEmpty) {
@@ -604,29 +599,12 @@ class _PurchaseListState extends State<PurchaseList> {
                 showSearchBox: true,
               ),
               const Divider(),
-              // Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              //   for (var data in purchaseTypeList)
-              //     Row(children: [
-              //       Radio(
-              //         value: data['id'],
-              //         groupValue: purchaseTypeListID,
-              //         onChanged: (value) {
-              //           setState(() {
-              //             purchaseTypeListID = value;
-              //           });
-              //         },
-              //       ),
-              //       Text(data['name']),
-              //     ]),
-              // ]),
             ],
           ),
         ),
       ],
     );
   }
-
-  int purchaseTypeListID = 0;
 
   Future _selectDate(String type) async {
     DateTime picked = await showDatePicker(
@@ -990,7 +968,7 @@ class _PurchaseListState extends State<PurchaseList> {
       subcategoryId,
       salesManId,
       taxGroupId,
-      dataSType) async {
+      purchaseType) async {
     if (!lastRecord) {
       if ((dataDisplay.isEmpty || dataDisplay.length < totalRecords) &&
           !isLoadingData) {
@@ -1002,37 +980,47 @@ class _PurchaseListState extends State<PurchaseList> {
         var dataJsonS = '[' +
             json.encode({
               'statementType': statementType.isEmpty ? '' : statementType,
-              'sDate': sDate.isEmpty ? '' : formatYMD(sDate),
-              'eDate': eDate.isEmpty ? '' : formatYMD(eDate),
-              'itemId': itemsId,
-              'customerId': supplierId,
-              'mfr': mfrId,
-              'category': categoryId,
-              'subcategory': subcategoryId,
-              'location': locationsId,
-              'project': projectId,
-              'salesman': salesManId,
-              'salesType': dataSType != null
-                  ? jsonEncode(dataSType)
+              'sDate': sDate.isEmpty ? '' : sDate,
+              'eDate': eDate.isEmpty ? '' : eDate,
+              'itemId': int.tryParse(itemsId.toString()),
+              'customerId': int.tryParse(supplierId.toString()),
+              'supplierId': int.tryParse(supplierId.toString()),
+              'mfr': int.tryParse(mfrId.toString()),
+              'category': int.tryParse(categoryId.toString()),
+              'subcategory': int.tryParse(subcategoryId.toString()),
+              'location': int.tryParse(locationsId.toString()),
+              'project': int.tryParse(projectId.toString()),
+              'salesman': int.tryParse(salesManId.toString()),
+              'salesType': purchaseType != null
+                  ? jsonEncode(purchaseType)
                   : jsonEncode({'id': 0}),
-              "page": page
+              "page": page,
+              'areaId': 0,
+              'groupId': 0,
+              'taxGroup': 0
             }) +
             ']';
         api.getListPageReport(dataJsonS).then((value) {
           final response = value;
-          pageTotal = response[1][0]['Filtered'];
-          totalRecords = response[1][0]['Total'];
-          page++;
-          for (int i = 0; i < response[0].length; i++) {
-            tempList.add(response[0][i]);
-          }
+          if (response.isNotEmpty) {
+            pageTotal = response[1][0]['Filtered'];
+            totalRecords = response[1][0]['Total'];
+            page++;
+            for (int i = 0; i < response[0].length; i++) {
+              tempList.add(response[0][i]);
+            }
 
-          setState(() {
-            isLoadingData = false;
             dataDisplay.addAll(tempList);
             dataDisplayHead.addAll(response[1]);
             lastRecord = tempList.isNotEmpty ? false : true;
-          });
+          } else {
+            dataDisplay = [];
+            dataDisplayHead = [];
+            lastRecord = tempList.isNotEmpty ? false : true;
+          }
+          isLoadingData = false;
+
+          setState(() {});
         });
       }
     }
@@ -1054,7 +1042,7 @@ class _PurchaseListState extends State<PurchaseList> {
       subcategoryId,
       salesManId,
       taxGroupId,
-      dataSType) {
+      purchaseType) {
     _getMoreData(
         locationsId,
         statementType,
@@ -1068,7 +1056,7 @@ class _PurchaseListState extends State<PurchaseList> {
         subcategoryId,
         salesManId,
         taxGroupId,
-        dataSType);
+        purchaseType);
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
@@ -1085,7 +1073,7 @@ class _PurchaseListState extends State<PurchaseList> {
             subcategoryId,
             salesManId,
             taxGroupId,
-            dataSType);
+            purchaseType);
       }
     });
 

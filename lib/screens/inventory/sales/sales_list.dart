@@ -86,17 +86,17 @@ class _SalesListState extends State<SalesList> {
     TypeItem(20, 'Customer Address'),
     TypeItem(21, 'Insurance Report'),
     TypeItem(22, 'Sales Qty Total'),
-    TypeItem(23, 'Group Summery Custom'),
-    TypeItem(24, 'P&L Monthly'),
-    TypeItem(25, 'ItemWise Rate Analysis'),
-    TypeItem(26, 'ItemWise Profit Analysis'),
-    TypeItem(27, 'Sales E-Invoice Report'),
-    TypeItem(28, 'Month Wise Item Summery'),
-    TypeItem(29, 'Supplier Wise Sales Total'),
-    TypeItem(30, 'Sales ItemWise Customer Grouping'),
-    TypeItem(31, 'Sales Summery DC'),
-    TypeItem(32, 'Sales Monthly'),
-    TypeItem(33, 'DeliveryNote Summery')
+    // TypeItem(23, 'Group Summery Custom'),
+    // TypeItem(24, 'P&L Monthly'),
+    // TypeItem(25, 'ItemWise Rate Analysis'),
+    // TypeItem(26, 'ItemWise Profit Analysis'),
+    // TypeItem(27, 'Sales E-Invoice Report'),
+    // TypeItem(28, 'Month Wise Item Summery'),
+    // TypeItem(29, 'Supplier Wise Sales Total'),
+    // TypeItem(30, 'Sales ItemWise Customer Grouping'),
+    // TypeItem(31, 'Sales Summery DC'),
+    // TypeItem(32, 'Sales Monthly'),
+    // TypeItem(33, 'DeliveryNote Summery')
   ];
   int valueType = 1;
   String area = '0', route = '0';
@@ -270,44 +270,45 @@ class _SalesListState extends State<SalesList> {
         ? 'Sales_Summery'
         : title == 'Sales ItemWise'
             ? 'Sales_ItemWise'
-            : title == 'Daily'
+            : title == 'Daily' || title == 'Sales Daily'
                 ? 'Sales_Daily'
-                : title == 'Sales Daily'
-                    ? 'Sales_Daily'
-                    : title == 'P&L Summary'
-                        ? 'P_l_Summery'
-                        : title == 'P&L ItemWise'
-                            ? 'P_l_ItemWise_New'
-                            : title == 'P&L ItemSimple'
-                                ? 'P_l_ItemSimple'
-                                : title == 'Item Summary'
-                                    ? 'Item_Summery'
-                                    : title == 'Packing Slip'
-                                        ? 'Packing_Slip'
-                                        : title == 'Customer Summary'
-                                            ? 'Sales_Customer_Summery'
-                                            : title == 'Daily Sales Tax Report'
-                                                ? 'Daily Sales Tax Report'
-                                                : title == 'IVA Report'
-                                                    ? 'IVA Report'
+                : title == 'P&L Summary'
+                    ? 'P_l_Summery'
+                    : title == 'P&L ItemWise'
+                        ? 'P_l_ItemWise_New'
+                        : title == 'P&L ItemSimple'
+                            ? 'P_l_ItemSimple'
+                            : title == 'Item Summary'
+                                ? 'Item_Summery'
+                                : title == 'Packing Slip'
+                                    ? 'Packing_Slip'
+                                    : title == 'Customer Summary'
+                                        ? 'Sales_Customer_Summery'
+                                        : title == 'Daily Sales Tax Report'
+                                            ? 'Daily Sales Tax Report'
+                                            : title == 'IVA Report'
+                                                ? 'IVA Report'
+                                                : title ==
+                                                        'Customer Summery Invoice'
+                                                    ? 'Customer_Summery_Invoice'
                                                     : title ==
-                                                            'Customer Summery Invoice'
-                                                        ? 'Customer_Summery_Invoice'
+                                                            'Counter Wise Report'
+                                                        ? 'Counter_Wise_Report'
                                                         : title ==
-                                                                'Counter Wise Report'
-                                                            ? 'Counter_Wise_Report'
+                                                                'Replace P&L ItemWise'
+                                                            ? 'Replace_p_l_Itemwise'
                                                             : title ==
-                                                                    'Replace P&L ItemWise'
-                                                                ? 'Replace_p_l_Itemwise'
+                                                                    'Simple P&l Report'
+                                                                ? 'Simple_P_l_Report'
                                                                 : title ==
-                                                                        'Simple P&l Report'
-                                                                    ? 'Simple_P_l_Report'
+                                                                        'Scheme Report'
+                                                                    ? 'SchemeReport'
                                                                     : title ==
-                                                                            'Scheme Report'
-                                                                        ? 'SchemeReport'
+                                                                            'ItemWise Monthly'
+                                                                        ? 'Itemwise_monthly'
                                                                         : title ==
-                                                                                'ItemWise Monthly'
-                                                                            ? 'Itemwise_monthly'
+                                                                                'Sales Qty Total'
+                                                                            ? 'Sales_QtyTotal'
                                                                             : 'Sales_Summery';
     for (var data in salesTypeDataList) {
       if (data.stock) dataSType.add({'id': data.id});
@@ -391,7 +392,9 @@ class _SalesListState extends State<SalesList> {
             if (snapshot.data.isNotEmpty) {
               var data = snapshot.data;
               var col = data[0].keys.toList();
-              if (classic && statementType != 'P_l_ItemWise_New') {
+              if (classic &&
+                  statementType != 'P_l_ItemWise_New' &&
+                  statementType != 'Sales_QtyTotal') {
                 Map<String, dynamic> totalData = {};
                 for (int i = 0; i < col.length; i++) {
                   var cell = '';
@@ -430,7 +433,9 @@ class _SalesListState extends State<SalesList> {
                                 (b[col[i]] != null
                                     ? b[col[i]] == ''
                                         ? 0
-                                        : double.parse(b[col[i]].toString())
+                                        : double.tryParse(
+                                                b[col[i]].toString()) ??
+                                            0
                                     : 0))
                         .toStringAsFixed(2);
                   }

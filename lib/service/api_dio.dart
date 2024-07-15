@@ -1437,43 +1437,19 @@ class DioService {
     }
   }
 
-  Future<List<dynamic>> getPurchaseReport(
-      branchId,
-      statement,
-      sDate,
-      eDate,
-      supplierId,
-      project,
-      itemId,
-      mfr,
-      category,
-      subcategory,
-      salesman,
-      taxGroup) async {
+  Future<List<dynamic>> getPurchaseReport(data) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String dataBase = 'cSharp';
     dataBase = isEstimateDataBase
         ? (pref.getString('DBName') ?? "cSharp")
         : (pref.getString('DBNameT') ?? "cSharp");
     try {
-      final response = await dio.get(
+      final response = await dio.post(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'purchaseReport/$dataBase',
-          queryParameters: {
-            'sDate': '$sDate',
-            'eDate': '$eDate',
-            'branchId': branchId,
-            'statementType': statement,
-            'supplierId': supplierId,
-            'project': project,
-            'itemId': itemId,
-            'mfr': mfr,
-            'category': category,
-            'subcategory': subcategory,
-            'salesman': salesman,
-            'taxGroup': taxGroup
-          });
+              'purchase_report/$dataBase',
+          data: data,
+          options: Options(headers: {'Content-Type': 'application/json'}));
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         return data;
