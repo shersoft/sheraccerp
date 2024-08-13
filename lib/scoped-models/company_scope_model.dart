@@ -49,9 +49,11 @@ mixin CompanyScopeModel on Model {
         List<dynamic> _data = response.data;
         _company = CompanyInformation.fromJson(_data[0][0]);
         secondLanguage = _company.secondFont ?? 'es';
+        _settings.clear();
         for (var data in _data[1]) {
           _settings.add(CompanySettings.fromJson(data));
         }
+        _financialYear.clear();
         for (var data in _data[2]) {
           _financialYear.add(FinancialYear.fromJson(data));
         }
@@ -75,6 +77,7 @@ mixin CompanyScopeModel on Model {
         if (settingsData != null) {
           _settings = settingsData;
         }
+        enableMap = ComSettings.getStatus('KEY ENABLE GEO MAP', _settings);
         notifyListeners();
       } else {
         _company = null;

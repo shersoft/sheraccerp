@@ -1,13 +1,17 @@
 // @dart = 2.9
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:scoped_model/scoped_model.dart';
@@ -15,14 +19,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sheraccerp/models/api_error.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/company_user.dart';
+import 'package:sheraccerp/models/location_model.dart';
 import 'package:sheraccerp/models/user_settings_model.dart';
 import 'package:sheraccerp/provider/app_provider.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api.dart';
 import 'package:sheraccerp/service/api_dio.dart';
+import 'package:sheraccerp/service/foreground_service.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/loading.dart';
+// import 'package:workmanager/workmanager.dart';
 
 class Landing extends StatefulWidget {
   const Landing({Key key}) : super(key: key);
@@ -43,6 +50,7 @@ class _LandingState extends State<Landing> {
   LocalAuthentication auth = LocalAuthentication();
   List<FirmModel> data;
   DioService api = DioService();
+  // ReceivePort receivePort;
 
   @override
   void initState() {
@@ -135,7 +143,7 @@ class _LandingState extends State<Landing> {
         ],
         elevation: .1,
       ),
-      body: nextWidget ? authUser() : firmWidget(),
+      body: WithForegroundTask(child: (nextWidget ? authUser() : firmWidget())),
     );
   }
 
@@ -902,7 +910,19 @@ class _LandingState extends State<Landing> {
       ScopedModel.of<MainModel>(context).getCompanySettingsAll(dataBase);
       ScopedModel.of<MainModel>(context)
           .getReportDesignByName(dataBase, 'Ledger_Report_Qty');
+      delayFunction();
     }
+  }
+
+  delayFunction() {
+    Future.delayed(
+      const Duration(seconds: 5),
+      () {
+        if (enableMap) {
+          // checkGPSService();
+        }
+      },
+    );
   }
 
   _loadUserInfo() async {
@@ -928,10 +948,15 @@ class _LandingState extends State<Landing> {
             // Future.delayed(const Duration(milliseconds: 3000), () {
             CompanyUser _user = _apiResponse.Data;
             companyUserData = _user;
+
             // if (companyUserData.active.isNotEmpty &&
             //     companyUserData.active.toUpperCase() == 'TRUE') {
             //   userRole = _user.userType.toUpperCase();
-
+            if (companyUserData.username.isNotEmpty) {
+              var fId = (pref.getString('fId') ?? "");
+              customerId = fId;
+              logeUserName = companyUserData.username;
+            }
             if (_userId != null) {
               getCompanyUserControlList(_userId).then((value) {
                 userControlData.addAll(value);
@@ -1188,5 +1213,126 @@ class _LandingState extends State<Landing> {
   setUserSettings(UserSettingsModel data) {
     editUserSettings(data)
         .then((value) => debugPrint('user default settings done'));
+  }
+
+  // Future<void> getLocation() async {
+  //   // Workmanager().registerPeriodicTask("1", fetchBackground,
+  //   //     frequency: const Duration(seconds: 5),
+  //   //     inputData: {'id': customerId, 'name': logeUserName});
+  //   // This is used to listen to the messages that senderPort sends from ForegroundTaskService we created
+  //   receivePort = await FlutterForegroundTask.receivePort;
+  //   taskObj = SomeTask();
+  //   if (receivePort != null) {
+  //     receivePort.asBroadcastStream().listen((data) {
+  //       if (data == "startTask") {
+  //         // taskObj.performTask();
+  //         setLocation();
+  //       } else if (data == "killTask") {
+  //         taskObj.killTask();
+  //       }
+  //     });
+  //   }
+  // }
+
+  // bool serviceStatus = false;
+  // LocationPermission permission;
+  // Future<void> checkGPSService() async {
+  //   serviceStatus = await Geolocator.isLocationServiceEnabled();
+  //   if (serviceStatus) {
+  //     permission = await Geolocator.checkPermission();
+
+  //     if (permission == LocationPermission.denied) {
+  //       permission = await Geolocator.requestPermission();
+  //       if (permission == LocationPermission.denied) {
+  //         debugPrint('Location permissions are denied');
+  //       } else if (permission == LocationPermission.deniedForever) {
+  //         debugPrint("'Location permissions are permanently denied");
+  //       } else {
+  //         startService();
+  //         getLocation();
+  //       }
+  //     } else {
+  //       startService();
+  //       getLocation();
+  //     }
+  //   } else {
+  //     debugPrint("GPS Service is not enabled, turn on GPS location");
+  //   }
+  // }
+
+  // void startService() async {
+  //   if (await FlutterForegroundTask.isRunningService) {
+  //     FlutterForegroundTask.restartService();
+  //   } else {
+  //     FlutterForegroundTask.startService(
+  //       notificationTitle: 'SherAccERP Service is running',
+  //       notificationText: 'Tap to return to the app',
+  //       callback:
+  //           startCallback, // Function imported from ForegroundService.dart
+  //     );
+  //   }
+  // }
+
+  // Timer timer;
+  // setLocation() async {
+  //   timer = Timer.periodic(const Duration(seconds: 5), (Timer t) async {
+  //     Position position;
+  //     String long = "", lat = "";
+  //     position = await Geolocator.getCurrentPosition(
+  //         desiredAccuracy: LocationAccuracy.high);
+  //     long = position.longitude.toString();
+  //     lat = position.latitude.toString();
+  //     debugPrint('long:$long lat:$lat');
+
+  //     LocationSettings locationSettings = const LocationSettings(
+  //       accuracy: LocationAccuracy.high,
+  //       distanceFilter: 100,
+  //     );
+
+  //     StreamSubscription<Position> positionStream =
+  //         Geolocator.getPositionStream(locationSettings: locationSettings)
+  //             .listen((Position position) {
+  //       debugPrint(position.longitude.toString());
+  //       debugPrint(position.latitude.toString());
+
+  //       long = position.longitude.toString();
+  //       lat = position.latitude.toString();
+
+  //       getUserLocationHistory(lat, long);
+  //     });
+  //   });
+  // }
+
+  // getUserLocationHistory(String lat, String long) async {
+  //   List<LocationModel> locationResult = [];
+  //   var dio = Dio();
+  //   try {
+  //     final response = await dio.get('${geoMapUrl}getUser',
+  //         queryParameters: {'id': customerId, 'name': logeUserName});
+  //     if (response.statusCode == 200) {
+  //       var jsonResponse = response.data;
+
+  //       if (jsonResponse.toString().isNotEmpty) {
+  //         List<dynamic> locationMap = jsonResponse['location'];
+  //         var name = jsonResponse['name'];
+  //         locationMap.add({"Latitude": lat, "Longitude": long});
+  //         dio.put('${geoMapUrl}updateUser',
+  //             queryParameters: {'id': customerId, 'name': name},
+  //             data: {"name": name, "location": locationMap});
+  //       }
+  //     } else {
+  //       debugPrint('Failed to load data');
+  //     }
+  //   } catch (e) {
+  //     debugPrint(e.toString());
+  //   }
+  // }
+
+  @override
+  void dispose() {
+    // if (timer != null) {
+    //   timer.cancel();
+    // }
+    super.dispose();
   }
 }

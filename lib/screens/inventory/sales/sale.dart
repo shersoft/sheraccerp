@@ -167,12 +167,7 @@ class _SaleState extends State<Sale> {
     }
 
     loadSettings();
-    api.fetchDetailAmount().then((value) {
-      otherAmountList = value;
-      setState(() {
-        otherAmountLoaded = true;
-      });
-    });
+
     api.getUnregisteredNameList().then((value) => unregisteredNameList = value);
     salesManId = ComSettings.appSettings(
             'int', 'key-dropdown-default-salesman-view', 1) -
@@ -226,6 +221,14 @@ class _SaleState extends State<Sale> {
       }
       setState(() {
         cashBankACList.addAll(_dataTemp);
+        if (bankLedgerData != null) {
+          bankLedgerData = cashBankACList.firstWhere(
+            (element) =>
+                element.name.toLowerCase() == bankLedgerName.toLowerCase(),
+            orElse: () => LedgerModel(id: 0, name: bankLedgerName),
+          );
+          bankLedgerName = bankLedgerData.name;
+        }
       });
     });
     userDateCheck(DateUtil.dateYMD(formattedDate));
@@ -319,6 +322,13 @@ class _SaleState extends State<Sale> {
       _isLoading = true;
       fetchSale(context, dataDynamic[0]);
       _isLoading = false;
+    } else {
+      api.fetchDetailAmount().then((value) {
+        otherAmountList = value;
+        setState(() {
+          otherAmountLoaded = true;
+        });
+      });
     }
 
     api.getVehicleNameList().then((value) {
@@ -483,7 +493,9 @@ class _SaleState extends State<Sale> {
                                     CartItem.encodeCartToJson(cartItem)
                                         .toString(),
                                 0);
-                            deleteSale(context);
+                            if (currentFinancialYear != null) {
+                              deleteSale(context);
+                            }
                           } else {
                             Fluttertoast.showToast(
                                 msg: 'Please select atleast one bill');
@@ -529,7 +541,9 @@ class _SaleState extends State<Sale> {
                                       CartItem.encodeCartToJson(cartItem)
                                           .toString(),
                                   0);
-                              updateSale();
+                              if (currentFinancialYear != null) {
+                                updateSale();
+                              }
                             } else {
                               Fluttertoast.showToast(
                                   msg: 'Please select atleast one bill');
@@ -573,7 +587,9 @@ class _SaleState extends State<Sale> {
                                       CartItem.encodeCartToJson(cartItem)
                                           .toString(),
                                   0);
-                              saveSale();
+                              if (currentFinancialYear != null) {
+                                saveSale();
+                              }
                             } else {
                               Fluttertoast.showToast(
                                   msg: 'Please add at least one item');
@@ -1443,6 +1459,7 @@ class _SaleState extends State<Sale> {
           json.encode({
             'statement': 'SalesUpdate',
             'entryNo': dataDynamic[0]['EntryNo'],
+            'EditEntryNo': dataDynamic[0]['EntryNo'],
             'invoiceNo': manualInvoiceNumberInSales
                 ? invoiceNo
                 : dataDynamic[0]['InvoiceNo'].toString(),
@@ -1513,20 +1530,39 @@ class _SaleState extends State<Sale> {
         'particular': items,
         'serialNoData': json.encode(SerialNOModel.encodedToJson(serialNoData)),
       };
-      api.editSale(body).then((result) {
-        if (CommonService().isNumeric(result) && int.tryParse(result) > 0) {
-          final bodyJsonAmount = {
-            'statement': 'SalesUpdate',
-            'entryNo': dataDynamic[0]['EntryNo'].toString(),
-            'data': otherAmount,
-            'date': order.dated.toString(),
-            'saleFormType': saleFormType,
-            'narration': order.narration,
-            'location': order.location.toString(),
-            'id': order.customerModel[0].id.toString()
-          };
-          if (salesTypeData.accounts) {
-            api.addOtherAmount(bodyJsonAmount).then((retNotUsed) {
+      if (saleAccountId != '0' && order.cashAC != '0') {
+        api.editSale(body).then((result) {
+          if (CommonService().isNumeric(result) && int.tryParse(result) > 0) {
+            final bodyJsonAmount = {
+              'statement': 'SalesUpdate',
+              'entryNo': dataDynamic[0]['EntryNo'].toString(),
+              'data': otherAmount,
+              'date': order.dated.toString(),
+              'saleFormType': saleFormType,
+              'narration': order.narration,
+              'location': order.location.toString(),
+              'id': order.customerModel[0].id.toString(),
+              'fyId': currentFinancialYear.id.toString()
+            };
+            if (salesTypeData.accounts) {
+              api.addOtherAmount(bodyJsonAmount).then((retNotUsed) {
+                final bodyJson = {
+                  'statement': 'CheckPrint',
+                  'entryNo': dataDynamic[0]['EntryNo'].toString(),
+                  'sType': dataDynamic[0]['Type'].toString(),
+                  'grandTotal': ComSettings.appSettings(
+                          'bool', 'key-round-off-amount', false)
+                      ? grandTotal.toStringAsFixed(decimal)
+                      : grandTotal.roundToDouble().toString()
+                };
+                api.checkBill(bodyJson).then((data) {
+                  if (data) {
+                    clearCart();
+                    showMore(context, false);
+                  }
+                });
+              });
+            } else {
               final bodyJson = {
                 'statement': 'CheckPrint',
                 'entryNo': dataDynamic[0]['EntryNo'].toString(),
@@ -1542,33 +1578,19 @@ class _SaleState extends State<Sale> {
                   showMore(context, false);
                 }
               });
+            }
+            setState(() {
+              _isLoading = false;
             });
           } else {
-            final bodyJson = {
-              'statement': 'CheckPrint',
-              'entryNo': dataDynamic[0]['EntryNo'].toString(),
-              'sType': dataDynamic[0]['Type'].toString(),
-              'grandTotal':
-                  ComSettings.appSettings('bool', 'key-round-off-amount', false)
-                      ? grandTotal.toStringAsFixed(decimal)
-                      : grandTotal.roundToDouble().toString()
-            };
-            api.checkBill(bodyJson).then((data) {
-              if (data) {
-                clearCart();
-                showMore(context, false);
-              }
-            });
+            showErrorDialog(context, result.toString());
           }
-          setState(() {
-            _isLoading = false;
-          });
-        } else {
-          showErrorDialog(context, result.toString());
-        }
-      }).catchError((e) {
-        showErrorDialog(context, e.toString());
-      });
+        }).catchError((e) {
+          showErrorDialog(context, e.toString());
+        });
+      } else {
+        Fluttertoast.showToast(msg: "select SalesAccount or CashAccount");
+      }
     }
   }
 
@@ -2565,7 +2587,7 @@ class _SaleState extends State<Sale> {
                               Visibility(
                                 visible: itemCodeVise,
                                 child: SizedBox(
-                                  // height: 20,
+                                  height: 60,
                                   width: 80,
                                   child: DropdownSearch<dynamic>(
                                     maxHeight: 300,
@@ -2579,17 +2601,19 @@ class _SaleState extends State<Sale> {
                                     onChanged: (dynamic data) {
                                       String itemId = data.name;
                                       api
-                                          .fetchStockItem(int.tryParse(itemId))
+                                          .fetchStockByItemCode(itemId)
                                           .then((responds) {
                                         var res = responds[0];
                                         setState(() {
                                           productModel = StockItem(
                                               code: itemId,
-                                              hasVariant: false,
-                                              id: res.productId,
+                                              hasVariant: responds.length > 1
+                                                  ? true
+                                                  : false,
+                                              id: res.itemId,
                                               name: res.name,
                                               quantity: res.quantity);
-                              
+
                                           lastRateStatus = true;
                                           lastRateSelected = false;
                                           nextWidget = 3;
@@ -3004,6 +3028,7 @@ class _SaleState extends State<Sale> {
   }
 
   bool isBarcodePicker = false;
+  bool defaultUnitItem = false;
   itemDetailWidget() {
     return editItem
         ? showVariantDialog(
@@ -3012,7 +3037,9 @@ class _SaleState extends State<Sale> {
             ? showBarcodeProduct()
             : (salesTypeData.type == 'SALES-O' ||
                     salesTypeData.type == 'SALES-Q')
-                ? selectNoStockLedger()
+                ? isStockProductOnlyInSalesQO
+                    ? selectStockLedger()
+                    : selectNoStockLedger()
                 : productModel.hasVariant
                     ? showVariantDialog(productModel.id, productModel.name,
                         productModel.quantity.toString())
@@ -3231,7 +3258,7 @@ class _SaleState extends State<Sale> {
   showVariantDialog(int id, String name, String quantity) {
     _stockVariantQuantity = double.tryParse(quantity);
     return FutureBuilder<List<StockProduct>>(
-      future: api.fetchStockVariant(id),
+      future: api.fetchStockVariantList(id),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
@@ -3695,6 +3722,13 @@ class _SaleState extends State<Sale> {
   bool lastRateStatus = true, lastRateSelected = false, rateEdited = false;
   showAddMore(BuildContext context, StockProduct product) {
     List<UnitModel> unitListData = [];
+    if (product.unitId > 0) {
+      defaultUnitItem = true;
+      _dropDownUnit = product.unitId;
+    } else {
+      defaultUnitItem = false;
+      _dropDownUnit = 0;
+    }
     if (editItem) {
       pRate = product.buyingPrice;
       rPRate = product.buyingPriceReal;
@@ -4537,6 +4571,27 @@ class _SaleState extends State<Sale> {
                           child: Text('$_conversion'),
                         )),
                       ),
+                      Visibility(
+                          visible: (!enableMULTIUNIT && defaultUnitItem),
+                          child: DropdownButton<OtherRegistrationModel>(
+                            hint: Text(_dropDownUnit > 0
+                                ? UnitSettings.getOtherUnitName(_dropDownUnit)
+                                : 'Unit'),
+                            items: otherRegUnitList
+                                .map<DropdownMenuItem<OtherRegistrationModel>>(
+                                    (item) {
+                              return DropdownMenuItem<OtherRegistrationModel>(
+                                value: item,
+                                child: Text(item.name),
+                              );
+                            }).toList(),
+                            onChanged: (valueData) {
+                              setState(() {
+                                _dropDownUnit =
+                                    int.tryParse(valueData.id.toString());
+                              });
+                            },
+                          )),
                     ],
                   ),
                   const Divider(),
@@ -4952,7 +5007,7 @@ class _SaleState extends State<Sale> {
                                                   children: [
                                                     TextSpan(
                                                         text:
-                                                            '${UnitSettings.getUnitName(cartItem[index].unitId)}\n',
+                                                            '${enableMULTIUNIT ? (UnitSettings.getUnitName(cartItem[index].unitId)) : (UnitSettings.getOtherUnitName(cartItem[index].unitId))}\n',
                                                         style: const TextStyle(
                                                             fontSize: 12.0,
                                                             fontWeight:
@@ -6151,6 +6206,7 @@ class _SaleState extends State<Sale> {
   }
 
   footerWidget() {
+    balanceCalculate();
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Container(
@@ -6657,34 +6713,65 @@ class _SaleState extends State<Sale> {
                       ? Icons.keyboard_double_arrow_down_outlined
                       : Icons.keyboard_double_arrow_up_outlined), //Text('More',
                 ),
-                const Text('GrandTotal : ',
-                    style: TextStyle(
-                        fontSize: 22.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red)),
-                Text(
-                    grandTotal > 0
-                        ? ComSettings.appSettings(
-                                'bool', 'key-round-off-amount', false)
-                            ? CommonService.getRound(decimal, grandTotal)
-                                .toString()
-                            : CommonService.getRound(decimal, grandTotal)
-                                .roundToDouble()
-                                .toString()
-                        : ComSettings.appSettings(
-                                'bool', 'key-round-off-amount', false)
-                            ? CommonService.getRound(
-                                    decimal, totalCartValue - returnAmount)
-                                .toString()
-                            : CommonService.getRound(
-                                    decimal,
-                                    (totalCartValue - returnAmount)
-                                        .roundToDouble())
-                                .toString(),
-                    style: const TextStyle(
-                        fontSize: 22.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red)),
+                Column(
+                  children: [
+                    Row(
+                      children: [
+                        const Text('GrandTotal : ',
+                            style: TextStyle(
+                                fontSize: 22.0,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red)),
+                        Text(
+                            grandTotal > 0
+                                ? ComSettings.appSettings(
+                                        'bool', 'key-round-off-amount', false)
+                                    ? CommonService.getRound(
+                                            decimal, grandTotal)
+                                        .toString()
+                                    : CommonService.getRound(
+                                            decimal, grandTotal)
+                                        .roundToDouble()
+                                        .toString()
+                                : ComSettings.appSettings(
+                                        'bool', 'key-round-off-amount', false)
+                                    ? CommonService.getRound(decimal,
+                                            totalCartValue - returnAmount)
+                                        .toString()
+                                    : CommonService.getRound(
+                                            decimal,
+                                            (totalCartValue - returnAmount)
+                                                .roundToDouble())
+                                        .toString(),
+                            style: const TextStyle(
+                                fontSize: 22.0,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red)),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const Text('Net Balance:',
+                            style: TextStyle(
+                                fontSize: 12.0,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red)),
+                        Text(
+                            (double.parse(oldBalance.split(' ')[0]) +
+                                    grandTotal -
+                                    double.parse(controllerCashReceived
+                                            .text.isNotEmpty
+                                        ? controllerCashReceived.text.toString()
+                                        : '0'))
+                                .toStringAsFixed(2),
+                            style: const TextStyle(
+                                fontSize: 12.0,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red)),
+                      ],
+                    )
+                  ],
+                ),
               ],
             ),
           ],
@@ -6873,12 +6960,11 @@ class _SaleState extends State<Sale> {
         icon: Icons.check,
         onPressedNo: () {
           Navigator.of(context).pop();
-          widgetID = true;
-          dataDisplay = [];
-          nextWidget = 0;
-          // totalRecords = 0;
-          // isLoadingData = false;
-          setState(() {});
+          Navigator.of(context).pushReplacement(MaterialPageRoute(
+              builder: (context) => Sale(
+                    oldSale: false,
+                    thisSale: thisSale,
+                  )));
         },
         onPressedYes: () {
           Navigator.of(context).pop();
@@ -6986,14 +7072,17 @@ class _SaleState extends State<Sale> {
 
         String _bankLedgerName = information['BankName'] != null
             ? information['BankName'].toString()
-            : 0;
+            : '';
         double _bankLedgerAmount = information['bankamount'] != null
             ? double.tryParse(information['bankamount'].toString())
             : 0;
         if (_bankLedgerAmount > 0) {
           bankAmountController.text = _bankLedgerAmount.toString();
-          bankLedgerData = cashBankACList.firstWhere((element) =>
-              element.name.toLowerCase() == _bankLedgerName.toLowerCase());
+          bankLedgerData = cashBankACList.firstWhere(
+            (element) =>
+                element.name.toLowerCase() == _bankLedgerName.toLowerCase(),
+            orElse: () => LedgerModel(id: 0, name: _bankLedgerName),
+          );
           bankLedgerName = bankLedgerData.name;
         } else {
           bankAmountController.text = '';
@@ -7912,7 +8001,7 @@ class _SaleState extends State<Sale> {
   String getRefId(map) {
     if (map.containsKey('refId')) {
       if (map['refId'].toString().trim() != '0') {
-        return map['refId'].toString();
+        return map['refId'].toString() == 'null' ? '' : map['refId'].toString();
       } else {
         return '';
       }

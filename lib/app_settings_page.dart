@@ -529,7 +529,6 @@ class AppSettings extends StatelessWidget {
                 ],
               )),
         ),
-        // //Item
         SimpleSettingsTile(
             title: 'Item',
             subtitle: 'Item Settings',
@@ -787,7 +786,6 @@ class AppSettings extends StatelessWidget {
                 )
               ],
             )),
-        // //Pinter
         SimpleSettingsTile(
             title: 'Pinter',
             subtitle: 'Pinter Settings',
@@ -1157,12 +1155,11 @@ class AppSettings extends StatelessWidget {
                 ),
               ],
             )),
-        // //PDF
         SimpleSettingsTile(
             title: 'PDF',
             subtitle: 'Pdf Settings',
             child: SettingsScreen(
-              title: 'Pinter Settings',
+              title: 'Pdf Settings',
               children: [
                 SwitchSettingsTile(
                   settingKey: 'key-pdf-logo',

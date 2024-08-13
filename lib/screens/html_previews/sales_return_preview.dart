@@ -1345,8 +1345,10 @@ class _SalesReturnPreviewShowState extends State<SalesReturnPreviewShow> {
         0, (total, particular) => total + particular['Net'].toDouble());
     double lineTotal = dataParticulars.fold(
         0, (total, particular) => total + particular['Total'].toDouble());
-    double oldBalance =
-        double.tryParse(dataInformation['LedgerBalance'].toString()).toDouble();
+    double oldBalance = dataInformation != null
+        ? double.tryParse(dataInformation['LedgerBalance'].toString())
+            .toDouble()
+        : 0;
     double balance = double.tryParse(customerBalance).toDouble() ?? 0.00;
     return taxSale
         ? SafeArea(

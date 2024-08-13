@@ -7,6 +7,7 @@ import 'package:csv/csv.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:scoped_model/scoped_model.dart';
@@ -14,6 +15,8 @@ import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
+import 'package:sheraccerp/service/blue_thermal.dart';
+import 'package:sheraccerp/service/bt_print.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -58,7 +61,9 @@ class _StockReportState extends State<StockReport> {
   String title = '';
   List<String> tableColumn = [];
   List<CompanySettings> settings;
+  CompanyInformation companySettings;
   List<ReportDesign> reportDesign;
+  Uint8List byteImage;
 
   @override
   void initState() {
@@ -69,6 +74,7 @@ class _StockReportState extends State<StockReport> {
     dropdownValueReportType = reportTypeList.first;
     dropdownValueLedgerReportType = reportTypeLedgerList.first;
     location = DataJson(id: 1, name: defaultLocation);
+    companySettings = ScopedModel.of<MainModel>(context).getCompanySettings();
     settings = ScopedModel.of<MainModel>(context).getSettings();
     reportDesign = ScopedModel.of<MainModel>(context).getReportDesign();
 
@@ -99,10 +105,17 @@ class _StockReportState extends State<StockReport> {
       location = DataJson(id: otherData.id, name: otherData.name);
     }
     loadDesignColumns('SimpleSummery');
+    loadAssets();
   }
 
   loadDesignColumns(String formName) {
     api.getReportDesignByName(formName).then((value) => reportDesign = value);
+  }
+
+  void loadAssets() {
+    rootBundle.load('assets/logo.png').then((ByteData bytes) {
+      byteImage = bytes.buffer.asUint8List();
+    });
   }
 
   @override
@@ -128,6 +141,18 @@ class _StockReportState extends State<StockReport> {
                         rack = null;
                         taxGroup = null;
                       });
+                    }),
+                IconButton(
+                    icon: const Icon(Icons.print),
+                    onPressed: () {
+                      askPrintDevice(
+                          context,
+                          title + '_Date_${fromDate}_$toDate',
+                          companySettings,
+                          settings,
+                          _data,
+                          byteImage,
+                          '');
                     }),
                 PopupMenuButton(
                   icon: const Icon(Icons.share_rounded),
@@ -1737,6 +1762,235 @@ class _StockReportState extends State<StockReport> {
           subject: subject,
           sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
     }
+  }
+
+  askPrintDevice(
+      BuildContext context,
+      String title,
+      CompanyInformation companySettings,
+      List<CompanySettings> settings,
+      var data,
+      Uint8List byteImage,
+      var customerModel) {
+    int printerType =
+        ComSettings.appSettings('int', 'key-dropdown-printer-type-view', 0);
+    int printerDevice =
+        ComSettings.appSettings('int', 'key-dropdown-printer-device-view', 0);
+
+    if (printerType == 2) {
+      //2: 'Bluetooth',
+      if (printerDevice == 2) {
+        //2: 'Default',
+      } else if (printerDevice == 3) {
+        //3: 'Line',
+      } else if (printerDevice == 4) {
+        //                4: 'Local',
+      } else if (printerDevice == 5) {
+        //                5: 'ESC/POS',
+        _showPrinterSize(
+            context, title, companySettings, settings, data, byteImage);
+      } else if (printerDevice == 6) {
+        //                6: 'Thermal',
+        _selectBtThermalPrint(
+            context, title, companySettings, settings, data, byteImage, "4");
+      } else if (printerDevice == 7) {
+        //                7: 'RP_80',
+      } else if (printerDevice == 8) {
+        //                8: 'SEWOO',
+      } else if (printerDevice == 9) {
+        //                9: 'ESYPOS',
+      } else if (printerDevice == 10) {
+        //                10: 'CIONTEK',
+      } else if (printerDevice == 11) {
+        //                11: 'SUNMI_V1',
+        printSunmiV1([companySettings, settings, data]);
+      } else if (printerDevice == 12) {
+        //                12: 'SUNMI_V2',
+        printSunmiV2([companySettings, settings, data]);
+      } else if (printerDevice == 13) {
+        //13: 'Other',
+      }
+    } else if (printerType == 3) {
+      // 3: 'Cloud',
+      //
+    } else if (printerType == 4) {
+      // 4: 'Document',
+      printDocument(title, companySettings, settings, data, customerModel);
+    } else if (printerType == 5) {
+      // 5: 'POS',
+      if (printerDevice == 2) {
+        //2: 'Default',
+      } else if (printerDevice == 3) {
+        //3: 'Line',
+      } else if (printerDevice == 4) {
+        //                4: 'Local',
+      } else if (printerDevice == 5) {
+        //                5: 'ESC/POS',
+        _showPrinterSize(
+            context, title, companySettings, settings, data, byteImage);
+      } else if (printerDevice == 6) {
+        //                6: 'Thermal',
+        _selectBtThermalPrint(
+            context, title, companySettings, settings, data, byteImage, "4");
+      } else if (printerDevice == 7) {
+        //                7: 'RP_80',
+      } else if (printerDevice == 8) {
+        //                8: 'SEWOO',
+      } else if (printerDevice == 9) {
+        //                9: 'ESYPOS',
+      } else if (printerDevice == 10) {
+        //                10: 'CIONTEK',
+      } else if (printerDevice == 11) {
+        //                11: 'SUNMI_V1',
+        printSunmiV1([companySettings, settings, data]);
+      } else if (printerDevice == 12) {
+        //                12: 'SUNMI_V2',
+        printSunmiV2([companySettings, settings, data]);
+      } else if (printerDevice == 13) {
+        //13: 'Other',
+      }
+    } else if (printerType == 6) {
+      // 6: 'TCP',
+      //
+    } else if (printerType == 7) {
+      // 7: 'WiFi',
+      //
+    } else if (printerType == 8) {
+      // 8: 'USB,
+      //
+    } else {
+      printDocument(title, companySettings, settings, data, customerModel);
+    }
+  }
+
+  _selectBtThermalPrint(
+      BuildContext context,
+      String title,
+      CompanyInformation companySettings,
+      List<CompanySettings> settings,
+      data,
+      byteImage,
+      size) async {
+    var dataAll = [companySettings, settings, data, size, "STOCK"];
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) => BlueThermalPrint(dataAll, byteImage)));
+  }
+
+  List<String> newDataList = ["2", "3", "4"];
+
+  _showPrinterSize(BuildContext context, title, companySettings, settings, data,
+      byteImage) async {
+    _asyncSimpleDialog(context).then((value) => printBluetooth(
+        context, title, companySettings, settings, data, byteImage, value));
+  }
+
+  Future<String> _asyncSimpleDialog(BuildContext context) async {
+    return await showDialog<String>(
+        context: context,
+        barrierDismissible: true,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            title: const Text('Printer Size'),
+            children: <Widget>[
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, newDataList[0]);
+                },
+                child: const Text('2'),
+              ),
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, newDataList[1]);
+                },
+                child: const Text('3'),
+              ),
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, newDataList[2]);
+                },
+                child: const Text('4'),
+              ),
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, newDataList[3]);
+                },
+                child: const Text('5'),
+              ),
+            ],
+          );
+        });
+  }
+
+  Future<String> askPrintMethod(
+      BuildContext context,
+      String title,
+      var companySettings,
+      var settings,
+      var data,
+      Uint8List byteImage,
+      var customerModel) async {
+    List<String> colorList = [
+      'Pdf Document',
+      'TCP',
+      'Bluetooth',
+      'WiFi',
+      'Thermal',
+      'Other'
+    ];
+    return showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Select Print Type'),
+            content: SizedBox(
+              width: double.minPositive,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: colorList.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return ListTile(
+                    title: Text(colorList[index]),
+                    onTap: () {
+                      Navigator.pop(context, colorList[index]);
+                      if (colorList[index] == 'Pdf Document') {
+                        printDocument(title, companySettings, settings, data,
+                            customerModel);
+                      } else if (colorList[index] == 'Bluetooth') {
+                        _showPrinterSize(context, title, companySettings,
+                            settings, data, byteImage);
+                      }
+                    },
+                  );
+                },
+              ),
+            ),
+          );
+        });
+  }
+
+  Future<dynamic> printBluetooth(
+      BuildContext context,
+      String title,
+      CompanyInformation companySettings,
+      List<CompanySettings> settings,
+      data,
+      byteImage,
+      size) async {
+    var dataAll = [companySettings, settings, data, size, "STOCK"];
+    // dataAll.add('Settings[' + settings + ']');b
+    Navigator.push(context,
+        MaterialPageRoute(builder: (_) => BtPrint(dataAll, byteImage)));
+  }
+
+  void printSunmiV1(List list) {}
+
+  void printSunmiV2(List list) {}
+
+  Future<String> printDocument(String title, CompanyInformation companySettings,
+      List<CompanySettings> settings, var data, var customerBalance) async {
+    return '';
   }
 }
 

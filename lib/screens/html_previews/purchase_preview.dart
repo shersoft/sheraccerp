@@ -4627,7 +4627,7 @@ class _PurchasePreviewShowState extends State<PurchasePreviewShow> {
                                     Padding(
                                       padding: const EdgeInsets.all(2.0),
                                       child: Text(
-                                        dataParticulars[i]['itemname'],
+                                        dataParticulars[i]['ProductName'],
                                         style: const TextStyle(
                                             fontSize: 7,
                                             fontWeight: FontWeight.bold),
@@ -4668,7 +4668,7 @@ class _PurchasePreviewShowState extends State<PurchasePreviewShow> {
                                             MainAxisAlignment.end,
                                         children: [
                                           Text(
-                                            dataParticulars[i]['RealRate']
+                                            dataParticulars[i]['RealPrate']
                                                 .toStringAsFixed(2),
                                             style: const TextStyle(
                                                 fontSize: 6,
@@ -4954,12 +4954,12 @@ class _PurchasePreviewShowState extends State<PurchasePreviewShow> {
                                                         fontSize: 7,
                                                       ),
                                                     ),
-                                                  const Text(
-                                                    "Return Amt         :",
-                                                    style: TextStyle(
-                                                      fontSize: 8,
-                                                    ),
-                                                  ),
+                                                  // const Text(
+                                                  //   "Return Amt         :",
+                                                  //   style: TextStyle(
+                                                  //     fontSize: 8,
+                                                  //   ),
+                                                  // ),
                                                   const Text(
                                                     "BILL AMOUNT    :",
                                                     style: TextStyle(
@@ -4973,7 +4973,7 @@ class _PurchasePreviewShowState extends State<PurchasePreviewShow> {
                                                     ),
                                                   ),
                                                   const Text(
-                                                    "Cash Recieved   :",
+                                                    "Cash Paid   :",
                                                     style: TextStyle(
                                                       fontSize: 8,
                                                     ),
@@ -5010,13 +5010,13 @@ class _PurchasePreviewShowState extends State<PurchasePreviewShow> {
                                                           fontWeight:
                                                               FontWeight.bold),
                                                     ),
-                                                  Text(
-                                                    "${dataInformation['ReturnAmount'].toStringAsFixed(2)} ",
-                                                    style: const TextStyle(
-                                                        fontSize: 8,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  ),
+                                                  // Text(
+                                                  //   "${dataInformation['ReturnAmount'].toStringAsFixed(2)} ",
+                                                  //   style: const TextStyle(
+                                                  //       fontSize: 8,
+                                                  //       fontWeight:
+                                                  //           FontWeight.bold),
+                                                  // ),
                                                   Text(
                                                     "${dataInformation['GrandTotal'].toStringAsFixed(2)} ",
                                                     style: const TextStyle(

@@ -18922,7 +18922,7 @@ Future<pw.Document> makePDF(
                             total + particular['Qty'].toDouble());
                   }
 
-                  int totalRowCount = pdfLineSpace > 0 ? pdfLineSpace : 26;
+                  int totalRowCount = pdfLineSpace > 0 ? pdfLineSpace : 25;
                   final int existingRowCount = dataParticulars.length;
 
                   final int emptyRowCount = totalRowCount - existingRowCount;
@@ -19337,7 +19337,7 @@ Future<pw.Document> makePDF(
 
                   int totalRowCount = pdfLineSpace > 0
                       ? pdfLineSpace
-                      : 53; // Desired total row count
+                      : 41; // Desired total row count
                   final int existingRowCount = dataParticulars.length;
 
 // Calculate the number of empty rows needed
@@ -20882,7 +20882,7 @@ _buildEstimateFooter(pw.Context context, dataBankLedger, dataInformation,
 }
 
 _buildEstimateHeader(
-    company, companySettings, dataLedger, dataInformation, bool isHeading) {
+    company, cSettings, dataLedger, dataInformation, bool isHeading) {
   var invoiceHead = salesTypeData.type == 'SALES-ES'
       ? Settings.getValue<String>('key-sales-estimate-head', 'ESTIMATE')
       : salesTypeData.type == 'SALES-Q'
@@ -20906,8 +20906,8 @@ _buildEstimateHeader(
                   width: 2),
             ),
             child: pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              mainAxisAlignment: pw.MainAxisAlignment.center,
+              crossAxisAlignment: pw.CrossAxisAlignment.center,
               children: [
                 pw.Padding(
                   padding: const pw.EdgeInsets.only(top: 5),
@@ -20915,49 +20915,44 @@ _buildEstimateHeader(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text(
-                        company.name,
+                        cSettings.name,
                         style: pw.TextStyle(
                             fontSize: 15, fontWeight: pw.FontWeight.bold),
                       ),
                       pw.Text(
-                        company.add1,
+                        cSettings.add1,
                         style: const pw.TextStyle(fontSize: 8),
                       ),
                       pw.Text(
-                        company.add2,
+                        cSettings.add2,
                         style: const pw.TextStyle(fontSize: 8),
                       ),
                       pw.Text(
-                        company.email,
+                        cSettings.email,
                         style: const pw.TextStyle(fontSize: 8),
                       ),
                       pw.Text(
-                        company.mobile,
+                        cSettings.mobile,
                         style: const pw.TextStyle(fontSize: 8),
+                      ),
+                      pw.SizedBox(
+                        height: 5,
+                      ),
+                      pw.Text(
+                        "GST No : $companyTaxNo",
+                        style: pw.TextStyle(
+                            fontSize: 12, fontWeight: pw.FontWeight.bold),
+                      ),
+                      pw.SizedBox(
+                        height: 10,
+                      ),
+                      pw.Text(
+                        "State      : $companyState       $companyStateCode",
+                        style: pw.TextStyle(
+                            fontSize: 12, fontWeight: pw.FontWeight.bold),
                       ),
                     ],
                   ),
-                ),
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.SizedBox(
-                      height: 5,
-                    ),
-                    pw.Text(
-                      "GST No : $companyTaxNo",
-                      style: pw.TextStyle(
-                          fontSize: 12, fontWeight: pw.FontWeight.bold),
-                    ),
-                    pw.SizedBox(
-                      height: 10,
-                    ),
-                    pw.Text(
-                      "State / code: ${companyState}    ${companyStateCode}",
-                      style: pw.TextStyle(
-                          fontSize: 12, fontWeight: pw.FontWeight.bold),
-                    ),
-                  ],
                 ),
               ],
             ),

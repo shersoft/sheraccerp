@@ -16,6 +16,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
+import 'package:sheraccerp/models/option_rate_type.dart';
 
 import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/models/sales_type.dart';
@@ -86,8 +87,8 @@ class _SalesListState extends State<SalesList> {
     TypeItem(20, 'Customer Address'),
     TypeItem(21, 'Insurance Report'),
     TypeItem(22, 'Sales Qty Total'),
-    // TypeItem(23, 'Group Summery Custom'),
-    // TypeItem(24, 'P&L Monthly'),
+    TypeItem(23, 'Location Wise Summary'),
+    TypeItem(24, 'Location Wise Qty Total'),
     // TypeItem(25, 'ItemWise Rate Analysis'),
     // TypeItem(26, 'ItemWise Profit Analysis'),
     // TypeItem(27, 'Sales E-Invoice Report'),
@@ -102,6 +103,8 @@ class _SalesListState extends State<SalesList> {
   String area = '0', route = '0';
   dynamic areaModel, routeModel;
   DataJson location;
+  // List<ItemDataModel> areaDataList = [];
+  bool isBranchSelected = false;
 
   @override
   void initState() {
@@ -135,6 +138,31 @@ class _SalesListState extends State<SalesList> {
               name: defaultLocation,
               type: ''));
       location = DataJson(id: otherData.id, name: otherData.name);
+
+      // for (OtherRegistrationModel element in otherRegAreaList) {
+      //   areaDataList.add(
+      //       ItemDataModel(id: element.id, name: element.name, status: true));
+      // }
+      // api.getCityListBySalesMan(salesMan).then(
+      //   (valueResult) {
+      //     if (valueResult.isNotEmpty) {
+      //       areaDataList.clear();
+      //       for (Map element in valueResult) {
+      //         areaDataList.add(ItemDataModel(
+      //             id: element['id'],
+      //             name: (element['name'] ?? ''),
+      //             status: element['id'] == 0 ? false : true));
+      //       }
+      //     }
+      //   },
+      // );
+
+      int salesManId = ComSettings.appSettings(
+              'int', 'key-dropdown-default-salesman-view', 1) -
+          1;
+      if (salesManId > 0) {
+        salesMan = DataJson(id: salesManId, name: '');
+      }
     }
   }
 
@@ -187,6 +215,7 @@ class _SalesListState extends State<SalesList> {
                     salesMan != null;
                     taxGroup = null;
                     stockValuation = false;
+                    isBranchSelected = false;
                     supplier = null;
                     area = '0';
                     route = '0';
@@ -309,7 +338,12 @@ class _SalesListState extends State<SalesList> {
                                                                         : title ==
                                                                                 'Sales Qty Total'
                                                                             ? 'Sales_QtyTotal'
-                                                                            : 'Sales_Summery';
+                                                                            : title == 'Location Wise Summary'
+                                                                                ? 'Location Wise Summary'
+                                                                                : title == 'Location Wise Qty Total'
+                                                                                    ? 'Location Wise Qty Total'
+                                                                                    : 'Sales_Summery';
+
     for (var data in salesTypeDataList) {
       if (data.stock) dataSType.add({'id': data.id});
     }
@@ -324,9 +358,13 @@ class _SalesListState extends State<SalesList> {
     } else {
       var locationData = [];
       if (isAdminUser) {
-        for (var data in locationList) {
-          if (data.value.toString().isNotEmpty) {
-            locationData.add({'id': data.key});
+        if (isBranchSelected) {
+          locationData.add({'id': location.id});
+        } else {
+          for (var data in locationList) {
+            if (data.value.toString().isNotEmpty) {
+              locationData.add({'id': data.key});
+            }
           }
         }
       } else {
@@ -1261,6 +1299,7 @@ class _SalesListState extends State<SalesList> {
                       border: OutlineInputBorder(), labelText: 'Select Branch'),
                   onChanged: (dynamic data) {
                     location = data;
+                    isBranchSelected = true;
                   },
                   showSearchBox: true,
                 ),
@@ -1293,7 +1332,9 @@ class _SalesListState extends State<SalesList> {
                   setState(() {
                     loadReport = true;
                     location = isAdminUser
-                        ? DataJson(id: 1, name: defaultLocation)
+                        ? isBranchSelected
+                            ? location
+                            : DataJson(id: 1, name: defaultLocation)
                         : location;
                   });
                 },
@@ -1396,17 +1437,21 @@ class _SalesListState extends State<SalesList> {
                 },
                 showSearchBox: true,
               ),
-              const Divider(),
-              DropdownSearch<dynamic>(
-                maxHeight: 300,
-                onFind: (String filter) =>
-                    api.getSalesListData(filter, 'sales_list/salesMan'),
-                dropdownSearchDecoration: const InputDecoration(
-                    border: OutlineInputBorder(), labelText: "Select SalesMan"),
-                onChanged: (dynamic data) {
-                  salesMan = data;
-                },
-                showSearchBox: true,
+              Visibility(visible: isAdminUser, child: const Divider()),
+              Visibility(
+                visible: isAdminUser,
+                child: DropdownSearch<dynamic>(
+                  maxHeight: 300,
+                  onFind: (String filter) =>
+                      api.getSalesListData(filter, 'sales_list/salesMan'),
+                  dropdownSearchDecoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: "Select SalesMan"),
+                  onChanged: (dynamic data) {
+                    salesMan = data;
+                  },
+                  showSearchBox: true,
+                ),
               ),
               const Divider(),
               DropdownSearch<dynamic>(
@@ -1444,31 +1489,34 @@ class _SalesListState extends State<SalesList> {
                 },
                 showSearchBox: true,
               ),
-              const Divider(),
-              Card(
-                elevation: 5,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    const Text('Select Area'),
-                    DropdownButton<OtherRegistrationModel>(
-                      icon: const Icon(Icons.keyboard_arrow_down),
-                      items:
-                          otherRegAreaList.map((OtherRegistrationModel items) {
-                        return DropdownMenuItem<OtherRegistrationModel>(
-                          value: items,
-                          child: Text(items.name),
-                        );
-                      }).toList(),
-                      value: areaModel,
-                      onChanged: (value) {
-                        setState(() {
-                          areaModel = value;
-                          area = value.id.toString();
-                        });
-                      },
-                    ),
-                  ],
+              Visibility(visible: isAdminUser, child: const Divider()),
+              Visibility(
+                visible: isAdminUser,
+                child: Card(
+                  elevation: 5,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      const Text('Select Area'),
+                      DropdownButton<OtherRegistrationModel>(
+                        icon: const Icon(Icons.keyboard_arrow_down),
+                        items: otherRegAreaList
+                            .map((OtherRegistrationModel items) {
+                          return DropdownMenuItem<OtherRegistrationModel>(
+                            value: items,
+                            child: Text(items.name),
+                          );
+                        }).toList(),
+                        value: areaModel,
+                        onChanged: (value) {
+                          setState(() {
+                            areaModel = value;
+                            area = value.id.toString();
+                          });
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const Divider(),

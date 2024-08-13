@@ -73,19 +73,23 @@ import 'package:sheraccerp/screens/inventory/stock_report.dart';
 import 'package:sheraccerp/screens/inventory/products_list_page.dart';
 import 'package:sheraccerp/screens/inventory/stock_transfer.dart';
 import 'package:sheraccerp/screens/user_login_screen.dart';
+import 'package:sheraccerp/service/foreground_service.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/add_user_screen.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
+// import 'package:workmanager/workmanager.dart';
 
 ValueNotifier<Color> accentColor = ValueNotifier(kPrimaryColor);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  // await Workmanager().initialize(callbackDispatcher, isInDebugMode: true);
 
   runZonedGuarded(() {
     initSettings().then((_) {
+      // ForegroundTaskService.init();
       runApp(MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (context) => AppProvider()),
@@ -227,3 +231,11 @@ class MyApp extends StatelessWidget {
         ));
   }
 }
+
+// void callbackDispatcher() {
+//   Workmanager().executeTask((task, inputData) async {
+//     LocationService locationService = LocationService();
+//     await locationService.sendLocation(inputData);
+//     return Future.value(true);
+//   });
+// }

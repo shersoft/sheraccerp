@@ -274,7 +274,12 @@ class _ReportViewState extends State<ReportView> {
                                                                             'No Report'));
   }
 
+  bool classic = false;
+  final GlobalKey _globalKey = GlobalKey();
   reportView() {
+    if (widget.type != 'ledger') {
+      classic = true;
+    }
     var dataJson = '[' +
         json.encode({
           'statementType': widget.statement.isEmpty ? '' : widget.statement,
@@ -336,7 +341,9 @@ class _ReportViewState extends State<ReportView> {
                       .fold(
                           0.0,
                           (a, b) =>
-                              a + double.parse(b[tableColumn[i]].toString()))
+                              a +
+                              (double.tryParse(b[tableColumn[i]].toString()) ??
+                                  0))
                       .toStringAsFixed(2);
                 }
                 if (i == 0) {
@@ -351,82 +358,323 @@ class _ReportViewState extends State<ReportView> {
             } else {
               _data = data;
             }
-            return Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                controller: controller,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                        child: Text(widget.name +
-                            ' Date : From ' +
-                            DateUtil.dateDMY(widget.sDate) +
-                            ' To ' +
-                            DateUtil.dateDMY(widget.eDate))),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        headingRowColor: MaterialStateColor.resolveWith(
-                            (states) => Colors.grey.shade200),
-                        border:
-                            TableBorder.all(width: 1.0, color: Colors.black),
-                        columnSpacing: 12,
-                        dataRowHeight: 20,
-                        headingRowHeight: 30,
-                        columns: [
-                          for (int i = 0; i < tableColumn.length; i++)
-                            DataColumn(
-                              label: Align(
-                                alignment: Alignment.center,
-                                child: Text(
-                                  tableColumn[i],
-                                  style: const TextStyle(
-                                      // color: Colors.black,
-                                      fontWeight: FontWeight.bold),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                        ],
-                        rows: data
-                            .map(
-                              (values) => DataRow(
-                                cells: [
-                                  for (int i = 0; i < values.length; i++)
-                                    DataCell(
-                                      Align(
-                                        alignment: ComSettings.oKNumeric(
-                                          values[tableColumn[i]] != null
-                                              ? values[tableColumn[i]]
-                                                  .toString()
-                                              : '',
-                                        )
-                                            ? Alignment.centerRight
-                                            : Alignment.centerLeft,
-                                        child: Text(
-                                          values[tableColumn[i]] != null
-                                              ? values[tableColumn[i]]
-                                                  .toString()
-                                              : '',
-                                          softWrap: true,
-                                          overflow: TextOverflow.ellipsis,
-                                          //style: TextStyle(fontSize: 6),
-                                        ),
+            return classic
+                ? Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      controller: controller,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
+                              child: Text(widget.name +
+                                  ' Date : From ' +
+                                  DateUtil.dateDMY(widget.sDate) +
+                                  ' To ' +
+                                  DateUtil.dateDMY(widget.eDate))),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: DataTable(
+                              headingRowColor: MaterialStateColor.resolveWith(
+                                  (states) => Colors.grey.shade200),
+                              border: TableBorder.all(
+                                  width: 1.0, color: Colors.black),
+                              columnSpacing: 12,
+                              dataRowHeight: 20,
+                              headingRowHeight: 30,
+                              columns: [
+                                for (int i = 0; i < tableColumn.length; i++)
+                                  DataColumn(
+                                    label: Align(
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        tableColumn[i],
+                                        style: const TextStyle(
+                                            // color: Colors.black,
+                                            fontWeight: FontWeight.bold),
+                                        textAlign: TextAlign.center,
                                       ),
                                     ),
-                                ],
-                              ),
-                            )
-                            .toList(),
+                                  ),
+                              ],
+                              rows: data
+                                  .map(
+                                    (values) => DataRow(
+                                      cells: [
+                                        for (int i = 0; i < values.length; i++)
+                                          DataCell(
+                                            Align(
+                                              alignment: ComSettings.oKNumeric(
+                                                values[tableColumn[i]] != null
+                                                    ? values[tableColumn[i]]
+                                                        .toString()
+                                                    : '',
+                                              )
+                                                  ? Alignment.centerRight
+                                                  : Alignment.centerLeft,
+                                              child: Text(
+                                                values[tableColumn[i]] != null
+                                                    ? values[tableColumn[i]]
+                                                        .toString()
+                                                    : '',
+                                                softWrap: true,
+                                                overflow: TextOverflow.ellipsis,
+                                                //style: TextStyle(fontSize: 6),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ),
+                          // SizedBox(height: 500),
+                        ],
                       ),
                     ),
-                    // SizedBox(height: 500),
-                  ],
-                ),
-              ),
-            );
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: RepaintBoundary(
+                      key: _globalKey,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  "ACCOUNT SUMMERY",
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Text(
+                                  widget.name,
+                                  style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "From  ${widget.sDate}",
+                                      style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(
+                                      width: 15,
+                                    ),
+                                    Text(
+                                      "To  ${widget.eDate}",
+                                      style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 0,
+                            ),
+                            const Divider(
+                              color: Colors.blue,
+                            ),
+                            Container(
+                              height: 20,
+                              color: Colors.blue,
+                              child: Table(
+                                columnWidths: const {
+                                  0: FixedColumnWidth(45),
+                                  1: FlexColumnWidth(15),
+                                  2: FlexColumnWidth(8),
+                                  3: FlexColumnWidth(9),
+                                  4: FlexColumnWidth(8),
+                                },
+                                children: [
+                                  TableRow(children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: const [
+                                        SizedBox(
+                                          height: 5,
+                                        ),
+                                        Text(
+                                          '  Date',
+                                          style: TextStyle(
+                                              fontSize: 7,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: const [
+                                        SizedBox(
+                                          height: 5,
+                                        ),
+                                        Text(
+                                          '  Description',
+                                          style: TextStyle(
+                                              fontSize: 7,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      children: const [
+                                        SizedBox(
+                                          height: 5,
+                                        ),
+                                        Text(
+                                          'Debit',
+                                          style: TextStyle(
+                                              fontSize: 7,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      children: const [
+                                        SizedBox(
+                                          height: 5,
+                                        ),
+                                        Text(
+                                          'Credit',
+                                          style: TextStyle(
+                                              fontSize: 7,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      children: const [
+                                        SizedBox(
+                                          height: 5,
+                                        ),
+                                        Text(
+                                          "Balanace",
+                                          style: TextStyle(
+                                              fontSize: 7,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                  ]),
+                                ],
+                                border: TableBorder.all(
+                                    width: 1, color: Colors.blue),
+                              ),
+                            ),
+                            Table(
+                              columnWidths: const {
+                                0: FixedColumnWidth(45),
+                                1: FlexColumnWidth(15),
+                                2: FlexColumnWidth(8),
+                                3: FlexColumnWidth(9),
+                                4: FlexColumnWidth(8),
+                              },
+                              children: [
+                                for (var i = 0; i < data.length; i++)
+                                  TableRow(children: [
+                                    Center(
+                                        child: Column(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.all(2.0),
+                                          child: Text(
+                                            // '10/20/2020',
+                                            '${data[i]['Date']}',
+
+                                            style: const TextStyle(
+                                                fontSize: 6,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                      ],
+                                    )),
+                                    Padding(
+                                      padding: const EdgeInsets.all(2.0),
+                                      child: Text(
+                                        '${data[i]['Particulars']}',
+                                        style: const TextStyle(
+                                            fontSize: 6,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(2.0),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            '${data[i]['Debit']}',
+                                            style: const TextStyle(
+                                                fontSize: 6,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(2.0),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            '${data[i]['Credit']}',
+                                            style: const TextStyle(
+                                                fontSize: 6,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.all(2.0),
+                                          child: Text(
+                                            "${data[i]['Balance']}",
+                                            style: const TextStyle(
+                                                fontSize: 6,
+                                                color: Colors.black,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ]),
+                              ],
+                              border:
+                                  TableBorder.all(width: 1, color: Colors.blue),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
           } else {
             return Center(
               child: Column(
@@ -478,7 +726,6 @@ class _ReportViewState extends State<ReportView> {
         );
       },
     );
-
     // FutureBuilder<List<dynamic>>(
     //   future: _data,
     //   builder: (ctx, snapshot) {
@@ -1573,7 +1820,8 @@ class _ReportViewState extends State<ReportView> {
           'Check_openingBalance': widget.ob ?? 0,
           'location': jsonEncode(location),
           'city': jsonEncode(project),
-          'salesMan': widget.salesMan.isNotEmpty ? widget.salesMan : '0'
+          'salesMan': widget.salesMan.isNotEmpty ? widget.salesMan : '0',
+          'hName': ''
         }) +
         ']';
     return FutureBuilder<List<dynamic>>(
@@ -1595,7 +1843,9 @@ class _ReportViewState extends State<ReportView> {
                     .fold(
                         0.0,
                         (a, b) =>
-                            a + double.parse(b[tableColumn[i]].toString()))
+                            a +
+                            (double.tryParse(b[tableColumn[i]].toString()) ??
+                                0))
                     .toStringAsFixed(2);
               }
               if (i == 0) {
@@ -1922,7 +2172,9 @@ class _ReportViewState extends State<ReportView> {
                     .fold(
                         0.0,
                         (a, b) =>
-                            a + double.parse(b[tableColumn[i]].toString()))
+                            a +
+                            (double.tryParse(b[tableColumn[i]].toString()) ??
+                                0))
                     .toStringAsFixed(2);
               }
               if (i == 0) {

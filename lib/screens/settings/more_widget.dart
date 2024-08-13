@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sheraccerp/screens/about_shersoft.dart';
+import 'package:sheraccerp/screens/geomap_screen/geo_map.dart';
 import 'package:sheraccerp/screens/printer_settings.dart';
 import 'package:sheraccerp/screens/profile.dart';
 import 'package:sheraccerp/screens/salesman_registration.dart';
@@ -8,6 +9,7 @@ import 'package:sheraccerp/screens/tax_registration.dart';
 import 'package:sheraccerp/screens/ui/add_screen.dart';
 import 'package:sheraccerp/screens/user_list.dart';
 import 'package:sheraccerp/screens/user_registration.dart';
+import 'package:sheraccerp/shared/constants.dart';
 
 import '../../util/res_color.dart';
 
@@ -70,6 +72,20 @@ class MoreWidget extends StatelessWidget {
             },
           ),
         ),
+        Visibility(
+            visible: enableMap,
+            child: Card(
+              elevation: 2,
+              child: TextButton(
+                child: const Text('Track User'),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const GeoMap()),
+                  );
+                },
+              ),
+            )),
         Card(
           elevation: 2,
           child: TextButton(

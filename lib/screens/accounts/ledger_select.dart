@@ -440,7 +440,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                         MaterialPageRoute(
                             builder: (BuildContext context) => ReportView(
                                 _id.toString(),
-                                '1',
+                                (_ob ? '1' : '0'),
                                 DateUtil.dateDMY2YMD(fromDate),
                                 DateUtil.dateDMY2YMD(toDate),
                                 'ledger',
@@ -543,7 +543,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                             MaterialPageRoute(
                                 builder: (BuildContext context) => ReportView(
                                     _id.toString(),
-                                    '1',
+                                    (_ob ? '1' : '0'),
                                     DateUtil.dateDMY2YMD(fromDate),
                                     DateUtil.dateDMY2YMD(toDate),
                                     'Day Book',
@@ -642,7 +642,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                     builder: (BuildContext context) =>
                                         ReportView(
                                             _id.toString(),
-                                            '1',
+                                            (_ob ? '1' : '0'),
                                             DateUtil.dateDMY2YMD(fromDate),
                                             DateUtil.dateDMY2YMD(toDate),
                                             'Trial Balance',
@@ -723,7 +723,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                         builder: (BuildContext context) =>
                                             ReportView(
                                                 _id.toString(),
-                                                '1',
+                                                (_ob ? '1' : '0'),
                                                 DateUtil.dateDMY2YMD(fromDate),
                                                 DateUtil.dateDMY2YMD(toDate),
                                                 'Cash Flow',
@@ -835,7 +835,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                             builder: (BuildContext context) =>
                                                 ReportView(
                                                     _id.toString(),
-                                                    '1',
+                                                    (_ob ? '1' : '0'),
                                                     DateUtil.dateDMY2YMD(
                                                         fromDate),
                                                     DateUtil.dateDMY2YMD(
@@ -916,7 +916,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                         context) =>
                                                     ReportView(
                                                         _id.toString(),
-                                                        '1',
+                                                        (_ob ? '1' : '0'),
                                                         DateUtil.dateDMY2YMD(
                                                             fromDate),
                                                         DateUtil.dateDMY2YMD(
@@ -1001,7 +1001,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                             context) =>
                                                         ReportView(
                                                             _id.toString(),
-                                                            '1',
+                                                            (_ob ? '1' : '0'),
                                                             DateUtil
                                                                 .dateDMY2YMD(
                                                                     fromDate),
@@ -1174,7 +1174,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                   'PV/RV Report',
                                                   'Salesman Wise Group List',
                                                   'Group List All Groups',
-                                                  'Balance Order By Date'
+                                                  'Balance Order By Date',
+                                                  'Summery Route Wise'
                                                 ].map((String items) {
                                                   return DropdownMenuItem(
                                                     value: items,
@@ -1197,18 +1198,20 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                         'Summery Area Wise'
                                                                     ? 'SummeryAreaWise'
                                                                     : value ==
-                                                                            'Group & Ledger'
-                                                                        ? 'Group_Ledger'
+                                                                            'Summery Route Wise'
+                                                                        ? 'SummeryRouteWise'
                                                                         : value ==
-                                                                                'PV/RV Report'
-                                                                            ? 'PV/RV Report'
-                                                                            : value == 'Salesman Wise Group List'
-                                                                                ? 'SalesmanGroupList'
-                                                                                : value == 'Group List All Groups'
-                                                                                    ? 'GroupListAllGroups'
-                                                                                    : value == 'Balance Order By Date'
-                                                                                        ? 'Balance Order By Date'
-                                                                                        : 'SummeryAll';
+                                                                                'Group & Ledger'
+                                                                            ? 'Group_Ledger'
+                                                                            : value == 'PV/RV Report'
+                                                                                ? 'PV/RV Report'
+                                                                                : value == 'Salesman Wise Group List'
+                                                                                    ? 'SalesmanGroupList'
+                                                                                    : value == 'Group List All Groups'
+                                                                                        ? 'GroupListAllGroups'
+                                                                                        : value == 'Balance Order By Date'
+                                                                                            ? 'Balance Order By Date'
+                                                                                            : 'SummeryAll';
                                                   });
                                                 },
                                               ),
@@ -1222,6 +1225,10 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                             ? 'SummeryBalanceOnly'
                                                             : 'SummeryZeroBalanceOnly'
                                                     : statement;
+                                                if (sType ==
+                                                    'Summery Route Wise') {
+                                                  area = route;
+                                                }
                                                 Navigator.push(
                                                     context,
                                                     MaterialPageRoute(
@@ -1229,7 +1236,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                 context) =>
                                                             ReportView(
                                                                 _id.toString(),
-                                                                '1',
+                                                                (_ob
+                                                                    ? '1'
+                                                                    : '0'),
                                                                 DateUtil
                                                                     .dateDMY2YMD(
                                                                         fromDate),
@@ -1320,9 +1329,11 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                     }).toList(),
                                                     value: routeModel,
                                                     onChanged: (value) {
-                                                      routeModel = value;
-                                                      route =
-                                                          value.id.toString();
+                                                      setState(() {
+                                                        routeModel = value;
+                                                        route =
+                                                            value.id.toString();
+                                                      });
                                                     },
                                                   ),
                                                 ],
@@ -1442,7 +1453,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                             MaterialPageRoute(
                                                                 builder: (BuildContext context) => ReportView(
                                                                     '0',
-                                                                    '1',
+                                                                    (_ob
+                                                                        ? '1'
+                                                                        : '0'),
                                                                     DateUtil.dateDMY2YMD(
                                                                         fromDate),
                                                                     DateUtil.dateDMY2YMD(
@@ -1612,7 +1625,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                 MaterialPageRoute(
                                                                     builder: (BuildContext context) => ReportView(
                                                                         '0',
-                                                                        '1',
+                                                                        (_ob
+                                                                            ? '1'
+                                                                            : '0'),
                                                                         DateUtil.dateDMY2YMD(
                                                                             fromDate),
                                                                         DateUtil.dateDMY2YMD(
@@ -1771,7 +1786,9 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                     MaterialPageRoute(
                                                                         builder: (BuildContext context) => ReportView(
                                                                             '0',
-                                                                            '1',
+                                                                            (_ob
+                                                                                ? '1'
+                                                                                : '0'),
                                                                             DateUtil.dateDMY2YMD(
                                                                                 fromDate),
                                                                             DateUtil.dateDMY2YMD(
@@ -1955,7 +1972,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                         MaterialPageRoute(
                                                                             builder: (BuildContext context) => ReportView(
                                                                                 selectedItem.id.toString(),
-                                                                                '1',
+                                                                                (_ob ? '1' : '0'),
                                                                                 DateUtil.dateDMY2YMD(fromDate),
                                                                                 DateUtil.dateDMY2YMD(toDate),
                                                                                 mode,
@@ -2120,7 +2137,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                           () {
                                                                         Navigator.push(
                                                                             context,
-                                                                            MaterialPageRoute(builder: (BuildContext context) => ReportView('0', '1', DateUtil.dateDMY2YMD(fromDate), DateUtil.dateDMY2YMD(toDate), statement, '', statement, salesMan, locationId != null ? [locationId.id] : [_dropDownBranchId], area, route)));
+                                                                            MaterialPageRoute(builder: (BuildContext context) => ReportView('0', (_ob ? '1' : '0'), DateUtil.dateDMY2YMD(fromDate), DateUtil.dateDMY2YMD(toDate), statement, '', statement, salesMan, locationId != null ? [locationId.id] : [_dropDownBranchId], area, route)));
                                                                       },
                                                                       child: const Text(
                                                                           'Show'),
@@ -2235,7 +2252,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                           () {
                                                                         Navigator.push(
                                                                             context,
-                                                                            MaterialPageRoute(builder: (BuildContext context) => ReportView('0', '1', DateUtil.dateDMY2YMD(fromDate), DateUtil.dateDMY2YMD(toDate), statement, '', statement, salesMan, locationId != null ? [locationId.id] : [_dropDownBranchId], area, route)));
+                                                                            MaterialPageRoute(builder: (BuildContext context) => ReportView('0', (_ob ? '1' : '0'), DateUtil.dateDMY2YMD(fromDate), DateUtil.dateDMY2YMD(toDate), statement, '', statement, salesMan, locationId != null ? [locationId.id] : [_dropDownBranchId], area, route)));
                                                                       },
                                                                       child: const Text(
                                                                           'Show'),

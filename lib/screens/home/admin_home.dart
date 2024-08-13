@@ -183,160 +183,165 @@ class _AdminHomeState extends State<AdminHome> with TickerProviderStateMixin {
         }
       }
     }
-    return DefaultTabController(
-        length: 10,
-        child: Scaffold(
-          appBar: AppBar(
-            // title: Text("SherAcc"),
-            // brightness: Brightness.dark,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.logout),
-                onPressed: () {
-                  _handleLogout();
-                },
-              )
-            ],
-            elevation: .1,
-            title: const TabBar(
-              tabs: [
-                Tab(icon: Icon(Icons.dashboard), text: "Today"),
-                Tab(icon: Icon(Icons.assessment), text: "DashBoard"),
-                // Tab(icon: Icon(Icons.assessment), text: "Statement"),
-                // Tab(icon: Icon(Icons.assignment), text: "Expense"),
-                // Tab(icon: Icon(Icons.assignment_outlined), text: "Cash & Bank"),
-                // Tab(
-                //     icon: Icon(Icons.assignment_outlined),
-                //     text: "Receivable & Payable"),
-                Tab(icon: Icon(Icons.inventory), text: "Inventory"),
-                Tab(icon: Icon(Icons.account_balance), text: "Accounts"),
-                Tab(
-                    icon: Icon(Icons.assignment_outlined),
-                    text: "Account Report"),
-                Tab(
-                    icon: Icon(Icons.assignment_outlined),
-                    text: "Inventory Report"),
-                Tab(icon: Icon(Icons.assignment_outlined), text: "Report"),
-                Tab(icon: Icon(Icons.assignment_outlined), text: "Record List"),
-                Tab(
-                    icon: Icon(Icons.settings_applications_outlined),
-                    text: "Settings"),
-                Tab(icon: Icon(Icons.more), text: "Tools"),
+    return WillPopScope(
+      onWillPop: showExitPopup,
+      child: DefaultTabController(
+          length: 10,
+          child: Scaffold(
+            appBar: AppBar(
+              // title: Text("SherAcc"),
+              // brightness: Brightness.dark,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.logout),
+                  onPressed: () {
+                    _handleLogout();
+                  },
+                )
               ],
-              isScrollable: true,
-              labelStyle: TextStyle(fontWeight: FontWeight.bold),
+              elevation: .1,
+              title: const TabBar(
+                tabs: [
+                  Tab(icon: Icon(Icons.dashboard), text: "Today"),
+                  Tab(icon: Icon(Icons.assessment), text: "DashBoard"),
+                  // Tab(icon: Icon(Icons.assessment), text: "Statement"),
+                  // Tab(icon: Icon(Icons.assignment), text: "Expense"),
+                  // Tab(icon: Icon(Icons.assignment_outlined), text: "Cash & Bank"),
+                  // Tab(
+                  //     icon: Icon(Icons.assignment_outlined),
+                  //     text: "Receivable & Payable"),
+                  Tab(icon: Icon(Icons.inventory), text: "Inventory"),
+                  Tab(icon: Icon(Icons.account_balance), text: "Accounts"),
+                  Tab(
+                      icon: Icon(Icons.assignment_outlined),
+                      text: "Account Report"),
+                  Tab(
+                      icon: Icon(Icons.assignment_outlined),
+                      text: "Inventory Report"),
+                  Tab(icon: Icon(Icons.assignment_outlined), text: "Report"),
+                  Tab(
+                      icon: Icon(Icons.assignment_outlined),
+                      text: "Record List"),
+                  Tab(
+                      icon: Icon(Icons.settings_applications_outlined),
+                      text: "Settings"),
+                  Tab(icon: Icon(Icons.more), text: "Tools"),
+                ],
+                isScrollable: true,
+                labelStyle: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-          body: TabBarView(
-            children: [
-              (args.active == "false"
-                  ? _commonService.getTrialPeriod(args.atDate)
-                      ? isExpireWarning
-                          ? Center(
-                              child:
-                                  _expireWarningWidget(args, context, daysLeft),
-                            )
-                          : const DashPage()
-                      : _expire(args, context)
-                  : const DashPage()),
-              args.active == "false"
-                  ? _commonService.getTrialPeriod(args.atDate)
-                      ? isExpireWarning
-                          ? Center(
-                              child:
-                                  _expireWarningWidget(args, context, daysLeft),
-                            )
-                          : const DashList()
-                      : _expire(args, context)
-                  : const DashList(),
-              // args.active == "false"
-              //     ? _commonService.getTrialPeriod(args.atDate)
-              //         ? const Statement()
-              //         : _expire(args, context)
-              //     : const Statement(),
-              // args.active == "false"
-              //     ? _commonService.getTrialPeriod(args.atDate)
-              //         ? const Expense()
-              //         : _expire(args, context)
-              //     : const Expense(),
-              // args.active == "false"
-              //     ? _commonService.getTrialPeriod(args.atDate)
-              //         ? CashAndBank()
-              //         : _expire(args, context)
-              //     : CashAndBank(),
-              // args.active == "false"
-              //     ? _commonService.getTrialPeriod(args.atDate)
-              //         ? ReceivablesAndPayables()
-              //         : _expire(args, context)
-              //     : ReceivablesAndPayables(),
-              args.active == "false"
-                  ? _commonService.getTrialPeriod(args.atDate)
-                      ? isExpireWarning
-                          ? Center(
-                              child:
-                                  _expireWarningWidget(args, context, daysLeft),
-                            )
-                          : const InventoryMenu()
-                      : _expire(args, context)
-                  : const InventoryMenu(),
-              args.active == "false"
-                  ? _commonService.getTrialPeriod(args.atDate)
-                      ? isExpireWarning
-                          ? Center(
-                              child:
-                                  _expireWarningWidget(args, context, daysLeft),
-                            )
-                          : const AccountsMenu()
-                      : _expire(args, context)
-                  : const AccountsMenu(),
-              args.active == "false"
-                  ? _commonService.getTrialPeriod(args.atDate)
-                      ? isExpireWarning
-                          ? Center(
-                              child:
-                                  _expireWarningWidget(args, context, daysLeft),
-                            )
-                          : const AccountsReportMenu()
-                      : _expire(args, context)
-                  : const AccountsReportMenu(),
-              args.active == "false"
-                  ? _commonService.getTrialPeriod(args.atDate)
-                      ? isExpireWarning
-                          ? Center(
-                              child:
-                                  _expireWarningWidget(args, context, daysLeft),
-                            )
-                          : const InventoryReportMenu()
-                      : _expire(args, context)
-                  : const InventoryReportMenu(),
-              args.active == "false"
-                  ? _commonService.getTrialPeriod(args.atDate)
-                      ? isExpireWarning
-                          ? Center(
-                              child:
-                                  _expireWarningWidget(args, context, daysLeft),
-                            )
-                          : Report()
-                      : _expire(args, context)
-                  : Report(),
-              args.active == "false"
-                  ? _commonService.getTrialPeriod(args.atDate)
-                      ? isExpireWarning
-                          ? Center(
-                              child:
-                                  _expireWarningWidget(args, context, daysLeft),
-                            )
-                          : const RecordListMenu()
-                      : _expire(args, context)
-                  : const RecordListMenu(),
-              const AppSettings(),
-              args.userType.toUpperCase() == 'ADMIN'
-                  ? const MoreWidget()
-                  : const MoreWidget2(),
-            ],
-          ),
-          // floatingActionButton: buildSpeedDial(args),
-        ));
+            body: TabBarView(
+              children: [
+                (args.active == "false"
+                    ? _commonService.getTrialPeriod(args.atDate)
+                        ? isExpireWarning
+                            ? Center(
+                                child: _expireWarningWidget(
+                                    args, context, daysLeft),
+                              )
+                            : const DashPage()
+                        : _expire(args, context)
+                    : const DashPage()),
+                args.active == "false"
+                    ? _commonService.getTrialPeriod(args.atDate)
+                        ? isExpireWarning
+                            ? Center(
+                                child: _expireWarningWidget(
+                                    args, context, daysLeft),
+                              )
+                            : const DashList()
+                        : _expire(args, context)
+                    : const DashList(),
+                // args.active == "false"
+                //     ? _commonService.getTrialPeriod(args.atDate)
+                //         ? const Statement()
+                //         : _expire(args, context)
+                //     : const Statement(),
+                // args.active == "false"
+                //     ? _commonService.getTrialPeriod(args.atDate)
+                //         ? const Expense()
+                //         : _expire(args, context)
+                //     : const Expense(),
+                // args.active == "false"
+                //     ? _commonService.getTrialPeriod(args.atDate)
+                //         ? CashAndBank()
+                //         : _expire(args, context)
+                //     : CashAndBank(),
+                // args.active == "false"
+                //     ? _commonService.getTrialPeriod(args.atDate)
+                //         ? ReceivablesAndPayables()
+                //         : _expire(args, context)
+                //     : ReceivablesAndPayables(),
+                args.active == "false"
+                    ? _commonService.getTrialPeriod(args.atDate)
+                        ? isExpireWarning
+                            ? Center(
+                                child: _expireWarningWidget(
+                                    args, context, daysLeft),
+                              )
+                            : const InventoryMenu()
+                        : _expire(args, context)
+                    : const InventoryMenu(),
+                args.active == "false"
+                    ? _commonService.getTrialPeriod(args.atDate)
+                        ? isExpireWarning
+                            ? Center(
+                                child: _expireWarningWidget(
+                                    args, context, daysLeft),
+                              )
+                            : const AccountsMenu()
+                        : _expire(args, context)
+                    : const AccountsMenu(),
+                args.active == "false"
+                    ? _commonService.getTrialPeriod(args.atDate)
+                        ? isExpireWarning
+                            ? Center(
+                                child: _expireWarningWidget(
+                                    args, context, daysLeft),
+                              )
+                            : const AccountsReportMenu()
+                        : _expire(args, context)
+                    : const AccountsReportMenu(),
+                args.active == "false"
+                    ? _commonService.getTrialPeriod(args.atDate)
+                        ? isExpireWarning
+                            ? Center(
+                                child: _expireWarningWidget(
+                                    args, context, daysLeft),
+                              )
+                            : const InventoryReportMenu()
+                        : _expire(args, context)
+                    : const InventoryReportMenu(),
+                args.active == "false"
+                    ? _commonService.getTrialPeriod(args.atDate)
+                        ? isExpireWarning
+                            ? Center(
+                                child: _expireWarningWidget(
+                                    args, context, daysLeft),
+                              )
+                            : Report()
+                        : _expire(args, context)
+                    : Report(),
+                args.active == "false"
+                    ? _commonService.getTrialPeriod(args.atDate)
+                        ? isExpireWarning
+                            ? Center(
+                                child: _expireWarningWidget(
+                                    args, context, daysLeft),
+                              )
+                            : const RecordListMenu()
+                        : _expire(args, context)
+                    : const RecordListMenu(),
+                const AppSettings(),
+                args.userType.toUpperCase() == 'ADMIN'
+                    ? const MoreWidget()
+                    : const MoreWidget2(),
+              ],
+            ),
+            // floatingActionButton: buildSpeedDial(args),
+          )),
+    );
   }
 
   SpeedDial buildSpeedDial(CompanyUser args) {
@@ -608,5 +613,26 @@ class _AdminHomeState extends State<AdminHome> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  Future<bool> showExitPopup() async {
+    return await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Exit App'),
+            content: const Text('Do you want to exit an App?'),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('No'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Yes'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 }

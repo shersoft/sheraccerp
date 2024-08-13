@@ -39,6 +39,7 @@ const gstEWayDetailsByIrnApi =
     "/einvoice/type/GETEWAYBILLIRN/version/V1_03"; //get
 const gstB2BQRDetailsApi = "/einvoice/qrcode";
 const invoiceUrl = 'http://148.72.210.101:888/Home/DownloadPdf';
+const geoMapUrl = 'http://148.72.210.101:8228/';
 const geoApiFy =
     'https://api.geoapify.com/v1/geocode/search?text=pin&lang=en&limit=1&type=postcode&format=json&apiKey=d1f13eb6d5b04bcdbe6cfdad0d01cbaa';
 const eWayAuthApi = "/ewaybillapi/v1.03/authenticate";
@@ -59,6 +60,9 @@ const softwarePassword = 'SHERSOFT';
 String _sherSoftPassword = '';
 get sherSoftPassword => _sherSoftPassword;
 set sherSoftPassword(String value) => _sherSoftPassword = value;
+bool _enableMap = false;
+get enableMap => _enableMap;
+set enableMap(bool value) => _enableMap = value;
 
 const currencySymbol = '₹';
 // const bool isVariant = false;
@@ -577,10 +581,34 @@ class UnitSettings {
     return name;
   }
 
+  static getOtherUnitName(int id) {
+    String name = '';
+    if (otherRegUnitList.isNotEmpty) {
+      var exist = otherRegUnitList.firstWhere((element) => element.id == id,
+          orElse: () => null);
+      if (exist != null) {
+        name = exist.name;
+      }
+    }
+    return name;
+  }
+
   static getUnitId(String name) {
     int id = 0;
     if (unitListSettings.isNotEmpty) {
       var exist = unitListSettings.firstWhere((element) => element.name == name,
+          orElse: () => null);
+      if (exist != null) {
+        id = exist.id;
+      }
+    }
+    return id;
+  }
+
+  static getOtherUnitId(String name) {
+    int id = 0;
+    if (otherRegUnitList.isNotEmpty) {
+      var exist = otherRegUnitList.firstWhere((element) => element.name == name,
           orElse: () => null);
       if (exist != null) {
         id = exist.id;
@@ -789,3 +817,9 @@ bool defaultCashAc = false;
 bool defaultArea = false;
 bool defaultGroup = false;
 bool defaultRoute = false;
+String _logeUserName = "";
+get logeUserName => _logeUserName;
+set logeUserName(String value) => _logeUserName = value;
+String _customerId = "";
+get customerId => _customerId;
+set customerId(String value) => _customerId = value;

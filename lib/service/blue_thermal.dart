@@ -1954,6 +1954,48 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
           }
         }
       });
+    } else if (widget.data[4] == 'STOCK') {
+      bill = bill;
+
+      bluetooth.isConnected.then((isConnected) {
+        if (isConnected == true) {
+          String line = "0";
+          try {
+            bluetooth.printNewLine();
+            line = "1";
+            bluetooth.printCustom(
+                'Stock Report ${bill[0]['Location']}'.toString().trim(),
+                Enu.Size.bold.val,
+                Enu.Align.center.val);
+            bluetooth.printNewLine();
+            line = "2";
+            bluetooth.printLeftRight('ItemName', 'Qty', Enu.Size.bold.val);
+            bluetooth.printNewLine();
+            for (var i = 0; i < bill.length; i++) {
+              // bluetooth.print3Column("${bill[i]['ItemName'].toString()} : ",
+              //     " ", bill[i]['Qty'].toString(), Enu.Size.bold.val,
+              //     format: "%-18s %-4s %20s %n");
+              if (i == bill.length - 1) {
+                bluetooth.printNewLine();
+                bluetooth.printLeftRight('Total Item $i = ',
+                    bill[i]['Qty'].toString(), Enu.Size.bold.val);
+              } else {
+                bluetooth.printLeftRight(bill[i]['ItemName'].toString(),
+                    bill[i]['Qty'].toString(), Enu.Size.bold.val);
+              }
+            }
+            // line = "3";
+            // bluetooth.printCustom('total item = ${bill.length}',
+            //     Enu.Size.bold.val, Enu.Align.center.val);
+            line = "3";
+            bluetooth.printNewLine();
+            bluetooth.printNewLine();
+          } catch (e, s) {
+            FirebaseCrashlytics.instance
+                .recordError(e, s, reason: 'blue print:' + line);
+          }
+        }
+      });
     }
   }
 }

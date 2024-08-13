@@ -1348,6 +1348,7 @@ class _SalesReturnState extends State<SalesReturn> {
     int id = editItem ? cartModel.itemId : productModel.slNo;
     int locationId = lId.toString().trim().isNotEmpty ? lId : 1;
     if (editItem) {
+      defaultUnitID = cartModel.unitId;
       return FutureBuilder<ProductRegisterModel>(
           future: api.getProductById(cartModel.itemId.toString()),
           builder: (context0, snapshot1) {
@@ -2040,7 +2041,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                       i++) {
                                     if (defaultUnitID.toString().isNotEmpty) {
                                       if (snapshot.data[i].id ==
-                                          defaultUnitID - 1) {
+                                          defaultUnitID) {
                                         _dropDownUnit = snapshot.data[i].id;
                                         _conversion =
                                             snapshot.data[i].conversion;

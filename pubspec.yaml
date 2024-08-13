@@ -89,6 +89,10 @@ dependencies:
   ping_discover_network:
   wifi:
   google_translate:
+  latlong2:
+  flutter_map:
+  geolocator:
+  flutter_foreground_task:
 
 dev_dependencies:
   flutter_test:

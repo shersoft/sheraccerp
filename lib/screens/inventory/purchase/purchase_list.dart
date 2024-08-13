@@ -40,8 +40,8 @@ class _PurchaseListState extends State<PurchaseList> {
   bool loadReport = false;
   DateTime now = DateTime.now();
   List<TypeItem> dropdownItemsType = [
-    TypeItem(1, 'Summery'),
-    TypeItem(2, 'Daily'),
+    TypeItem(1, 'Daily'),
+    TypeItem(2, 'Summery'),
     TypeItem(3, 'ItemWise'),
     TypeItem(4, 'Capital Summery'),
     TypeItem(5, 'Expense Summery'),
@@ -158,31 +158,89 @@ class _PurchaseListState extends State<PurchaseList> {
         .where((TypeItem element) => element.id == valueType)
         .map((e) => e.name)
         .first;
-    var statementType = statement == 'Summery'
-        ? 'P_Summery'
-        : statement == 'ItemWise'
-            ? 'P_ItemWise'
-            : statement == 'Capital Summery'
-                ? 'Capital_Summery'
-                : statement == 'Expense Summery'
-                    ? 'Expense_Summery'
-                    : statement == 'ItemWise Comparison Stock Rate'
-                        ? 'ItemWise Comparison Stock Rate'
-                        : 'P_Summery';
+    var statementType = '';
+    if (formType == 'Purchase') {
+      statementType = statement == 'Summery'
+          ? 'P_Summery'
+          : statement == 'ItemWise'
+              ? 'P_ItemWise'
+              : statement == 'Capital Summery'
+                  ? 'Capital_Summery'
+                  : statement == 'Expense Summery'
+                      ? 'Expense_Summery'
+                      : statement == 'ItemWise Comparison Stock Rate'
+                          ? 'ItemWise Comparison Stock Rate'
+                          : 'P_Summery';
+    } else if (formType == 'All') {
+      statementType = 'All_Summery';
+    } else if (formType == 'Purchase Return') {
+      statementType = statement == 'Summery'
+          ? 'Pr_Summery'
+          : statement == 'ItemWise'
+              ? 'Pr_ItemWise'
+              : statement == 'Capital Summery'
+                  ? 'Capital_Summery'
+                  : statement == 'Expense Summery'
+                      ? 'Expense_Summery'
+                      : statement == 'ItemWise Comparison Stock Rate'
+                          ? 'ItemWise Comparison Stock Rate'
+                          : 'Pr_Summery';
+    } else if (formType == 'Purchase Order') {
+      statementType = statement == 'Summery'
+          ? 'PO_Summery'
+          : statement == 'ItemWise'
+              ? 'PO_ItemWise'
+              : statement == 'Capital Summery'
+                  ? 'Capital_Summery'
+                  : statement == 'Expense Summery'
+                      ? 'Expense_Summery'
+                      : statement == 'ItemWise Comparison Stock Rate'
+                          ? 'ItemWise Comparison Stock Rate'
+                          : 'PO_Summery';
+    } else if (formType == 'UnR-Purchase') {
+      statementType = statement == 'Summery'
+          ? 'UnP_Summery'
+          : statement == 'ItemWise'
+              ? 'UnP_ItemWise'
+              : statement == 'Capital Summery'
+                  ? 'Capital_Summery'
+                  : statement == 'Expense Summery'
+                      ? 'Expense_Summery'
+                      : statement == 'ItemWise Comparison Stock Rate'
+                          ? 'ItemWise Comparison Stock Rate'
+                          : 'UnP_Summery';
+    }
     var sDate = fromDate.isEmpty ? '2021-01-011' : formatYMD(fromDate);
     var eDate = toDate.isEmpty ? '2021-01-011' : formatYMD(toDate);
-    var itemsId = itemId != null ? itemId['id'] : '0';
-    var supplierId = supplier != null ? supplier['id'] : '0';
-    var mfrId = mfr != null ? mfr['id'] : '0';
-    var categoryId = category != null ? category['id'] : '0';
-    var subcategoryId = subCategory != null ? subCategory['id'] : '0';
-    var locationsId = locationId != null ? locationId.id : '0';
-    var projectId = project != null ? project['id'] : '0';
-    var salesManId = salesMan != null ? salesMan['id'] : '0';
-    var taxGroupId = taxGroup != null ? taxGroup['id'] : '0';
+    var itemsId = itemId != null ? itemId.id : '0';
+    var supplierId = supplier != null ? supplier.id : '0';
+    var mfrId = mfr != null ? mfr.id : '0';
+    var categoryId = category != null ? category.id : '0';
+    var subcategoryId = subCategory != null ? subCategory.id : '0';
+    var locationsId = locationId != null ? locationId.id : '1';
+    var projectId = project != null ? project.id : '0';
+    var salesManId = salesMan != null ? salesMan.id : '0';
+    var taxGroupId = taxGroup != null ? taxGroup.id : '0';
+    var pType = purchaseType == 'Purchase'
+        ? 'P'
+        : purchaseType == 'InterState'
+            ? 'I'
+            : purchaseType == 'InterState'
+                ? 'I'
+                : purchaseType == 'Composite'
+                    ? 'C'
+                    : purchaseType == 'Branch Transfer'
+                        ? 'BT'
+                        : purchaseType == 'Imports'
+                            ? 'Im'
+                            : purchaseType == 'UnRegistered Dealer'
+                                ? 'U'
+                                : purchaseType == 'VAT Purchase'
+                                    ? 'VP'
+                                    : '';
 
     if (statement == 'Daily') {
-      _purchaseListData(
+      return _purchaseListData(
           locationsId,
           statementType,
           sDate,
@@ -211,8 +269,8 @@ class _PurchaseListState extends State<PurchaseList> {
             'subcategory': subcategoryId,
             'salesman': salesManId,
             'taxGroup': taxGroupId,
-            'type': '',
-            'taxType': '',
+            'type': pType,
+            'taxType': taxType,
             'purchaseType': dataPType != null
                 ? jsonEncode(dataPType)
                 : jsonEncode({'id': 0}),
@@ -375,6 +433,10 @@ class _PurchaseListState extends State<PurchaseList> {
     }
   }
 
+  String formType = 'Purchase';
+  String purchaseType = '';
+  String taxType = '';
+
   selectData() {
     return ListView(
       children: [
@@ -416,7 +478,35 @@ class _PurchaseListState extends State<PurchaseList> {
                   ],
                 ),
               ),
-              const Divider(),
+              Card(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    const Text('Purchase Form : '),
+                    DropdownButton(
+                      value: formType,
+                      items: [
+                        'Purchase',
+                        'All',
+                        'Purchase Return',
+                        'Purchase Order',
+                        'UnR-Purchase'
+                      ].map((String item) {
+                        return DropdownMenuItem<String>(
+                          child: Text(item),
+                          value: item,
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          formType = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              // const Divider(),
               // Card(
               //   elevation: 2,
               //   child: DropDownSettingsTile<int>(
@@ -446,25 +536,27 @@ class _PurchaseListState extends State<PurchaseList> {
                 showSearchBox: true,
               ),
               // Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  const Text('Type : '),
-                  DropdownButton(
-                    value: valueType,
-                    items: dropdownItemsType.map((TypeItem item) {
-                      return DropdownMenuItem<int>(
-                        child: Text(item.name),
-                        value: item.id,
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        valueType = value;
-                      });
-                    },
-                  ),
-                ],
+              Card(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    const Text('Type : '),
+                    DropdownButton(
+                      value: valueType,
+                      items: dropdownItemsType.map((TypeItem item) {
+                        return DropdownMenuItem<int>(
+                          child: Text(item.name),
+                          value: item.id,
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          valueType = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ),
               // Divider(),
               TextButton(
@@ -481,7 +573,37 @@ class _PurchaseListState extends State<PurchaseList> {
                       MaterialStateProperty.all<Color>(Colors.white),
                 ),
               ),
-              const Divider(),
+              // const Divider(),
+              Card(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    const Text('Purchase Type : '),
+                    DropdownButton(
+                      value: purchaseType,
+                      items: [
+                        '',
+                        'Purchase',
+                        'InterState',
+                        'Composite',
+                        'UnRegistered Dealer',
+                        'Branch Transfer'
+                            'Imports'
+                      ].map((String item) {
+                        return DropdownMenuItem<String>(
+                          child: Text(item),
+                          value: item,
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          purchaseType = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
               DropdownSearch<dynamic>(
                 maxHeight: 300,
                 onFind: (String filter) =>
@@ -598,7 +720,29 @@ class _PurchaseListState extends State<PurchaseList> {
                 },
                 showSearchBox: true,
               ),
-              const Divider(),
+              // const Divider(),
+              Card(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    const Text('Tax Type : '),
+                    DropdownButton(
+                      value: taxType,
+                      items: ['', 'T', 'NT'].map((String item) {
+                        return DropdownMenuItem<String>(
+                          child: Text(item),
+                          value: item,
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          taxType = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -979,7 +1123,7 @@ class _PurchaseListState extends State<PurchaseList> {
         List tempList = [];
         var dataJsonS = '[' +
             json.encode({
-              'statementType': statementType.isEmpty ? '' : statementType,
+              'statementType': 'PurchaseList',
               'sDate': sDate.isEmpty ? '' : sDate,
               'eDate': eDate.isEmpty ? '' : eDate,
               'itemId': int.tryParse(itemsId.toString()),
@@ -1105,8 +1249,7 @@ class _PurchaseListState extends State<PurchaseList> {
                       children: [
                         Text(
                           'Cash:' +
-                              dataDisplayHead[0]['CashReceived']
-                                  .toStringAsFixed(2),
+                              dataDisplayHead[0]['CashPaid'].toStringAsFixed(2),
                           style: const TextStyle(
                               fontSize: 18, fontWeight: FontWeight.w600),
                         ),
@@ -1247,7 +1390,7 @@ class _PurchaseListState extends State<PurchaseList> {
                                           CrossAxisAlignment.start,
                                       children: <Widget>[
                                         Text(
-                                          dataDisplay[index]['ToName']
+                                          dataDisplay[index]['FromSup']
                                               .toString(),
                                           style: const TextStyle(
                                               color: Colors.black,
@@ -1255,7 +1398,7 @@ class _PurchaseListState extends State<PurchaseList> {
                                         ),
                                         Text(
                                           'Invoice : ' +
-                                              dataDisplay[index]['Invoice']
+                                              dataDisplay[index]['Id']
                                                   .toString(),
                                           style: const TextStyle(
                                             color: Colors.black,
@@ -1376,15 +1519,16 @@ class _PurchaseListState extends State<PurchaseList> {
   }
 
   showDetails(context, data, sType) {
-    // dataDynamic = [
-    //   {
-    //     'RealEntryNo': int.tryParse(data['Id'].toString()),
-    //     'EntryNo': int.tryParse(data['Id'].toString()),
-    //     'InvoiceNo': int.tryParse(data['Id'].toString()),
-    //     'Type': sType ?? 3
-    //   }
-    // ];
-    // Navigator.pushNamed(context, '/preview_show', arguments: {'title': 'Sale'});
+    dataDynamic = [
+      {
+        'RealEntryNo': int.tryParse(data['Id'].toString()),
+        'EntryNo': int.tryParse(data['Id'].toString()),
+        'InvoiceNo': int.tryParse(data['Id'].toString()),
+        'Type': '0'
+      }
+    ];
+    Navigator.pushReplacementNamed(context, '/purchasePreviewShow',
+        arguments: {'title': 'Purchase'});
   }
 
   showEditDialog(context, int _id) {

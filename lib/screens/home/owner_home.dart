@@ -114,229 +114,232 @@ class _OwnerHomeState extends State<OwnerHome> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: const Text("SherAcc"),
-          // brightness: Brightness.dark,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed: () {
-                _handleLogout();
-              },
-            ),
-            IconButton(
+    return WillPopScope(
+      onWillPop: showExitPopup,
+      child: Scaffold(
+          appBar: AppBar(
+            title: const Text("SherAcc"),
+            // brightness: Brightness.dark,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.logout),
                 onPressed: () {
-                  // Navigator.pushNamed(context, '/salesManList');
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (BuildContext context) =>
-                          const SalesManSettings()));
+                  _handleLogout();
                 },
-                icon: const Icon(Icons.settings))
-          ],
-          elevation: .1,
-        ),
-        body:
-            // );
-// }
+              ),
+              IconButton(
+                  onPressed: () {
+                    // Navigator.pushNamed(context, '/salesManList');
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (BuildContext context) =>
+                            const SalesManSettings()));
+                  },
+                  icon: const Icon(Icons.settings))
+            ],
+            elevation: .1,
+          ),
+          body:
+              // );
+              // }
 
-            // @override
-            // Widget build(BuildContext context) {
-            GridView.count(
-          primary: false,
-          padding: const EdgeInsets.all(20),
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          crossAxisCount: MediaQuery.of(context).size.width > 400
-              ? (MediaQuery.of(context).size.width ~/ 250).toInt()
-              : (MediaQuery.of(context).size.width ~/ 150).toInt(),
-          children: <Widget>[
-            GestureDetector(
-              child: Card(
-                elevation: 5.0,
-                child: Container(
-                  padding: const EdgeInsets.all(0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: <Widget>[
-                      Icon(
-                        Icons.menu_book_rounded,
-                        color: Colors.amber[200],
-                        size: 90.0,
-                      ),
-                      const Text(
-                        'Ledger Report',
-                        style: TextStyle(
-                            color: Colors.black, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              onTap: () {
-                argumentsPass = {'mode': 'ledger'};
-                Navigator.pushNamed(
-                  context,
-                  '/select_ledger',
-                );
-              },
-            ),
-            GestureDetector(
-              child: Card(
-                elevation: 5.0,
-                child: Container(
-                  padding: const EdgeInsets.all(0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: <Widget>[
-                      Icon(
-                        Icons.auto_stories,
-                        color: Colors.blue[300],
-                        size: 90.0,
-                      ),
-                      const Text('Day Book', //note actually
+              // @override
+              // Widget build(BuildContext context) {
+              GridView.count(
+            primary: false,
+            padding: const EdgeInsets.all(20),
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            crossAxisCount: MediaQuery.of(context).size.width > 400
+                ? (MediaQuery.of(context).size.width ~/ 250).toInt()
+                : (MediaQuery.of(context).size.width ~/ 150).toInt(),
+            children: <Widget>[
+              GestureDetector(
+                child: Card(
+                  elevation: 5.0,
+                  child: Container(
+                    padding: const EdgeInsets.all(0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: <Widget>[
+                        Icon(
+                          Icons.menu_book_rounded,
+                          color: Colors.amber[200],
+                          size: 90.0,
+                        ),
+                        const Text(
+                          'Ledger Report',
                           style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold)),
-                    ],
+                              color: Colors.black, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+                onTap: () {
+                  argumentsPass = {'mode': 'ledger'};
+                  Navigator.pushNamed(
+                    context,
+                    '/select_ledger',
+                  );
+                },
               ),
-              onTap: () {
-                argumentsPass = {'mode': 'CashBook'};
-                Navigator.pushNamed(
-                  context,
-                  '/select_ledger',
-                );
-              },
-            ),
-            // GestureDetector(
-            //   child: Card(
-            //     elevation: 5.0,
-            //     child: Container(
-            //       padding: const EdgeInsets.all(0),
-            //       child: Column(
-            //         mainAxisAlignment: MainAxisAlignment.spaceAround,
-            //         children: <Widget>[
-            //           new Icon(
-            //             Icons.account_balance_rounded,
-            //             color: Colors.red[300],
-            //             size: 90.0,
-            //           ),
-            //           Text(
-            //             'Trial Balance',
-            //             style: TextStyle(
-            //                 color: Colors.black, fontWeight: FontWeight.bold),
-            //           ),
-            //         ],
-            //       ),
-            //     ),
-            //   ),
-            //   onTap: () {
-            //     argumentsPass = {'mode': 'TrialBalance'};
-            //     Navigator.pushNamed(
-            //       context,
-            //       '/select_ledger',
-            //     );
-            //   },
-            // ),
-            // GestureDetector(
-            //   child: Card(
-            //     elevation: 5.0,
-            //     child: Container(
-            //       padding: const EdgeInsets.all(0),
-            //       child: Column(
-            //         mainAxisAlignment: MainAxisAlignment.spaceAround,
-            //         children: <Widget>[
-            //           new Icon(
-            //             Icons.show_chart_rounded,
-            //             color: Colors.green[300],
-            //             size: 90.0,
-            //           ),
-            //           Text(
-            //             'Cash Flow',
-            //             style: TextStyle(
-            //                 color: Colors.black, fontWeight: FontWeight.bold),
-            //           ),
-            //         ],
-            //       ),
-            //     ),
-            //   ),
-            //   onTap: () {
-            //     argumentsPass = {'mode': 'CashFlow'};
-            //     Navigator.pushNamed(
-            //       context,
-            //       '/select_ledger',
-            //     );
-            //   },
-            // ),
-            GestureDetector(
-              child: Card(
-                elevation: 5.0,
-                child: Container(
-                  padding: const EdgeInsets.all(0),
-                  child: Column(
-                    children: <Widget>[
-                      Icon(
-                        Icons.trending_up_rounded,
-                        color: Colors.red[300],
-                        size: 90.0,
-                      ),
-                      const Text(
-                        'Fund Flow',
-                        style: TextStyle(
-                            color: Colors.black, fontWeight: FontWeight.bold),
-                      ),
-                    ],
+              GestureDetector(
+                child: Card(
+                  elevation: 5.0,
+                  child: Container(
+                    padding: const EdgeInsets.all(0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: <Widget>[
+                        Icon(
+                          Icons.auto_stories,
+                          color: Colors.blue[300],
+                          size: 90.0,
+                        ),
+                        const Text('Day Book', //note actually
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold)),
+                      ],
+                    ),
                   ),
                 ),
+                onTap: () {
+                  argumentsPass = {'mode': 'CashBook'};
+                  Navigator.pushNamed(
+                    context,
+                    '/select_ledger',
+                  );
+                },
               ),
-              onTap: () {
-                argumentsPass = {'mode': 'FundFlow'};
-                Navigator.pushNamed(
-                  context,
-                  '/select_ledger',
-                );
-              },
-            ),
-            GestureDetector(
-              child: Card(
-                elevation: 5.0,
-                child: Container(
-                  padding: const EdgeInsets.all(0),
-                  child: Column(
-                    children: <Widget>[
-                      Icon(
-                        Icons.read_more,
-                        color: Colors.pink[300],
-                        size: 90.0,
-                      ),
-                      const Text(
-                        'More',
-                        style: TextStyle(
-                            color: Colors.black, fontWeight: FontWeight.bold),
-                      ),
-                    ],
+              // GestureDetector(
+              //   child: Card(
+              //     elevation: 5.0,
+              //     child: Container(
+              //       padding: const EdgeInsets.all(0),
+              //       child: Column(
+              //         mainAxisAlignment: MainAxisAlignment.spaceAround,
+              //         children: <Widget>[
+              //           new Icon(
+              //             Icons.account_balance_rounded,
+              //             color: Colors.red[300],
+              //             size: 90.0,
+              //           ),
+              //           Text(
+              //             'Trial Balance',
+              //             style: TextStyle(
+              //                 color: Colors.black, fontWeight: FontWeight.bold),
+              //           ),
+              //         ],
+              //       ),
+              //     ),
+              //   ),
+              //   onTap: () {
+              //     argumentsPass = {'mode': 'TrialBalance'};
+              //     Navigator.pushNamed(
+              //       context,
+              //       '/select_ledger',
+              //     );
+              //   },
+              // ),
+              // GestureDetector(
+              //   child: Card(
+              //     elevation: 5.0,
+              //     child: Container(
+              //       padding: const EdgeInsets.all(0),
+              //       child: Column(
+              //         mainAxisAlignment: MainAxisAlignment.spaceAround,
+              //         children: <Widget>[
+              //           new Icon(
+              //             Icons.show_chart_rounded,
+              //             color: Colors.green[300],
+              //             size: 90.0,
+              //           ),
+              //           Text(
+              //             'Cash Flow',
+              //             style: TextStyle(
+              //                 color: Colors.black, fontWeight: FontWeight.bold),
+              //           ),
+              //         ],
+              //       ),
+              //     ),
+              //   ),
+              //   onTap: () {
+              //     argumentsPass = {'mode': 'CashFlow'};
+              //     Navigator.pushNamed(
+              //       context,
+              //       '/select_ledger',
+              //     );
+              //   },
+              // ),
+              GestureDetector(
+                child: Card(
+                  elevation: 5.0,
+                  child: Container(
+                    padding: const EdgeInsets.all(0),
+                    child: Column(
+                      children: <Widget>[
+                        Icon(
+                          Icons.trending_up_rounded,
+                          color: Colors.red[300],
+                          size: 90.0,
+                        ),
+                        const Text(
+                          'Fund Flow',
+                          style: TextStyle(
+                              color: Colors.black, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+                onTap: () {
+                  argumentsPass = {'mode': 'FundFlow'};
+                  Navigator.pushNamed(
+                    context,
+                    '/select_ledger',
+                  );
+                },
               ),
-              onTap: () {
-                _showDialog(context);
-                //Ledger_ReportProject
-                //ReceivblesDebitOnly,
-                //ReceivblesCreditOnly
-                //ReceivblesDebitOnlySalesman
-                //ReceivblesCreditOnlySalesman
-                //Cash Book Projection
-                //Trial_G_l
-                //Trial_G
-                //Custom Summary
-                //Ledger_Report_Qty
-                //ShowBills
-              },
-            ),
-          ],
-        ));
+              GestureDetector(
+                child: Card(
+                  elevation: 5.0,
+                  child: Container(
+                    padding: const EdgeInsets.all(0),
+                    child: Column(
+                      children: <Widget>[
+                        Icon(
+                          Icons.read_more,
+                          color: Colors.pink[300],
+                          size: 90.0,
+                        ),
+                        const Text(
+                          'More',
+                          style: TextStyle(
+                              color: Colors.black, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                onTap: () {
+                  _showDialog(context);
+                  //Ledger_ReportProject
+                  //ReceivblesDebitOnly,
+                  //ReceivblesCreditOnly
+                  //ReceivblesDebitOnlySalesman
+                  //ReceivblesCreditOnlySalesman
+                  //Cash Book Projection
+                  //Trial_G_l
+                  //Trial_G
+                  //Custom Summary
+                  //Ledger_Report_Qty
+                  //ShowBills
+                },
+              ),
+            ],
+          )),
+    );
   }
 
   void _showDialog(BuildContext context) {
@@ -368,5 +371,26 @@ class _OwnerHomeState extends State<OwnerHome> {
         );
       },
     );
+  }
+
+  Future<bool> showExitPopup() async {
+    return await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Exit App'),
+            content: const Text('Do you want to exit an App?'),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('No'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Yes'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 }

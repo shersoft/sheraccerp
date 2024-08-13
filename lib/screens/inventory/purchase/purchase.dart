@@ -12,6 +12,7 @@ import 'package:scoped_model/scoped_model.dart';
 import 'package:sheraccerp/models/cart_item.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/customer_model.dart';
+import 'package:sheraccerp/models/other_registrations.dart';
 import 'package:sheraccerp/models/product_register_model.dart';
 import 'package:sheraccerp/models/sales_model.dart';
 import 'package:sheraccerp/models/unit_model.dart';
@@ -20,6 +21,7 @@ import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
 import 'package:sheraccerp/shared/constants.dart';
+import 'package:sheraccerp/util/color_palette.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/util/show_confirm_alert_box.dart';
@@ -596,21 +598,124 @@ class _PurchaseState extends State<Purchase> {
                   ),
                 );
               } else {
-                return Card(
-                  elevation: 2,
-                  child: ListTile(
-                    title: Text(dataDisplay[index]['Name']),
-                    subtitle: Text('Date: ' +
-                        dataDisplay[index]['Date'] +
-                        ' / EntryNo : ' +
-                        dataDisplay[index]['Id'].toString()),
-                    trailing: Text(
-                        'Total : ' + dataDisplay[index]['Total'].toString()),
-                    onTap: () {
-                      showEditDialog(context, dataDisplay[index]);
-                    },
-                  ),
-                );
+                return Container(
+                    margin: const EdgeInsets.symmetric(vertical: 2),
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          offset: const Offset(0, 5),
+                          blurRadius: 6,
+                          color: const Color(0xff000000).withOpacity(0.06),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(10),
+                    child: Row(
+                      children: [
+                        Expanded(
+                            flex: 3,
+                            child: InkWell(
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      dataDisplay[index]['Name'],
+                                      // maxLines: 1,
+                                      style: const TextStyle(
+                                        // fontSize: 16,
+                                        color: ColorPalette.timberGreen,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: 5,
+                                    ),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'Date :${dataDisplay[index]['Date']}',
+                                          maxLines: 1,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: ColorPalette.timberGreen
+                                                .withOpacity(0.44),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            left: 5,
+                                            top: 2,
+                                            right: 5,
+                                          ),
+                                          child: Icon(
+                                            Icons.circle,
+                                            size: 5,
+                                            color: ColorPalette.timberGreen
+                                                .withOpacity(0.44),
+                                          ),
+                                        ),
+                                        Text(
+                                          'EntryNo :${dataDisplay[index]['Id'].toString()}',
+                                          maxLines: 1,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: ColorPalette.timberGreen
+                                                .withOpacity(0.44),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ]),
+                              onTap: () {
+                                showEditDialog(context, dataDisplay[index]);
+                              },
+                            )),
+                        Expanded(
+                          flex: 2,
+                          child: InkWell(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                const Text(
+                                  'Total',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: ColorPalette.nileBlue,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                        '${dataDisplay[index]['Total'].toStringAsFixed(decimal)}'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            onTap: () {
+                              showDetails(context, dataDisplay[index]);
+                            },
+                          ),
+                        ),
+                      ],
+                    ));
+                // return Card(
+                //   elevation: 2,
+                //   child: ListTile(
+                //     title: Text(dataDisplay[index]['Name']),
+                //     subtitle: Text('Date: ' +
+                //         dataDisplay[index]['Date'] +
+                //         ' / EntryNo : ' +
+                //         dataDisplay[index]['Id'].toString()),
+                //     trailing: Text(
+                //         'Total : ' + dataDisplay[index]['Total'].toString()),
+                //     onTap: () {
+                //       showEditDialog(context, dataDisplay[index]);
+                //     },
+                //   ),
+                // );
               }
             },
             controller: _scrollController,
@@ -1500,6 +1605,7 @@ class _PurchaseState extends State<Purchase> {
   bool lockItemDetails = false;
 
   itemFetchPrice(var id) {
+    fetchProductDetails(id.toString());
     return lockItemDetails
         ? itemDetailWidget()
         : FutureBuilder(
@@ -1522,6 +1628,7 @@ class _PurchaseState extends State<Purchase> {
                               onPressed: () {
                                 setState(() {
                                   lockItemDetails = false;
+                                  defaultUnitItem = false;
                                   nextWidget = 3;
                                 });
                               },
@@ -1572,6 +1679,16 @@ class _PurchaseState extends State<Purchase> {
                 ),
               );
             });
+  }
+
+  bool defaultUnitItem = false;
+  void fetchProductDetails(String id) {
+    api.getProductById(id).then((product) {
+      var isUnited = product.unitId;
+      if ((isUnited != null && int.tryParse(isUnited.toString()) > 0)) {
+        defaultUnitItem = true;
+      }
+    });
   }
 
   TextEditingController controllerQuantity = TextEditingController();
@@ -1984,6 +2101,7 @@ class _PurchaseState extends State<Purchase> {
                       nextWidget = 3;
                       clearValue();
                       lockItemDetails = false;
+                      defaultUnitItem = false;
                     });
                   },
                   child: const Text("Back"),
@@ -2000,6 +2118,7 @@ class _PurchaseState extends State<Purchase> {
                       nextWidget = 5;
                       clearValue();
                       lockItemDetails = false;
+                      defaultUnitItem = false;
                     });
                   },
                   child: const Text("Cancel"),
@@ -2156,6 +2275,7 @@ class _PurchaseState extends State<Purchase> {
                           nextWidget = 5;
                           clearValue();
                           lockItemDetails = false;
+                          defaultUnitItem = false;
                         }
                       });
                     } else if (total > 0) {
@@ -2287,6 +2407,7 @@ class _PurchaseState extends State<Purchase> {
                           nextWidget = 5;
                           clearValue();
                           lockItemDetails = false;
+                          defaultUnitItem = false;
                         }
                       });
                     } else {
@@ -2391,8 +2512,7 @@ class _PurchaseState extends State<Purchase> {
                               unitListData.clear();
                               for (var i = 0; i < snapshot.data.length; i++) {
                                 if (defaultUnitID.toString().isNotEmpty) {
-                                  if (snapshot.data[i].id ==
-                                      defaultUnitID - 1) {
+                                  if (snapshot.data[i].id == defaultUnitID) {
                                     _dropDownUnit = snapshot.data[i].id;
                                     _conversion = snapshot.data[i].conversion;
                                     unit = DataJson(
@@ -2502,6 +2622,27 @@ class _PurchaseState extends State<Purchase> {
                     child: Text('$_conversion'),
                   )),
                 ),
+                Visibility(
+                    visible: (!enableMULTIUNIT && defaultUnitItem),
+                    child: DropdownButton<OtherRegistrationModel>(
+                      hint: Text(_dropDownUnit > 0 ? unit.name : 'Unit'),
+                      items: otherRegUnitList
+                          .map<DropdownMenuItem<OtherRegistrationModel>>(
+                              (item) {
+                        return DropdownMenuItem<OtherRegistrationModel>(
+                          value: item,
+                          child: Text(item.name),
+                        );
+                      }).toList(),
+                      onChanged: (valueModel) {
+                        setState(() {
+                          _dropDownUnit =
+                              int.tryParse(valueModel.id.toString());
+                          unit = DataJson(
+                              id: _dropDownUnit, name: valueModel.name);
+                        });
+                      },
+                    ))
               ],
             ),
             const Divider(height: 5),
@@ -3833,7 +3974,7 @@ class _PurchaseState extends State<Purchase> {
                                                         children: [
                                                           TextSpan(
                                                               text:
-                                                                  '${UnitSettings.getUnitName(cartItem[index].unitId)}\n',
+                                                                  '${enableMULTIUNIT ? (UnitSettings.getUnitName(cartItem[index].unitId)) : (UnitSettings.getOtherUnitName(cartItem[index].unitId))}\n',
                                                               style: const TextStyle(
                                                                   fontSize:
                                                                       12.0,
@@ -3927,6 +4068,9 @@ class _PurchaseState extends State<Purchase> {
                                                           .toString();
                                                   // controller.text = cartModel..toString();
 
+                                                  _dropDownUnit = 0;
+                                                  unit =
+                                                      DataJson(id: 0, name: '');
                                                   nextWidget = 4;
                                                 });
                                               },
@@ -4302,10 +4446,11 @@ class _PurchaseState extends State<Purchase> {
     DioService api = DioService();
     double billTotal = 0, billCash = 0;
     String narration = ' ';
+    int frmId = voucherTypeData != null
+        ? voucherTypeData.id
+        : int.parse(data['Type'].toString());
 
-    api
-        .fetchPurchaseInvoiceSp(data['Id'], 'P_Find', voucherTypeData.id)
-        .then((value) {
+    api.fetchPurchaseInvoiceSp(data['Id'], 'P_Find', frmId).then((value) {
       if (value != null) {
         var information = value['Information'][0];
         var particulars = value['Particulars'];
@@ -5441,6 +5586,19 @@ class _PurchaseState extends State<Purchase> {
         const SnackBar(content: Text('no Permission')),
       );
     }
+  }
+
+  showDetails(BuildContext context, data) {
+    dataDynamic = [
+      {
+        'RealEntryNo': data['Id'],
+        'EntryNo': data['Id'],
+        'InvoiceNo': data['Id'],
+        'Type': '0'
+      }
+    ];
+    Navigator.pushReplacementNamed(context, '/purchasePreviewShow',
+        arguments: {'title': 'Purchase'});
   }
 }
 
