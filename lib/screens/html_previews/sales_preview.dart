@@ -17,6 +17,7 @@ import 'package:pdf/pdf.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:printing/printing.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:sheraccerp/app_settings_page.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/print_settings_model.dart';
 import 'package:sheraccerp/models/sales_bill.dart';
@@ -69,7 +70,8 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
   dynamic data;
   bool _isLoading = true;
   bool isQrCodeKSA = false;
-  bool isEsQrCodeKSA = false; //
+  bool isEsQrCodeKSA = false;
+  bool isCashBill = false;
   int printerType = 0, printerDevice = 0, printModel = 2;
   bool toggle = true;
   var eNo = 0, type = 0;
@@ -236,6 +238,16 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         loadAsset();
         _isLoading = false;
 
+        AppSettingsMap mapCash = cashAccount.firstWhere(
+            (element) =>
+                element.key.toString() ==
+                dataInformation['Customer'].toString(),
+            orElse: () => AppSettingsMap(key: 0, value: ''));
+        isCashBill =
+            mapCash.key.toString() == dataInformation['Customer'].toString()
+                ? true
+                : false;
+
         dataParticulars.addAll(dataParticularsAll);
 
         data['Particulars'] = dataParticulars;
@@ -252,7 +264,8 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                   companySettings,
                   settings,
                   data,
-                  customerBalance)
+                  customerBalance,
+                  isCashBill)
               .then((value) => pdfPath = value);
         }
       });
@@ -2901,59 +2914,51 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                               const SizedBox(
                                                                 width: 30,
                                                               ),
-                                                              Visibility(
-                                                                visible:
-                                                                    oldBalance >
-                                                                            0 ||
-                                                                        balance >
-                                                                            0,
-                                                                child: Column(
-                                                                  mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .center,
-                                                                  crossAxisAlignment:
-                                                                      CrossAxisAlignment
-                                                                          .start,
-                                                                  children: [
-                                                                    Row(
-                                                                      children: [
-                                                                        const SizedBox(
-                                                                          child:
+                                                              isCashBill
+                                                                  ? Container()
+                                                                  : Visibility(
+                                                                      visible: oldBalance >
+                                                                              0 ||
+                                                                          balance >
+                                                                              0,
+                                                                      child:
+                                                                          Column(
+                                                                        mainAxisAlignment:
+                                                                            MainAxisAlignment.center,
+                                                                        crossAxisAlignment:
+                                                                            CrossAxisAlignment.start,
+                                                                        children: [
+                                                                          Row(
+                                                                            children: [
+                                                                              const SizedBox(
+                                                                                child: Text(
+                                                                                  "OB           : ",
+                                                                                  style: TextStyle(fontSize: 6),
+                                                                                ),
+                                                                              ),
                                                                               Text(
-                                                                            "OB           : ",
-                                                                            style:
-                                                                                TextStyle(fontSize: 6),
+                                                                                double.tryParse(dataInformation['LedgerBalance'].toString()).toStringAsFixed(decimal),
+                                                                                style: const TextStyle(fontSize: 6),
+                                                                              )
+                                                                            ],
                                                                           ),
-                                                                        ),
-                                                                        Text(
-                                                                          double.tryParse(dataInformation['LedgerBalance'].toString())
-                                                                              .toStringAsFixed(decimal),
-                                                                          style:
-                                                                              const TextStyle(fontSize: 6),
-                                                                        )
-                                                                      ],
-                                                                    ),
-                                                                    Row(
-                                                                      children: [
-                                                                        const SizedBox(
-                                                                          child:
+                                                                          Row(
+                                                                            children: [
+                                                                              const SizedBox(
+                                                                                child: Text(
+                                                                                  "Balance  : ",
+                                                                                  style: TextStyle(fontSize: 6),
+                                                                                ),
+                                                                              ),
                                                                               Text(
-                                                                            "Balance  : ",
-                                                                            style:
-                                                                                TextStyle(fontSize: 6),
+                                                                                double.tryParse(customerBalance).toStringAsFixed(decimal),
+                                                                                style: const TextStyle(fontSize: 6),
+                                                                              )
+                                                                            ],
                                                                           ),
-                                                                        ),
-                                                                        Text(
-                                                                          double.tryParse(customerBalance)
-                                                                              .toStringAsFixed(decimal),
-                                                                          style:
-                                                                              const TextStyle(fontSize: 6),
-                                                                        )
-                                                                      ],
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              )
+                                                                        ],
+                                                                      ),
+                                                                    )
                                                             ],
                                                           )),
                                                           const SizedBox(
@@ -5166,133 +5171,230 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                       ),
                                     ),
                                   ),
-                                  Expanded(
-                                    child: SizedBox(
-                                      width:
-                                          MediaQuery.of(context).size.width / 2,
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  for (var i = 0;
-                                                      i < otherAmount.length;
-                                                      i++)
-                                                    Text(
-                                                      "${otherAmount[i]['LedName']} ",
-                                                      style: const TextStyle(
-                                                        fontSize: 7,
-                                                      ),
+                                  isCashBill
+                                      ? Expanded(
+                                          child: SizedBox(
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width /
+                                                2,
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        for (var i = 0;
+                                                            i <
+                                                                otherAmount
+                                                                    .length;
+                                                            i++)
+                                                          Text(
+                                                            "${otherAmount[i]['LedName']} ",
+                                                            style:
+                                                                const TextStyle(
+                                                              fontSize: 7,
+                                                            ),
+                                                          ),
+                                                        const Text(
+                                                          "Grand Total    :",
+                                                          style: TextStyle(
+                                                            fontSize: 8,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 5,
+                                                        ),
+                                                      ],
                                                     ),
-                                                  const Text(
-                                                    "Return Amt         :",
-                                                    style: TextStyle(
-                                                      fontSize: 8,
-                                                    ),
-                                                  ),
-                                                  const Text(
-                                                    "BILL AMOUNT    :",
-                                                    style: TextStyle(
-                                                      fontSize: 8,
-                                                    ),
-                                                  ),
-                                                  const Text(
-                                                    "OB                        :",
-                                                    style: TextStyle(
-                                                      fontSize: 8,
-                                                    ),
-                                                  ),
-                                                  const Text(
-                                                    "Cash Recieved   :",
-                                                    style: TextStyle(
-                                                      fontSize: 8,
-                                                    ),
-                                                  ),
-                                                  const Text(
-                                                    "Balance               :",
-                                                    style: TextStyle(
-                                                      fontSize: 8,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 5,
-                                                  ),
-                                                  // const Text(
-                                                  //   "NET AMOUNT    :",
-                                                  //   style: TextStyle(
-                                                  //       fontSize: 8,
-                                                  //       fontWeight:
-                                                  //           FontWeight.bold),
-                                                  // )
-                                                ],
-                                              ),
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.end,
-                                                children: [
-                                                  for (var i = 0;
-                                                      i < otherAmount.length;
-                                                      i++)
-                                                    Text(
-                                                      "${otherAmount[i]['Amount'].toStringAsFixed(2)} ",
-                                                      style: const TextStyle(
-                                                          fontSize: 8,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  Text(
-                                                    "${dataInformation['ReturnAmount'].toStringAsFixed(2)} ",
-                                                    style: const TextStyle(
-                                                        fontSize: 8,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  ),
-                                                  Text(
-                                                    "${dataInformation['GrandTotal'].toStringAsFixed(2)} ",
-                                                    style: const TextStyle(
-                                                        fontSize: 8,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  ),
-                                                  Text(
-                                                    "${dataInformation['LedgerBalance'].toStringAsFixed(2)} ",
-                                                    style: const TextStyle(
-                                                        fontSize: 8,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  ),
-                                                  Text(
-                                                    "${dataInformation['CashReceived'].toStringAsFixed(2)} ",
-                                                    style: const TextStyle(
-                                                        fontSize: 8,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  ),
-                                                  Text(
-                                                    "${dataInformation['Balance'].toStringAsFixed(2)} ",
-                                                    style: const TextStyle(
-                                                        fontSize: 8,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 5,
-                                                  ),
-                                                ],
-                                              )
-                                            ],
+                                                    Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .end,
+                                                      children: [
+                                                        for (var i = 0;
+                                                            i <
+                                                                otherAmount
+                                                                    .length;
+                                                            i++)
+                                                          Text(
+                                                            "${otherAmount[i]['Amount'].toStringAsFixed(2)} ",
+                                                            style: const TextStyle(
+                                                                fontSize: 8,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold),
+                                                          ),
+                                                        Text(
+                                                          "${dataInformation['GrandTotal'].toStringAsFixed(2)} ",
+                                                          style: const TextStyle(
+                                                              fontSize: 8,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 5,
+                                                        ),
+                                                      ],
+                                                    )
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
+                                        )
+                                      : Expanded(
+                                          child: SizedBox(
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width /
+                                                2,
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        for (var i = 0;
+                                                            i <
+                                                                otherAmount
+                                                                    .length;
+                                                            i++)
+                                                          Text(
+                                                            "${otherAmount[i]['LedName']} ",
+                                                            style:
+                                                                const TextStyle(
+                                                              fontSize: 7,
+                                                            ),
+                                                          ),
+                                                        const Text(
+                                                          "Return Amt         :",
+                                                          style: TextStyle(
+                                                            fontSize: 8,
+                                                          ),
+                                                        ),
+                                                        const Text(
+                                                          "BILL AMOUNT    :",
+                                                          style: TextStyle(
+                                                            fontSize: 8,
+                                                          ),
+                                                        ),
+                                                        const Text(
+                                                          "OB                        :",
+                                                          style: TextStyle(
+                                                            fontSize: 8,
+                                                          ),
+                                                        ),
+                                                        const Text(
+                                                          "Cash Recieved   :",
+                                                          style: TextStyle(
+                                                            fontSize: 8,
+                                                          ),
+                                                        ),
+                                                        const Text(
+                                                          "Balance               :",
+                                                          style: TextStyle(
+                                                            fontSize: 8,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 5,
+                                                        ),
+                                                        // const Text(
+                                                        //   "NET AMOUNT    :",
+                                                        //   style: TextStyle(
+                                                        //       fontSize: 8,
+                                                        //       fontWeight:
+                                                        //           FontWeight.bold),
+                                                        // )
+                                                      ],
+                                                    ),
+                                                    Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .end,
+                                                      children: [
+                                                        for (var i = 0;
+                                                            i <
+                                                                otherAmount
+                                                                    .length;
+                                                            i++)
+                                                          Text(
+                                                            "${otherAmount[i]['Amount'].toStringAsFixed(2)} ",
+                                                            style: const TextStyle(
+                                                                fontSize: 8,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold),
+                                                          ),
+                                                        Text(
+                                                          "${dataInformation['ReturnAmount'].toStringAsFixed(2)} ",
+                                                          style: const TextStyle(
+                                                              fontSize: 8,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                        Text(
+                                                          "${dataInformation['GrandTotal'].toStringAsFixed(2)} ",
+                                                          style: const TextStyle(
+                                                              fontSize: 8,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                        Text(
+                                                          "${dataInformation['LedgerBalance'].toStringAsFixed(2)} ",
+                                                          style: const TextStyle(
+                                                              fontSize: 8,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                        Text(
+                                                          "${dataInformation['CashReceived'].toStringAsFixed(2)} ",
+                                                          style: const TextStyle(
+                                                              fontSize: 8,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                        Text(
+                                                          "${dataInformation['Balance'].toStringAsFixed(2)} ",
+                                                          style: const TextStyle(
+                                                              fontSize: 8,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 5,
+                                                        ),
+                                                      ],
+                                                    )
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
                                 ],
                               ),
                             ),
@@ -5363,8 +5465,8 @@ askPrintDevice(
           context, title, companySettings, settings, data, byteImage);
     } else if (printerDevice == 6) {
       //                6: 'Thermal',
-      _selectBtThermalPrint(
-          context, title, companySettings, settings, data, byteImage, "4");
+      _selectBtThermalPrint(context, title, companySettings, settings, data,
+          byteImage, paperSize.toString());
     } else if (printerDevice == 7) {
       //                7: 'RP_80',
     } else if (printerDevice == 8) {
@@ -5407,8 +5509,8 @@ askPrintDevice(
           context, title, companySettings, settings, data, byteImage);
     } else if (printerDevice == 6) {
       //                6: 'Thermal',
-      _selectBtThermalPrint(
-          context, title, companySettings, settings, data, byteImage, "4");
+      _selectBtThermalPrint(context, title, companySettings, settings, data,
+          byteImage, paperSize.toString());
     } else if (printerDevice == 7) {
       //                7: 'RP_80',
     } else if (printerDevice == 8) {
@@ -6487,8 +6589,10 @@ Future<String> _createPDF(
     CompanyInformation companySettings,
     List<CompanySettings> settings,
     var data,
-    var customerBalance) async {
-  return makePDF(model, title, companySettings, settings, data, customerBalance)
+    var customerBalance,
+    isCashBill) async {
+  return makePDF(model, title, companySettings, settings, data, customerBalance,
+          isCashBill)
       .then((value) => savePreviewPDF(value, title));
 }
 
@@ -6526,7 +6630,8 @@ Future<pw.Document> makePDF(
     CompanyInformation companySettings,
     List<CompanySettings> settings,
     var data,
-    var customerBalance) async {
+    var customerBalance,
+    isCashBill) async {
   var dataInformation = data['Information'][0];
   var dataParticulars = data['Particulars'];
   // var dataSerialNO = data['SerialNO'];
@@ -16034,7 +16139,8 @@ Future<pw.Document> makePDF(
                             companySettings,
                             otherAmount,
                             dataInformation,
-                            customerBalance),
+                            customerBalance,
+                            isCashBill),
                       ]);
                     },
                   )
@@ -16055,7 +16161,8 @@ Future<pw.Document> makePDF(
                         companySettings,
                         otherAmount,
                         dataInformation,
-                        customerBalance),
+                        customerBalance,
+                        isCashBill),
                     build: (pw.Context context) {
                       double calculateTotalQuantity(List<dynamic> perticu) {
                         return perticu.fold(0,
@@ -19300,7 +19407,8 @@ Future<pw.Document> makePDF(
                         dataInformation,
                         companySettings,
                         otherAmount,
-                        dataParticulars),
+                        dataParticulars,
+                        isCashBill),
                   ]);
                 },
               )
@@ -19319,7 +19427,8 @@ Future<pw.Document> makePDF(
                     dataInformation,
                     companySettings,
                     otherAmount,
-                    dataParticulars),
+                    dataParticulars,
+                    isCashBill),
                 build: (pw.Context context) {
                   double calculateEstTotalAmount(List<dynamic> perticu) {
                     return perticu.fold(
@@ -20696,7 +20805,7 @@ _buildHeaderTax(pw.Context context, company, companySettings, ledger,
 }
 
 _buildEstimateFooter(pw.Context context, dataBankLedger, dataInformation,
-    companySettings, otherAmount, dataParticulars) {
+    companySettings, otherAmount, dataParticulars, isCashBill) {
   double calculateEstTotalAmount(List<dynamic> perticu) {
     return perticu.fold(
         0, (total, particular) => total + particular['Total'].toDouble());
@@ -20755,114 +20864,172 @@ _buildEstimateFooter(pw.Context context, dataBankLedger, dataInformation,
                       child: pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.end,
                         children: [
-                          pw.Row(
-                            mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
-                            children: [
-                              pw.Column(
-                                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                                children: [
-                                  for (var i = 0; i < otherAmount.length; i++)
-                                    pw.Text(
-                                      "${otherAmount[i]['LedName']} ",
-                                      style: const pw.TextStyle(
-                                        fontSize: 8,
+                          isCashBill
+                              ? pw.Row(
+                                  mainAxisAlignment:
+                                      pw.MainAxisAlignment.spaceBetween,
+                                  children: [
+                                      pw.Column(
+                                        crossAxisAlignment:
+                                            pw.CrossAxisAlignment.start,
+                                        children: [
+                                          for (var i = 0;
+                                              i < otherAmount.length;
+                                              i++)
+                                            pw.Text(
+                                              "${otherAmount[i]['LedName']} ",
+                                              style: const pw.TextStyle(
+                                                fontSize: 8,
+                                              ),
+                                            ),
+                                          pw.Text(
+                                            "Grand Total    :",
+                                            style: const pw.TextStyle(
+                                              fontSize: 8,
+                                            ),
+                                          ),
+                                        ],
                                       ),
+                                      pw.Column(
+                                        crossAxisAlignment:
+                                            pw.CrossAxisAlignment.end,
+                                        children: [
+                                          for (var i = 0;
+                                              i < otherAmount.length;
+                                              i++)
+                                            pw.Text(
+                                              "${otherAmount[i]['Amount'].toStringAsFixed(2)} ",
+                                              style: pw.TextStyle(
+                                                  fontSize: 8,
+                                                  fontWeight:
+                                                      pw.FontWeight.bold),
+                                            ),
+                                          pw.Text(
+                                            "${(calculateEstTotalAmount(dataParticulars) - dataInformation['ReturnAmount'] + otherAmount.fold(0.0, (t, e) => t + double.parse(e['symbol'] == '-' ? (e['Amount'] * -1).toString() : e['Amount'].toString()))).toStringAsFixed(2)} ",
+                                            style: pw.TextStyle(
+                                                fontSize: 8,
+                                                fontWeight: pw.FontWeight.bold),
+                                          ),
+                                          pw.SizedBox(
+                                            height: 5,
+                                          ),
+                                        ],
+                                      )
+                                    ])
+                              : pw.Row(
+                                  mainAxisAlignment:
+                                      pw.MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    pw.Column(
+                                      crossAxisAlignment:
+                                          pw.CrossAxisAlignment.start,
+                                      children: [
+                                        for (var i = 0;
+                                            i < otherAmount.length;
+                                            i++)
+                                          pw.Text(
+                                            "${otherAmount[i]['LedName']} ",
+                                            style: const pw.TextStyle(
+                                              fontSize: 8,
+                                            ),
+                                          ),
+                                        pw.Text(
+                                          "Return Amt          :",
+                                          style: const pw.TextStyle(
+                                            fontSize: 8,
+                                          ),
+                                        ),
+                                        pw.Text(
+                                          "BILL AMOUNT    :",
+                                          style: const pw.TextStyle(
+                                            fontSize: 8,
+                                          ),
+                                        ),
+                                        pw.Text(
+                                          "OB                       :",
+                                          style: const pw.TextStyle(
+                                            fontSize: 8,
+                                          ),
+                                        ),
+                                        pw.Text(
+                                          "Cash Recieved    :",
+                                          style: const pw.TextStyle(
+                                            fontSize: 8,
+                                          ),
+                                        ),
+                                        pw.Text(
+                                          "Balance            :",
+                                          style: const pw.TextStyle(
+                                            fontSize: 8,
+                                          ),
+                                        ),
+                                        // pw.SizedBox(
+                                        //   height: 5,
+                                        // ),
+                                        // pw.Text(
+                                        //   "NET AMOUNT    :",
+                                        //   style: pw.TextStyle(
+                                        //       fontSize: 8,
+                                        //       fontWeight: pw.FontWeight.bold),
+                                        // )
+                                      ],
                                     ),
-                                  pw.Text(
-                                    "Return Amt          :",
-                                    style: const pw.TextStyle(
-                                      fontSize: 8,
-                                    ),
-                                  ),
-                                  pw.Text(
-                                    "BILL AMOUNT    :",
-                                    style: const pw.TextStyle(
-                                      fontSize: 8,
-                                    ),
-                                  ),
-                                  pw.Text(
-                                    "OB                       :",
-                                    style: const pw.TextStyle(
-                                      fontSize: 8,
-                                    ),
-                                  ),
-                                  pw.Text(
-                                    "Cash Recieved    :",
-                                    style: const pw.TextStyle(
-                                      fontSize: 8,
-                                    ),
-                                  ),
-                                  pw.Text(
-                                    "Balance            :",
-                                    style: const pw.TextStyle(
-                                      fontSize: 8,
-                                    ),
-                                  ),
-                                  // pw.SizedBox(
-                                  //   height: 5,
-                                  // ),
-                                  // pw.Text(
-                                  //   "NET AMOUNT    :",
-                                  //   style: pw.TextStyle(
-                                  //       fontSize: 8,
-                                  //       fontWeight: pw.FontWeight.bold),
-                                  // )
-                                ],
-                              ),
-                              pw.Column(
-                                crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                children: [
-                                  for (var i = 0; i < otherAmount.length; i++)
-                                    pw.Text(
-                                      "${otherAmount[i]['Amount'].toStringAsFixed(2)} ",
-                                      style: pw.TextStyle(
-                                          fontSize: 8,
-                                          fontWeight: pw.FontWeight.bold),
-                                    ),
-                                  pw.Text(
-                                    "${dataInformation['ReturnAmount'].toStringAsFixed(2)} ",
-                                    style: pw.TextStyle(
-                                        fontSize: 8,
-                                        fontWeight: pw.FontWeight.bold),
-                                  ),
-                                  pw.Text(
-                                    "${(calculateEstTotalAmount(dataParticulars) - dataInformation['ReturnAmount'] + otherAmount.fold(0.0, (t, e) => t + double.parse(e['symbol'] == '-' ? (e['Amount'] * -1).toString() : e['Amount'].toString()))).toStringAsFixed(2)} ",
-                                    style: pw.TextStyle(
-                                        fontSize: 8,
-                                        fontWeight: pw.FontWeight.bold),
-                                  ),
-                                  pw.Text(
-                                    "${dataInformation['LedgerBalance'].toStringAsFixed(2)} ",
-                                    style: pw.TextStyle(
-                                        fontSize: 8,
-                                        fontWeight: pw.FontWeight.bold),
-                                  ),
-                                  pw.Text(
-                                    "${dataInformation['CashReceived'].toStringAsFixed(2)} ",
-                                    style: pw.TextStyle(
-                                        fontSize: 8,
-                                        fontWeight: pw.FontWeight.bold),
-                                  ),
-                                  pw.Text(
-                                    "${dataInformation['Balance'].toStringAsFixed(2)} ",
-                                    style: pw.TextStyle(
-                                        fontSize: 8,
-                                        fontWeight: pw.FontWeight.bold),
-                                  ),
-                                  pw.SizedBox(
-                                    height: 5,
-                                  ),
-                                  // pw.Text(
-                                  //   "${dataInformation['GrandTotal'].toStringAsFixed(2)} ",
-                                  //   style: pw.TextStyle(
-                                  //       fontSize: 8,
-                                  //       fontWeight: pw.FontWeight.bold),
-                                  // )
-                                ],
-                              )
-                            ],
-                          ),
+                                    pw.Column(
+                                      crossAxisAlignment:
+                                          pw.CrossAxisAlignment.end,
+                                      children: [
+                                        for (var i = 0;
+                                            i < otherAmount.length;
+                                            i++)
+                                          pw.Text(
+                                            "${otherAmount[i]['Amount'].toStringAsFixed(2)} ",
+                                            style: pw.TextStyle(
+                                                fontSize: 8,
+                                                fontWeight: pw.FontWeight.bold),
+                                          ),
+                                        pw.Text(
+                                          "${dataInformation['ReturnAmount'].toStringAsFixed(2)} ",
+                                          style: pw.TextStyle(
+                                              fontSize: 8,
+                                              fontWeight: pw.FontWeight.bold),
+                                        ),
+                                        pw.Text(
+                                          "${(calculateEstTotalAmount(dataParticulars) - dataInformation['ReturnAmount'] + otherAmount.fold(0.0, (t, e) => t + double.parse(e['symbol'] == '-' ? (e['Amount'] * -1).toString() : e['Amount'].toString()))).toStringAsFixed(2)} ",
+                                          style: pw.TextStyle(
+                                              fontSize: 8,
+                                              fontWeight: pw.FontWeight.bold),
+                                        ),
+                                        pw.Text(
+                                          "${dataInformation['LedgerBalance'].toStringAsFixed(2)} ",
+                                          style: pw.TextStyle(
+                                              fontSize: 8,
+                                              fontWeight: pw.FontWeight.bold),
+                                        ),
+                                        pw.Text(
+                                          "${dataInformation['CashReceived'].toStringAsFixed(2)} ",
+                                          style: pw.TextStyle(
+                                              fontSize: 8,
+                                              fontWeight: pw.FontWeight.bold),
+                                        ),
+                                        pw.Text(
+                                          "${dataInformation['Balance'].toStringAsFixed(2)} ",
+                                          style: pw.TextStyle(
+                                              fontSize: 8,
+                                              fontWeight: pw.FontWeight.bold),
+                                        ),
+                                        pw.SizedBox(
+                                          height: 5,
+                                        ),
+                                        // pw.Text(
+                                        //   "${dataInformation['GrandTotal'].toStringAsFixed(2)} ",
+                                        //   style: pw.TextStyle(
+                                        //       fontSize: 8,
+                                        //       fontWeight: pw.FontWeight.bold),
+                                        // )
+                                      ],
+                                    )
+                                  ],
+                                ),
                         ],
                       ),
                     ),
@@ -21145,7 +21312,7 @@ _buildEstimateHeader(
 }
 
 _buildFooterr(pw.Context context, bankledger, dataInfo, cSettings, otherAmount,
-    dataInformation, customerBalance) {
+    dataInformation, customerBalance, isCashBill) {
   double oldBalance =
       double.tryParse(dataInformation['LedgerBalance'].toString()).toDouble();
 
@@ -21218,53 +21385,60 @@ _buildFooterr(pw.Context context, bankledger, dataInfo, cSettings, otherAmount,
                           ],
                         ),
                         pw.SizedBox(width: 50),
-                        oldBalance > 0 || balance > 0
-                            ? pw.Column(
-                                mainAxisAlignment: pw.MainAxisAlignment.center,
-                                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                                children: [
-                                  pw.Row(
+                        isCashBill
+                            ? pw.Container()
+                            : oldBalance > 0 || balance > 0
+                                ? pw.Column(
+                                    mainAxisAlignment:
+                                        pw.MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        pw.CrossAxisAlignment.start,
                                     children: [
-                                      pw.SizedBox(
-                                        child: pw.Expanded(
-                                          child: pw.Text(
-                                            "OB           : ",
-                                            style:
-                                                const pw.TextStyle(fontSize: 6),
+                                      pw.Row(
+                                        children: [
+                                          pw.SizedBox(
+                                            child: pw.Expanded(
+                                              child: pw.Text(
+                                                "OB           : ",
+                                                style: const pw.TextStyle(
+                                                    fontSize: 6),
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                      pw.Text(
-                                        double.tryParse(
-                                                dataInformation['LedgerBalance']
+                                          pw.Text(
+                                            double.tryParse(dataInformation[
+                                                        'LedgerBalance']
                                                     .toString())
-                                            .toStringAsFixed(2),
-                                        style: const pw.TextStyle(fontSize: 6),
-                                      )
-                                    ],
-                                  ),
-                                  pw.Row(
-                                    mainAxisAlignment: pw.MainAxisAlignment.end,
-                                    children: [
-                                      pw.SizedBox(
-                                        child: pw.Expanded(
-                                          child: pw.Text(
-                                            "Balance  : ",
+                                                .toStringAsFixed(2),
                                             style:
                                                 const pw.TextStyle(fontSize: 6),
-                                          ),
-                                        ),
+                                          )
+                                        ],
                                       ),
-                                      pw.Text(
-                                        double.tryParse(customerBalance)
-                                            .toStringAsFixed(2),
-                                        style: const pw.TextStyle(fontSize: 6),
-                                      )
+                                      pw.Row(
+                                        mainAxisAlignment:
+                                            pw.MainAxisAlignment.end,
+                                        children: [
+                                          pw.SizedBox(
+                                            child: pw.Expanded(
+                                              child: pw.Text(
+                                                "Balance  : ",
+                                                style: const pw.TextStyle(
+                                                    fontSize: 6),
+                                              ),
+                                            ),
+                                          ),
+                                          pw.Text(
+                                            double.tryParse(customerBalance)
+                                                .toStringAsFixed(2),
+                                            style:
+                                                const pw.TextStyle(fontSize: 6),
+                                          )
+                                        ],
+                                      ),
                                     ],
-                                  ),
-                                ],
-                              )
-                            : pw.Container()
+                                  )
+                                : pw.Container()
                       ],
                     )),
                     pw.Text(

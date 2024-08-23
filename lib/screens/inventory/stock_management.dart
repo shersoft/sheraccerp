@@ -57,6 +57,7 @@ class _StockManagementState extends State<StockManagement> {
       enableKeralaFloodCess = false,
       useUNIQUECODEASBARCODE = false,
       useOLDBARCODE = false,
+      buttonEvent = false,
       realPRATEBASEDPROFITPERCENTAGE = false,
       keyItemsVariantStock = false;
   int salesManId = 0, decimal = 2, locationFromId = 0, locationToId = 0;
@@ -217,7 +218,11 @@ class _StockManagementState extends State<StockManagement> {
               ElevatedButton(
                 onPressed: (() {
                   if (cartItem.isNotEmpty) {
-                    _updateStockItem();
+                    if (buttonEvent) {
+                      return;
+                    } else {
+                      _updateStockItem();
+                    }
                   } else {
                     Fluttertoast.showToast(msg: 'add data');
                   }
@@ -452,6 +457,7 @@ class _StockManagementState extends State<StockManagement> {
       } else {
         Fluttertoast.showToast(msg: 'error');
       }
+      buttonEvent = false;
     });
   }
 

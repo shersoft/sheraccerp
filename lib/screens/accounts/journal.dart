@@ -141,13 +141,17 @@ class _JournalState extends State<Journal> {
                     iconSize: 40,
                     onPressed: () {
                       //edit
-                      if (companyUserData.updateData) {
-                        submitData('UPDATE');
+                      if (buttonEvent) {
+                        return;
                       } else {
-                        showInSnackBar('Permission denied\ncan`t edit');
-                        setState(() {
-                          buttonEvent = false;
-                        });
+                        if (companyUserData.updateData) {
+                          submitData('UPDATE');
+                        } else {
+                          showInSnackBar('Permission denied\ncan`t edit');
+                          setState(() {
+                            buttonEvent = false;
+                          });
+                        }
                       }
                     },
                     icon: const Icon(Icons.edit))
@@ -156,13 +160,17 @@ class _JournalState extends State<Journal> {
                     iconSize: 40,
                     onPressed: () {
                       //save
-                      if (companyUserData.insertData) {
-                        submitData('INSERT');
+                      if (buttonEvent) {
+                        return;
                       } else {
-                        showInSnackBar('Permission denied\ncan`t save');
-                        setState(() {
-                          buttonEvent = false;
-                        });
+                        if (companyUserData.insertData) {
+                          submitData('INSERT');
+                        } else {
+                          showInSnackBar('Permission denied\ncan`t save');
+                          setState(() {
+                            buttonEvent = false;
+                          });
+                        }
                       }
                     },
                     icon: const Icon(Icons.save)),

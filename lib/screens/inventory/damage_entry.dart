@@ -51,6 +51,7 @@ class _DamageEntryState extends State<DamageEntry> {
       enableKeralaFloodCess = false,
       useUNIQUECODEASBARCODE = false,
       useOLDBARCODE = false,
+      buttonEvent = false,
       widgetID = true,
       lastRecord = false,
       keyItemsVariantStock = false;
@@ -145,10 +146,33 @@ class _DamageEntryState extends State<DamageEntry> {
                   backgroundColor: Colors.blue[700],
                 ),
                 onPressed: () async {
-                  setState(() {
-                    _isLoading = true;
-                  });
-                  saveSale();
+                  if (buttonEvent) {
+                    return;
+                  } else {
+                    if (companyUserData.insertData) {
+                      if (totalItem > 0) {
+                        setState(() {
+                          _isLoading = true;
+                          buttonEvent = true;
+                        });
+                        if (currentFinancialYear != null) {
+                          saveSale();
+                        }
+                      } else {
+                        Fluttertoast.showToast(
+                            msg: 'Please add at least one item');
+                        setState(() {
+                          buttonEvent = false;
+                        });
+                      }
+                    } else {
+                      Fluttertoast.showToast(
+                          msg: 'Permission denied\ncan`t save');
+                      setState(() {
+                        buttonEvent = false;
+                      });
+                    }
+                  }
                 }),
           ],
         ),
@@ -304,6 +328,7 @@ class _DamageEntryState extends State<DamageEntry> {
       dio.addDamage(body).then((value) {
         setState(() {
           _isLoading = false;
+          buttonEvent = false;
         });
         if (value) {
           clearCart();

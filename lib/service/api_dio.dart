@@ -2012,7 +2012,7 @@ class DioService {
         : (pref.getString('DBNameT') ?? "cSharp");
     List<LedgerModel> _items = [];
     try {
-      var _salesman = salesManId > 1 ? salesManId : 0,
+      var _salesman = salesManId > 0 ? salesManId : 0,
           _areaId = 0,
           _routeId = 0,
           _groupId = 0,
@@ -2543,8 +2543,8 @@ class DioService {
     List<LedgerModel> _items = [];
     try {
       Response response;
-      if (salesman > 1) {
-        var _salesman = salesman > 1 ? salesman : 0;
+      if (salesman > 0) {
+        var _salesman = salesman > 0 ? salesman : 0;
         response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +

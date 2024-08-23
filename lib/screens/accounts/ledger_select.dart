@@ -30,6 +30,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
       _ob = true,
       _gAll = true,
       isSalesManWiseLedger = false,
+      isAdminUser = false,
       _0b = false;
   var _ledger, _id, locationId, _dropDownBranchId;
   String fromDate, toDate, sType = 'Summery', area = '0', route = '0';
@@ -39,11 +40,13 @@ class _LedgerSelectState extends State<LedgerSelect> {
   var mode = '';
   DateTime now = DateTime.now();
   String radioButtonItem = 'All';
-  int rdId = 1, groupId = 0;
+  int rdId = 1, groupId = 0, areaId = 0, routeId = 0;
   String selectedGroupValues = '', selectedStockValue = '';
   dynamic selectedItem;
 
   List<CompanySettings> settings;
+  List<OtherRegistrationModel> otherRegAreaDataList = [];
+  List<OtherRegistrationModel> otherRegRouteDataList = [];
 
   @override
   void initState() {
@@ -63,11 +66,40 @@ class _LedgerSelectState extends State<LedgerSelect> {
     groupId =
         ComSettings.appSettings('int', 'key-dropdown-default-group-view', 0) -
             1;
+    areaId =
+        ComSettings.appSettings('int', 'key-dropdown-default-area-view', 0) - 1;
+    routeId =
+        ComSettings.appSettings('int', 'key-dropdown-default-route-view', 0) -
+            1;
     isSalesManWiseLedger =
         ComSettings.getStatus('KEY SALESMAN WISE LEDGER', settings);
     int salesManId = ComSettings.appSettings(
             'int', 'key-dropdown-default-salesman-view', 1) -
         1;
+
+    isAdminUser =
+        companyUserData.userType.toUpperCase() == 'ADMIN' ? true : false;
+    if (!isAdminUser) {
+      locationId = ComSettings.appSettings(
+              'int', 'key-dropdown-default-location-view', 2) -
+          1;
+      salesMan = (ComSettings.appSettings(
+                  'int', 'key-dropdown-default-salesman-view', 1) -
+              1)
+          .toString();
+      OtherRegistrationModel otherData = otherRegLocationList.firstWhere(
+          (element) => element.id == locationId,
+          orElse: () => OtherRegistrationModel(
+              add1: '',
+              add2: '',
+              add3: '',
+              description: '',
+              email: '',
+              id: locationId,
+              name: defaultLocation,
+              type: ''));
+      locationId = DataJson(id: otherData.id, name: otherData.name);
+    }
 
     if (arguments != null) {
       mode = arguments['mode'];
@@ -256,10 +288,27 @@ class _LedgerSelectState extends State<LedgerSelect> {
     }
 
     if (otherRegAreaList.isNotEmpty) {
-      areaModel = otherRegAreaList.first;
+      otherRegAreaDataList.addAll(otherRegAreaList);
+      if (areaId > 1) {
+        areaModel = otherRegAreaDataList.firstWhere(
+            (element) => element.id == areaId,
+            orElse: () => OtherRegistrationModel.emptyData());
+      } else {
+        otherRegAreaDataList.add(OtherRegistrationModel.emptyData());
+        areaModel = otherRegAreaDataList.last;
+      }
     }
+
     if (otherRegRouteList.isNotEmpty) {
-      routeModel = otherRegRouteList.first;
+      otherRegAreaDataList.addAll(otherRegRouteList);
+      if (routeId > 1) {
+        areaModel = otherRegRouteDataList.firstWhere(
+            (element) => element.id == routeId,
+            orElse: () => OtherRegistrationModel.emptyData());
+      } else {
+        otherRegRouteDataList.add(OtherRegistrationModel.emptyData());
+        routeModel = otherRegRouteDataList.last;
+      }
     }
   }
 
@@ -412,22 +461,24 @@ class _LedgerSelectState extends State<LedgerSelect> {
                 //           },
                 //     selected: 2,
                 //     onChange: (value) {
-                //       debugPrint('key-dropdown-default-location-view: $value');
                 //       dropDownBranchId = value - 1;
                 //     },
                 //   ),
                 // ),
-                DropdownSearch<dynamic>(
-                  maxHeight: 300,
-                  onFind: (String filter) =>
-                      api.getSalesListData(filter, 'sales_list/location'),
-                  dropdownSearchDecoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      label: Text('Select Branch')),
-                  onChanged: (dynamic data) {
-                    locationId = data;
-                  },
-                  showSearchBox: true,
+                Visibility(
+                  visible: isAdminUser,
+                  child: DropdownSearch<dynamic>(
+                    maxHeight: 300,
+                    onFind: (String filter) =>
+                        api.getSalesListData(filter, 'sales_list/location'),
+                    dropdownSearchDecoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        label: Text('Select Branch')),
+                    onChanged: (dynamic data) {
+                      locationId = data;
+                    },
+                    showSearchBox: true,
+                  ),
                 ),
                 TextButton(
                   onPressed: () {
@@ -518,23 +569,25 @@ class _LedgerSelectState extends State<LedgerSelect> {
                     //           },
                     //     selected: 2,
                     //     onChange: (value) {
-                    //       debugPrint(
-                    //           'key-dropdown-default-location-view: $value');
+
                     //       dropDownBranchId = value - 1;
                     //     },
                     //   ),
                     // ),
-                    DropdownSearch<dynamic>(
-                      maxHeight: 300,
-                      onFind: (String filter) =>
-                          api.getSalesListData(filter, 'sales_list/location'),
-                      dropdownSearchDecoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          label: Text('Select Branch')),
-                      onChanged: (dynamic data) {
-                        locationId = data;
-                      },
-                      showSearchBox: true,
+                    Visibility(
+                      visible: isAdminUser,
+                      child: DropdownSearch<dynamic>(
+                        maxHeight: 300,
+                        onFind: (String filter) =>
+                            api.getSalesListData(filter, 'sales_list/location'),
+                        dropdownSearchDecoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            label: Text('Select Branch')),
+                        onChanged: (dynamic data) {
+                          locationId = data;
+                        },
+                        showSearchBox: true,
+                      ),
                     ),
                     TextButton(
                       onPressed: () {
@@ -628,8 +681,6 @@ class _LedgerSelectState extends State<LedgerSelect> {
                         //           },
                         //     selected: 2,
                         //     onChange: (value) {
-                        //       debugPrint(
-                        //           'key-dropdown-default-location-view: $value');
                         //       dropDownBranchId = value - 1;
                         //     },
                         //   ),
@@ -821,8 +872,6 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                 //           },
                                 //     selected: 2,
                                 //     onChange: (value) {
-                                //       debugPrint(
-                                //           'key-dropdown-default-location-view: $value');
                                 //       dropDownBranchId = value - 1;
                                 //     },
                                 //   ),
@@ -1144,21 +1193,24 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                 const Text('0 Balance'),
                                               ],
                                             ),
-                                            DropdownSearch<dynamic>(
-                                              maxHeight: 300,
-                                              onFind: (String filter) =>
-                                                  api.getSalesListData(filter,
-                                                      'sales_list/location'),
-                                              dropdownSearchDecoration:
-                                                  const InputDecoration(
-                                                      border:
-                                                          OutlineInputBorder(),
-                                                      label: Text(
-                                                          'Select Branch')),
-                                              onChanged: (dynamic data) {
-                                                locationId = data;
-                                              },
-                                              showSearchBox: true,
+                                            Visibility(
+                                              visible: isAdminUser,
+                                              child: DropdownSearch<dynamic>(
+                                                maxHeight: 300,
+                                                onFind: (String filter) =>
+                                                    api.getSalesListData(filter,
+                                                        'sales_list/location'),
+                                                dropdownSearchDecoration:
+                                                    const InputDecoration(
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                        label: Text(
+                                                            'Select Branch')),
+                                                onChanged: (dynamic data) {
+                                                  locationId = data;
+                                                },
+                                                showSearchBox: true,
+                                              ),
                                             ),
                                             Card(
                                               elevation: 2,
@@ -1175,7 +1227,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                   'Salesman Wise Group List',
                                                   'Group List All Groups',
                                                   'Balance Order By Date',
-                                                  'Summery Route Wise'
+                                                  'Summery Route Wise',
+                                                  'Group Location Wise'
                                                 ].map((String items) {
                                                   return DropdownMenuItem(
                                                     value: items,
@@ -1284,9 +1337,10 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                       OtherRegistrationModel>(
                                                     icon: const Icon(Icons
                                                         .keyboard_arrow_down),
-                                                    items: otherRegAreaList.map(
-                                                        (OtherRegistrationModel
-                                                            items) {
+                                                    items: otherRegAreaDataList
+                                                        .map(
+                                                            (OtherRegistrationModel
+                                                                items) {
                                                       return DropdownMenuItem<
                                                           OtherRegistrationModel>(
                                                         value: items,
@@ -1318,9 +1372,10 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                       OtherRegistrationModel>(
                                                     icon: const Icon(Icons
                                                         .keyboard_arrow_down),
-                                                    items: otherRegRouteList.map(
-                                                        (OtherRegistrationModel
-                                                            items) {
+                                                    items: otherRegRouteDataList
+                                                        .map(
+                                                            (OtherRegistrationModel
+                                                                items) {
                                                       return DropdownMenuItem<
                                                           OtherRegistrationModel>(
                                                         value: items,
@@ -1337,6 +1392,26 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                     },
                                                   ),
                                                 ],
+                                              ),
+                                            ),
+                                            const Divider(),
+                                            Visibility(
+                                              visible: isAdminUser,
+                                              child: DropdownSearch<dynamic>(
+                                                maxHeight: 300,
+                                                onFind: (String filter) =>
+                                                    api.getSalesListData(filter,
+                                                        'sales_list/salesMan'),
+                                                dropdownSearchDecoration:
+                                                    const InputDecoration(
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                        label: Text(
+                                                            'Select Salesman')),
+                                                onChanged: (dynamic data) {
+                                                  salesMan = data.id.toString();
+                                                },
+                                                showSearchBox: true,
                                               ),
                                             ),
                                           ],
@@ -1428,23 +1503,28 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                         },
                                                       ),
                                                     ),
-                                                    DropdownSearch<dynamic>(
-                                                      maxHeight: 300,
-                                                      onFind: (String filter) =>
-                                                          api.getSalesListData(
-                                                              filter,
-                                                              'sales_list/location'),
-                                                      dropdownSearchDecoration:
-                                                          const InputDecoration(
-                                                              border:
-                                                                  OutlineInputBorder(),
-                                                              label: Text(
-                                                                  'Select Branch')),
-                                                      onChanged:
-                                                          (dynamic data) {
-                                                        locationId = data;
-                                                      },
-                                                      showSearchBox: true,
+                                                    Visibility(
+                                                      visible: isAdminUser,
+                                                      child: DropdownSearch<
+                                                          dynamic>(
+                                                        maxHeight: 300,
+                                                        onFind: (String
+                                                                filter) =>
+                                                            api.getSalesListData(
+                                                                filter,
+                                                                'sales_list/location'),
+                                                        dropdownSearchDecoration:
+                                                            const InputDecoration(
+                                                                border:
+                                                                    OutlineInputBorder(),
+                                                                label: Text(
+                                                                    'Select Branch')),
+                                                        onChanged:
+                                                            (dynamic data) {
+                                                          locationId = data;
+                                                        },
+                                                        showSearchBox: true,
+                                                      ),
                                                     ),
                                                     TextButton(
                                                       onPressed: () {
@@ -2049,28 +2129,30 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                         ],
                                                                       ),
                                                                     ),
-                                                                    DropdownSearch<
-                                                                        dynamic>(
-                                                                      maxHeight:
-                                                                          300,
-                                                                      onFind: (String
-                                                                              filter) =>
-                                                                          api.getSalesListData(
-                                                                              filter,
-                                                                              'sales_list/location'),
-                                                                      dropdownSearchDecoration: const InputDecoration(
-                                                                          border:
-                                                                              OutlineInputBorder(),
-                                                                          label:
-                                                                              Text('Select Branch')),
-                                                                      onChanged:
-                                                                          (dynamic
-                                                                              data) {
-                                                                        locationId =
-                                                                            data;
-                                                                      },
-                                                                      showSearchBox:
-                                                                          true,
+                                                                    Visibility(
+                                                                      visible:
+                                                                          isAdminUser,
+                                                                      child: DropdownSearch<
+                                                                          dynamic>(
+                                                                        maxHeight:
+                                                                            300,
+                                                                        onFind: (String filter) => api.getSalesListData(
+                                                                            filter,
+                                                                            'sales_list/location'),
+                                                                        dropdownSearchDecoration: const InputDecoration(
+                                                                            border:
+                                                                                OutlineInputBorder(),
+                                                                            label:
+                                                                                Text('Select Branch')),
+                                                                        onChanged:
+                                                                            (dynamic
+                                                                                data) {
+                                                                          locationId =
+                                                                              data;
+                                                                        },
+                                                                        showSearchBox:
+                                                                            true,
+                                                                      ),
                                                                     ),
                                                                     const Divider(),
                                                                     Card(
@@ -2088,7 +2170,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                             icon:
                                                                                 const Icon(Icons.keyboard_arrow_down),
                                                                             items:
-                                                                                otherRegAreaList.map((OtherRegistrationModel items) {
+                                                                                otherRegAreaDataList.map((OtherRegistrationModel items) {
                                                                               return DropdownMenuItem<OtherRegistrationModel>(
                                                                                 value: items,
                                                                                 child: Text(items.name),
@@ -2108,29 +2190,31 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                       ),
                                                                     ),
                                                                     const Divider(),
-                                                                    DropdownSearch<
-                                                                        dynamic>(
-                                                                      maxHeight:
-                                                                          300,
-                                                                      onFind: (String
-                                                                              filter) =>
-                                                                          api.getSalesListData(
-                                                                              filter,
-                                                                              'sales_list/salesMan'),
-                                                                      dropdownSearchDecoration: const InputDecoration(
-                                                                          border:
-                                                                              OutlineInputBorder(),
-                                                                          label:
-                                                                              Text('Select Salesman')),
-                                                                      onChanged:
-                                                                          (dynamic
-                                                                              data) {
-                                                                        salesMan = data
-                                                                            .id
-                                                                            .toString();
-                                                                      },
-                                                                      showSearchBox:
-                                                                          true,
+                                                                    Visibility(
+                                                                      visible:
+                                                                          isAdminUser,
+                                                                      child: DropdownSearch<
+                                                                          dynamic>(
+                                                                        maxHeight:
+                                                                            300,
+                                                                        onFind: (String filter) => api.getSalesListData(
+                                                                            filter,
+                                                                            'sales_list/salesMan'),
+                                                                        dropdownSearchDecoration: const InputDecoration(
+                                                                            border:
+                                                                                OutlineInputBorder(),
+                                                                            label:
+                                                                                Text('Select Salesman')),
+                                                                        onChanged:
+                                                                            (dynamic
+                                                                                data) {
+                                                                          salesMan = data
+                                                                              .id
+                                                                              .toString();
+                                                                        },
+                                                                        showSearchBox:
+                                                                            true,
+                                                                      ),
                                                                     ),
                                                                     TextButton(
                                                                       onPressed:
@@ -2217,35 +2301,35 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                     //           },
                                                                     //     selected: 2,
                                                                     //     onChange: (value) {
-                                                                    //       debugPrint(
-                                                                    //           'key-dropdown-default-location-view: $value');
                                                                     //       dropDownBranchId =
                                                                     //           value - 1;
                                                                     //     },
                                                                     //   ),
                                                                     // ),
-                                                                    DropdownSearch<
-                                                                        dynamic>(
-                                                                      maxHeight:
-                                                                          300,
-                                                                      onFind: (String
-                                                                              filter) =>
-                                                                          api.getSalesListData(
-                                                                              filter,
-                                                                              'sales_list/location'),
-                                                                      dropdownSearchDecoration: const InputDecoration(
-                                                                          border:
-                                                                              OutlineInputBorder(),
-                                                                          label:
-                                                                              Text('Select Branch')),
-                                                                      onChanged:
-                                                                          (dynamic
-                                                                              data) {
-                                                                        locationId =
-                                                                            data;
-                                                                      },
-                                                                      showSearchBox:
-                                                                          true,
+                                                                    Visibility(
+                                                                      visible:
+                                                                          isAdminUser,
+                                                                      child: DropdownSearch<
+                                                                          dynamic>(
+                                                                        maxHeight:
+                                                                            300,
+                                                                        onFind: (String filter) => api.getSalesListData(
+                                                                            filter,
+                                                                            'sales_list/location'),
+                                                                        dropdownSearchDecoration: const InputDecoration(
+                                                                            border:
+                                                                                OutlineInputBorder(),
+                                                                            label:
+                                                                                Text('Select Branch')),
+                                                                        onChanged:
+                                                                            (dynamic
+                                                                                data) {
+                                                                          locationId =
+                                                                              data;
+                                                                        },
+                                                                        showSearchBox:
+                                                                            true,
+                                                                      ),
                                                                     ),
                                                                     TextButton(
                                                                       onPressed:

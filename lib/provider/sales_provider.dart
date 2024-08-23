@@ -402,7 +402,9 @@ class SalesProvider with ChangeNotifier {
         iGST: product.iGST,
         cGST: product.cGST,
         sGST: product.sGST,
-        minimumRate: 0);
+        minimumRate: 0,
+        cessPer: 0,
+        adCessPer: 0);
   }
 
   void addProduct(product) {

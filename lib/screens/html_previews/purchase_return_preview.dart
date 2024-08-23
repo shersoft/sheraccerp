@@ -197,8 +197,9 @@ class _PurchaseReturnPreviewShowState extends State<PurchaseReturnPreviewShow> {
       }
     }
 
-    voucherTypeData = voucherTypeList.firstWhere(
-        (element) => element.voucher.toLowerCase() == 'purchase return');
+    voucherTypeData = voucherTypeList.firstWhere((element) =>
+        element.voucher.toLowerCase() == 'purchase return' ||
+        element.voucher.toLowerCase() == 'purchase return voucher');
 
     api
         .fetchPurchaseReturnInvoice(

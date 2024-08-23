@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
+import 'package:pinch_zoom/pinch_zoom.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sheraccerp/models/company.dart';
@@ -223,55 +224,57 @@ class _ReportViewState extends State<ReportView> {
           ],
           title: Text(widget.type),
         ),
-        body: widget.type == 'ledger' ||
-                widget.type == 'Day Book' ||
-                widget.type == 'Trial Balance' ||
-                widget.type == 'Cash Flow' ||
-                widget.type == 'Invoice Wise Balance Customers' ||
-                widget.type == 'Invoice Wise Balance Suppliers'
-            ? reportView()
-            : widget.type == 'Fund Flow'
-                ? reportViewFundFlow()
-                : widget.type == 'Cheque'
-                    ? reportViewBankVouchers()
-                    : widget.type == 'User Activity'
-                        ? reportViewUserActivity()
-                        : widget.type == 'Monthly Sales'
-                            ? reportViewMonthlySalesReport(widget.branchId)
-                            : widget.type == 'Monthly Purchase'
-                                ? reportViewMonthlyPurchase(widget.branchId)
-                                : widget.type == 'Bill By Bill'
-                                    ? reportViewSalesBillByBill()
-                                    : widget.type == 'GroupList'
-                                        ? reportViewGroupList()
-                                        : widget.type == 'LedgerList'
-                                            ? reportViewLedgerList()
-                                            : widget.type == 'Closing Report'
-                                                ? reportViewClosingReport()
-                                                : widget.type == 'EmployeeList'
-                                                    ? reportViewEmployeeList()
+        body: PinchZoom(
+            maxScale: 2.5,
+            resetDuration: const Duration(seconds: 2),
+            child: (widget.type == 'ledger' ||
+                    widget.type == 'Day Book' ||
+                    widget.type == 'Trial Balance' ||
+                    widget.type == 'Cash Flow' ||
+                    widget.type == 'Invoice Wise Balance Customers' ||
+                    widget.type == 'Invoice Wise Balance Suppliers'
+                ? reportView()
+                : widget.type == 'Fund Flow'
+                    ? reportViewFundFlow()
+                    : widget.type == 'Cheque'
+                        ? reportViewBankVouchers()
+                        : widget.type == 'User Activity'
+                            ? reportViewUserActivity()
+                            : widget.type == 'Monthly Sales'
+                                ? reportViewMonthlySalesReport(widget.branchId)
+                                : widget.type == 'Monthly Purchase'
+                                    ? reportViewMonthlyPurchase(widget.branchId)
+                                    : widget.type == 'Bill By Bill'
+                                        ? reportViewSalesBillByBill()
+                                        : widget.type == 'GroupList'
+                                            ? reportViewGroupList()
+                                            : widget.type == 'LedgerList'
+                                                ? reportViewLedgerList()
+                                                : widget.type ==
+                                                        'Closing Report'
+                                                    ? reportViewClosingReport()
                                                     : widget.type ==
-                                                            'CustomerCardList'
-                                                        ? reportViewCustomerCardList()
+                                                            'EmployeeList'
+                                                        ? reportViewEmployeeList()
                                                         : widget.type ==
-                                                                'P&L Account'
-                                                            ? reportViewProfitAndLossAccount()
+                                                                'CustomerCardList'
+                                                            ? reportViewCustomerCardList()
                                                             : widget.type ==
-                                                                    'BalanceSheet'
-                                                                ? reportViewBalanceSheet()
+                                                                    'P&L Account'
+                                                                ? reportViewProfitAndLossAccount()
                                                                 : widget.type ==
-                                                                            'Payable' ||
-                                                                        widget.type ==
-                                                                            'Receivable'
-                                                                    ? reportView()
-                                                                    : widget.type == 'PaymentList' ||
+                                                                        'BalanceSheet'
+                                                                    ? reportViewBalanceSheet()
+                                                                    : widget.type ==
+                                                                                'Payable' ||
                                                                             widget.type ==
-                                                                                'ReceiptList' ||
-                                                                            widget.type ==
-                                                                                'JournalList'
-                                                                        ? reportVoucherList()
-                                                                        : const Text(
-                                                                            'No Report'));
+                                                                                'Receivable'
+                                                                        ? reportView()
+                                                                        : widget.type == 'PaymentList' ||
+                                                                                widget.type == 'ReceiptList' ||
+                                                                                widget.type == 'JournalList'
+                                                                            ? reportVoucherList()
+                                                                            : const Text('No Report'))));
   }
 
   bool classic = false;
@@ -311,7 +314,6 @@ class _ReportViewState extends State<ReportView> {
               // Map<String, dynamic> singleItem = {"type": "P"};
               // filterItems.removeWhere(
               //     (element) => element.keys. =>  == singleItem.keys.first);
-              debugPrint(filterItems.toString());
               data = filterItems;
             } else {
               var filterItems = data;
@@ -3801,7 +3803,6 @@ class _ReportViewState extends State<ReportView> {
   }
 
   pw.Widget _buildFooter(pw.Context context) {
-    debugPrint('Page ${context.pageNumber}/${context.pagesCount}');
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       crossAxisAlignment: pw.CrossAxisAlignment.end,

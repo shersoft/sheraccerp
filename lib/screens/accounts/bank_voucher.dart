@@ -189,16 +189,20 @@ class _BankVoucherState extends State<BankVoucher> {
                       //edit
                       accountId =
                           int.parse(accountId) > 0 ? accountId.toString() : '0';
-                      if (companyUserData.updateData) {
-                        title == 'Bank Payment'
-                            ? submitData('Bank Payment', 'UPDATE')
-                            : submitData('Bank Receipt', 'UPDATE');
+                      if (buttonEvent) {
+                        return;
                       } else {
-                        Fluttertoast.showToast(
-                            msg: 'Permission denied\ncan`t edit');
-                        setState(() {
-                          buttonEvent = false;
-                        });
+                        if (companyUserData.updateData) {
+                          title == 'Bank Payment'
+                              ? submitData('Bank Payment', 'UPDATE')
+                              : submitData('Bank Receipt', 'UPDATE');
+                        } else {
+                          Fluttertoast.showToast(
+                              msg: 'Permission denied\ncan`t edit');
+                          setState(() {
+                            buttonEvent = false;
+                          });
+                        }
                       }
                     },
                     icon: const Icon(Icons.edit))
@@ -212,16 +216,20 @@ class _BankVoucherState extends State<BankVoucher> {
                             ? accountId.toString()
                             : '0';
                       }
-                      if (companyUserData.insertData) {
-                        title == 'Bank Payment'
-                            ? submitData('Bank Payment', 'INSERT')
-                            : submitData('Bank Receipt', 'INSERT');
+                      if (buttonEvent) {
+                        return;
                       } else {
-                        Fluttertoast.showToast(
-                            msg: 'Permission denied\ncan`t save');
-                        setState(() {
-                          buttonEvent = false;
-                        });
+                        if (companyUserData.insertData) {
+                          title == 'Bank Payment'
+                              ? submitData('Bank Payment', 'INSERT')
+                              : submitData('Bank Receipt', 'INSERT');
+                        } else {
+                          Fluttertoast.showToast(
+                              msg: 'Permission denied\ncan`t save');
+                          setState(() {
+                            buttonEvent = false;
+                          });
+                        }
                       }
                     },
                     icon: const Icon(Icons.save)),

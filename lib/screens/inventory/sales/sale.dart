@@ -3722,12 +3722,14 @@ class _SaleState extends State<Sale> {
   bool lastRateStatus = true, lastRateSelected = false, rateEdited = false;
   showAddMore(BuildContext context, StockProduct product) {
     List<UnitModel> unitListData = [];
-    if (product.unitId > 0) {
-      defaultUnitItem = true;
-      _dropDownUnit = product.unitId;
-    } else {
-      defaultUnitItem = false;
-      _dropDownUnit = 0;
+    if (!enableMULTIUNIT) {
+      if (product.unitId > 0) {
+        defaultUnitItem = true;
+        _dropDownUnit = product.unitId;
+      } else {
+        defaultUnitItem = false;
+        _dropDownUnit = 0;
+      }
     }
     if (editItem) {
       pRate = product.buyingPrice;
@@ -4118,7 +4120,9 @@ class _SaleState extends State<Sale> {
                                                   sGST: csGST,
                                                   stock: product.quantity,
                                                   minimumRate:
-                                                      product.minimumRate),
+                                                      product.minimumRate,
+                                                  cessPer: cessPer,
+                                                  adCessPer: adCessPer),
                                               -1);
                                           // }
 
@@ -6014,6 +6018,20 @@ class _SaleState extends State<Sale> {
             CommonService.getRound(4, ((cartItem[index].net * csPer) / 100));
         cartItem[index].sGST = csGST;
         cartItem[index].cGST = csGST;
+        if (cessOnNetAmount) {
+          if (cartItem[index].cessPer > 0) {
+            cartItem[index].cess = CommonService.getRound(
+                4, ((cartItem[index].net * cartItem[index].cessPer) / 100));
+            cartItem[index].adCess =
+                CommonService.getRound(4, (qty * cartItem[index].adCessPer));
+          } else {
+            cartItem[index].cess = 0;
+            cartItem[index].adCess = 0;
+          }
+        } else {
+          cartItem[index].cess = 0;
+          cartItem[index].adCess = 0;
+        }
       } else if (companyTaxMode == 'GULF') {
         cartItem[index].cGST = 0;
         cartItem[index].sGST = 0;
@@ -6034,10 +6052,25 @@ class _SaleState extends State<Sale> {
             cartItem[index].cess +
             cartItem[index].fCess +
             cartItem[index].adCess));
-    cartItem[index].profitPer = CommonService.getRound(
-        4,
-        cartItem[index].total -
-            cartItem[index].rPRate * cartItem[index].quantity);
+
+    if (enableMULTIUNIT && cartItem[index].unitValue > 0) {
+      cartItem[index].profitPer = CommonService.getRound(
+          4,
+          cartItem[index].total -
+              (pRateBasedProfitInSales
+                      ? cartItem[index].pRate
+                      : cartItem[index].rPRate) *
+                  cartItem[index].unitValue *
+                  cartItem[index].quantity);
+    } else {
+      cartItem[index].profitPer = CommonService.getRound(
+          4,
+          cartItem[index].total -
+              (pRateBasedProfitInSales
+                      ? cartItem[index].pRate
+                      : cartItem[index].rPRate) *
+                  cartItem[index].quantity);
+    }
 
     if (cartItem[index].quantity == 0) removeProduct(index);
 
@@ -7176,7 +7209,9 @@ class _SaleState extends State<Sale> {
                       double.tryParse(product['adcess'].toString()), //adCess,
                   iGST: double.tryParse(product['IGST'].toString()),
                   cGST: double.tryParse(product['CGST'].toString()),
-                  sGST: double.tryParse(product['SGST'].toString())),
+                  sGST: double.tryParse(product['SGST'].toString()),
+                  cessPer: double.tryParse(product['cessper'].toString()),
+                  adCessPer: double.tryParse(product['adcessper'].toString())),
               -1);
         }
 

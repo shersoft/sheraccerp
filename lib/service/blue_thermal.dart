@@ -975,10 +975,15 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                     Enu.Size.bold.val,
                     Enu.Align.left.val);
                 line = "5";
-                bluetooth.printCustom(
-                    '----------------------------------------------------------',
-                    Enu.Size.medium.val,
-                    Enu.Align.center.val);
+                if (printerSize == "2") {
+                  bluetooth.printCustom('--------------------------------',
+                      Enu.Size.medium.val, Enu.Align.center.val);
+                } else {
+                  bluetooth.printCustom(
+                      '----------------------------------------------------------',
+                      Enu.Size.medium.val,
+                      Enu.Align.center.val);
+                }
                 line = "6";
                 bluetooth.printCustom('Bill To : ${dataInformation['ToName']}',
                     Enu.Size.bold.val, Enu.Align.left.val);
@@ -995,18 +1000,31 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                 }
                 line = "8";
                 // bluetooth.printNewLine();
-                bluetooth.printCustom(
-                    '----------------------------------------------------------',
-                    Enu.Size.medium.val,
-                    Enu.Align.center.val);
+                if (printerSize == "2") {
+                  bluetooth.printCustom('--------------------------------',
+                      Enu.Size.medium.val, Enu.Align.center.val);
+                } else {
+                  bluetooth.printCustom(
+                      '----------------------------------------------------------',
+                      Enu.Size.medium.val,
+                      Enu.Align.center.val);
+                }
                 line = "9";
-                bluetooth.print5Column("Description", "Qty", "Price", "Disc",
-                    "Total", Enu.Size.bold.val,
-                    format: "%-20s %-4s %-4s %-4s %-6s %n");
-                bluetooth.printCustom(
-                    '----------------------------------------------------------',
-                    Enu.Size.medium.val,
-                    Enu.Align.center.val);
+                if (printerSize == "2") {
+                  bluetooth.print4Column(
+                      "Description", "Qty", "Price", "Total", Enu.Size.bold.val,
+                      format: "%-10s %-4s %-4s %-6s %n");
+                  bluetooth.printCustom('--------------------------------',
+                      Enu.Size.medium.val, Enu.Align.center.val);
+                } else {
+                  bluetooth.print5Column("Description", "Qty", "Price", "Disc",
+                      "Total", Enu.Size.bold.val,
+                      format: "%-20s %-4s %-4s %-4s %-6s %n");
+                  bluetooth.printCustom(
+                      '----------------------------------------------------------',
+                      Enu.Size.medium.val,
+                      Enu.Align.center.val);
+                }
                 line = "10";
                 for (var i = 0; i < dataParticulars.length; i++) {
                   var itemName = dataParticulars[i]['itemname'].toString();
@@ -1014,21 +1032,36 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                       itemName, Enu.Size.bold.val, Enu.Align.left.val);
                   // bluetooth.print4Column(itemName, "", "", "", Enu.Size.bold.val,
                   //     format: "%35s %-1s %1s %1s %n");
-                  bluetooth.print5Column(
-                      "",
-                      '${dataParticulars[i]['Qty']}',
-                      '${dataParticulars[i]['Rate'].toStringAsFixed(2)}',
-                      '${dataParticulars[i]['Disc'].toStringAsFixed(2)}',
-                      '${dataParticulars[i]['Total'].toStringAsFixed(2)}',
-                      Enu.Size.bold.val,
-                      format: "%-20s %4s %4s %4s %6s %n");
+                  if (printerSize == "2") {
+                    bluetooth.print4Column(
+                        "",
+                        '${dataParticulars[i]['Qty']}',
+                        '${dataParticulars[i]['Rate'].toStringAsFixed(2)}',
+                        '${dataParticulars[i]['Total'].toStringAsFixed(2)}',
+                        Enu.Size.bold.val,
+                        format: "%-10s %4s %4s %6s %n");
+                  } else {
+                    bluetooth.print5Column(
+                        "",
+                        '${dataParticulars[i]['Qty']}',
+                        '${dataParticulars[i]['Rate'].toStringAsFixed(2)}',
+                        '${dataParticulars[i]['Disc'].toStringAsFixed(2)}',
+                        '${dataParticulars[i]['Total'].toStringAsFixed(2)}',
+                        Enu.Size.bold.val,
+                        format: "%-20s %4s %4s %4s %6s %n");
+                  }
                 }
                 line = "11";
                 // bluetooth.printNewLine();
-                bluetooth.printCustom(
-                    '----------------------------------------------------------',
-                    Enu.Size.medium.val,
-                    Enu.Align.center.val);
+                if (printerSize == "2") {
+                  bluetooth.printCustom('--------------------------------',
+                      Enu.Size.medium.val, Enu.Align.center.val);
+                } else {
+                  bluetooth.printCustom(
+                      '----------------------------------------------------------',
+                      Enu.Size.medium.val,
+                      Enu.Align.center.val);
+                }
                 bluetooth.printCustom(
                     'Gross Total :    ${dataInformation['NetAmount'].toStringAsFixed(2)}',
                     Enu.Size.bold.val,
@@ -1054,10 +1087,17 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                   }
                 }
                 line = "14";
-                bluetooth.printCustom(
-                    'Net Total : ${dataInformation['GrandTotal'].toStringAsFixed(2)}',
-                    Enu.Size.boldMedium.val,
-                    Enu.Align.right.val);
+                if (printerSize == "2") {
+                  bluetooth.printCustom(
+                      'Net Total : ${dataInformation['GrandTotal'].toStringAsFixed(2)}',
+                      Enu.Size.bold.val,
+                      Enu.Align.right.val);
+                } else {
+                  bluetooth.printCustom(
+                      'Net Total : ${dataInformation['GrandTotal'].toStringAsFixed(2)}',
+                      Enu.Size.boldMedium.val,
+                      Enu.Align.right.val);
+                }
                 // bluetooth.printNewLine();
                 line = "15";
                 if (isQrCodeKSA) {
@@ -1136,57 +1176,104 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                 // bluetooth.printLeftRight("LEFT", "RIGHT", Size.bold.val);
                 // bluetooth.printLeftRight("LEFT", "RIGHT", Size.bold.val);
                 line = "4";
-                bluetooth.print3Column(
-                    "Invoice No : ${dataInformation['InvoiceNo']}",
-                    " ",
-                    'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
-                    Enu.Size.bold.val,
-                    format: "%-18s %-4s %-20s %n");
-                line = "5";
-                bluetooth.printCustom(
-                    '----------------------------------------------------------',
-                    Enu.Size.medium.val,
-                    Enu.Align.center.val);
+                if (printerSize == "2") {
+                  bluetooth.printCustom(
+                      "Invoice No : ${dataInformation['InvoiceNo']}",
+                      Enu.Size.bold.val,
+                      Enu.Align.left.val);
+                  bluetooth.printCustom(
+                      'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
+                      Enu.Size.bold.val,
+                      Enu.Align.left.val);
+                  line = "5";
+                } else {
+                  bluetooth.print3Column(
+                      "Invoice No : ${dataInformation['InvoiceNo']}",
+                      " ",
+                      'Date : ${DateUtil.dateDMY(dataInformation['DDate']) + ' ' + DateUtil.timeHMSA(dataInformation['BTime'])}',
+                      Enu.Size.bold.val,
+                      format: "%-18s %-4s %-20s %n");
+                  line = "5";
+                }
+                if (printerSize == "2") {
+                  bluetooth.printCustom('--------------------------------',
+                      Enu.Size.medium.val, Enu.Align.center.val);
+                } else {
+                  bluetooth.printCustom(
+                      '----------------------------------------------------------',
+                      Enu.Size.medium.val,
+                      Enu.Align.center.val);
+                }
                 line = "6";
                 bluetooth.printCustom('${dataInformation['ToName']}',
                     Enu.Size.bold.val, Enu.Align.left.val);
                 line = "7";
                 line = "8";
                 // bluetooth.printNewLine();
-                bluetooth.printCustom(
-                    '----------------------------------------------------------',
-                    Enu.Size.medium.val,
-                    Enu.Align.center.val);
+                if (printerSize == "2") {
+                  bluetooth.printCustom('--------------------------------',
+                      Enu.Size.medium.val, Enu.Align.center.val);
+                } else {
+                  bluetooth.printCustom(
+                      '----------------------------------------------------------',
+                      Enu.Size.medium.val,
+                      Enu.Align.center.val);
+                }
                 line = "9";
-                bluetooth.print5Column("Description", "Qty", "Price", "Disc",
-                    "Total", Enu.Size.bold.val,
-                    format: "%-20s %-4s %-4s %-4s %-6s %n");
-                bluetooth.printCustom(
-                    '----------------------------------------------------------',
-                    Enu.Size.medium.val,
-                    Enu.Align.center.val);
+                if (printerSize == "2") {
+                  bluetooth.print4Column(
+                      "Description", "Qty", "Price", "Total", Enu.Size.bold.val,
+                      format: "%-10s %-4s %-4s %-6s %n");
+                  bluetooth.printCustom('--------------------------------',
+                      Enu.Size.medium.val, Enu.Align.center.val);
+                } else {
+                  bluetooth.print5Column("Description", "Qty", "Price", "Disc",
+                      "Total", Enu.Size.bold.val,
+                      format: "%-20s %-4s %-4s %-4s %-6s %n");
+                  bluetooth.printCustom(
+                      '----------------------------------------------------------',
+                      Enu.Size.medium.val,
+                      Enu.Align.center.val);
+                }
                 line = "10";
                 for (var i = 0; i < dataParticulars.length; i++) {
                   var itemName = dataParticulars[i]['itemname'].toString();
-                  bluetooth.printCustom(
-                      itemName, Enu.Size.bold.val, Enu.Align.left.val);
-                  // bluetooth.print4Column(itemName, "", "", "", Enu.Size.bold.val,
-                  //     format: "%35s %-1s %1s %1s %n");
-                  bluetooth.print5Column(
-                      "",
-                      '${dataParticulars[i]['Qty']}',
-                      '${dataParticulars[i]['Rate'].toStringAsFixed(2)}',
-                      '${dataParticulars[i]['Disc'].toStringAsFixed(2)}',
-                      '${dataParticulars[i]['Total'].toStringAsFixed(2)}',
-                      Enu.Size.bold.val,
-                      format: "%-20s %4s %4s %4s %6s %n");
+                  if (printerSize == "2") {
+                    bluetooth.printCustom(
+                        itemName, Enu.Size.bold.val, Enu.Align.left.val);
+                    bluetooth.print4Column(
+                        "",
+                        '${dataParticulars[i]['Qty']}',
+                        '${dataParticulars[i]['Rate'].toStringAsFixed(2)}',
+                        '${dataParticulars[i]['Total'].toStringAsFixed(2)}',
+                        Enu.Size.bold.val,
+                        format: "%-10s %4s %4s %6s %n");
+                  } else {
+                    bluetooth.printCustom(
+                        itemName, Enu.Size.bold.val, Enu.Align.left.val);
+                    // bluetooth.print4Column(itemName, "", "", "", Enu.Size.bold.val,
+                    //     format: "%35s %-1s %1s %1s %n");
+                    bluetooth.print5Column(
+                        "",
+                        '${dataParticulars[i]['Qty']}',
+                        '${dataParticulars[i]['Rate'].toStringAsFixed(2)}',
+                        '${dataParticulars[i]['Disc'].toStringAsFixed(2)}',
+                        '${dataParticulars[i]['Total'].toStringAsFixed(2)}',
+                        Enu.Size.bold.val,
+                        format: "%-20s %4s %4s %4s %6s %n");
+                  }
                 }
                 line = "11";
                 // bluetooth.printNewLine();
-                bluetooth.printCustom(
-                    '----------------------------------------------------------',
-                    Enu.Size.medium.val,
-                    Enu.Align.center.val);
+                if (printerSize == "2") {
+                  bluetooth.printCustom('--------------------------------',
+                      Enu.Size.medium.val, Enu.Align.center.val);
+                } else {
+                  bluetooth.printCustom(
+                      '----------------------------------------------------------',
+                      Enu.Size.medium.val,
+                      Enu.Align.center.val);
+                }
                 bluetooth.printCustom(
                     'Gross Total : ${dataInformation['NetAmount'].toStringAsFixed(2)}',
                     Enu.Size.bold.val,
@@ -1232,10 +1319,15 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
               }
 
               if (!Settings.getValue<bool>('key-print-balance', false)) {
-                bluetooth.printCustom(
-                    '----------------------------------------------------------',
-                    Enu.Size.medium.val,
-                    Enu.Align.center.val);
+                if (printerSize == "2") {
+                  bluetooth.printCustom('--------------------------------',
+                      Enu.Size.medium.val, Enu.Align.center.val);
+                } else {
+                  bluetooth.printCustom(
+                      '----------------------------------------------------------',
+                      Enu.Size.medium.val,
+                      Enu.Align.center.val);
+                }
                 bluetooth.printLeftRight(
                     "CashReceived : ",
                     "${dataInformation['CashReceived'].toStringAsFixed(2)}",
@@ -1255,6 +1347,9 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
               line = "15";
               bluetooth.printNewLine();
               bluetooth.printNewLine();
+              if (printerSize == "2") {
+                bluetooth.printNewLine();
+              }
             }
           } catch (e, s) {
             FirebaseCrashlytics.instance

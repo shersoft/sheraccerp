@@ -175,17 +175,20 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
                     color: white,
                     iconSize: 40,
                     onPressed: () {
-                      //edit
-                      if (companyUserData.updateData) {
-                        title == 'Payment Invoice'
-                            ? submitData('Payment Invoice', 'UPDATE')
-                            : submitData('Receipt  Invoice', 'UPDATE');
+                      if (buttonEvent) {
+                        return;
                       } else {
-                        Fluttertoast.showToast(
-                            msg: 'Permission denied\ncan`t edit');
-                        setState(() {
-                          buttonEvent = false;
-                        });
+                        if (companyUserData.updateData) {
+                          title == 'Payment Invoice'
+                              ? submitData('Payment Invoice', 'UPDATE')
+                              : submitData('Receipt  Invoice', 'UPDATE');
+                        } else {
+                          Fluttertoast.showToast(
+                              msg: 'Permission denied\ncan`t edit');
+                          setState(() {
+                            buttonEvent = false;
+                          });
+                        }
                       }
                     },
                     icon: const Icon(Icons.edit))
@@ -194,16 +197,20 @@ class _InvRPVoucherState extends State<InvRPVoucher> {
                     iconSize: 40,
                     onPressed: () {
                       //save
-                      if (companyUserData.insertData) {
-                        title == 'Payment Invoice'
-                            ? submitData('Payment Invoice', 'INSERT')
-                            : submitData('Receipt  Invoice', 'INSERT');
+                      if (buttonEvent) {
+                        return;
                       } else {
-                        Fluttertoast.showToast(
-                            msg: 'Permission denied\ncan`t save');
-                        setState(() {
-                          buttonEvent = false;
-                        });
+                        if (companyUserData.insertData) {
+                          title == 'Payment Invoice'
+                              ? submitData('Payment Invoice', 'INSERT')
+                              : submitData('Receipt  Invoice', 'INSERT');
+                        } else {
+                          Fluttertoast.showToast(
+                              msg: 'Permission denied\ncan`t save');
+                          setState(() {
+                            buttonEvent = false;
+                          });
+                        }
                       }
                     },
                     icon: const Icon(Icons.save)),

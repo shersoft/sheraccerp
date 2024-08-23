@@ -269,24 +269,28 @@ class _RPVoucherState extends State<RPVoucher> {
                         Fluttertoast.showToast(msg: 'Select Cash Account');
                         return;
                       }
-                      if (companyUserData.updateData) {
-                        if (!daysBefore) {
-                          title == 'Payment'
-                              ? submitData('Payment', 'UPDATE')
-                              : submitData('Receipt', 'UPDATE');
+                      if (buttonEvent) {
+                        return;
+                      } else {
+                        if (companyUserData.updateData) {
+                          if (!daysBefore) {
+                            title == 'Payment'
+                                ? submitData('Payment', 'UPDATE')
+                                : submitData('Receipt', 'UPDATE');
+                          } else {
+                            Fluttertoast.showToast(
+                                msg: 'Voucher Date not equal\ncan`t edit');
+                            setState(() {
+                              buttonEvent = false;
+                            });
+                          }
                         } else {
                           Fluttertoast.showToast(
-                              msg: 'Voucher Date not equal\ncan`t edit');
+                              msg: 'Permission denied\ncan`t edit');
                           setState(() {
                             buttonEvent = false;
                           });
                         }
-                      } else {
-                        Fluttertoast.showToast(
-                            msg: 'Permission denied\ncan`t edit');
-                        setState(() {
-                          buttonEvent = false;
-                        });
                       }
                     },
                     icon: const Icon(Icons.edit))
@@ -301,24 +305,28 @@ class _RPVoucherState extends State<RPVoucher> {
                         Fluttertoast.showToast(msg: 'Select Cash Account');
                         return;
                       }
-                      if (companyUserData.insertData) {
-                        if (!daysBefore) {
-                          title == 'Payment'
-                              ? submitData('Payment', 'INSERT')
-                              : submitData('Receipt', 'INSERT');
+                      if (buttonEvent) {
+                        return;
+                      } else {
+                        if (companyUserData.insertData) {
+                          if (!daysBefore) {
+                            title == 'Payment'
+                                ? submitData('Payment', 'INSERT')
+                                : submitData('Receipt', 'INSERT');
+                          } else {
+                            Fluttertoast.showToast(
+                                msg: 'Voucher Date not equal\ncan`t save');
+                            setState(() {
+                              buttonEvent = false;
+                            });
+                          }
                         } else {
                           Fluttertoast.showToast(
-                              msg: 'Voucher Date not equal\ncan`t save');
+                              msg: 'Permission denied\ncan`t save');
                           setState(() {
                             buttonEvent = false;
                           });
                         }
-                      } else {
-                        Fluttertoast.showToast(
-                            msg: 'Permission denied\ncan`t save');
-                        setState(() {
-                          buttonEvent = false;
-                        });
                       }
                     },
                     icon: const Icon(Icons.save)),

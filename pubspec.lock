@@ -970,6 +970,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "5.1.0"
+  pinch_zoom:
+    dependency: "direct main"
+    description:
+      name: pinch_zoom
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.0"
   ping_discover_network:
     dependency: "direct main"
     description:

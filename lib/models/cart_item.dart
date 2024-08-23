@@ -26,7 +26,9 @@ class CartItem {
       iGST,
       cGST,
       sGST,
-      minimumRate;
+      minimumRate,
+      cessPer,
+      adCessPer;
   int id, itemId, fUnitId, unitId, barcode, uniqueCode;
   CartItem(
       {required this.id,
@@ -64,7 +66,9 @@ class CartItem {
       required this.cGST,
       required this.sGST,
       required this.stock,
-      required this.minimumRate});
+      required this.minimumRate,
+      required this.cessPer,
+      required this.adCessPer});
 
   Map<String, dynamic> toCartJson() {
     return {
@@ -103,7 +107,9 @@ class CartItem {
       'cGST': cGST,
       'sGST': sGST,
       'stock': stock,
-      'minimumRate': minimumRate
+      'minimumRate': minimumRate,
+      'cessPer': cessPer,
+      'adCessPer': adCessPer
     };
   }
 
@@ -151,6 +157,8 @@ class CartItem {
     map['sGST'] = sGST;
     map['stock'] = stock;
     map['minimumRate'] = minimumRate;
+    map['cessPer'] = cessPer;
+    map['adCessPer'] = adCessPer;
     return map;
   }
 }

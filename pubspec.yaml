@@ -93,6 +93,7 @@ dependencies:
   flutter_map:
   geolocator:
   flutter_foreground_task:
+  pinch_zoom:
 
 dev_dependencies:
   flutter_test:

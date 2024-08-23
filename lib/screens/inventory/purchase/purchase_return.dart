@@ -51,6 +51,7 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
       widgetID = true,
       oldBill = false,
       lastRecord = false,
+      buttonEvent = false,
       keyItemsVariantStock = false;
   List<CartItemP> cartItem = [];
   int page = 1, pageTotal = 0, totalRecords = 0;
@@ -112,8 +113,10 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
     keyItemsVariantStock =
         ComSettings.getStatus('KEY LOCK SALES DISCOUNT', settings);
 
-    voucherTypeData = voucherTypeList.firstWhere(
-        (element) => element.voucher.toLowerCase() == 'purchase return');
+    voucherTypeData = voucherTypeList.firstWhere((element) =>
+        element.voucher.toLowerCase() == 'purchase return' ||
+        element.voucher.toLowerCase() == 'purchase return entry' ||
+        element.voucher.toLowerCase() == 'purchase return voucher');
   }
 
   @override
@@ -172,68 +175,87 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                   color: green,
                   iconSize: 40,
                   onPressed: () async {
-                    setState(() {
-                      _isLoading = true;
-                    });
-                    var inf = '[' +
-                        json.encode({
-                          'id': ledgerModel.id,
-                          'name': ledgerModel.name,
-                          'invNo': invNoController.text.isNotEmpty
-                              ? invNoController.text
-                              : '0',
-                          'invDate': DateUtil.dateYMD(invDate)
-                        }) +
-                        ']';
-                    var jsonItem = CartItemP.encodeCartToJson(cartItem);
-                    var items = json.encode(jsonItem);
-                    var stType = 'Pr_Update';
-                    var data = '[' +
-                        json.encode({
-                          'entryNo': dataDynamic[0]['EntryNo'],
-                          'date': DateUtil.dateYMD(formattedDate),
-                          'grossValue': totalGrossValue,
-                          'discount': totalDiscount,
-                          'net': totalNet,
-                          'cess': totalCess,
-                          'total': totalCartTotal,
-                          'otherCharges': 0,
-                          'otherDiscount': 0,
-                          'grandTotal': totalCartTotal,
-                          'taxType': isTax ? 'T' : 'N.T',
-                          'purchaseAccount': purchaseAccountList[0]['id'],
-                          'narration': _narration,
-                          'type': 'PR',
-                          'cashPaid': '0',
-                          'igst': totalIgST,
-                          'cgst': totalCgST,
-                          'sgst': totalSgST,
-                          'fCess': totalFCess,
-                          'adCess': totalAdCess,
-                          'Salesman': salesManId,
-                          'location': locationId,
-                          'statementtype': stType,
-                          'fyId': currentFinancialYear.id,
-                          'frmId': voucherTypeData.id
-                        }) +
-                        ']';
+                    if (cartItem.isNotEmpty) {
+                      if (buttonEvent) {
+                        return;
+                      } else {
+                        if (companyUserData.updateData) {
+                          setState(() {
+                            _isLoading = true;
+                            buttonEvent = true;
+                          });
+                          var inf = '[' +
+                              json.encode({
+                                'id': ledgerModel.id,
+                                'name': ledgerModel.name,
+                                'invNo': invNoController.text.isNotEmpty
+                                    ? invNoController.text
+                                    : '0',
+                                'invDate': DateUtil.dateYMD(invDate)
+                              }) +
+                              ']';
+                          var jsonItem = CartItemP.encodeCartToJson(cartItem);
+                          var items = json.encode(jsonItem);
+                          var stType = 'Pr_Update';
+                          var data = '[' +
+                              json.encode({
+                                'entryNo': dataDynamic[0]['EntryNo'],
+                                'date': DateUtil.dateYMD(formattedDate),
+                                'grossValue': totalGrossValue,
+                                'discount': totalDiscount,
+                                'net': totalNet,
+                                'cess': totalCess,
+                                'total': totalCartTotal,
+                                'otherCharges': 0,
+                                'otherDiscount': 0,
+                                'grandTotal': totalCartTotal,
+                                'taxType': isTax ? 'T' : 'N.T',
+                                'purchaseAccount': purchaseAccountList[0]['id'],
+                                'narration': _narration,
+                                'type': 'PR',
+                                'cashPaid': '0',
+                                'igst': totalIgST,
+                                'cgst': totalCgST,
+                                'sgst': totalSgST,
+                                'fCess': totalFCess,
+                                'adCess': totalAdCess,
+                                'Salesman': salesManId,
+                                'location': locationId,
+                                'statementtype': stType,
+                                'fyId': currentFinancialYear.id,
+                                'frmId': voucherTypeData.id
+                              }) +
+                              ']';
 
-                    final body = {
-                      'information': inf,
-                      'data': data,
-                      'particular': items,
-                      'serialNoData': json
-                          .encode(SerialNOModel.encodedToJson(serialNoData)),
-                    };
-                    bool _state = await dio.addPurchase(body);
-                    setState(() {
-                      _isLoading = false;
-                    });
-                    if (_state) {
-                      cartItem.clear();
-                      showMore(context, 'Edited');
+                          final body = {
+                            'information': inf,
+                            'data': data,
+                            'particular': items,
+                            'serialNoData': json.encode(
+                                SerialNOModel.encodedToJson(serialNoData)),
+                          };
+                          bool _state = await dio.addPurchase(body);
+                          setState(() {
+                            _isLoading = false;
+                          });
+                          if (_state) {
+                            cartItem.clear();
+                            showMore(context, 'Edited');
+                          } else {
+                            showInSnackBar('Error enter data correctly');
+                            setState(() {
+                              buttonEvent = false;
+                            });
+                          }
+                        } else {
+                          showInSnackBar('Permission denied\ncan`t edit');
+                          setState(() {
+                            buttonEvent = false;
+                          });
+                        }
+                      }
                     } else {
-                      showInSnackBar('Error enter data correctly');
+                      showInSnackBar('Please add at least one item');
                     }
                   },
                   icon: const Icon(Icons.edit))
@@ -241,67 +263,86 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                   color: blue,
                   iconSize: 40,
                   onPressed: () async {
-                    setState(() {
-                      _isLoading = true;
-                    });
-                    var inf = '[' +
-                        json.encode({
-                          'id': ledgerModel.id,
-                          'name': ledgerModel.name,
-                          'invNo': invNoController.text.isNotEmpty
-                              ? invNoController.text
-                              : '0',
-                          'invDate': DateUtil.dateYMD(invDate)
-                        }) +
-                        ']';
-                    var jsonItem = CartItemP.encodeCartToJson(cartItem);
-                    var items = json.encode(jsonItem);
-                    var stType = 'Pr_Insert';
-                    var data = '[' +
-                        json.encode({
-                          'date': DateUtil.dateYMD(formattedDate),
-                          'grossValue': totalGrossValue,
-                          'discount': totalDiscount,
-                          'net': totalNet,
-                          'cess': totalCess,
-                          'total': totalCartTotal,
-                          'otherCharges': 0,
-                          'otherDiscount': 0,
-                          'grandTotal': totalCartTotal,
-                          'taxType': isTax ? 'T' : 'N.T',
-                          'purchaseAccount': purchaseAccountList[0]['id'],
-                          'narration': _narration,
-                          'type': 'PR',
-                          'cashPaid': '0',
-                          'igst': totalIgST,
-                          'cgst': totalCgST,
-                          'sgst': totalSgST,
-                          'fCess': totalFCess,
-                          'adCess': totalAdCess,
-                          'Salesman': salesManId,
-                          'location': locationId,
-                          'statementtype': stType,
-                          'fyId': currentFinancialYear.id,
-                          'frmId': voucherTypeData.id
-                        }) +
-                        ']';
+                    if (cartItem.isNotEmpty) {
+                      if (buttonEvent) {
+                        return;
+                      } else {
+                        if (companyUserData.insertData) {
+                          setState(() {
+                            _isLoading = true;
+                            buttonEvent = true;
+                          });
+                          var inf = '[' +
+                              json.encode({
+                                'id': ledgerModel.id,
+                                'name': ledgerModel.name,
+                                'invNo': invNoController.text.isNotEmpty
+                                    ? invNoController.text
+                                    : '0',
+                                'invDate': DateUtil.dateYMD(invDate)
+                              }) +
+                              ']';
+                          var jsonItem = CartItemP.encodeCartToJson(cartItem);
+                          var items = json.encode(jsonItem);
+                          var stType = 'Pr_Insert';
+                          var data = '[' +
+                              json.encode({
+                                'date': DateUtil.dateYMD(formattedDate),
+                                'grossValue': totalGrossValue,
+                                'discount': totalDiscount,
+                                'net': totalNet,
+                                'cess': totalCess,
+                                'total': totalCartTotal,
+                                'otherCharges': 0,
+                                'otherDiscount': 0,
+                                'grandTotal': totalCartTotal,
+                                'taxType': isTax ? 'T' : 'N.T',
+                                'purchaseAccount': purchaseAccountList[0]['id'],
+                                'narration': _narration,
+                                'type': 'PR',
+                                'cashPaid': '0',
+                                'igst': totalIgST,
+                                'cgst': totalCgST,
+                                'sgst': totalSgST,
+                                'fCess': totalFCess,
+                                'adCess': totalAdCess,
+                                'Salesman': salesManId,
+                                'location': locationId,
+                                'statementtype': stType,
+                                'fyId': currentFinancialYear.id,
+                                'frmId': voucherTypeData.id
+                              }) +
+                              ']';
 
-                    final body = {
-                      'information': inf,
-                      'data': data,
-                      'particular': items,
-                      'serialNoData': json
-                          .encode(SerialNOModel.encodedToJson(serialNoData)),
-                    };
-                    bool _state = await dio.addPurchase(body);
-                    setState(() {
-                      _isLoading = false;
-                    });
-                    if (_state) {
-                      cartItem.clear();
-                      showMore(context, 'Saved');
+                          final body = {
+                            'information': inf,
+                            'data': data,
+                            'particular': items,
+                            'serialNoData': json.encode(
+                                SerialNOModel.encodedToJson(serialNoData)),
+                          };
+                          bool _state = await dio.addPurchase(body);
+                          setState(() {
+                            _isLoading = false;
+                          });
+                          if (_state) {
+                            cartItem.clear();
+                            showMore(context, 'Saved');
+                          } else {
+                            showInSnackBar('Error enter data correctly');
+                            setState(() {
+                              buttonEvent = false;
+                            });
+                          }
+                        } else {
+                          showInSnackBar('Permission denied\ncan`t save');
+                          setState(() {
+                            buttonEvent = false;
+                          });
+                        }
+                      }
                     } else {
-                      showInSnackBar('Error enter data correctly');
+                      showInSnackBar('Please add at least one item');
                     }
                   },
                   icon: const Icon(Icons.save)),
