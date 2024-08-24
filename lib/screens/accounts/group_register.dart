@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:sheraccerp/models/company.dart';
-import 'package:sheraccerp/models/ledger_name_model.dart';
+import 'package:sheraccerp/models/group_model.dart';
 import 'package:sheraccerp/models/ledger_parent.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
@@ -32,10 +32,12 @@ class _GroupRegistrationState extends State<GroupRegistration> {
       isUnderSelected = false,
       isExist = false,
       buttonEvent = false;
-  String GroupRegistrationId = '';
-  List<LedgerModel> GroupRegistrationList = [];
-  List<String> GroupRegistrationListDisplay = [];
-  List<dynamic> GroupRegistrationGroupList = [];
+  String groupRegistrationId = '';
+  List<LedgerParent> groupRegistrationList = [];
+  List<String> groupRegistrationListDisplay = [];
+  List<dynamic> groupRegistrationGroupList = [];
+  List<MainHeadsModel> mainHeadModelList = [];
+  MainHeadsModel headerModel;
   String lName = '';
   int locationId = 1, salesManId = 0;
 
@@ -44,23 +46,21 @@ class _GroupRegistrationState extends State<GroupRegistration> {
     super.initState();
     // settings = ScopedModel.of<MainModel>(context).getSettings();
 
-    // api.getGroupRegistrationAll().then(
-    //   (value) {
-    //     setState(() {
-    //       GroupRegistrationList.addAll(value);
-    //       GroupRegistrationListDisplay.addAll(List<String>.from(GroupRegistrationList
-    //           .map((item) => (item.name))
-    //           .toList()
-    //           .map((s) => s)
-    //           .toList()));
-    //     });
-    //   },
-    // );
     api.getLedgerParent().then((value) {
-      setState(() {
-        GroupRegistrationGroupList.addAll(value);
-        GroupRegistrationGroupList.add(LedgerParent(id: 0, name: ''));
-      });
+      groupRegistrationGroupList.addAll(value);
+      groupRegistrationGroupList.add(LedgerParent(id: 0, name: ''));
+      groupRegistrationList.addAll(value);
+      groupRegistrationListDisplay.addAll(List<String>.from(
+          groupRegistrationList
+              .map((item) => (item.name))
+              .toList()
+              .map((s) => s)
+              .toList()));
+      setState(() {});
+    });
+
+    api.getGroupHeads().then((value) {
+      mainHeadModelList.addAll(value);
     });
   }
 
@@ -73,11 +73,14 @@ class _GroupRegistrationState extends State<GroupRegistration> {
     if (!isUnderSelected) {
       if (routes != null) {
         var parentName = routes['parent'] ?? '';
-        _dropDownValue = parentName.isNotEmpty
-            ? GroupRegistrationGroupList.firstWhere(
-                (element) => element.name == parentName,
-                orElse: () => LedgerModel(id: 0, name: '')).id
-            : _dropDownValue;
+        if (parentName.isNotEmpty) {
+          _dropDownValue = groupRegistrationGroupList
+              .firstWhere((element) => element.name == parentName,
+                  orElse: () => LedgerParent(id: 0, name: ''))
+              .id;
+          headerModel = mainHeadModelList
+              .firstWhere((element) => element.mlhId == _dropDownValue);
+        }
       }
     }
     return Scaffold(
@@ -104,8 +107,7 @@ class _GroupRegistrationState extends State<GroupRegistration> {
     setState(() {
       _isLoading = true;
     });
-    bool result =
-        false; //await api.spGroupRegistrationDelete(GroupRegistrationId);
+    bool result = await api.groupRegistrationDelete(groupRegistrationId);
     if (result) {
       setState(() {
         _isLoading = false;
@@ -125,13 +127,18 @@ class _GroupRegistrationState extends State<GroupRegistration> {
     var data = [
       {
         'name': name.toUpperCase(),
-        'parent': _dropDownValue,
+        'groupId': 1,
+        'parentId': _dropDownValue,
+        'id': groupRegistrationId.isNotEmpty
+            ? int.tryParse(groupRegistrationId)
+            : 0,
+        'userId': 1
       }
     ];
 
-    bool result = false; //action == 'edit'
-    //     ? await api.spGroupRegistrationEdit(data)
-    //     : await api.spGroupRegistrationAdd(data);
+    bool result = action == 'edit'
+        ? await api.groupRegistrationEdit(data)
+        : await api.groupRegistrationAdd(data);
 
     if (result) {
       _saveAndRedirectToHome(action);
@@ -164,18 +171,24 @@ class _GroupRegistrationState extends State<GroupRegistration> {
     setState(() {
       _isLoading = true;
     });
-    // api.findGroupRegistration(id).then((value) {
-    //   var data = value[0][0];
-    //   setState(() {
-    //     _nameCtr.text = data['LedName'] ?? '';
-    //     if (data['lh_id'] > 0) {
-    //       _dropDownValue = data['lh_id'];
-    //     }
-    //   });
-    //   setState(() {
-    //     _isLoading = false;
-    //   });
-    // });
+    api.findGroupRegistration(id).then((value) {
+      var data = value[0][0];
+      //lh_id,Mlh_id,lh_name,Active,lh_Code
+      setState(() {
+        _nameCtr.text = data['lh_name'] ?? '';
+        if (data['lh_id'] > 0) {
+          _dropDownValue = data['lh_Code'];
+          headerModel = MainHeadsModel(
+              mlhId: data['Mlh_id'],
+              plhId: data['lh_Code'],
+              mlhName: data['mlhName']);
+          groupRegistrationId = data['lh_id'];
+        }
+      });
+      setState(() {
+        _isLoading = false;
+      });
+    });
   }
 
   tabBarWidget() {
@@ -193,14 +206,14 @@ class _GroupRegistrationState extends State<GroupRegistration> {
                 } else {
                   if (isExist) {
                     if (companyUserData.updateData) {
-                      if (GroupRegistrationId.isNotEmpty) {
+                      if (groupRegistrationId.isNotEmpty) {
                         setState(() {
                           _isLoading = true;
                           buttonEvent = true;
                         });
                         _handleSubmitted('edit');
                       } else {
-                        showInSnackBar('Please select GroupRegistration');
+                        showInSnackBar('Please select a Group');
                         setState(() {
                           buttonEvent = false;
                         });
@@ -213,14 +226,14 @@ class _GroupRegistrationState extends State<GroupRegistration> {
                     }
                   } else {
                     if (companyUserData.insertData) {
-                      if (GroupRegistrationId.isEmpty) {
+                      if (_nameCtr.text.isNotEmpty || _dropDownValue > 0) {
                         setState(() {
                           _isLoading = true;
                           buttonEvent = true;
                         });
                         _handleSubmitted('save');
                       } else {
-                        showInSnackBar('Please add GroupRegistration');
+                        showInSnackBar('Please select Under and Name');
                         setState(() {
                           buttonEvent = false;
                         });
@@ -244,7 +257,7 @@ class _GroupRegistrationState extends State<GroupRegistration> {
                         return;
                       } else {
                         if (companyUserData.deleteData) {
-                          if (GroupRegistrationId.isNotEmpty) {
+                          if (groupRegistrationId.isNotEmpty) {
                             setState(() {
                               _isLoading = true;
                               buttonEvent = true;
@@ -300,20 +313,20 @@ class _GroupRegistrationState extends State<GroupRegistration> {
                   key: keyGroupRegistrationName,
                   controller: _nameCtr,
                   clearOnSubmit: false,
-                  suggestions: GroupRegistrationListDisplay,
+                  suggestions: groupRegistrationListDisplay,
                   decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'GroupRegistration Name'),
+                      border: OutlineInputBorder(), labelText: 'Group Name'),
                   textSubmitted: (data) {
                     lName = data;
                     if (lName.isNotEmpty) {
-                      int _id = GroupRegistrationList.firstWhere(
-                          (element) => element.name == lName,
-                          orElse: () => LedgerModel(id: 0, name: '')).id;
+                      int _id = groupRegistrationList
+                          .firstWhere((element) => element.name == lName,
+                              orElse: () => LedgerParent(id: 0, name: ''))
+                          .id;
                       if (_id > 0) {
-                        GroupRegistrationId = _id.toString();
+                        groupRegistrationId = _id.toString();
                         isExist = true;
-                        findGroupRegistration(GroupRegistrationId);
+                        findGroupRegistration(groupRegistrationId);
                       }
                     }
                   },
@@ -337,8 +350,8 @@ class _GroupRegistrationState extends State<GroupRegistration> {
                       child: Text('Select under', textAlign: TextAlign.center),
                     ),
                     value: _dropDownValue.toString(),
-                    items: GroupRegistrationGroupList.map<
-                        DropdownMenuItem<String>>((item) {
+                    items: groupRegistrationGroupList
+                        .map<DropdownMenuItem<String>>((item) {
                       return DropdownMenuItem<String>(
                         value: item.id.toString(),
                         child: Padding(

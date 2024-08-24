@@ -1681,7 +1681,7 @@ class _SaleState extends State<Sale> {
   }
 
   getEntryNo(saleFormId) {
-    api.getSalesInvoiceNo(saleFormId).then((value) {
+    api.getSalesInvoiceNo(saleFormId, 'SEntryNo').then((value) {
       setState(() {
         invoiceNo = (int.parse(value.toString()) + 1).toString();
         invoiceNoController.text = invoiceNo;
@@ -3470,7 +3470,10 @@ class _SaleState extends State<Sale> {
           } else {
             //r = (saleRate * _conversion);
             // rate = saleRate * _conversion;
-            rate = editItem ? saleRate : (saleRate * _conversion);
+            rate = editItem
+                ? saleRate
+                : double.tryParse(
+                    (saleRate * _conversion).toStringAsFixed(decimal));
             _rateController.text = rate.toStringAsFixed(decimal);
           }
           //rate = r;
@@ -3807,7 +3810,9 @@ class _SaleState extends State<Sale> {
         _rateController.text = _conversion > 0
             ? (saleRate * _conversion).toStringAsFixed(decimal)
             : saleRate.toStringAsFixed(decimal);
-        rate = _conversion > 0 ? saleRate * _conversion : saleRate;
+        rate = _conversion > 0
+            ? double.tryParse((saleRate * _conversion).toStringAsFixed(decimal))
+            : saleRate;
       }
       uniqueCode = product.productId;
       if (isSerialNoInStockVariant) {
@@ -4374,10 +4379,17 @@ class _SaleState extends State<Sale> {
                                   for (var i = 0;
                                       i < snapshot.data.length;
                                       i++) {
-                                    if (defaultUnitID.toString().isNotEmpty) {
+                                    if (defaultUnitID > 0) {
                                       if (snapshot.data[i].id ==
                                           defaultUnitID - 1) {
                                         _dropDownUnit = snapshot.data[i].id;
+                                        _conversion =
+                                            snapshot.data[i].conversion;
+                                      }
+                                    } else {
+                                      if (snapshot.data[i].id ==
+                                          _dropDownUnit) {
+                                        // _dropDownUnit = snapshot.data[i].id;
                                         _conversion =
                                             snapshot.data[i].conversion;
                                       }
@@ -4450,14 +4462,18 @@ class _SaleState extends State<Sale> {
                                                           element.name ==
                                                           _unit.rate);
                                                 }
-                                                rate = _rate;
-                                                saleRate = _rate;
+                                                _conversion = _unit.conversion;
+                                                rate = editItem
+                                                    ? (_rate * _conversion)
+                                                        .toDouble()
+                                                    : _rate;
+                                                saleRate =
+                                                    editItem ? rate : _rate;
                                                 _rateController.text =
                                                     saleRate > 0
                                                         ? saleRate
                                                             .toStringAsFixed(2)
                                                         : '';
-                                                _conversion = _unit.conversion;
                                                 if (quantity > 0 ||
                                                     freeQty > 0) {
                                                   if (totalItem > 0) {

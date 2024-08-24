@@ -23,7 +23,7 @@ import 'package:sheraccerp/service/api_dio.dart';
 import 'package:intl/intl.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
 
-const String apiV = 'v24/';
+const String apiV = 'v25/';
 
 const gstBaseApi = "https://api.mastergst.com";
 const gstApi = "https://api.mastergst.com/einvoice/authenticate"; //get

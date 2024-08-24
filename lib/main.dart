@@ -17,6 +17,7 @@ import 'package:sheraccerp/provider/sales_provider.dart';
 import 'package:sheraccerp/provider/stock_provider.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/accounts/bank_voucher.dart';
+import 'package:sheraccerp/screens/accounts/group_register.dart';
 import 'package:sheraccerp/screens/accounts/journal.dart';
 import 'package:sheraccerp/screens/accounts/salesman_report.dart';
 import 'package:sheraccerp/screens/accounts/tax_report.dart';
@@ -215,6 +216,7 @@ class MyApp extends StatelessWidget {
               '/serialNoList': (context) => const SerialNoList(),
               '/purchasePreviewShow': (context) => const PurchasePreviewShow(),
               '/salesManReport': (context) => const SalesManReport(),
+              '/groupRegistration': (context) => const GroupRegistration(),
             },
             theme: isDarkTheme
                 ? ThemeData(

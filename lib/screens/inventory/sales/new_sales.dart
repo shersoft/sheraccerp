@@ -1656,7 +1656,7 @@ class _SaleState extends State<Sale> {
   }
 
   getEntryNo(saleFormId) {
-    api.getSalesInvoiceNo(saleFormId).then((value) {
+    api.getSalesInvoiceNo(saleFormId, 'SEntryNo').then((value) {
       setState(() {
         invoiceNo = (int.parse(value.toString()) + 1).toString();
         invoiceNoController.text = invoiceNo;
