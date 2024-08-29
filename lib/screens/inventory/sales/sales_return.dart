@@ -12,8 +12,7 @@ import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/customer_model.dart';
 import 'package:sheraccerp/models/order.dart';
 import 'package:sheraccerp/models/product_register_model.dart';
-import 'package:sheraccerp/models/stock_item.dart';
-import 'package:sheraccerp/models/stock_product.dart';
+import 'package:sheraccerp/models/sales_type.dart';
 import 'package:sheraccerp/models/unit_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/inventory/sales/sale.dart';
@@ -25,7 +24,6 @@ import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/components.dart';
-import 'package:sheraccerp/widget/loading.dart';
 import 'package:sheraccerp/widget/popup_menu_action.dart';
 import 'package:sheraccerp/widget/progress_hud.dart';
 
@@ -47,6 +45,7 @@ class _SalesReturnState extends State<SalesReturn> {
   dynamic productModel;
   List<CartItem> cartItem = [];
   List<dynamic> otherAmountList = [];
+  List<SalesType> salesTypeDisplay = [];
   bool taxable = true;
   bool isTax = true,
       _isCashBill = false,
@@ -83,7 +82,7 @@ class _SalesReturnState extends State<SalesReturn> {
   int saleAccount = 0;
   int lId = 0, groupId = 0, acId = 0;
   var salesManId = 0;
-  int saleFormId = 1;
+  int saleReturnFormId = 1;
   int printerType = 0, printerDevice = 0, printModel = 2;
   String labelSerialNo = 'SerialNo';
   String labelSpRate = 'SpRetail';
@@ -197,6 +196,7 @@ class _SalesReturnState extends State<SalesReturn> {
     manualInvoiceNumberInSales =
         ComSettings.getStatus('MANNUAL INVOICE NUMBER IN SALES', settings);
 
+    salesTypeDisplay = salesReturnTypeList;
     loadAsset();
   }
 
@@ -222,39 +222,100 @@ class _SalesReturnState extends State<SalesReturn> {
   @override
   Widget build(BuildContext context) {
     deviceSize = MediaQuery.of(context).size;
-    return widgetID ? widgetPrefix() : widgetSuffix();
+    bool thisSale = true;
+    if (salesTypeDisplay.length > 1) {
+      thisSale = false;
+    } else {
+      previewData = true;
+    }
+    return WillPopScope(
+        onWillPop: _onWillPop,
+        child: widgetID ? widgetPrefix(thisSale) : widgetSuffix());
   }
 
-  widgetPrefix() {
+  Future<bool> _onWillPop() async {
+    if (nextWidget == 3) {
+      return (await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Back'),
+              content: const Text('Select Item Again?'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      nextWidget = 2;
+                      clearValue();
+                    });
+                    Navigator.of(context).pop(false);
+                  },
+                  child: const Text('Select'),
+                ),
+              ],
+            ),
+          )) ??
+          false;
+    } else {
+      return (await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Are you sure?'),
+              content: const Text('Do you want to exit Sale'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('No'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Yes'),
+                ),
+              ],
+            ),
+          )) ??
+          false;
+    }
+  }
+
+  widgetPrefix(thisSale) {
     return Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
           title: const Text("Sales Return"),
           actions: [
-            TextButton(
-              child: const Text(
-                "New",
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            Visibility(
+              visible: previewData,
+              child: TextButton(
+                child: const Text(
+                  "New",
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.blue[700],
+                ),
+                onPressed: () async {
+                  setState(() {
+                    widgetID = false;
+                  });
+                },
+                onLongPress: () {
+                  searchBill(context, 1);
+                },
               ),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: Colors.blue[700],
-              ),
-              onPressed: () async {
-                setState(() {
-                  widgetID = false;
-                });
-              },
-              onLongPress: () {
-                searchBill(context, 1);
-              },
             ),
           ],
         ),
-        body: Container(
-          child: previousBill(),
-        ));
+        body: thisSale
+            ? Container(
+                child: previousBill(),
+              )
+            : previewData
+                ? Container(
+                    child: previousBill(),
+                  )
+                : Container(child: selectSalesType()));
   }
 
   widgetSuffix() {
@@ -471,7 +532,7 @@ class _SalesReturnState extends State<SalesReturn> {
                 'SalesReturnList',
                 page,
                 lId.toString(),
-                '1',
+                saleReturnFormId.toString(),
                 DateUtil.dateYMD(formattedDate),
                 salesManId > 0 ? salesManId.toString() : '')
             .then((value) {
@@ -594,7 +655,7 @@ class _SalesReturnState extends State<SalesReturn> {
             'statement': 'SalesReturnInsert',
             'entryNo': 0,
             'invoiceNo': '0',
-            'saleFormId': saleFormId,
+            'saleFormId': saleReturnFormId,
             'saleFormType': '',
             'taxType': taxType,
             'date': order.dated,
@@ -664,7 +725,7 @@ class _SalesReturnState extends State<SalesReturn> {
                 'statement': 'SREntryNo',
                 'entryNo': 0,
                 'invoiceNo': 0,
-                'saleFormId': saleFormId,
+                'saleFormId': saleReturnFormId,
                 'billType': order.billType,
                 'returnNo': 0,
                 'returnAmount': 0,
@@ -694,6 +755,20 @@ class _SalesReturnState extends State<SalesReturn> {
                 'Type': 1
               }
             ];
+            if (salesTypeData.accounts) {
+              final bodyJsonAmount = {
+                'statement': 'SalesReturnInsert',
+                'entryNo': int.tryParse(value1.toString()),
+                'data': otherAmount,
+                'date': order.dated.toString(),
+                'saleFormType': salesTypeData.type,
+                'narration': order.narration,
+                'location': order.location.toString(),
+                'id': order.customerModel[0].id.toString(),
+                'fyId': currentFinancialYear.id
+              };
+              api.addOthersAmount(bodyJsonAmount);
+            }
             // clearCart();
             showMore(context);
           });
@@ -780,7 +855,7 @@ class _SalesReturnState extends State<SalesReturn> {
             'statement': 'SalesReturnUpdate',
             'entryNo': dataDynamic[0]['EntryNo'],
             'invoiceNo': dataDynamic[0]['InvoiceNo'],
-            'saleFormId': saleFormId,
+            'saleFormId': saleReturnFormId,
             'saleFormType': '',
             'taxType': taxType,
             'date': order.dated,
@@ -847,6 +922,20 @@ class _SalesReturnState extends State<SalesReturn> {
                     ? grandTotal
                     : grandTotal.roundToDouble();
           }
+          if (salesTypeData.accounts) {
+            final bodyJsonAmount = {
+              'statement': 'SalesReturnInsert',
+              'entryNo': int.tryParse(dataDynamic[0]['EntryNo'].toString()),
+              'data': otherAmount,
+              'date': order.dated.toString(),
+              'saleFormType': salesTypeData.type,
+              'narration': order.narration,
+              'location': order.location.toString(),
+              'id': order.customerModel[0].id.toString(),
+              'fyId': currentFinancialYear.id
+            };
+            api.addOthersAmount(bodyJsonAmount);
+          }
           // clearCart();
           showMore(context);
         }
@@ -860,7 +949,7 @@ class _SalesReturnState extends State<SalesReturn> {
           'statement': 'SalesReturnDelete',
           'entryNo': dataDynamic[0]['EntryNo'],
           'invoiceNo': dataDynamic[0]['InvoiceNo'],
-          'saleFormId': saleFormId,
+          'saleFormId': saleReturnFormId,
           'fyId': currentFinancialYear.id
         }) +
         ']';
@@ -902,7 +991,7 @@ class _SalesReturnState extends State<SalesReturn> {
         );
       }
     });
-    // dio.deleteSale(dataDynamic[0]['EntryNo'], saleFormId, '').then((value) {
+    // dio.deleteSale(dataDynamic[0]['EntryNo'], saleReturnFormId, '').then((value) {
     //   setState(() {
     //     _isLoading = false;
     //   });
@@ -2057,7 +2146,8 @@ class _SalesReturnState extends State<SalesReturn> {
                                         unit: snapshot.data[i].unit));
                                   }
                                 }
-                                return snapshot.hasData
+                                return snapshot.data != null &&
+                                        snapshot.data.length > 0
                                     ? DropdownButton<String>(
                                         hint: Text(_dropDownUnit > 0
                                             ? UnitSettings.getUnitName(
@@ -2088,7 +2178,36 @@ class _SalesReturnState extends State<SalesReturn> {
                                           });
                                         },
                                       )
-                                    : Container();
+                                    : DropdownButton<String>(
+                                        hint: Text(_dropDownUnit > 0
+                                            ? UnitSettings.getUnitName(
+                                                _dropDownUnit)
+                                            : 'Unit'),
+                                        items: unitListSettings
+                                            .map<DropdownMenuItem<String>>(
+                                                (item) {
+                                          return DropdownMenuItem<String>(
+                                            value: item.key.toString(),
+                                            child: Text(item.value),
+                                          );
+                                        }).toList(),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _dropDownUnit = int.tryParse(value);
+                                            for (var i = 0;
+                                                i < unitList.length;
+                                                i++) {
+                                              UnitModel _unit = unitList[i];
+                                              if (_unit.unit ==
+                                                  int.tryParse(value)) {
+                                                _conversion = _unit.conversion;
+                                                break;
+                                              }
+                                            }
+                                            // calculate();
+                                          });
+                                        },
+                                      );
                               },
                             ),
                           ),
@@ -3288,7 +3407,7 @@ class _SalesReturnState extends State<SalesReturn> {
               json.encode({
                 'statement': 'SalesReturnFind',
                 'entryNo': dataDynamic[0]['EntryNo'].toString(),
-                'saleFormId': saleFormId,
+                'saleFormId': saleReturnFormId,
                 'fyId': currentFinancialYear.id
               }) +
               ']';
@@ -3384,7 +3503,7 @@ class _SalesReturnState extends State<SalesReturn> {
     rateType = '1';
     double billTotal = 0;
 
-    api.fetchSalesReturnInvoice(id.toString(), 1).then((value) {
+    api.fetchSalesReturnInvoice(id.toString(), saleReturnFormId).then((value) {
       if (value != null) {
         var information = value['Information'][0];
         var particulars = value['Particulars'];
@@ -3400,7 +3519,7 @@ class _SalesReturnState extends State<SalesReturn> {
             'RealEntryNo': information['RealEntryNo'],
             'EntryNo': information['EntryNo'],
             'InvoiceNo': information['InvoiceNo'],
-            'Type': saleFormId
+            'Type': saleReturnFormId
           }
         ];
         billTotal = double.tryParse(information['GrandTotal'].toString());
@@ -3704,6 +3823,46 @@ class _SalesReturnState extends State<SalesReturn> {
             ),
           );
         });
+  }
+
+  selectSalesType() {
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: salesTypeDisplay.length,
+      itemBuilder: (context, index) {
+        return _listSalesTypItem(index);
+      },
+    );
+  }
+
+  _listSalesTypItem(index) {
+    return InkWell(
+      child: Card(
+        child: ListTile(title: Text(salesTypeDisplay[index].name)),
+      ),
+      onTap: () {
+        setState(() {
+          salesTypeData = salesTypeDisplay[index];
+          saleReturnFormId = salesTypeData.id;
+          previewData = true;
+          taxable = (salesTypeData != null ? salesTypeData.tax : taxable);
+          // rateTypeItem = rateTypeList.isEmpty
+          //     ? null
+          //     : rateTypeList.firstWhere((element) =>
+          //         element.name == salesTypeData.rateType.toUpperCase());
+          getEntryNo(salesTypeData.id);
+        });
+      },
+    );
+  }
+
+  void getEntryNo(saleReturnFormId) {
+    // api.getSalesInvoiceNo(saleReturnFormId, 'SREntryNo').then((value) {
+    //   setState(() {
+    //     invoiceNo = (int.parse(value.toString()) + 1).toString();
+    //     invoiceNoController.text = invoiceNo;
+    //   });
+    // });
   }
 }
 

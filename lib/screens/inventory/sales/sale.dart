@@ -7585,6 +7585,79 @@ class _SaleState extends State<Sale> {
                                                 RegExp(r'[0-9]'),
                                                 allow: true)
                                           ],
+                                          // onChanged: (str) {
+                                          //   var cartTotal = totalCartValue;
+                                          //   if (str.isNotEmpty) {
+                                          //     try {
+                                          //       otherAmountList[index]
+                                          //               ['Amount'] =
+                                          //           double.tryParse(str);
+                                          //       otherAmountList[index]
+                                          //               ['Percentage'] =
+                                          //           CommonService.getRound(
+                                          //               decimal,
+                                          //               ((double.tryParse(str) *
+                                          //                       100) /
+                                          //                   cartTotal));
+                                          //       var netTotal = (cartTotal -
+                                          //               returnAmount) +
+                                          //           otherAmountList.fold(
+                                          //               0.0,
+                                          //               (t, e) =>
+                                          //                   t +
+                                          //                   double.parse(
+                                          //                       e['Symbol'] ==
+                                          //                               '-'
+                                          //                           ? (e['Amount'] *
+                                          //                                   -1)
+                                          //                               .toString()
+                                          //                           : e['Amount']
+                                          //                               .toString()));
+                                          //       setState(() {
+                                          //         grandTotal = netTotal;
+                                          //       });
+                                          //     } on FormatException {
+                                          //       debugPrint('ex');
+                                          //     }
+                                          //   }
+                                          // },
+                                          // onEditingComplete: () {
+                                          //   var str = otherAmountList[index];
+                                          //   var cartTotal = totalCartValue;
+                                          //   if (str.isNotEmpty) {
+                                          //     try {
+                                          //       otherAmountList[index]
+                                          //               ['Amount'] =
+                                          //           double.tryParse(str);
+                                          //       otherAmountList[index]
+                                          //               ['Percentage'] =
+                                          //           CommonService.getRound(
+                                          //               decimal,
+                                          //               ((double.tryParse(str) *
+                                          //                       100) /
+                                          //                   cartTotal));
+                                          //       var netTotal = (cartTotal -
+                                          //               returnAmount) +
+                                          //           otherAmountList.fold(
+                                          //               0.0,
+                                          //               (t, e) =>
+                                          //                   t +
+                                          //                   double.parse(
+                                          //                       e['Symbol'] ==
+                                          //                               '-'
+                                          //                           ? (e['Amount'] *
+                                          //                                   -1)
+                                          //                               .toString()
+                                          //                           : e['Amount']
+                                          //                               .toString()));
+                                          //       setState(() {
+                                          //         grandTotal = netTotal;
+                                          //       });
+                                          //     } on FormatException {
+                                          //       debugPrint('ex');
+                                          //     }
+                                          //   }
+                                          // },
                                           onFieldSubmitted: (String str) {
                                             var cartTotal = totalCartValue;
                                             if (str.isNotEmpty) {

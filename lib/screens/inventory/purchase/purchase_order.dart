@@ -105,10 +105,18 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
     decimal = ComSettings.getValue('DECIMAL', settings).toString().isNotEmpty
         ? int.tryParse(ComSettings.getValue('DECIMAL', settings).toString())
         : 2;
-    voucherTypeData = voucherTypeList.firstWhere((element) =>
-        element.voucher.toLowerCase() == 'purchase order' ||
-        element.voucher.toLowerCase() == 'purchase order entry' ||
-        element.voucher.toLowerCase() == 'purchase order voucher');
+    voucherTypeData = voucherTypeList.firstWhere(
+      (element) => element.voucher.toLowerCase() == 'purchase order',
+      orElse: () => VoucherType(
+          id: 10,
+          name: 'Purchase Order Entry',
+          voucher: 'Purchase Order',
+          abbr: 'PURCHASE ORDER',
+          location: locationId,
+          active: 1,
+          tax: 1,
+          sentry: 0),
+    );
   }
 
   @override

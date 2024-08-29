@@ -113,10 +113,18 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
     keyItemsVariantStock =
         ComSettings.getStatus('KEY LOCK SALES DISCOUNT', settings);
 
-    voucherTypeData = voucherTypeList.firstWhere((element) =>
-        element.voucher.toLowerCase() == 'purchase return' ||
-        element.voucher.toLowerCase() == 'purchase return entry' ||
-        element.voucher.toLowerCase() == 'purchase return voucher');
+    voucherTypeData = voucherTypeList.firstWhere(
+      (element) => element.voucher.toLowerCase() == 'purchase return',
+      orElse: () => VoucherType(
+          id: 9,
+          name: 'Purchase Return Entry',
+          voucher: 'Purchase Return',
+          abbr: 'PURCHASE RETURN',
+          location: locationId,
+          active: 1,
+          tax: 1,
+          sentry: 0),
+    );
   }
 
   @override

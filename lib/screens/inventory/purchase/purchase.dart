@@ -150,8 +150,18 @@ class _PurchaseState extends State<Purchase> {
       _isLoading = false;
     }
 
-    voucherTypeData = voucherTypeList
-        .firstWhere((element) => element.voucher.toLowerCase() == 'purchase');
+    voucherTypeData = voucherTypeList.firstWhere(
+      (element) => element.voucher.toLowerCase() == 'purchase',
+      orElse: () => VoucherType(
+          id: 8,
+          name: 'Purchase Entry',
+          voucher: 'Purchase',
+          abbr: 'PURCHASE',
+          location: locationId,
+          active: 1,
+          tax: 1,
+          sentry: 0),
+    );
   }
 
   setCursorPosition() {
