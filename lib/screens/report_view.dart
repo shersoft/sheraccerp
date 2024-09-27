@@ -282,6 +282,12 @@ class _ReportViewState extends State<ReportView> {
   reportView() {
     if (widget.type != 'ledger') {
       classic = true;
+    } else {
+      if (MediaQuery.of(context).orientation == Orientation.landscape) {
+        classic = true;
+      } else {
+        classic = false;
+      }
     }
     var dataJson = '[' +
         json.encode({

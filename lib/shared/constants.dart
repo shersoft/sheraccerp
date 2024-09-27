@@ -42,6 +42,7 @@ const invoiceUrl = 'http://148.72.210.101:888/Home/DownloadPdf';
 const geoMapUrl = 'http://148.72.210.101:8228/';
 const geoApiFy =
     'https://api.geoapify.com/v1/geocode/search?text=pin&lang=en&limit=1&type=postcode&format=json&apiKey=d1f13eb6d5b04bcdbe6cfdad0d01cbaa';
+const erpImageUploadUrl = "http://148.72.210.101:866";
 const eWayAuthApi = "/ewaybillapi/v1.03/authenticate";
 const eWayBillApi = "/ewayapi/genewaybill";
 const eWayBillCancelApi = "/ewaybillapi/v1.03/ewayapi/canewb";

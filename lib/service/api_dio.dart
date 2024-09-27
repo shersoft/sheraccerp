@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cross_file/src/types/interface.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -28,6 +29,7 @@ import 'package:sheraccerp/models/user_model.dart';
 import 'package:sheraccerp/models/voucher_type_model.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/widget/simple_piediagram_pay_rec.dart';
+import 'package:http/http.dart' as ht;
 
 import '../models/sms_data_model.dart';
 
@@ -1450,7 +1452,11 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'salesReportMonthly/$dataBase/$branchId');
+              'salesReportMonthly/$dataBase',
+          queryParameters: {
+            'location': branchId,
+            'fyId': currentFinancialYear.id
+          });
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
@@ -1503,7 +1509,11 @@ class DioService {
       final response = await dio.get(
           pref.getString('api' ?? '127.0.0.1:80/api/') +
               apiV +
-              'purchaseReportMonthly/$dataBase');
+              'purchaseReportMonthly/$dataBase',
+          queryParameters: {
+            'location': branchId,
+            'fyId': currentFinancialYear.id
+          });
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
@@ -7409,6 +7419,33 @@ class DioService {
       debugPrint(errorMessage.toString());
     }
     return ret;
+  }
+
+  Future<bool> addProductImageEComm(id, XFile image) async {
+    String fileName = image.name;
+    var imageFormat = 'jpg'.toLowerCase();
+    try {
+      var url = '$erpImageUploadUrl/upload-image/$id.$imageFormat';
+      var stream = ht.ByteStream((image.openRead()));
+      var length = await image.length();
+      var uri = Uri.parse(url);
+      var request = ht.MultipartRequest("POST", uri);
+      var multipartFile =
+          ht.MultipartFile('image', stream, length, filename: fileName);
+      request.files.add(multipartFile);
+      var response = await request.send();
+      if (response.statusCode == 200) {
+        //List<dynamic> data = response.data;
+        return true;
+      } else {
+        debugPrint('Failed to load data');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = e.toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
   }
 }
 

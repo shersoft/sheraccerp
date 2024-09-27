@@ -65,16 +65,16 @@ class _SaleState extends State<Sale> {
       isCustomForm = false,
       buttonEvent = false,
       isSerialNoInStockVariant = false;
-  bool _autoVariantSelect = false, autoBatchSelection = false;
+  bool _autoVariantSelect = false;
   DioService api = DioService();
   Size deviceSize;
   var vehicleData;
   CustomerModel ledgerModel;
   LedgerModel ledgerDataModel;
-  CartItem cartModel, cartModelBatch;
+  CartItem cartModel;
   String vehicleName = '', invoiceNo = '';
   StockItem productModel;
-  List<CartItem> cartItem = [], cartModelList = [];
+  List<CartItem> cartItem = [];
   List<String> unregisteredNameList = [];
   List<dynamic> otherAmountList = [];
   bool isTax = true,
@@ -317,8 +317,6 @@ class _SaleState extends State<Sale> {
         .toString());
     manualInvoiceNumberInSales =
         ComSettings.getStatus('MANNUAL INVOICE NUMBER IN SALES', settings);
-    autoBatchSelection =
-        ComSettings.getStatus('KEY AUTOMATIC BATCH SELECTION', settings);
 
     if (widget.oldSale != null && widget.oldSale) {
       _isLoading = true;
@@ -1676,7 +1674,7 @@ class _SaleState extends State<Sale> {
                     : nextWidget == 4
                         ? cartProduct()
                         : nextWidget == 5
-                            ? batchEditItem()
+                            ? const Text('No Data 5')
                             : nextWidget == 6
                                 ? const Text('No Data 6')
                                 : const Text('No Widget');
@@ -2614,17 +2612,20 @@ class _SaleState extends State<Sale> {
                                               id: res.itemId,
                                               name: res.name,
                                               quantity: res.quantity);
-                                          _autoVariantSelect =
-                                              autoBatchSelection
-                                                  ? (productModel.hasVariant
-                                                      ? true
-                                                      : false)
-                                                  : false;
+
                                           lastRateStatus = true;
                                           lastRateSelected = false;
                                           nextWidget = 3;
                                         });
                                       });
+                                      // setState(() {
+                                      //   productModel = itemDisplay[index - 1];
+                                      //   // _autoVariantSelect =
+                                      //   //     productModel.hasVariant ? true : false;
+                                      //   lastRateStatus = true;
+                                      //   lastRateSelected = false;
+                                      //   nextWidget = 3;
+                                      // });
                                     },
                                     showSearchBox: true,
                                   ),
@@ -2729,9 +2730,8 @@ class _SaleState extends State<Sale> {
                           onTap: () {
                             setState(() {
                               productModel = itemDisplay[index - 1];
-                              _autoVariantSelect = autoBatchSelection
-                                  ? (productModel.hasVariant ? true : false)
-                                  : false;
+                              // _autoVariantSelect =
+                              //     productModel.hasVariant ? true : false;
                               lastRateStatus = true;
                               lastRateSelected = false;
                               nextWidget = 3;
@@ -3496,7 +3496,7 @@ class _SaleState extends State<Sale> {
       pRate = 0,
       rPRate = 0;
 
-  calculateOut(StockProduct product) {
+  calculate(StockProduct product) {
     if (enableMULTIUNIT) {
       if (saleRate > 0) {
         if (_conversion > 0) {
@@ -3764,428 +3764,8 @@ class _SaleState extends State<Sale> {
     unitValue = _conversion > 0 ? _conversion : 1;
   }
 
-  calculateTextBatch(StockProduct product, double qty) {
-    double sRate = _rateController.text.isNotEmpty
-        ? double.tryParse(_rateController.text)
-        : 0;
-    double discP = _discountPercentController.text.isNotEmpty
-        ? double.tryParse(_discountPercentController.text)
-        : 0;
-    double disc =
-        double.parse((((qty * sRate) * discP) / 100).toStringAsFixed(2));
-
-    if (enableMULTIUNIT && rate > 0 && _conversion > 0) {
-      rate = rate; // * _conversion;
-      pRate = product.buyingPrice * _conversion;
-      rPRate = product.buyingPriceReal * _conversion;
-    } else {
-      pRate = product.buyingPrice;
-      rPRate = product.buyingPriceReal;
-    }
-    freeQty = _freeQuantityController.text.isNotEmpty
-        ? double.tryParse(_freeQuantityController.text)
-        : 0;
-    rRate = taxMethod == 'MINUS'
-        ? cessOnNetAmount
-            ? CommonService.getRound(
-                4, (100 * rate) / (100 + taxP + kfcP + cessPer))
-            : CommonService.getRound(4, (100 * rate) / (100 + taxP + kfcP))
-        : rate;
-    discount = disc;
-    discountPercent = discP;
-    // if (discP > 0) {
-    //   discount =
-    //       double.parse((((qt * sRate) * discP) / 100).toStringAsFixed(2));
-    //   _discountController.text = discount.toStringAsFixed(2);
-    //   discountPercent = discP;
-    // } else if (disc > 0) {
-    //   discountPercent =
-    //       double.parse(((disc * 100) / (qt * sRate)).toStringAsFixed(2));
-    //   _discountPercentController.text = discountPercent.toStringAsFixed(2);
-    //   discount = disc;
-    // }
-
-    rDisc = taxMethod == 'MINUS'
-        ? CommonService.getRound(
-            4,
-            ((discount * 100) /
-                (cessOnNetAmount
-                    ? (taxP + 100 + cessPer + kfcP)
-                    : (taxP + 100 + kfcP))))
-        : discount;
-    gross = CommonService.getRound(decimal, ((rRate * qty)));
-    subTotal = CommonService.getRound(decimal, (gross - rDisc));
-    if (taxP > 0) {
-      tax = CommonService.getRound(4, ((subTotal * taxP) / 100));
-    }
-    if (companyTaxMode == 'INDIA') {
-      kfc = isKFC ? CommonService.getRound(4, ((subTotal * kfcP) / 100)) : 0;
-      double csPer = taxP / 2;
-      iGST = 0;
-      csGST = CommonService.getRound(4, ((subTotal * csPer) / 100));
-    } else if (companyTaxMode == 'GULF') {
-      iGST = CommonService.getRound(4, ((subTotal * taxP) / 100));
-      csGST = 0;
-      kfc = 0;
-    } else {
-      iGST = 0;
-      csGST = 0;
-      kfc = 0;
-      tax = 0;
-    }
-    if (cessOnNetAmount) {
-      if (cessPer > 0) {
-        cess = CommonService.getRound(4, ((subTotal * cessPer) / 100));
-        adCess = CommonService.getRound(4, (qty * adCessPer));
-      } else {
-        cess = 0;
-        adCess = 0;
-      }
-    } else {
-      cess = 0;
-      adCess = 0;
-    }
-    total = CommonService.getRound(
-        2, (subTotal + csGST + csGST + iGST + cess + kfc + adCess));
-    if (enableMULTIUNIT && _conversion > 0) {
-      profitPer = pRateBasedProfitInSales
-          ? CommonService.getRound(
-              2, (total - (product.buyingPrice * _conversion * qty)))
-          : CommonService.getRound(
-              decimal, (total - (product.buyingPriceReal * _conversion * qty)));
-    } else {
-      profitPer = pRateBasedProfitInSales
-          ? CommonService.getRound(2, (total - (product.buyingPrice * qty)))
-          : CommonService.getRound(
-              2, (total - (product.buyingPriceReal * qty)));
-    }
-    unitValue = _conversion > 0 ? _conversion : 1;
-  }
-
   bool lastRateStatus = true, lastRateSelected = false, rateEdited = false;
   showAddMore(BuildContext context, StockProduct product) {
-    calculateSub() {
-      if (enableMULTIUNIT) {
-        if (saleRate > 0) {
-          if (_conversion > 0) {
-            //var r = 0.0;
-            if (_focusNodeRate.hasFocus) {
-              rate = double.tryParse(_rateController.text);
-              // rate = double.tryParse(_rateController.text) * _conversion;
-              lastRateStatus = false;
-              lastRateSelected = false;
-            } else {
-              //r = (saleRate * _conversion);
-              // rate = saleRate * _conversion;
-              rate = editItem
-                  ? saleRate
-                  : double.tryParse(
-                      (saleRate * _conversion).toStringAsFixed(decimal));
-              _rateController.text = rate.toStringAsFixed(decimal);
-            }
-            //rate = r;
-            // _rateController.text = r.toStringAsFixed(decimal);
-            pRate = product.buyingPrice * _conversion;
-            rPRate = product.buyingPriceReal * _conversion;
-          } else {
-            rate = _rateController.text.isNotEmpty
-                ? (double.tryParse(_rateController.text))
-                : 0;
-          }
-        } else {
-          rate = _rateController.text.isNotEmpty
-              ? (double.tryParse(_rateController.text))
-              : 0;
-        }
-      } else {
-        if (_focusNodeRate.hasFocus) {
-          rate = double.tryParse(_rateController.text);
-
-          lastRateStatus = false;
-          lastRateSelected = false;
-        } else if (saleRate > 0) {
-          _rateController.text = saleRate.toStringAsFixed(decimal);
-          rate = saleRate;
-        } else {
-          rate = _rateController.text.isNotEmpty
-              ? double.tryParse(_rateController.text)
-              : 0;
-        }
-      }
-      if (_focusNodeQuantity.hasFocus) {
-        quantity = _quantityController.text.isNotEmpty
-            ? double.tryParse(_quantityController.text)
-            : 0;
-      } else {
-        quantity = _quantityController.text.isNotEmpty
-            ? double.tryParse(_quantityController.text)
-            : 0;
-      }
-      freeQty = _freeQuantityController.text.isNotEmpty
-          ? double.tryParse(_freeQuantityController.text)
-          : 0;
-      rRate = taxMethod == 'MINUS'
-          ? cessOnNetAmount
-              ? CommonService.getRound(
-                  4, (100 * rate) / (100 + taxP + kfcP + cessPer))
-              : CommonService.getRound(4, (100 * rate) / (100 + taxP + kfcP))
-          : rate;
-      discount = _discountController.text.isNotEmpty
-          ? double.tryParse(_discountController.text)
-          : 0;
-      double discP = _discountPercentController.text.isNotEmpty
-          ? double.tryParse(_discountPercentController.text)
-          : 0;
-      double disc = _discountController.text.isNotEmpty
-          ? double.tryParse(_discountController.text)
-          : 0;
-      double qt = _quantityController.text.isNotEmpty
-          ? double.tryParse(_quantityController.text)
-          : 0;
-      double sRate = _rateController.text.isNotEmpty
-          ? double.tryParse(_rateController.text)
-          : 0;
-      if (_focusNodeDiscountPer.hasFocus) {
-        _discountController.text = _discountPercentController.text.isNotEmpty
-            ? (((qt * sRate) * discP) / 100).toStringAsFixed(2)
-            : '';
-        discount = _discountController.text.isNotEmpty
-            ? double.tryParse(_discountController.text)
-            : 0;
-        discountPercent = double.tryParse(_discountPercentController.text);
-      }
-
-      if (_focusNodeDiscount.hasFocus) {
-        _discountPercentController.text = _discountController.text.isNotEmpty
-            ? ((disc * 100) / (qt * sRate)).toStringAsFixed(2)
-            : '';
-        discountPercent = _discountController.text.isNotEmpty
-            ? double.tryParse(_discountPercentController.text)
-            : 0;
-        // discount = discountPercent > 0
-        // ?
-        double.tryParse(_discountController.text);
-        // : discount;
-      }
-      rDisc = taxMethod == 'MINUS'
-          ? CommonService.getRound(
-              4,
-              ((discount * 100) /
-                  (cessOnNetAmount
-                      ? (taxP + 100 + cessPer + kfcP)
-                      : (taxP + 100 + kfcP))))
-          : discount;
-      gross = CommonService.getRound(decimal, ((rRate * quantity)));
-      subTotal = CommonService.getRound(decimal, (gross - rDisc));
-      if (taxP > 0) {
-        tax = CommonService.getRound(4, ((subTotal * taxP) / 100));
-      }
-      if (companyTaxMode == 'INDIA') {
-        kfc = isKFC ? CommonService.getRound(4, ((subTotal * kfcP) / 100)) : 0;
-        double csPer = taxP / 2;
-        iGST = 0;
-        csGST = CommonService.getRound(4, ((subTotal * csPer) / 100));
-      } else if (companyTaxMode == 'GULF') {
-        iGST = CommonService.getRound(4, ((subTotal * taxP) / 100));
-        csGST = 0;
-        kfc = 0;
-      } else {
-        iGST = 0;
-        csGST = 0;
-        kfc = 0;
-        tax = 0;
-      }
-      if (cessOnNetAmount) {
-        if (cessPer > 0) {
-          cess = CommonService.getRound(4, ((subTotal * cessPer) / 100));
-          adCess = CommonService.getRound(4, (quantity * adCessPer));
-        } else {
-          cess = 0;
-          adCess = 0;
-        }
-      } else {
-        cess = 0;
-        adCess = 0;
-      }
-      total = CommonService.getRound(
-          2, (subTotal + csGST + csGST + iGST + cess + kfc + adCess));
-      if (enableMULTIUNIT && _conversion > 0) {
-        profitPer = pRateBasedProfitInSales
-            ? CommonService.getRound(
-                2, (total - (product.buyingPrice * _conversion * quantity)))
-            : CommonService.getRound(decimal,
-                (total - (product.buyingPriceReal * _conversion * quantity)));
-      } else {
-        profitPer = pRateBasedProfitInSales
-            ? CommonService.getRound(
-                2, (total - (product.buyingPrice * quantity)))
-            : CommonService.getRound(
-                2, (total - (product.buyingPriceReal * quantity)));
-      }
-      unitValue = _conversion > 0 ? _conversion : 1;
-    }
-
-    calculateMultiUnit() {
-      if (enableMULTIUNIT) {
-        if (saleRate > 0) {
-          if (_conversion > 0) {
-            //var r = 0.0;
-            if (_focusNodeRate.hasFocus) {
-              rate = double.tryParse(_rateController.text);
-              // rate = double.tryParse(_rateController.text) * _conversion;
-              lastRateStatus = false;
-              lastRateSelected = false;
-            } else {
-              //r = (saleRate * _conversion);
-              // rate = saleRate * _conversion;
-              rate = editItem
-                  ? saleRate
-                  : double.tryParse(
-                      (saleRate * _conversion).toStringAsFixed(decimal));
-              _rateController.text = rate.toStringAsFixed(decimal);
-            }
-            //rate = r;
-            // _rateController.text = r.toStringAsFixed(decimal);
-            pRate = product.buyingPrice * _conversion;
-            rPRate = product.buyingPriceReal * _conversion;
-          } else {
-            rate = _rateController.text.isNotEmpty
-                ? (double.tryParse(_rateController.text))
-                : 0;
-          }
-        } else {
-          rate = _rateController.text.isNotEmpty
-              ? (double.tryParse(_rateController.text))
-              : 0;
-        }
-      } else {
-        if (_focusNodeRate.hasFocus) {
-          rate = double.tryParse(_rateController.text);
-
-          lastRateStatus = false;
-          lastRateSelected = false;
-        } else if (saleRate > 0) {
-          _rateController.text = saleRate.toStringAsFixed(decimal);
-          rate = saleRate;
-        } else {
-          rate = _rateController.text.isNotEmpty
-              ? double.tryParse(_rateController.text)
-              : 0;
-        }
-      }
-      if (_focusNodeQuantity.hasFocus) {
-        quantity = _quantityController.text.isNotEmpty
-            ? double.tryParse(_quantityController.text)
-            : 0;
-      } else {
-        quantity = _quantityController.text.isNotEmpty
-            ? double.tryParse(_quantityController.text)
-            : 0;
-      }
-      freeQty = _freeQuantityController.text.isNotEmpty
-          ? double.tryParse(_freeQuantityController.text)
-          : 0;
-      rRate = taxMethod == 'MINUS'
-          ? cessOnNetAmount
-              ? CommonService.getRound(
-                  4, (100 * rate) / (100 + taxP + kfcP + cessPer))
-              : CommonService.getRound(4, (100 * rate) / (100 + taxP + kfcP))
-          : rate;
-      discount = _discountController.text.isNotEmpty
-          ? double.tryParse(_discountController.text)
-          : 0;
-      double discP = _discountPercentController.text.isNotEmpty
-          ? double.tryParse(_discountPercentController.text)
-          : 0;
-      double disc = _discountController.text.isNotEmpty
-          ? double.tryParse(_discountController.text)
-          : 0;
-      double qt = _quantityController.text.isNotEmpty
-          ? double.tryParse(_quantityController.text)
-          : 0;
-      double sRate = _rateController.text.isNotEmpty
-          ? double.tryParse(_rateController.text)
-          : 0;
-      if (_focusNodeDiscountPer.hasFocus) {
-        _discountController.text = _discountPercentController.text.isNotEmpty
-            ? (((qt * sRate) * discP) / 100).toStringAsFixed(2)
-            : '';
-        discount = _discountController.text.isNotEmpty
-            ? double.tryParse(_discountController.text)
-            : 0;
-        discountPercent = double.tryParse(_discountPercentController.text);
-      }
-
-      if (_focusNodeDiscount.hasFocus) {
-        _discountPercentController.text = _discountController.text.isNotEmpty
-            ? ((disc * 100) / (qt * sRate)).toStringAsFixed(2)
-            : '';
-        discountPercent = _discountController.text.isNotEmpty
-            ? double.tryParse(_discountPercentController.text)
-            : 0;
-        // discount = discountPercent > 0
-        // ?
-        double.tryParse(_discountController.text);
-        // : discount;
-      }
-      rDisc = taxMethod == 'MINUS'
-          ? CommonService.getRound(
-              4,
-              ((discount * 100) /
-                  (cessOnNetAmount
-                      ? (taxP + 100 + cessPer + kfcP)
-                      : (taxP + 100 + kfcP))))
-          : discount;
-      gross = CommonService.getRound(decimal, ((rRate * quantity)));
-      subTotal = CommonService.getRound(decimal, (gross - rDisc));
-      if (taxP > 0) {
-        tax = CommonService.getRound(4, ((subTotal * taxP) / 100));
-      }
-      if (companyTaxMode == 'INDIA') {
-        kfc = isKFC ? CommonService.getRound(4, ((subTotal * kfcP) / 100)) : 0;
-        double csPer = taxP / 2;
-        iGST = 0;
-        csGST = CommonService.getRound(4, ((subTotal * csPer) / 100));
-      } else if (companyTaxMode == 'GULF') {
-        iGST = CommonService.getRound(4, ((subTotal * taxP) / 100));
-        csGST = 0;
-        kfc = 0;
-      } else {
-        iGST = 0;
-        csGST = 0;
-        kfc = 0;
-        tax = 0;
-      }
-      if (cessOnNetAmount) {
-        if (cessPer > 0) {
-          cess = CommonService.getRound(4, ((subTotal * cessPer) / 100));
-          adCess = CommonService.getRound(4, (quantity * adCessPer));
-        } else {
-          cess = 0;
-          adCess = 0;
-        }
-      } else {
-        cess = 0;
-        adCess = 0;
-      }
-      total = CommonService.getRound(
-          2, (subTotal + csGST + csGST + iGST + cess + kfc + adCess));
-      if (enableMULTIUNIT && _conversion > 0) {
-        profitPer = pRateBasedProfitInSales
-            ? CommonService.getRound(
-                2, (total - (product.buyingPrice * _conversion * quantity)))
-            : CommonService.getRound(decimal,
-                (total - (product.buyingPriceReal * _conversion * quantity)));
-      } else {
-        profitPer = pRateBasedProfitInSales
-            ? CommonService.getRound(
-                2, (total - (product.buyingPrice * quantity)))
-            : CommonService.getRound(
-                2, (total - (product.buyingPriceReal * quantity)));
-      }
-      unitValue = _conversion > 0 ? _conversion : 1;
-    }
-
     List<UnitModel> unitListData = [];
     if (!enableMULTIUNIT) {
       if (product.unitId > 0) {
@@ -4220,7 +3800,7 @@ class _SaleState extends State<Sale> {
       if (isLedgerWiseLastSRate && lastRateStatus) {
         lastRateOfLedger(product);
       }
-      calculateSub();
+      calculate(product);
     } else {
       pRate = product.buyingPrice;
       rPRate = product.buyingPriceReal;
@@ -4477,59 +4057,82 @@ class _SaleState extends State<Sale> {
                                               product.quantity;
                                           editItem = false;
                                         } else {
-                                          if (!keyItemsVariantStock &&
-                                              _autoVariantSelect) {
-                                            if (autoBatchSelection) {
-                                              for (var element in cartItem) {
-                                                if (cartModel != null ||
-                                                    cartModelBatch != null) {
-                                                  double rated =
-                                                      cartModel == null
-                                                          ? cartModelBatch.rate
-                                                          : cartModel.rate;
-                                                  if (element.itemId ==
-                                                          product.itemId &&
-                                                      element.rate == rated) {
-                                                    int indexed = cartItem
-                                                        .indexWhere((element) =>
-                                                            element.itemId ==
-                                                                product
-                                                                    .itemId &&
-                                                            element.rate ==
-                                                                rated);
-                                                    cartItem.removeAt(indexed);
-                                                    break;
-                                                  }
-                                                }
-                                              }
-                                            }
-                                            double qty = 0,
-                                                tQty = 0,
-                                                balanceQty = 0;
-                                            for (StockProduct variantProduct
-                                                in _autoStockVariant) {
-                                              qty = (variantProduct.quantity) >
-                                                      quantity
-                                                  ? quantity
-                                                  : variantProduct.quantity;
-                                              uniqueCode =
-                                                  variantProduct.productId;
-                                              double addQuantity =
-                                                  balanceQty > 0
-                                                      ? (balanceQty == qty
-                                                          ? qty
-                                                          : (balanceQty >= qty
-                                                              ? qty
-                                                              : balanceQty))
-                                                      : qty;
+                                          // if (!keyItemsVariantStock &&
+                                          //     _autoVariantSelect) {
+                                          //   double qty = 0,
+                                          //       tQty = 0,
+                                          //       balanceQty = 0;
+                                          //   for (StockProduct variantProduct
+                                          //       in _autoStockVariant) {
+                                          //     qty = (variantProduct.quantity) >
+                                          //             quantity
+                                          //         ? quantity
+                                          //         : variantProduct.quantity;
+                                          //     uniqueCode =
+                                          //         variantProduct.productId;
+                                          //     double addQuantity =
+                                          //         balanceQty > 0
+                                          //             ? (balanceQty == qty
+                                          //                 ? qty
+                                          //                 : (balanceQty >= qty
+                                          //                     ? qty
+                                          //                     : balanceQty))
+                                          //             : qty;
+                                          //     cartItem.add(CartItem(
+                                          //         id: totalItem + 1,
+                                          //         itemId: product.itemId,
+                                          //         itemName: product.name,
+                                          //         quantity: addQuantity,
+                                          //         rate: rate,
+                                          //         rRate: rRate,
+                                          //         uniqueCode: uniqueCode,
+                                          //         gross: gross,
+                                          //         discount: discount,
+                                          //         discountPercent:
+                                          //             discountPercent,
+                                          //         rDiscount: rDisc,
+                                          //         fCess: kfc,
+                                          //         serialNo:
+                                          //             _serialNoController.text,
+                                          //         tax: tax,
+                                          //         taxP: taxP,
+                                          //         unitId: _dropDownUnit,
+                                          //         unitValue: unitValue ?? 1,
+                                          //         pRate: pRate,
+                                          //         rPRate: rPRate,
+                                          //         barcode: barcode,
+                                          //         expDate: expDate,
+                                          //         free: freeQty,
+                                          //         fUnitId: fUnitId,
+                                          //         cdPer: cdPer,
+                                          //         cDisc: cDisc,
+                                          //         net: subTotal,
+                                          //         cess: cess,
+                                          //         total: total,
+                                          //         profitPer: profitPer,
+                                          //         fUnitValue: fUnitValue,
+                                          //         adCess: adCess,
+                                          //         iGST: iGST,
+                                          //         cGST: csGST,
+                                          //         sGST: csGST,
+                                          //         stock: product.quantity,
+                                          //         minimumRate:
+                                          //             product.minimumRate));
 
-                                              calculateTextBatch(
-                                                  product, addQuantity);
-                                              cartItem.add(CartItem(
+                                          //     tQty += addQuantity;
+                                          //     balanceQty = quantity - qty;
+                                          //     if (tQty >= quantity ||
+                                          //         balanceQty == 0) {
+                                          //       break;
+                                          //     }
+                                          //   }
+                                          // } else {
+                                          addProduct(
+                                              CartItem(
                                                   id: totalItem + 1,
                                                   itemId: product.itemId,
                                                   itemName: product.name,
-                                                  quantity: addQuantity,
+                                                  quantity: quantity,
                                                   rate: rate,
                                                   rRate: rRate,
                                                   uniqueCode: uniqueCode,
@@ -4565,154 +4168,10 @@ class _SaleState extends State<Sale> {
                                                   stock: product.quantity,
                                                   minimumRate:
                                                       product.minimumRate,
-                                                  adCessPer: product.adCessPer,
-                                                  cessPer: product.cessPer));
-
-                                              tQty += addQuantity;
-                                              balanceQty = quantity - tQty;
-                                              if (tQty >= quantity ||
-                                                  balanceQty == 0) {
-                                                break;
-                                              } else {
-                                                //
-                                              }
-                                            }
-                                          } else if (oldBill &&
-                                              autoBatchSelection) {
-                                            if (cartModelList != null) {
-                                              double qty = 0,
-                                                  tQty = 0,
-                                                  balanceQty = 0;
-                                              for (CartItem variantProduct
-                                                  in cartModelList) {
-                                                qty = (variantProduct
-                                                            .quantity) >
-                                                        quantity
-                                                    ? quantity
-                                                    : variantProduct.quantity;
-                                                uniqueCode =
-                                                    variantProduct.uniqueCode;
-                                                double addQuantity =
-                                                    balanceQty > 0
-                                                        ? (balanceQty == qty
-                                                            ? qty
-                                                            : (balanceQty >= qty
-                                                                ? qty
-                                                                : balanceQty))
-                                                        : qty;
-                                                for (CartItem item
-                                                    in cartModelList) {
-                                                  int j = cartItem.indexWhere(
-                                                      (i) =>
-                                                          i.itemId ==
-                                                          item.itemId);
-                                                  cartItem.removeAt(j);
-                                                }
-
-                                                calculateTextBatch(
-                                                    product, addQuantity);
-                                                cartItem.add(CartItem(
-                                                    id: totalItem + 1,
-                                                    itemId: product.itemId,
-                                                    itemName: product.name,
-                                                    quantity: addQuantity,
-                                                    rate: rate,
-                                                    rRate: rRate,
-                                                    uniqueCode: uniqueCode,
-                                                    gross: gross,
-                                                    discount: discount,
-                                                    discountPercent:
-                                                        discountPercent,
-                                                    rDiscount: rDisc,
-                                                    fCess: kfc,
-                                                    serialNo:
-                                                        _serialNoController
-                                                            .text,
-                                                    tax: tax,
-                                                    taxP: taxP,
-                                                    unitId: _dropDownUnit,
-                                                    unitValue: unitValue ?? 1,
-                                                    pRate: pRate,
-                                                    rPRate: rPRate,
-                                                    barcode: barcode,
-                                                    expDate: expDate,
-                                                    free: freeQty,
-                                                    fUnitId: fUnitId,
-                                                    cdPer: cdPer,
-                                                    cDisc: cDisc,
-                                                    net: subTotal,
-                                                    cess: cess,
-                                                    total: total,
-                                                    profitPer: profitPer,
-                                                    fUnitValue: fUnitValue,
-                                                    adCess: adCess,
-                                                    iGST: iGST,
-                                                    cGST: csGST,
-                                                    sGST: csGST,
-                                                    stock: product.quantity,
-                                                    minimumRate:
-                                                        product.minimumRate,
-                                                    adCessPer:
-                                                        product.adCessPer,
-                                                    cessPer: product.cessPer));
-
-                                                tQty += addQuantity;
-                                                balanceQty = quantity - tQty;
-                                                if (tQty >= quantity ||
-                                                    balanceQty == 0) {
-                                                  break;
-                                                } else {
-                                                  //
-                                                }
-                                              }
-                                            }
-                                          } else {
-                                            addProduct(
-                                                CartItem(
-                                                    id: totalItem + 1,
-                                                    itemId: product.itemId,
-                                                    itemName: product.name,
-                                                    quantity: quantity,
-                                                    rate: rate,
-                                                    rRate: rRate,
-                                                    uniqueCode: uniqueCode,
-                                                    gross: gross,
-                                                    discount: discount,
-                                                    discountPercent:
-                                                        discountPercent,
-                                                    rDiscount: rDisc,
-                                                    fCess: kfc,
-                                                    serialNo:
-                                                        _serialNoController
-                                                            .text,
-                                                    tax: tax,
-                                                    taxP: taxP,
-                                                    unitId: _dropDownUnit,
-                                                    unitValue: unitValue ?? 1,
-                                                    pRate: pRate,
-                                                    rPRate: rPRate,
-                                                    barcode: barcode,
-                                                    expDate: expDate,
-                                                    free: freeQty,
-                                                    fUnitId: fUnitId,
-                                                    cdPer: cdPer,
-                                                    cDisc: cDisc,
-                                                    net: subTotal,
-                                                    cess: cess,
-                                                    total: total,
-                                                    profitPer: profitPer,
-                                                    fUnitValue: fUnitValue,
-                                                    adCess: adCess,
-                                                    iGST: iGST,
-                                                    cGST: csGST,
-                                                    sGST: csGST,
-                                                    stock: product.quantity,
-                                                    minimumRate:
-                                                        product.minimumRate,
-                                                    cessPer: cessPer,
-                                                    adCessPer: adCessPer),
-                                                -1);
-                                          }
+                                                  cessPer: cessPer,
+                                                  adCessPer: adCessPer),
+                                              -1);
+                                          // }
 
                                           rateEdited = false;
                                         }
@@ -4796,33 +4255,17 @@ class _SaleState extends State<Sale> {
                                 if (totalItem > 0) {
                                   double cartS = 0, cartQt = 0;
                                   for (var element in cartItem) {
-                                    if (_autoVariantSelect) {
-                                      if (element.itemId == product.itemId) {
-                                        cartQt += (element.quantity *
-                                                element.unitValue) +
-                                            element.free;
-                                        cartS = oldBill
-                                            ? (cartQt + product.quantity)
-                                            : _autoStockVariant.fold(
-                                                0.0,
-                                                (a, b) =>
-                                                    a +
-                                                    double.parse(
-                                                        b.quantity.toString()));
-                                      }
-                                    } else if (element.uniqueCode ==
+                                    if (element.uniqueCode ==
                                         product.productId) {
                                       cartQt += (element.quantity *
                                               element.unitValue) +
                                           element.free;
-                                      cartS = oldBill
-                                          ? (cartQt + product.quantity)
-                                          : element.stock;
+                                      cartS = element.stock;
                                     }
                                   }
                                   if (cartS > 0) {
                                     if (cartS <
-                                        (double.tryParse(value) * unitValue)) {
+                                        cartQt + double.tryParse(value)) {
                                       cartQ = true;
                                     }
                                   }
@@ -4847,8 +4290,7 @@ class _SaleState extends State<Sale> {
                                         : salesTypeData.type == 'SALES-O' ||
                                                 salesTypeData.type == 'SALES-Q'
                                             ? isStockProductOnlyInSalesQO
-                                                ? (double.tryParse(value) *
-                                                                (unitValue) +
+                                                ? (double.tryParse(value) * (unitValue) +
                                                             freeQty) >
                                                         (_autoVariantSelect
                                                             ? _autoStockVariant.fold(
@@ -4868,14 +4310,12 @@ class _SaleState extends State<Sale> {
                                                     (_autoVariantSelect
                                                         ? _autoStockVariant.fold(
                                                             0.0, (a, b) => a + double.parse(b.quantity.toString()))
-                                                        : oldBill
-                                                            ? product.quantity + (cartModelBatch.quantity * cartModelBatch.unitValue)
-                                                            : product.quantity)
+                                                        : product.quantity)
                                                 ? true
                                                 : cartQ
                                                     ? true
                                                     : false;
-                                calculateSub();
+                                calculate(product);
                               });
                             }
                           },
@@ -4960,7 +4400,7 @@ class _SaleState extends State<Sale> {
                                                   : cartQ
                                                       ? true
                                                       : false;
-                                  calculateSub();
+                                  calculate(product);
                                 });
                               }
                             },
@@ -5146,7 +4586,7 @@ class _SaleState extends State<Sale> {
                                                 break;
                                               }
                                             }
-                                            calculateSub();
+                                            calculate(product);
                                           });
                                         },
                                       )
@@ -5176,7 +4616,7 @@ class _SaleState extends State<Sale> {
                                                 break;
                                               }
                                             }
-                                            // calculateSub();
+                                            // calculate();
                                           });
                                         },
                                       );
@@ -5250,7 +4690,7 @@ class _SaleState extends State<Sale> {
                                       minRate) {
                                     setState(() {
                                       isMinimumRatedLock = false;
-                                      calculateSub();
+                                      calculate(product);
                                     });
                                   } else {
                                     setState(() {
@@ -5259,7 +4699,7 @@ class _SaleState extends State<Sale> {
                                   }
                                 } else {
                                   setState(() {
-                                    calculateSub();
+                                    calculate(product);
                                   });
                                 }
                               }
@@ -5377,7 +4817,7 @@ class _SaleState extends State<Sale> {
                                                           saleRate
                                                               .toStringAsFixed(
                                                                   2);
-                                                      calculateSub();
+                                                      calculate(product);
                                                     });
                                                   }),
                                             );
@@ -5437,7 +4877,7 @@ class _SaleState extends State<Sale> {
                                 hintText: '0.0'),
                             onChanged: (value) {
                               setState(() {
-                                calculateSub();
+                                calculate(product);
                               });
                             },
                           ),
@@ -5460,7 +4900,7 @@ class _SaleState extends State<Sale> {
                                 hintText: '0.0'),
                             onChanged: (value) {
                               setState(() {
-                                calculateSub();
+                                calculate(product);
                               });
                             },
                           ),
@@ -5485,7 +4925,7 @@ class _SaleState extends State<Sale> {
                                     : 'SerialNo'),
                             onChanged: (value) {
                               // setState(() {
-                              //   // calculateSub();
+                              //   // calculate(product);
                               // });
                             },
                           ),
@@ -5553,1482 +4993,6 @@ class _SaleState extends State<Sale> {
     );
   }
 
-  batchEditItem() {
-    StockProduct product = StockProduct(
-        adCessPer: cartModelBatch.adCessPer,
-        branch: 0,
-        brand: 0,
-        buyingPrice: cartModelBatch.pRate,
-        buyingPriceReal: cartModelBatch.rPRate,
-        categoryId: 0,
-        cess: cartModelBatch.cess,
-        cessPer: cartModelBatch.cessPer,
-        color: 0,
-        company: 0,
-        estUniqueCode: 0,
-        expDate: cartModelBatch.expDate,
-        free: cartModelBatch.free,
-        hsnCode: cartModelBatch.hashCode.toString(),
-        itemId: cartModelBatch.itemId,
-        locationId: lId,
-        locked: 'N',
-        mfrId: 0,
-        minimumRate: cartModelBatch.minimumRate,
-        name: cartModelBatch.itemName,
-        oBarcode: '',
-        productId: cartModelBatch.uniqueCode,
-        quantity: cartModelBatch.quantity,
-        rackId: 0,
-        retailPrice: cartModelBatch.rate,
-        sellingPrice: cartModelBatch.rate,
-        serialNo: cartModelBatch.serialNo,
-        size: 0,
-        spRetailPrice: cartModelBatch.rate,
-        stockValuation: '',
-        subcategoryId: 0,
-        supplierId: 0,
-        tax: cartModelBatch.taxP,
-        taxType: 'T',
-        unitId: cartModelBatch.unitId,
-        wholeSalePrice: cartModelBatch.rate);
-    //   List<UnitModel> unitListData = [];
-
-    //   calculateSub() {
-    //     if (enableMULTIUNIT) {
-    //       if (saleRate > 0) {
-    //         if (_conversion > 0) {
-    //           //var r = 0.0;
-    //           if (_focusNodeRate.hasFocus) {
-    //             rate = double.tryParse(_rateController.text);
-    //             // rate = double.tryParse(_rateController.text) * _conversion;
-    //             lastRateStatus = false;
-    //             lastRateSelected = false;
-    //           } else {
-    //             //r = (saleRate * _conversion);
-    //             // rate = saleRate * _conversion;
-    //             rate = editItem
-    //                 ? saleRate
-    //                 : double.tryParse(
-    //                     (saleRate * _conversion).toStringAsFixed(decimal));
-    //             _rateController.text = rate.toStringAsFixed(decimal);
-    //           }
-    //           //rate = r;
-    //           // _rateController.text = r.toStringAsFixed(decimal);
-    //           pRate = product.buyingPrice * _conversion;
-    //           rPRate = product.buyingPriceReal * _conversion;
-    //         } else {
-    //           rate = _rateController.text.isNotEmpty
-    //               ? (double.tryParse(_rateController.text))
-    //               : 0;
-    //         }
-    //       } else {
-    //         rate = _rateController.text.isNotEmpty
-    //             ? (double.tryParse(_rateController.text))
-    //             : 0;
-    //       }
-    //     } else {
-    //       if (_focusNodeRate.hasFocus) {
-    //         rate = double.tryParse(_rateController.text);
-
-    //         lastRateStatus = false;
-    //         lastRateSelected = false;
-    //       } else if (saleRate > 0) {
-    //         _rateController.text = saleRate.toStringAsFixed(decimal);
-    //         rate = saleRate;
-    //       } else {
-    //         rate = _rateController.text.isNotEmpty
-    //             ? double.tryParse(_rateController.text)
-    //             : 0;
-    //       }
-    //     }
-    //     if (_focusNodeQuantity.hasFocus) {
-    //       quantity = _quantityController.text.isNotEmpty
-    //           ? double.tryParse(_quantityController.text)
-    //           : 0;
-    //     } else {
-    //       quantity = _quantityController.text.isNotEmpty
-    //           ? double.tryParse(_quantityController.text)
-    //           : 0;
-    //     }
-    //     freeQty = _freeQuantityController.text.isNotEmpty
-    //         ? double.tryParse(_freeQuantityController.text)
-    //         : 0;
-    //     rRate = taxMethod == 'MINUS'
-    //         ? cessOnNetAmount
-    //             ? CommonService.getRound(
-    //                 4, (100 * rate) / (100 + taxP + kfcP + cessPer))
-    //             : CommonService.getRound(4, (100 * rate) / (100 + taxP + kfcP))
-    //         : rate;
-    //     discount = _discountController.text.isNotEmpty
-    //         ? double.tryParse(_discountController.text)
-    //         : 0;
-    //     double discP = _discountPercentController.text.isNotEmpty
-    //         ? double.tryParse(_discountPercentController.text)
-    //         : 0;
-    //     double disc = _discountController.text.isNotEmpty
-    //         ? double.tryParse(_discountController.text)
-    //         : 0;
-    //     double qt = _quantityController.text.isNotEmpty
-    //         ? double.tryParse(_quantityController.text)
-    //         : 0;
-    //     double sRate = _rateController.text.isNotEmpty
-    //         ? double.tryParse(_rateController.text)
-    //         : 0;
-    //     if (_focusNodeDiscountPer.hasFocus) {
-    //       _discountController.text = _discountPercentController.text.isNotEmpty
-    //           ? (((qt * sRate) * discP) / 100).toStringAsFixed(2)
-    //           : '';
-    //       discount = _discountController.text.isNotEmpty
-    //           ? double.tryParse(_discountController.text)
-    //           : 0;
-    //       discountPercent = double.tryParse(_discountPercentController.text);
-    //     }
-
-    //     if (_focusNodeDiscount.hasFocus) {
-    //       _discountPercentController.text = _discountController.text.isNotEmpty
-    //           ? ((disc * 100) / (qt * sRate)).toStringAsFixed(2)
-    //           : '';
-    //       discountPercent = _discountController.text.isNotEmpty
-    //           ? double.tryParse(_discountPercentController.text)
-    //           : 0;
-    //       // discount = discountPercent > 0
-    //       // ?
-    //       double.tryParse(_discountController.text);
-    //       // : discount;
-    //     }
-    //     rDisc = taxMethod == 'MINUS'
-    //         ? CommonService.getRound(
-    //             4,
-    //             ((discount * 100) /
-    //                 (cessOnNetAmount
-    //                     ? (taxP + 100 + cessPer + kfcP)
-    //                     : (taxP + 100 + kfcP))))
-    //         : discount;
-    //     gross = CommonService.getRound(decimal, ((rRate * quantity)));
-    //     subTotal = CommonService.getRound(decimal, (gross - rDisc));
-    //     if (taxP > 0) {
-    //       tax = CommonService.getRound(4, ((subTotal * taxP) / 100));
-    //     }
-    //     if (companyTaxMode == 'INDIA') {
-    //       kfc = isKFC ? CommonService.getRound(4, ((subTotal * kfcP) / 100)) : 0;
-    //       double csPer = taxP / 2;
-    //       iGST = 0;
-    //       csGST = CommonService.getRound(4, ((subTotal * csPer) / 100));
-    //     } else if (companyTaxMode == 'GULF') {
-    //       iGST = CommonService.getRound(4, ((subTotal * taxP) / 100));
-    //       csGST = 0;
-    //       kfc = 0;
-    //     } else {
-    //       iGST = 0;
-    //       csGST = 0;
-    //       kfc = 0;
-    //       tax = 0;
-    //     }
-    //     if (cessOnNetAmount) {
-    //       if (cessPer > 0) {
-    //         cess = CommonService.getRound(4, ((subTotal * cessPer) / 100));
-    //         adCess = CommonService.getRound(4, (quantity * adCessPer));
-    //       } else {
-    //         cess = 0;
-    //         adCess = 0;
-    //       }
-    //     } else {
-    //       cess = 0;
-    //       adCess = 0;
-    //     }
-    //     total = CommonService.getRound(
-    //         2, (subTotal + csGST + csGST + iGST + cess + kfc + adCess));
-    //     if (enableMULTIUNIT && _conversion > 0) {
-    //       profitPer = pRateBasedProfitInSales
-    //           ? CommonService.getRound(
-    //               2, (total - (product.buyingPrice * _conversion * quantity)))
-    //           : CommonService.getRound(decimal,
-    //               (total - (product.buyingPriceReal * _conversion * quantity)));
-    //     } else {
-    //       profitPer = pRateBasedProfitInSales
-    //           ? CommonService.getRound(
-    //               2, (total - (product.buyingPrice * quantity)))
-    //           : CommonService.getRound(
-    //               2, (total - (product.buyingPriceReal * quantity)));
-    //     }
-    //     unitValue = _conversion > 0 ? _conversion : 1;
-    //   }
-
-    //   calculateMultiUnit() {
-    //     if (enableMULTIUNIT) {
-    //       if (saleRate > 0) {
-    //         if (_conversion > 0) {
-    //           //var r = 0.0;
-    //           if (_focusNodeRate.hasFocus) {
-    //             rate = double.tryParse(_rateController.text);
-    //             // rate = double.tryParse(_rateController.text) * _conversion;
-    //             lastRateStatus = false;
-    //             lastRateSelected = false;
-    //           } else {
-    //             //r = (saleRate * _conversion);
-    //             // rate = saleRate * _conversion;
-    //             rate = editItem
-    //                 ? saleRate
-    //                 : double.tryParse(
-    //                     (saleRate * _conversion).toStringAsFixed(decimal));
-    //             _rateController.text = rate.toStringAsFixed(decimal);
-    //           }
-    //           //rate = r;
-    //           // _rateController.text = r.toStringAsFixed(decimal);
-    //           pRate = product.buyingPrice * _conversion;
-    //           rPRate = product.buyingPriceReal * _conversion;
-    //         } else {
-    //           rate = _rateController.text.isNotEmpty
-    //               ? (double.tryParse(_rateController.text))
-    //               : 0;
-    //         }
-    //       } else {
-    //         rate = _rateController.text.isNotEmpty
-    //             ? (double.tryParse(_rateController.text))
-    //             : 0;
-    //       }
-    //     } else {
-    //       if (_focusNodeRate.hasFocus) {
-    //         rate = double.tryParse(_rateController.text);
-
-    //         lastRateStatus = false;
-    //         lastRateSelected = false;
-    //       } else if (saleRate > 0) {
-    //         _rateController.text = saleRate.toStringAsFixed(decimal);
-    //         rate = saleRate;
-    //       } else {
-    //         rate = _rateController.text.isNotEmpty
-    //             ? double.tryParse(_rateController.text)
-    //             : 0;
-    //       }
-    //     }
-    //     if (_focusNodeQuantity.hasFocus) {
-    //       quantity = _quantityController.text.isNotEmpty
-    //           ? double.tryParse(_quantityController.text)
-    //           : 0;
-    //     } else {
-    //       quantity = _quantityController.text.isNotEmpty
-    //           ? double.tryParse(_quantityController.text)
-    //           : 0;
-    //     }
-    //     freeQty = _freeQuantityController.text.isNotEmpty
-    //         ? double.tryParse(_freeQuantityController.text)
-    //         : 0;
-    //     rRate = taxMethod == 'MINUS'
-    //         ? cessOnNetAmount
-    //             ? CommonService.getRound(
-    //                 4, (100 * rate) / (100 + taxP + kfcP + cessPer))
-    //             : CommonService.getRound(4, (100 * rate) / (100 + taxP + kfcP))
-    //         : rate;
-    //     discount = _discountController.text.isNotEmpty
-    //         ? double.tryParse(_discountController.text)
-    //         : 0;
-    //     double discP = _discountPercentController.text.isNotEmpty
-    //         ? double.tryParse(_discountPercentController.text)
-    //         : 0;
-    //     double disc = _discountController.text.isNotEmpty
-    //         ? double.tryParse(_discountController.text)
-    //         : 0;
-    //     double qt = _quantityController.text.isNotEmpty
-    //         ? double.tryParse(_quantityController.text)
-    //         : 0;
-    //     double sRate = _rateController.text.isNotEmpty
-    //         ? double.tryParse(_rateController.text)
-    //         : 0;
-    //     if (_focusNodeDiscountPer.hasFocus) {
-    //       _discountController.text = _discountPercentController.text.isNotEmpty
-    //           ? (((qt * sRate) * discP) / 100).toStringAsFixed(2)
-    //           : '';
-    //       discount = _discountController.text.isNotEmpty
-    //           ? double.tryParse(_discountController.text)
-    //           : 0;
-    //       discountPercent = double.tryParse(_discountPercentController.text);
-    //     }
-
-    //     if (_focusNodeDiscount.hasFocus) {
-    //       _discountPercentController.text = _discountController.text.isNotEmpty
-    //           ? ((disc * 100) / (qt * sRate)).toStringAsFixed(2)
-    //           : '';
-    //       discountPercent = _discountController.text.isNotEmpty
-    //           ? double.tryParse(_discountPercentController.text)
-    //           : 0;
-    //       // discount = discountPercent > 0
-    //       // ?
-    //       double.tryParse(_discountController.text);
-    //       // : discount;
-    //     }
-    //     rDisc = taxMethod == 'MINUS'
-    //         ? CommonService.getRound(
-    //             4,
-    //             ((discount * 100) /
-    //                 (cessOnNetAmount
-    //                     ? (taxP + 100 + cessPer + kfcP)
-    //                     : (taxP + 100 + kfcP))))
-    //         : discount;
-    //     gross = CommonService.getRound(decimal, ((rRate * quantity)));
-    //     subTotal = CommonService.getRound(decimal, (gross - rDisc));
-    //     if (taxP > 0) {
-    //       tax = CommonService.getRound(4, ((subTotal * taxP) / 100));
-    //     }
-    //     if (companyTaxMode == 'INDIA') {
-    //       kfc = isKFC ? CommonService.getRound(4, ((subTotal * kfcP) / 100)) : 0;
-    //       double csPer = taxP / 2;
-    //       iGST = 0;
-    //       csGST = CommonService.getRound(4, ((subTotal * csPer) / 100));
-    //     } else if (companyTaxMode == 'GULF') {
-    //       iGST = CommonService.getRound(4, ((subTotal * taxP) / 100));
-    //       csGST = 0;
-    //       kfc = 0;
-    //     } else {
-    //       iGST = 0;
-    //       csGST = 0;
-    //       kfc = 0;
-    //       tax = 0;
-    //     }
-    //     if (cessOnNetAmount) {
-    //       if (cessPer > 0) {
-    //         cess = CommonService.getRound(4, ((subTotal * cessPer) / 100));
-    //         adCess = CommonService.getRound(4, (quantity * adCessPer));
-    //       } else {
-    //         cess = 0;
-    //         adCess = 0;
-    //       }
-    //     } else {
-    //       cess = 0;
-    //       adCess = 0;
-    //     }
-    //     total = CommonService.getRound(
-    //         2, (subTotal + csGST + csGST + iGST + cess + kfc + adCess));
-    //     if (enableMULTIUNIT && _conversion > 0) {
-    //       profitPer = pRateBasedProfitInSales
-    //           ? CommonService.getRound(
-    //               2, (total - (product.buyingPrice * _conversion * quantity)))
-    //           : CommonService.getRound(decimal,
-    //               (total - (product.buyingPriceReal * _conversion * quantity)));
-    //     } else {
-    //       profitPer = pRateBasedProfitInSales
-    //           ? CommonService.getRound(
-    //               2, (total - (product.buyingPrice * quantity)))
-    //           : CommonService.getRound(
-    //               2, (total - (product.buyingPriceReal * quantity)));
-    //     }
-    //     unitValue = _conversion > 0 ? _conversion : 1;
-    //   }
-
-    //   return Container(
-    //     padding: const EdgeInsets.all(8.0),
-    //     child: ListView(
-    //       children: [
-    //         Text(product.name),
-    //         SingleChildScrollView(
-    //           child: Form(
-    //             key: _resetKey,
-    //             autovalidateMode: AutovalidateMode.always,
-    //             child: Column(
-    //               mainAxisSize: MainAxisSize.min,
-    //               children: [
-    //                 Row(
-    //                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-    //                     children: [
-    //                       Visibility(
-    //                         visible: !editItem,
-    //                         child: MaterialButton(
-    //                           onPressed: () {
-    //                             setState(() {
-    //                               editItem = false;
-    //                               rateEdited = false;
-    //                               nextWidget = 2;
-    //                               isVariantSelected = false;
-    //                               clearValue();
-    //                             });
-    //                           },
-    //                           child: const Text("BACK"),
-    //                           color: blue[400],
-    //                         ),
-    //                       ),
-    //                       const SizedBox(
-    //                         width: 2,
-    //                       ),
-    //                       MaterialButton(
-    //                         onPressed: () {
-    //                           setState(() {
-    //                             rateEdited = false;
-    //                             editItem = false;
-    //                             isVariantSelected = false;
-    //                             nextWidget = 4;
-    //                             clearValue();
-    //                           });
-    //                         },
-    //                         child: const Text("CANCEL"),
-    //                         color: blue[400],
-    //                       ),
-    //                       const SizedBox(
-    //                         width: 2,
-    //                       ),
-    //                       MaterialButton(
-    //                         child: Text(editItem ? 'EDIT' : 'ADD'),
-    //                         color: blue,
-    //                         onPressed: () {
-    //                           calculateText(product);
-    //                           setState(() {
-    //                             isVariantSelected = false;
-    //                             if (quantity > 0 || isFreeItem) {
-    //                               if (outOfStock) {
-    //                                 ScaffoldMessenger.of(context)
-    //                                     .showSnackBar(SnackBar(
-    //                                   content: const Text(
-    //                                       'Sorry stock not available.'),
-    //                                   duration: const Duration(seconds: 3),
-    //                                   action: SnackBarAction(
-    //                                     label: 'Click',
-    //                                     onPressed: () {
-    //                                       // print('Action is clicked');
-    //                                     },
-    //                                     textColor: Colors.white,
-    //                                     disabledTextColor: Colors.grey,
-    //                                   ),
-    //                                   backgroundColor: Colors.red,
-    //                                 ));
-    //                               } else {
-    //                                 if (isMinimumRatedLock) {
-    //                                   ScaffoldMessenger.of(context)
-    //                                       .showSnackBar(SnackBar(
-    //                                     content:
-    //                                         const Text('Sorry rate is limited.'),
-    //                                     duration: const Duration(seconds: 1),
-    //                                     action: SnackBarAction(
-    //                                       label: 'Click',
-    //                                       onPressed: () {
-    //                                         // print('Action is clicked');
-    //                                       },
-    //                                       textColor: Colors.white,
-    //                                       disabledTextColor: Colors.grey,
-    //                                     ),
-    //                                     backgroundColor: Colors.red,
-    //                                   ));
-    //                                 } else {
-    //                                   bool profitable = true;
-    //                                   if (isEnableProfitlessSalesWarning) {
-    //                                     if (profitPer > 0) {
-    //                                       profitable = true;
-    //                                     } else {
-    //                                       profitable = false;
-    //                                     }
-    //                                   }
-    //                                   if (profitable) {
-    //                                     bool isUnit = true;
-    //                                     if (enableMULTIUNIT) {
-    //                                       if (_dropDownUnit <= 0) {
-    //                                         int united = unitListData != null
-    //                                             ? unitListData.isNotEmpty
-    //                                                 ? unitListData[0].sUnit
-    //                                                 : unitData.isNotEmpty
-    //                                                     ? unitData
-    //                                                         .firstWhere(
-    //                                                             (element) =>
-    //                                                                 element
-    //                                                                     .name ==
-    //                                                                 'NOS')
-    //                                                         .id
-    //                                                     : 0
-    //                                             : 0;
-    //                                         _dropDownUnit = united;
-    //                                         double unitedValue = unitListData !=
-    //                                                 null
-    //                                             ? unitListData.isNotEmpty
-    //                                                 ? unitListData[0].conversion
-    //                                                 : unitData.isNotEmpty
-    //                                                     ? unitData
-    //                                                         .firstWhere(
-    //                                                             (element) =>
-    //                                                                 element
-    //                                                                     .name ==
-    //                                                                 'NOS')
-    //                                                         .conversion
-    //                                                     : 1
-    //                                             : 0;
-    //                                         _conversion = unitedValue;
-    //                                       }
-    //                                       isUnit =
-    //                                           _dropDownUnit > 0 ? true : false;
-    //                                       if (unitData.isEmpty && !isUnit) {
-    //                                         unitValue = 1;
-    //                                         _conversion = 0;
-    //                                         isUnit = true;
-    //                                       }
-    //                                     } else {
-    //                                       _conversion = 0;
-    //                                       unitValue = 1;
-    //                                     }
-    //                                     if (isUnit) {
-    //                                       if (editItem) {
-    //                                         cartItem[position].adCess = adCess;
-    //                                         cartItem[position].quantity =
-    //                                             quantity;
-    //                                         cartItem[position].rate = rate;
-    //                                         cartItem[position].rRate = rRate;
-    //                                         cartItem[position].uniqueCode =
-    //                                             uniqueCode;
-    //                                         cartItem[position].gross = gross;
-    //                                         cartItem[position].discount =
-    //                                             discount;
-    //                                         cartItem[position].discountPercent =
-    //                                             discountPercent;
-    //                                         cartItem[position].rDiscount = rDisc;
-    //                                         cartItem[position].fCess = kfc;
-    //                                         cartItem[position].serialNo =
-    //                                             _serialNoController.text;
-    //                                         cartItem[position].tax = tax;
-    //                                         cartItem[position].taxP = taxP;
-    //                                         cartItem[position].unitId =
-    //                                             _dropDownUnit;
-    //                                         cartItem[position].unitValue =
-    //                                             unitValue ?? 1;
-    //                                         cartItem[position].pRate = pRate;
-    //                                         cartItem[position].rPRate = rPRate;
-    //                                         cartItem[position].barcode = barcode;
-    //                                         cartItem[position].expDate = expDate;
-    //                                         cartItem[position].free = freeQty;
-    //                                         cartItem[position].fUnitId = fUnitId;
-    //                                         cartItem[position].cdPer = cdPer;
-    //                                         cartItem[position].cDisc = cDisc;
-    //                                         cartItem[position].net = subTotal;
-    //                                         cartItem[position].cess = cess;
-    //                                         cartItem[position].total = total;
-    //                                         cartItem[position].profitPer =
-    //                                             profitPer;
-    //                                         cartItem[position].fUnitValue =
-    //                                             fUnitValue;
-    //                                         cartItem[position].adCess = adCess;
-    //                                         cartItem[position].iGST = iGST;
-    //                                         cartItem[position].cGST = csGST;
-    //                                         cartItem[position].sGST = csGST;
-    //                                         cartItem[position].stock =
-    //                                             product.quantity;
-    //                                         editItem = false;
-    //                                       } else {
-    //                                         if (!keyItemsVariantStock &&
-    //                                             _autoVariantSelect) {
-    //                                           double qty = 0,
-    //                                               tQty = 0,
-    //                                               balanceQty = 0;
-    //                                           for (StockProduct variantProduct
-    //                                               in _autoStockVariant) {
-    //                                             qty = (variantProduct.quantity) >
-    //                                                     quantity
-    //                                                 ? quantity
-    //                                                 : variantProduct.quantity;
-    //                                             uniqueCode =
-    //                                                 variantProduct.productId;
-    //                                             double addQuantity =
-    //                                                 balanceQty > 0
-    //                                                     ? (balanceQty == qty
-    //                                                         ? qty
-    //                                                         : (balanceQty >= qty
-    //                                                             ? qty
-    //                                                             : balanceQty))
-    //                                                     : qty;
-
-    //                                             calculateTextBatch(
-    //                                                 product, addQuantity);
-    //                                             cartItem.add(CartItem(
-    //                                                 id: totalItem + 1,
-    //                                                 itemId: product.itemId,
-    //                                                 itemName: product.name,
-    //                                                 quantity: addQuantity,
-    //                                                 rate: rate,
-    //                                                 rRate: rRate,
-    //                                                 uniqueCode: uniqueCode,
-    //                                                 gross: gross,
-    //                                                 discount: discount,
-    //                                                 discountPercent:
-    //                                                     discountPercent,
-    //                                                 rDiscount: rDisc,
-    //                                                 fCess: kfc,
-    //                                                 serialNo:
-    //                                                     _serialNoController.text,
-    //                                                 tax: tax,
-    //                                                 taxP: taxP,
-    //                                                 unitId: _dropDownUnit,
-    //                                                 unitValue: unitValue ?? 1,
-    //                                                 pRate: pRate,
-    //                                                 rPRate: rPRate,
-    //                                                 barcode: barcode,
-    //                                                 expDate: expDate,
-    //                                                 free: freeQty,
-    //                                                 fUnitId: fUnitId,
-    //                                                 cdPer: cdPer,
-    //                                                 cDisc: cDisc,
-    //                                                 net: subTotal,
-    //                                                 cess: cess,
-    //                                                 total: total,
-    //                                                 profitPer: profitPer,
-    //                                                 fUnitValue: fUnitValue,
-    //                                                 adCess: adCess,
-    //                                                 iGST: iGST,
-    //                                                 cGST: csGST,
-    //                                                 sGST: csGST,
-    //                                                 stock: product.quantity,
-    //                                                 minimumRate:
-    //                                                     product.minimumRate,
-    //                                                 adCessPer: product.adCessPer,
-    //                                                 cessPer: product.cessPer));
-
-    //                                             tQty += addQuantity;
-    //                                             balanceQty = quantity - tQty;
-    //                                             if (tQty >= quantity ||
-    //                                                 balanceQty == 0) {
-    //                                               break;
-    //                                             } else {
-    //                                               //
-    //                                             }
-    //                                           }
-    //                                         } else {
-    //                                           addProduct(
-    //                                               CartItem(
-    //                                                   id: totalItem + 1,
-    //                                                   itemId: product.itemId,
-    //                                                   itemName: product.name,
-    //                                                   quantity: quantity,
-    //                                                   rate: rate,
-    //                                                   rRate: rRate,
-    //                                                   uniqueCode: uniqueCode,
-    //                                                   gross: gross,
-    //                                                   discount: discount,
-    //                                                   discountPercent:
-    //                                                       discountPercent,
-    //                                                   rDiscount: rDisc,
-    //                                                   fCess: kfc,
-    //                                                   serialNo:
-    //                                                       _serialNoController
-    //                                                           .text,
-    //                                                   tax: tax,
-    //                                                   taxP: taxP,
-    //                                                   unitId: _dropDownUnit,
-    //                                                   unitValue: unitValue ?? 1,
-    //                                                   pRate: pRate,
-    //                                                   rPRate: rPRate,
-    //                                                   barcode: barcode,
-    //                                                   expDate: expDate,
-    //                                                   free: freeQty,
-    //                                                   fUnitId: fUnitId,
-    //                                                   cdPer: cdPer,
-    //                                                   cDisc: cDisc,
-    //                                                   net: subTotal,
-    //                                                   cess: cess,
-    //                                                   total: total,
-    //                                                   profitPer: profitPer,
-    //                                                   fUnitValue: fUnitValue,
-    //                                                   adCess: adCess,
-    //                                                   iGST: iGST,
-    //                                                   cGST: csGST,
-    //                                                   sGST: csGST,
-    //                                                   stock: product.quantity,
-    //                                                   minimumRate:
-    //                                                       product.minimumRate,
-    //                                                   cessPer: cessPer,
-    //                                                   adCessPer: adCessPer),
-    //                                               -1);
-    //                                         }
-
-    //                                         rateEdited = false;
-    //                                       }
-    //                                     } else {
-    //                                       ScaffoldMessenger.of(context)
-    //                                           .showSnackBar(SnackBar(
-    //                                         content:
-    //                                             const Text('Please select Unit'),
-    //                                         duration: const Duration(seconds: 1),
-    //                                         action: SnackBarAction(
-    //                                           label: 'Click',
-    //                                           onPressed: () {
-    //                                             // print('Action is clicked');
-    //                                           },
-    //                                           textColor: Colors.white,
-    //                                           disabledTextColor: Colors.grey,
-    //                                         ),
-    //                                         backgroundColor: Colors.red,
-    //                                       ));
-    //                                     }
-    //                                   } else {
-    //                                     ScaffoldMessenger.of(context)
-    //                                         .showSnackBar(SnackBar(
-    //                                       content: const Text(
-    //                                           'Sorry Non Profitable Rate.'),
-    //                                       duration: const Duration(seconds: 1),
-    //                                       action: SnackBarAction(
-    //                                         label: 'Click',
-    //                                         onPressed: () {
-    //                                           // print('Action is clicked');
-    //                                         },
-    //                                         textColor: Colors.white,
-    //                                         disabledTextColor: Colors.grey,
-    //                                       ),
-    //                                       backgroundColor: Colors.red,
-    //                                     ));
-    //                                   }
-    //                                   // }
-    //                                 }
-    //                               }
-    //                             }
-    //                             if (totalItem > 0) {
-    //                               clearValue();
-    //                               nextWidget = 4;
-    //                             }
-    //                           });
-    //                         },
-    //                       ),
-    //                     ]),
-    //                 const Divider(),
-    //                 Row(
-    //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    //                   children: [
-    //                     Expanded(
-    //                         child: Padding(
-    //                       padding: const EdgeInsets.all(2.0),
-    //                       child: TextFormField(
-    //                         controller: _quantityController,
-    //                         focusNode: _focusNodeQuantity,
-    //                         autofocus: true,
-    //                         validator: (value) {
-    //                           if (outOfStock) {
-    //                             return 'No Stock';
-    //                           }
-    //                           return null;
-    //                         },
-    //                         keyboardType: const TextInputType.numberWithOptions(
-    //                             decimal: true),
-    //                         inputFormatters: [
-    //                           FilteringTextInputFormatter(RegExp(r'[0-9]'),
-    //                               allow: true, replacementString: '.')
-    //                         ],
-    //                         decoration: const InputDecoration(
-    //                             labelText: 'Quantity',
-    //                             hintText: '0.0',
-    //                             border: OutlineInputBorder()),
-    //                         onChanged: (value) {
-    //                           if (value.isNotEmpty) {
-    //                             bool cartQ = false;
-    //                             setState(() {
-    //                               if (totalItem > 0) {
-    //                                 double cartS = 0, cartQt = 0;
-    //                                 for (var element in cartItem) {
-    //                                   if (element.uniqueCode ==
-    //                                       product.productId) {
-    //                                     cartQt += (element.quantity *
-    //                                             element.unitValue) +
-    //                                         element.free;
-    //                                     cartS = oldBill
-    //                                         ? (cartQt + product.quantity)
-    //                                         : element.stock;
-    //                                   }
-    //                                 }
-    //                                 if (cartS > 0) {
-    //                                   if (cartS <
-    //                                       (double.tryParse(value) * unitValue)) {
-    //                                     cartQ = true;
-    //                                   }
-    //                                 }
-    //                               }
-
-    //                               outOfStock = isLockQtyOnlyInSales
-    //                                   ? (double.tryParse(value) * (unitValue) + freeQty) >
-    //                                           (_autoVariantSelect
-    //                                               ? _autoStockVariant.fold(
-    //                                                   0.0,
-    //                                                   (a, b) =>
-    //                                                       a +
-    //                                                       double.parse(b.quantity
-    //                                                           .toString()))
-    //                                               : product.quantity)
-    //                                       ? true
-    //                                       : cartQ
-    //                                           ? true
-    //                                           : false
-    //                                   : negativeStock
-    //                                       ? false
-    //                                       : salesTypeData.type == 'SALES-O' ||
-    //                                               salesTypeData.type == 'SALES-Q'
-    //                                           ? isStockProductOnlyInSalesQO
-    //                                               ? (double.tryParse(value) *
-    //                                                               (unitValue) +
-    //                                                           freeQty) >
-    //                                                       (_autoVariantSelect
-    //                                                           ? _autoStockVariant.fold(
-    //                                                               0.0,
-    //                                                               (a, b) =>
-    //                                                                   a +
-    //                                                                   double.parse(b.quantity
-    //                                                                       .toString()))
-    //                                                           : product.quantity)
-    //                                                   ? true
-    //                                                   : cartQ
-    //                                                       ? true
-    //                                                       : false
-    //                                               : false
-    //                                           : (double.tryParse(value) * (unitValue) +
-    //                                                       freeQty) >
-    //                                                   (_autoVariantSelect
-    //                                                       ? _autoStockVariant.fold(
-    //                                                           0.0, (a, b) => a + double.parse(b.quantity.toString()))
-    //                                                       : oldBill
-    //                                                           ? product.quantity + (cartModel.quantity * cartModel.unitValue)
-    //                                                           : product.quantity)
-    //                                               ? true
-    //                                               : cartQ
-    //                                                   ? true
-    //                                                   : false;
-    //                               calculateSub();
-    //                             });
-    //                           }
-    //                         },
-    //                       ),
-    //                     )),
-    //                     Visibility(
-    //                       visible: isFreeQty,
-    //                       child: Expanded(
-    //                           child: Padding(
-    //                         padding: const EdgeInsets.all(2.0),
-    //                         child: TextFormField(
-    //                           controller: _freeQuantityController,
-    //                           focusNode: _focusNodeFreeQuantity,
-    //                           // autofocus: true,
-    //                           validator: (value) {
-    //                             if (outOfStock) {
-    //                               return 'No Stock';
-    //                             }
-    //                             return null;
-    //                           },
-    //                           keyboardType: const TextInputType.numberWithOptions(
-    //                               decimal: true),
-    //                           inputFormatters: [
-    //                             FilteringTextInputFormatter(RegExp(r'[0-9]'),
-    //                                 allow: true, replacementString: '.')
-    //                           ],
-    //                           decoration: const InputDecoration(
-    //                               border: OutlineInputBorder(),
-    //                               labelText: 'Free',
-    //                               hintText: '0.0'),
-    //                           onChanged: (value) {
-    //                             if (value.isNotEmpty) {
-    //                               bool cartQ = false;
-    //                               setState(() {
-    //                                 if (totalItem > 0) {
-    //                                   double cartS = 0, cartQt = 0;
-    //                                   for (var element in cartItem) {
-    //                                     if (element.uniqueCode ==
-    //                                         product.productId) {
-    //                                       cartQt += (element.quantity *
-    //                                               element.unitValue) +
-    //                                           element.free;
-    //                                       cartS = element.stock;
-    //                                     }
-    //                                   }
-    //                                   if (cartS > 0) {
-    //                                     if (cartS <
-    //                                         cartQt + double.tryParse(value)) {
-    //                                       cartQ = true;
-    //                                     }
-    //                                   }
-    //                                 }
-
-    //                                 outOfStock = isLockQtyOnlyInSales
-    //                                     ? ((quantity * unitValue) +
-    //                                                 double.tryParse(value)) >
-    //                                             product.quantity
-    //                                         ? true
-    //                                         : cartQ
-    //                                             ? true
-    //                                             : false
-    //                                     : negativeStock
-    //                                         ? false
-    //                                         : salesTypeData.type == 'SALES-O' ||
-    //                                                 salesTypeData.type ==
-    //                                                     'SALES-Q'
-    //                                             ? isStockProductOnlyInSalesQO
-    //                                                 ? ((quantity * unitValue) +
-    //                                                             double.tryParse(
-    //                                                                 value)) >
-    //                                                         product.quantity
-    //                                                     ? true
-    //                                                     : cartQ
-    //                                                         ? true
-    //                                                         : false
-    //                                                 : false
-    //                                             : ((quantity * unitValue) +
-    //                                                         double.tryParse(
-    //                                                             value)) >
-    //                                                     product.quantity
-    //                                                 ? true
-    //                                                 : cartQ
-    //                                                     ? true
-    //                                                     : false;
-    //                                 calculateSub();
-    //                               });
-    //                             }
-    //                           },
-    //                         ),
-    //                       )),
-    //                     ),
-    //                     Visibility(
-    //                       visible: enableMULTIUNIT,
-    //                       child: Expanded(
-    //                         child: Padding(
-    //                           padding: const EdgeInsets.all(2.0),
-    //                           child: FutureBuilder(
-    //                             future: api.fetchUnitOf(product.itemId),
-    //                             builder: (BuildContext context,
-    //                                 AsyncSnapshot snapshot) {
-    //                               if (snapshot.hasData) {
-    //                                 unitListData.clear();
-    //                                 for (var i = 0;
-    //                                     i < snapshot.data.length;
-    //                                     i++) {
-    //                                   if (defaultUnitID > 0) {
-    //                                     if (snapshot.data[i].id ==
-    //                                         defaultUnitID - 1) {
-    //                                       _dropDownUnit = snapshot.data[i].id;
-    //                                       _conversion =
-    //                                           snapshot.data[i].conversion;
-    //                                     }
-    //                                   } else {
-    //                                     if (snapshot.data[i].id ==
-    //                                         _dropDownUnit) {
-    //                                       // _dropDownUnit = snapshot.data[i].id;
-    //                                       _conversion =
-    //                                           snapshot.data[i].conversion;
-    //                                     }
-    //                                   }
-    //                                   unitListData.add(UnitModel(
-    //                                       id: snapshot.data[i].id,
-    //                                       itemId: snapshot.data[i].itemId,
-    //                                       conversion: snapshot.data[i].conversion,
-    //                                       name: snapshot.data[i].name,
-    //                                       pUnit: snapshot.data[i].pUnit,
-    //                                       sUnit: snapshot.data[i].sUnit,
-    //                                       unit: snapshot.data[i].unit,
-    //                                       rate: snapshot.data[i].rate));
-    //                                 }
-    //                               }
-    //                               return snapshot.data != null &&
-    //                                       snapshot.data.length > 0
-    //                                   ? DropdownButton<String>(
-    //                                       hint: Text(_dropDownUnit > 0
-    //                                           ? UnitSettings.getUnitName(
-    //                                               _dropDownUnit)
-    //                                           : 'Unit'),
-    //                                       items: snapshot.data
-    //                                           .map<DropdownMenuItem<String>>(
-    //                                               (item) {
-    //                                         return DropdownMenuItem<String>(
-    //                                           value: item.id.toString(),
-    //                                           child: Text(item.name),
-    //                                         );
-    //                                       }).toList(),
-    //                                       onChanged: (value) {
-    //                                         setState(() {
-    //                                           bool cartQ = false;
-    //                                           _dropDownUnit = int.tryParse(value);
-    //                                           for (var i = 0;
-    //                                               i < unitListData.length;
-    //                                               i++) {
-    //                                             UnitModel _unit = unitListData[i];
-    //                                             if (_unit.unit ==
-    //                                                 int.tryParse(value)) {
-    //                                               double _rate = rate;
-    //                                               if (_unit.rate.isNotEmpty) {
-    //                                                 rateTypeItem = rateTypeList
-    //                                                     .firstWhere((element) =>
-    //                                                         element.name ==
-    //                                                         _unit.rate);
-    //                                               }
-    //                                               _conversion = _unit.conversion;
-    //                                               rate = editItem
-    //                                                   ? (_rate * _conversion)
-    //                                                       .toDouble()
-    //                                                   : _rate;
-    //                                               saleRate =
-    //                                                   editItem ? rate : _rate;
-    //                                               _rateController.text =
-    //                                                   saleRate > 0
-    //                                                       ? saleRate
-    //                                                           .toStringAsFixed(2)
-    //                                                       : '';
-    //                                               if (quantity > 0 ||
-    //                                                   freeQty > 0) {
-    //                                                 if (totalItem > 0) {
-    //                                                   double cartS = 0,
-    //                                                       cartQt = 0;
-    //                                                   for (var element
-    //                                                       in cartItem) {
-    //                                                     if (element.uniqueCode ==
-    //                                                         product.productId) {
-    //                                                       cartQt += (element
-    //                                                                   .quantity *
-    //                                                               element
-    //                                                                   .unitValue) +
-    //                                                           element.free;
-    //                                                       cartS = element.stock;
-    //                                                     }
-    //                                                   }
-    //                                                   if (cartS > 0) {
-    //                                                     if (cartS <
-    //                                                         cartQt +
-    //                                                             quantity +
-    //                                                             freeQty) {
-    //                                                       cartQ = true;
-    //                                                     }
-    //                                                   }
-    //                                                 } else {
-    //                                                   cartQ = false;
-    //                                                 }
-    //                                                 outOfStock =
-    //                                                     isLockQtyOnlyInSales
-    //                                                         ? ((quantity * _conversion) +
-    //                                                                     freeQty) >
-    //                                                                 product
-    //                                                                     .quantity
-    //                                                             ? true
-    //                                                             : cartQ
-    //                                                                 ? true
-    //                                                                 : false
-    //                                                         : negativeStock
-    //                                                             ? false
-    //                                                             : salesTypeData.type ==
-    //                                                                         'SALES-O' ||
-    //                                                                     salesTypeData
-    //                                                                             .type ==
-    //                                                                         'SALES-Q'
-    //                                                                 ? isStockProductOnlyInSalesQO
-    //                                                                     ? ((quantity * _conversion) + freeQty) >
-    //                                                                             product
-    //                                                                                 .quantity
-    //                                                                         ? true
-    //                                                                         : cartQ
-    //                                                                             ? true
-    //                                                                             : false
-    //                                                                     : false
-    //                                                                 : ((quantity * _conversion) +
-    //                                                                             freeQty) >
-    //                                                                         product
-    //                                                                             .quantity
-    //                                                                     ? true
-    //                                                                     : cartQ
-    //                                                                         ? true
-    //                                                                         : false;
-    //                                               }
-    //                                               break;
-    //                                             }
-    //                                           }
-    //                                           calculateSub();
-    //                                         });
-    //                                       },
-    //                                     )
-    //                                   : DropdownButton<String>(
-    //                                       hint: Text(_dropDownUnit > 0
-    //                                           ? UnitSettings.getUnitName(
-    //                                               _dropDownUnit)
-    //                                           : 'Unit'),
-    //                                       items: unitListSettings
-    //                                           .map<DropdownMenuItem<String>>(
-    //                                               (item) {
-    //                                         return DropdownMenuItem<String>(
-    //                                           value: item.key.toString(),
-    //                                           child: Text(item.value),
-    //                                         );
-    //                                       }).toList(),
-    //                                       onChanged: (value) {
-    //                                         setState(() {
-    //                                           _dropDownUnit = int.tryParse(value);
-    //                                           for (var i = 0;
-    //                                               i < unitListData.length;
-    //                                               i++) {
-    //                                             UnitModel _unit = unitListData[i];
-    //                                             if (_unit.unit ==
-    //                                                 int.tryParse(value)) {
-    //                                               _conversion = _unit.conversion;
-    //                                               break;
-    //                                             }
-    //                                           }
-    //                                           // calculateSub();
-    //                                         });
-    //                                       },
-    //                                     );
-    //                             },
-    //                           ),
-    //                         ),
-    //                       ),
-    //                     ),
-    //                     Visibility(
-    //                       visible: enableMULTIUNIT
-    //                           ? _conversion > 0
-    //                               ? true
-    //                               : false
-    //                           : false,
-    //                       child: Expanded(
-    //                           child: Padding(
-    //                         padding: const EdgeInsets.all(2.0),
-    //                         child: Text('$_conversion'),
-    //                       )),
-    //                     ),
-    //                     Visibility(
-    //                         visible: (!enableMULTIUNIT && defaultUnitItem),
-    //                         child: DropdownButton<OtherRegistrationModel>(
-    //                           hint: Text(_dropDownUnit > 0
-    //                               ? UnitSettings.getOtherUnitName(_dropDownUnit)
-    //                               : 'Unit'),
-    //                           items: otherRegUnitList
-    //                               .map<DropdownMenuItem<OtherRegistrationModel>>(
-    //                                   (item) {
-    //                             return DropdownMenuItem<OtherRegistrationModel>(
-    //                               value: item,
-    //                               child: Text(item.name),
-    //                             );
-    //                           }).toList(),
-    //                           onChanged: (valueData) {
-    //                             setState(() {
-    //                               _dropDownUnit =
-    //                                   int.tryParse(valueData.id.toString());
-    //                             });
-    //                           },
-    //                         )),
-    //                   ],
-    //                 ),
-    //                 const Divider(),
-    //                 Row(
-    //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    //                     children: [
-    //                       Expanded(
-    //                           child: Padding(
-    //                         padding: const EdgeInsets.all(2.0),
-    //                         child: TextField(
-    //                           controller: _rateController,
-    //                           focusNode: _focusNodeRate,
-    //                           readOnly: isItemRateEditLocked,
-    //                           keyboardType: const TextInputType.numberWithOptions(
-    //                               decimal: true),
-    //                           inputFormatters: [
-    //                             FilteringTextInputFormatter(RegExp(r'[0-9]'),
-    //                                 allow: true, replacementString: '.')
-    //                           ],
-    //                           decoration: const InputDecoration(
-    //                               border: OutlineInputBorder(),
-    //                               labelText: 'Price',
-    //                               hintText: '0.0'),
-    //                           onChanged: (value) {
-    //                             if (value.isNotEmpty) {
-    //                               rateEdited = true;
-    //                               if (isMinimumRate) {
-    //                                 double minRate = product.minimumRate ?? 0;
-    //                                 if (double.tryParse(_rateController.text) >=
-    //                                     minRate) {
-    //                                   setState(() {
-    //                                     isMinimumRatedLock = false;
-    //                                     calculateSub();
-    //                                   });
-    //                                 } else {
-    //                                   setState(() {
-    //                                     isMinimumRatedLock = true;
-    //                                   });
-    //                                 }
-    //                               } else {
-    //                                 setState(() {
-    //                                   calculateSub();
-    //                                 });
-    //                               }
-    //                             }
-    //                           },
-    //                         ),
-    //                       )),
-    //                       TextButton.icon(
-    //                           style: ButtonStyle(
-    //                             //   backgroundColor: MaterialStateProperty.all<Color>(
-    //                             //       kPrimaryColor),
-    //                             foregroundColor: MaterialStateProperty.all<Color>(
-    //                                 kPrimaryDarkColor),
-    //                             overlayColor: MaterialStateProperty.all<Color>(
-    //                                 kPrimaryDarkColor),
-    //                           ),
-    //                           onPressed: () {
-    //                             List<ProductRating> rateData =
-    //                                 keySwitchSalesRateTypeSet
-    //                                     ? selectedRateTypeData(
-    //                                         rateTypeList, product)
-    //                                     : [
-    //                                         ProductRating(
-    //                                             id: 0,
-    //                                             name: 'MRP',
-    //                                             rate: unitValue > 1
-    //                                                 ? (product.sellingPrice *
-    //                                                     unitValue)
-    //                                                 : (product.sellingPrice)),
-    //                                         ProductRating(
-    //                                             id: 1,
-    //                                             name: 'Retail',
-    //                                             rate: unitValue > 1
-    //                                                 ? (product.retailPrice *
-    //                                                     unitValue)
-    //                                                 : (product.retailPrice)),
-    //                                         ProductRating(
-    //                                             id: 2,
-    //                                             name: 'WsRate',
-    //                                             rate: unitValue > 1
-    //                                                 ? (product.wholeSalePrice *
-    //                                                     unitValue)
-    //                                                 : (product.wholeSalePrice)),
-    //                                         ProductRating(
-    //                                             id: 2,
-    //                                             name: labelSpRate,
-    //                                             rate: unitValue > 1
-    //                                                 ? (product.spRetailPrice *
-    //                                                     unitValue)
-    //                                                 : (product.spRetailPrice)),
-    //                                         ProductRating(
-    //                                             id: 3,
-    //                                             name: 'Branch',
-    //                                             rate: unitValue > 1
-    //                                                 ? (product.branch * unitValue)
-    //                                                 : (product.branch))
-    //                                       ];
-    //                             showDialog(
-    //                                 context: context,
-    //                                 builder: (BuildContext context) {
-    //                                   return AlertDialog(
-    //                                     scrollable: true,
-    //                                     title: ComSettings.appSettings('bool',
-    //                                             'key-items-prate-sale', false)
-    //                                         ? Column(
-    //                                             children: [
-    //                                               const Text('Select Rate'),
-    //                                               Text(
-    //                                                 'PRate : ${product.buyingPrice} / RPRate : ${product.buyingPriceReal}',
-    //                                                 style: const TextStyle(
-    //                                                     fontSize: 10),
-    //                                               ),
-    //                                             ],
-    //                                           )
-    //                                         : const Text('Select Rate'),
-    //                                     content: SizedBox(
-    //                                       height: 250.0,
-    //                                       width: 400.0,
-    //                                       child: ListView.builder(
-    //                                         shrinkWrap: true,
-    //                                         itemCount: rateData.length,
-    //                                         itemBuilder: (BuildContext context,
-    //                                             int index) {
-    //                                           return Card(
-    //                                             elevation: 5,
-    //                                             child: ListTile(
-    //                                                 title: Row(
-    //                                                   mainAxisAlignment:
-    //                                                       MainAxisAlignment
-    //                                                           .spaceBetween,
-    //                                                   children: [
-    //                                                     Text(
-    //                                                         rateData[index].name),
-    //                                                     Text(
-    //                                                         ' : ${rateData[index].rate}'),
-    //                                                   ],
-    //                                                 ),
-    //                                                 // subtitle: Text(
-    //                                                 //     'Quantity : ${rateData[index].quantity} Rate ${rateData[index].sellingPrice}'),
-    //                                                 onTap: () {
-    //                                                   Navigator.of(context).pop();
-    //                                                   setState(() {
-    //                                                     var rated = _conversion !=
-    //                                                             null
-    //                                                         ? _conversion > 0
-    //                                                             ? (rateData[index]
-    //                                                                     .rate /
-    //                                                                 _conversion)
-    //                                                             : rateData[index]
-    //                                                                 .rate
-    //                                                         : rateData[index]
-    //                                                             .rate;
-    //                                                     rate = rated;
-    //                                                     saleRate = rated;
-    //                                                     _rateController.text =
-    //                                                         saleRate
-    //                                                             .toStringAsFixed(
-    //                                                                 2);
-    //                                                     calculateSub();
-    //                                                   });
-    //                                                 }),
-    //                                           );
-    //                                         },
-    //                                       ),
-    //                                     ),
-    //                                   );
-    //                                 });
-    //                           },
-    //                           icon: const Icon(
-    //                               Icons.arrow_drop_down_circle_outlined),
-    //                           label: const Text('')),
-    //                       Visibility(
-    //                           visible: productTracking,
-    //                           child: InkWell(
-    //                             child: Container(
-    //                               color: blue,
-    //                               child: const Text(
-    //                                 'Sold',
-    //                                 style: TextStyle(
-    //                                     fontWeight: FontWeight.bold,
-    //                                     color: white),
-    //                               ),
-    //                             ),
-    //                             onTap: () {
-    //                               productTrackingList(product);
-    //                             },
-    //                           )),
-    //                       Visibility(
-    //                         visible: false, //taxMethod == 'MINUS',
-    //                         child: Text(
-    //                           '$rRate',
-    //                           style: const TextStyle(color: Colors.red),
-    //                         ),
-    //                       )
-    //                     ]),
-    //                 const Divider(),
-    //                 Visibility(
-    //                   visible: !isItemDiscountEditLocked,
-    //                   child: Row(
-    //                     children: [
-    //                       Expanded(
-    //                           child: Padding(
-    //                         padding: const EdgeInsets.all(2.0),
-    //                         child: TextField(
-    //                           controller: _discountPercentController,
-    //                           focusNode: _focusNodeDiscountPer,
-    //                           keyboardType: const TextInputType.numberWithOptions(
-    //                               decimal: true),
-    //                           inputFormatters: [
-    //                             FilteringTextInputFormatter(RegExp(r'[0-9]'),
-    //                                 allow: true, replacementString: '.')
-    //                           ],
-    //                           decoration: const InputDecoration(
-    //                               border: OutlineInputBorder(),
-    //                               labelText: 'Discount % ',
-    //                               hintText: '0.0'),
-    //                           onChanged: (value) {
-    //                             setState(() {
-    //                               calculateSub();
-    //                             });
-    //                           },
-    //                         ),
-    //                       )),
-    //                       Expanded(
-    //                           child: Padding(
-    //                         padding: const EdgeInsets.all(2.0),
-    //                         child: TextField(
-    //                           focusNode: _focusNodeDiscount,
-    //                           controller: _discountController,
-    //                           keyboardType: const TextInputType.numberWithOptions(
-    //                               decimal: true),
-    //                           inputFormatters: [
-    //                             FilteringTextInputFormatter(RegExp(r'[0-9]'),
-    //                                 allow: true, replacementString: '.')
-    //                           ],
-    //                           decoration: const InputDecoration(
-    //                               border: OutlineInputBorder(),
-    //                               labelText: 'Discount',
-    //                               hintText: '0.0'),
-    //                           onChanged: (value) {
-    //                             setState(() {
-    //                               calculateSub();
-    //                             });
-    //                           },
-    //                         ),
-    //                       )),
-    //                     ],
-    //                   ),
-    //                 ),
-    //                 const Divider(),
-    //                 Visibility(
-    //                   visible: isItemSerialNo,
-    //                   child: Row(
-    //                     children: [
-    //                       Expanded(
-    //                           child: Padding(
-    //                         padding: const EdgeInsets.all(2.0),
-    //                         child: TextField(
-    //                           controller: _serialNoController,
-    //                           decoration: InputDecoration(
-    //                               border: const OutlineInputBorder(),
-    //                               labelText: labelSerialNo.isNotEmpty
-    //                                   ? labelSerialNo
-    //                                   : 'SerialNo'),
-    //                           onChanged: (value) {
-    //                             // setState(() {
-    //                             //   // calculateSub();
-    //                             // });
-    //                           },
-    //                         ),
-    //                       )),
-    //                     ],
-    //                   ),
-    //                 ),
-    //                 const Divider(),
-    //                 Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-    //                   Visibility(
-    //                     visible: isTax,
-    //                     child: Expanded(
-    //                         child: Padding(
-    //                             padding: const EdgeInsets.all(2.0),
-    //                             child: Text('Tax % : $taxP'))),
-    //                   ),
-    //                   const Padding(
-    //                     padding: EdgeInsets.all(2.0),
-    //                     child: Text('SubTotal : '),
-    //                   ),
-    //                   Padding(
-    //                     padding: const EdgeInsets.all(2.0),
-    //                     child: Text(subTotal.toStringAsFixed(decimal)),
-    //                   ),
-    //                 ]),
-    //                 const Divider(),
-    //                 Visibility(
-    //                   visible: isTax,
-    //                   child: Row(
-    //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    //                       children: [
-    //                         const Padding(
-    //                           padding: EdgeInsets.all(2.0),
-    //                           child: Text('Tax : '),
-    //                         ),
-    //                         Padding(
-    //                           padding: const EdgeInsets.all(2.0),
-    //                           child: Text(tax.toStringAsFixed(decimal)),
-    //                         ),
-    //                       ]),
-    //                 ),
-    //                 const Divider(),
-    //                 Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-    //                   const Padding(
-    //                     padding: EdgeInsets.all(2.0),
-    //                     child: Text(
-    //                       'Total : ',
-    //                       style: TextStyle(fontSize: 20),
-    //                     ),
-    //                   ),
-    //                   Padding(
-    //                     padding: const EdgeInsets.all(2.0),
-    //                     child: Text(
-    //                       total.toStringAsFixed(decimal),
-    //                       style: const TextStyle(fontSize: 20),
-    //                     ),
-    //                   ),
-    //                 ]),
-    //               ],
-    //             ),
-    //           ),
-    //         ),
-    //       ],
-    //     ),
-    //   );
-    return showVariantDialog(
-        product.itemId, product.name, product.quantity.toString());
-  }
-
   bool editItem = false;
   int position;
 
@@ -7081,16 +5045,17 @@ class _SaleState extends State<Sale> {
                                             RichText(
                                               maxLines: 1,
                                               text: TextSpan(
-                                                  text: '${cartItem[index].id}',
+                                                  text:
+                                                      '${cartItem[index].id}/',
                                                   style: TextStyle(
                                                       color: Colors
                                                           .blueGrey.shade800,
                                                       fontSize: 10.0),
-                                                  children: const [
+                                                  children: [
                                                     TextSpan(
                                                         text:
-                                                            '', //'/${cartItem[index].uniqueCode}/${cartItem[index].itemId}',
-                                                        style: TextStyle(
+                                                            '${cartItem[index].uniqueCode}/${cartItem[index].itemId}',
+                                                        style: const TextStyle(
                                                             fontSize: 10.0,
                                                             fontWeight:
                                                                 FontWeight
@@ -7119,25 +5084,234 @@ class _SaleState extends State<Sale> {
                                           ],
                                         ),
                                       ),
-                                      RichText(
-                                          maxLines: 1,
-                                          text: TextSpan(
-                                              text: 'Qty: ',
-                                              style: TextStyle(
-                                                  color:
-                                                      Colors.blueGrey.shade800,
-                                                  fontSize: 13.0),
-                                              children: [
-                                                TextSpan(
-                                                  text: cartItem[index]
-                                                      .quantity
-                                                      .toString(),
-                                                  style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 12.0),
-                                                ),
-                                              ])),
+                                      PlusMinusButtons(
+                                        addQuantity: () {
+                                          if (oldBill) {
+                                            api
+                                                .getStockOf(
+                                                    cartItem[index].itemId)
+                                                .then((value) {
+                                              cartItem[index].stock = value;
+                                              setState(() {
+                                                bool cartQ = false;
+                                                if (totalItem > 0) {
+                                                  double cartS = 0, cartQt = 0;
+                                                  for (var element
+                                                      in cartItem) {
+                                                    if (element.itemId ==
+                                                        cartItem[index]
+                                                            .itemId) {
+                                                      cartQt += (element
+                                                              .quantity *
+                                                          element.unitValue);
+                                                      cartS = element.stock;
+                                                    }
+                                                  }
+                                                  cartS =
+                                                      oldBill ? value : cartS;
+                                                  if (cartS > 0) {
+                                                    if (cartS < cartQt + 1) {
+                                                      cartQ = true;
+                                                    }
+                                                  }
+                                                }
+                                                outOfStock =
+                                                    isLockQtyOnlyInSales
+                                                        ? cartItem[index]
+                                                                        .quantity +
+                                                                    1 >
+                                                                cartItem[index]
+                                                                    .stock
+                                                            ? true
+                                                            : cartQ
+                                                                ? true
+                                                                : false
+                                                        : negativeStock
+                                                            ? false
+                                                            : salesTypeData.type ==
+                                                                        'SALES-O' ||
+                                                                    salesTypeData
+                                                                            .type ==
+                                                                        'SALES-Q'
+                                                                ? isStockProductOnlyInSalesQO
+                                                                    ? cartItem[index].quantity +
+                                                                                1 >
+                                                                            cartItem[index]
+                                                                                .stock
+                                                                        ? true
+                                                                        : cartQ
+                                                                            ? true
+                                                                            : false
+                                                                    : false
+                                                                : cartItem[index].quantity +
+                                                                            1 >
+                                                                        cartItem[index]
+                                                                            .stock
+                                                                    ? true
+                                                                    : cartQ
+                                                                        ? true
+                                                                        : false;
+                                                if (outOfStock) {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(SnackBar(
+                                                    content: const Text(
+                                                        'Sorry stock not available.'),
+                                                    duration: const Duration(
+                                                        seconds: 10),
+                                                    action: SnackBarAction(
+                                                      label: 'Click',
+                                                      onPressed: () {
+                                                        // print('Action is clicked');
+                                                      },
+                                                      textColor: Colors.white,
+                                                      disabledTextColor:
+                                                          Colors.grey,
+                                                    ),
+                                                    backgroundColor: Colors.red,
+                                                  ));
+                                                } else {
+                                                  updateProduct(
+                                                      cartItem[index],
+                                                      cartItem[index].quantity +
+                                                          1,
+                                                      index);
+                                                }
+                                              });
+                                            });
+                                          } else {
+                                            setState(() {
+                                              bool cartQ = false;
+                                              if (totalItem > 0) {
+                                                double cartS = 0, cartQt = 0;
+                                                for (var element in cartItem) {
+                                                  if (element.itemId ==
+                                                      cartItem[index].itemId) {
+                                                    cartQt += element.quantity *
+                                                        element.unitValue;
+                                                    cartS = element.stock;
+                                                  }
+                                                }
+                                                // cartS = oldBill?:cartS;
+                                                if (cartS > 0) {
+                                                  if (cartS < cartQt + 1) {
+                                                    cartQ = true;
+                                                  }
+                                                }
+                                              }
+                                              outOfStock = isLockQtyOnlyInSales
+                                                  ? ((cartItem[index].quantity *
+                                                                      cartItem[index]
+                                                                          .unitValue) +
+                                                                  cartItem[index]
+                                                                      .free) +
+                                                              1 >
+                                                          cartItem[index].stock
+                                                      ? true
+                                                      : cartQ
+                                                          ? true
+                                                          : false
+                                                  : negativeStock
+                                                      ? false
+                                                      : salesTypeData.type ==
+                                                                  'SALES-O' ||
+                                                              salesTypeData
+                                                                      .type ==
+                                                                  'SALES-Q'
+                                                          ? isStockProductOnlyInSalesQO
+                                                              ? ((cartItem[index].quantity * cartItem[index].unitValue) +
+                                                                              cartItem[index]
+                                                                                  .free) +
+                                                                          1 >
+                                                                      cartItem[index]
+                                                                          .stock
+                                                                  ? true
+                                                                  : cartQ
+                                                                      ? true
+                                                                      : false
+                                                              : false
+                                                          : cartItem[index]
+                                                                          .quantity +
+                                                                      1 >
+                                                                  cartItem[
+                                                                          index]
+                                                                      .stock
+                                                              ? true
+                                                              : cartQ
+                                                                  ? true
+                                                                  : false;
+                                              if (outOfStock) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(SnackBar(
+                                                  content: const Text(
+                                                      'Sorry stock not available.'),
+                                                  duration: const Duration(
+                                                      seconds: 10),
+                                                  action: SnackBarAction(
+                                                    label: 'Click',
+                                                    onPressed: () {
+                                                      // print('Action is clicked');
+                                                    },
+                                                    textColor: Colors.white,
+                                                    disabledTextColor:
+                                                        Colors.grey,
+                                                  ),
+                                                  backgroundColor: Colors.red,
+                                                ));
+                                              } else {
+                                                updateProduct(
+                                                    cartItem[index],
+                                                    cartItem[index].quantity +
+                                                        1,
+                                                    index);
+                                              }
+                                            });
+                                          }
+
+                                          //  cart.addQuantity(
+                                          //      cartItem[index].id!);
+                                          //  dbHelper!
+                                          //      .updateQuantity(Cart(
+                                          //          id: index,
+                                          //          productId: index.toString(),
+                                          //          productName: provider
+                                          //              .cart[index].productName,
+                                          //          initialPrice: provider
+                                          //              .cart[index].initialPrice,
+                                          //          productPrice: provider
+                                          //              .cart[index].productPrice,
+                                          //          quantity: ValueNotifier(
+                                          //              cartItem[index]
+                                          //                  .quantity!.value),
+                                          //          unitTag: provider
+                                          //              .cart[index].unitTag,
+                                          //          image: provider
+                                          //              .cart[index].image))
+                                          //      .then((value) {
+                                          //    setState(() {
+                                          //      cart.addTotalPrice(double.parse(
+                                          //          provider
+                                          //              .cart[index].productPrice
+                                          //              .toString()));
+                                          //    });
+                                          //  });
+                                        },
+                                        deleteQuantity: () {
+                                          setState(() {
+                                            updateProduct(
+                                                cartItem[index],
+                                                cartItem[index].quantity - 1,
+                                                index);
+                                          });
+
+                                          //  cart.deleteQuantity(
+                                          //      cartItem[index].id!);
+                                          //  cart.removeTotalPrice(double.parse(
+                                          //      cartItem[index].productPrice
+                                          //          .toString()));
+                                        },
+                                        text:
+                                            cartItem[index].quantity.toString(),
+                                      ),
                                       RichText(
                                         maxLines: 1,
                                         text: TextSpan(
@@ -7155,6 +5329,18 @@ class _SaleState extends State<Sale> {
                                                       fontSize: 12.0)),
                                             ]),
                                       ),
+                                      // IconButton(
+                                      // onPressed: () {
+                                      //  dbHelper!.deleteCartItem(
+                                      //      cartItem[index].id!);
+                                      //  provider
+                                      //      .removeItem(cartItem[index].id!);
+                                      //  provider.removeCounter();
+                                      // },
+                                      // icon: Icon(
+                                      // Icons.edit,
+                                      // color: Colors.blue.shade800,
+                                      // )),
                                       PopUpMenuAction(
                                         onDelete: () {
                                           setState(() {
@@ -7162,140 +5348,33 @@ class _SaleState extends State<Sale> {
                                           });
                                         },
                                         onEdit: () {
-                                          CartItem selectedItem =
-                                              cartItem.elementAt(index);
-                                          if (autoBatchSelection) {
-                                            List<CartItem> selectedCartItem =
-                                                cartItem
-                                                    .where((element) =>
-                                                        element.itemId ==
-                                                            selectedItem
-                                                                .itemId &&
-                                                        element.rate ==
-                                                            selectedItem.rate)
-                                                    .toList();
-                                            if (selectedCartItem.length > 1) {
-                                              cartModelBatch = null;
-                                              for (CartItem item
-                                                  in selectedCartItem) {
-                                                if (cartModelBatch == null) {
-                                                  cartModelBatch = item;
-                                                } else {
-                                                  cartModelBatch.adCess +=
-                                                      item.adCess;
-                                                  cartModelBatch.cDisc +=
-                                                      item.cDisc;
-                                                  cartModelBatch.cGST +=
-                                                      item.cGST;
-                                                  cartModelBatch.cess +=
-                                                      item.cess;
-                                                  cartModelBatch.discount +=
-                                                      item.discount;
-                                                  cartModelBatch.fCess +=
-                                                      item.fCess;
-                                                  cartModelBatch.free +=
-                                                      item.free;
-                                                  cartModelBatch.gross +=
-                                                      item.gross;
-                                                  cartModelBatch.iGST +=
-                                                      item.iGST;
-                                                  cartModelBatch.net +=
-                                                      item.net;
-                                                  cartModelBatch.quantity +=
-                                                      item.quantity;
-                                                  cartModelBatch.rDiscount +=
-                                                      item.rDiscount;
-                                                  cartModelBatch.sGST +=
-                                                      item.sGST;
-                                                  cartModelBatch.stock +=
-                                                      item.stock;
-                                                  cartModelBatch.tax +=
-                                                      item.tax;
-                                                  cartModelBatch.total +=
-                                                      item.total;
-                                                }
-                                              }
-                                              if (oldBill) {
-                                                cartModelList =
-                                                    selectedCartItem;
-                                              } else {
-                                                for (CartItem item
-                                                    in selectedCartItem) {
-                                                  int j = cartItem.indexWhere(
-                                                      (i) =>
-                                                          i.itemId ==
-                                                          item.itemId);
-                                                  cartItem.removeAt(j);
-                                                }
-                                              }
-                                              editItem = false;
-                                            } else {
-                                              cartModelBatch =
-                                                  selectedCartItem[0];
-                                              // cartModel = cartModelBatch;
-                                              // editItem = true;
-                                            }
-                                            setState(() {
-                                              editItem = false;
-                                              double _rated =
-                                                  cartModelBatch.rate /
-                                                      cartModelBatch.unitValue;
-                                              saleRate = _rated;
-                                              _rateController.text =
-                                                  cartModelBatch.rate
-                                                      .toString();
-                                              _quantityController.text =
-                                                  cartModelBatch.quantity
-                                                      .toString();
-                                              _freeQuantityController.text =
-                                                  cartModelBatch.free
-                                                      .toString();
-                                              _discountController.text =
-                                                  cartModelBatch.discount
-                                                      .toString();
-                                              _discountPercentController.text =
-                                                  cartModelBatch.discountPercent
-                                                      .toString();
-                                              _serialNoController.text =
-                                                  cartModelBatch.serialNo;
-                                              _dropDownUnit =
-                                                  cartModelBatch.unitId;
-                                              _conversion =
-                                                  cartModelBatch.unitValue;
-                                              unitValue = _conversion;
+                                          setState(() {
+                                            editItem = true;
+                                            position = index;
+                                            cartModel =
+                                                cartItem.elementAt(position);
+                                            double _rated = cartModel.rate /
+                                                cartModel.unitValue;
+                                            saleRate = _rated;
+                                            _rateController.text =
+                                                cartModel.rate.toString();
+                                            _quantityController.text =
+                                                cartModel.quantity.toString();
+                                            _freeQuantityController.text =
+                                                cartModel.free.toString();
+                                            _discountController.text =
+                                                cartModel.discount.toString();
+                                            _discountPercentController.text =
+                                                cartModel.discountPercent
+                                                    .toString();
+                                            _serialNoController.text =
+                                                cartModel.serialNo;
+                                            _dropDownUnit = cartModel.unitId;
+                                            _conversion = cartModel.unitValue;
+                                            unitValue = _conversion;
 
-                                              nextWidget = 5;
-                                            });
-                                          } else {
-                                            setState(() {
-                                              editItem = true;
-                                              position = index;
-                                              cartModel =
-                                                  cartItem.elementAt(position);
-
-                                              double _rated = cartModel.rate /
-                                                  cartModel.unitValue;
-                                              saleRate = _rated;
-                                              _rateController.text =
-                                                  cartModel.rate.toString();
-                                              _quantityController.text =
-                                                  cartModel.quantity.toString();
-                                              _freeQuantityController.text =
-                                                  cartModel.free.toString();
-                                              _discountController.text =
-                                                  cartModel.discount.toString();
-                                              _discountPercentController.text =
-                                                  cartModel.discountPercent
-                                                      .toString();
-                                              _serialNoController.text =
-                                                  cartModel.serialNo;
-                                              _dropDownUnit = cartModel.unitId;
-                                              _conversion = cartModel.unitValue;
-                                              unitValue = _conversion;
-
-                                              nextWidget = 3;
-                                            });
-                                          }
+                                            nextWidget = 3;
+                                          });
                                         },
                                       ),
                                     ],
@@ -7828,7 +5907,7 @@ class _SaleState extends State<Sale> {
                             // }
                             saleRate = rate;
                             _rateController.text = saleRate.toStringAsFixed(2);
-                            calculateOut(product);
+                            calculate(product);
                           });
                         },
                       ),
@@ -7927,7 +6006,7 @@ class _SaleState extends State<Sale> {
             rate = rate / _conversion;
             saleRate = rate;
           }
-          calculateOut(product);
+          calculate(product);
         });
       }
     });
@@ -7970,11 +6049,6 @@ class _SaleState extends State<Sale> {
       cartItem.add(product);
       calculateTotal();
     }
-  }
-
-  void addProductAll(product) {
-    cartItem.add(product);
-    calculateTotal();
   }
 
   void removeProduct(int index) {
@@ -9153,53 +7227,55 @@ class _SaleState extends State<Sale> {
             information['EntryNo'].toString());
         ScopedModel.of<MainModel>(context).addCustomer(cModel);
         for (var product in particulars) {
-          addProductAll(
-            CartItem(
-                stock: 0,
-                minimumRate: 0,
-                id: totalItem + 1,
-                itemId: product['itemId'],
-                itemName: product['itemname'],
-                quantity: double.tryParse(product['Qty'].toString()),
-                rate: double.tryParse(product['Rate'].toString()),
-                rRate: double.tryParse(product['RealRate'].toString()),
-                uniqueCode: product['UniqueCode'],
-                gross: double.tryParse(product['GrossValue'].toString()),
-                discount: double.tryParse(product['Disc'].toString()),
-                discountPercent:
-                    double.tryParse(product['DiscPersent'].toString()),
-                rDiscount: double.tryParse(product['RDisc'].toString()),
-                fCess: double.tryParse(product['Fcess'].toString()),
-                serialNo: product['serialno'].toString(),
-                tax: taxable
-                    ? (double.tryParse(product['CGST'].toString()) +
-                        double.tryParse(product['SGST'].toString()) +
-                        double.tryParse(product['IGST'].toString()))
-                    : 0,
-                taxP: taxable ? double.tryParse(product['igst'].toString()) : 0,
-                unitId: product['Unit'],
-                unitValue: double.tryParse(product['UnitValue'].toString()),
-                pRate: double.tryParse(product['Prate'].toString()),
-                rPRate: double.tryParse(product['Rprate'].toString()),
-                barcode: product['UniqueCode'],
-                expDate: '2020-01-01',
-                free: double.tryParse(product['freeQty'].toString()),
-                fUnitId: int.tryParse(product['Funit'].toString()),
-                cdPer: 0, //product['']cdPer,
-                cDisc: 0, //product['']cDisc,
-                net: double.tryParse(product['Net'].toString()), //subTotal,
-                cess: double.tryParse(product['cess'].toString()), //cess,
-                total: double.tryParse(product['Total'].toString()), //total,
-                profitPer: double.tryParse(product['Profit'].toString()),
-                fUnitValue:
-                    double.tryParse(product['FValue'].toString()), //fUnitValue,
-                adCess: double.tryParse(product['adcess'].toString()), //adCess,
-                iGST: double.tryParse(product['IGST'].toString()),
-                cGST: double.tryParse(product['CGST'].toString()),
-                sGST: double.tryParse(product['SGST'].toString()),
-                cessPer: double.tryParse(product['cessper'].toString()),
-                adCessPer: double.tryParse(product['adcessper'].toString())),
-          );
+          addProduct(
+              CartItem(
+                  stock: 0,
+                  minimumRate: 0,
+                  id: totalItem + 1,
+                  itemId: product['itemId'],
+                  itemName: product['itemname'],
+                  quantity: double.tryParse(product['Qty'].toString()),
+                  rate: double.tryParse(product['Rate'].toString()),
+                  rRate: double.tryParse(product['RealRate'].toString()),
+                  uniqueCode: product['UniqueCode'],
+                  gross: double.tryParse(product['GrossValue'].toString()),
+                  discount: double.tryParse(product['Disc'].toString()),
+                  discountPercent:
+                      double.tryParse(product['DiscPersent'].toString()),
+                  rDiscount: double.tryParse(product['RDisc'].toString()),
+                  fCess: double.tryParse(product['Fcess'].toString()),
+                  serialNo: product['serialno'].toString(),
+                  tax: taxable
+                      ? (double.tryParse(product['CGST'].toString()) +
+                          double.tryParse(product['SGST'].toString()) +
+                          double.tryParse(product['IGST'].toString()))
+                      : 0,
+                  taxP:
+                      taxable ? double.tryParse(product['igst'].toString()) : 0,
+                  unitId: product['Unit'],
+                  unitValue: double.tryParse(product['UnitValue'].toString()),
+                  pRate: double.tryParse(product['Prate'].toString()),
+                  rPRate: double.tryParse(product['Rprate'].toString()),
+                  barcode: product['UniqueCode'],
+                  expDate: '2020-01-01',
+                  free: double.tryParse(product['freeQty'].toString()),
+                  fUnitId: int.tryParse(product['Funit'].toString()),
+                  cdPer: 0, //product['']cdPer,
+                  cDisc: 0, //product['']cDisc,
+                  net: double.tryParse(product['Net'].toString()), //subTotal,
+                  cess: double.tryParse(product['cess'].toString()), //cess,
+                  total: double.tryParse(product['Total'].toString()), //total,
+                  profitPer: double.tryParse(product['Profit'].toString()),
+                  fUnitValue: double.tryParse(
+                      product['FValue'].toString()), //fUnitValue,
+                  adCess:
+                      double.tryParse(product['adcess'].toString()), //adCess,
+                  iGST: double.tryParse(product['IGST'].toString()),
+                  cGST: double.tryParse(product['CGST'].toString()),
+                  sGST: double.tryParse(product['SGST'].toString()),
+                  cessPer: double.tryParse(product['cessper'].toString()),
+                  adCessPer: double.tryParse(product['adcessper'].toString())),
+              -1);
         }
 
         userDateCheck(information['DDate'].toString());
@@ -9968,21 +8044,12 @@ class _SaleState extends State<Sale> {
       onPressed: () {
         setState(() {
           if (ledgerDataModel.name.toUpperCase() == 'CASH') {
-            // if (salesTypeData.rateType.isNotEmpty) {
-            //   rateTypeO = salesTypeData.id.toString();
-            // }
             nextWidget = 2;
           } else {
             if (salesTypeData.type == 'SALES-BB') {
               if (ledgerModel.taxNumber.isNotEmpty) {
-                // if (salesTypeData.rateType.isNotEmpty) {
-                //   rateTypeO = salesTypeData.id.toString();
-                // }
                 nextWidget = 2;
               } else if (!blockTaxLedgerOnB2CorBOS) {
-                // if (salesTypeData.rateType.isNotEmpty) {
-                //   rateTypeO = salesTypeData.id.toString();
-                // }
                 nextWidget = 2;
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(

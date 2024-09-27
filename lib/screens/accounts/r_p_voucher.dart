@@ -22,6 +22,7 @@ import 'package:sheraccerp/screens/html_previews/rpv_preview.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/bt_print.dart';
 import 'package:sheraccerp/shared/constants.dart';
+import 'package:sheraccerp/util/color_palette.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
 import 'package:sheraccerp/util/res_color.dart';
 import 'package:sheraccerp/widget/loading.dart';
@@ -59,6 +60,7 @@ class _RPVoucherState extends State<RPVoucher> {
       isMultiRvPv = false,
       keyLockCashAccount = false,
       isSalesManWiseLedger = false,
+      isAdminUser = false,
       keyEditAndDeleteAdminOnlyDaysBefore = false,
       daysBefore = false;
   int refNo = 0, acId = 0;
@@ -145,6 +147,9 @@ class _RPVoucherState extends State<RPVoucher> {
     isSalesManWiseLedger =
         ComSettings.getStatus('KEY SALESMAN WISE LEDGER', settings);
     userDateCheck(DateUtil.dateYMD(formattedDate));
+    if (companyUserData.userType.toUpperCase() == 'ADMIN') {
+      isAdminUser = true;
+    }
   }
 
   userDateCheck(String date) {
@@ -1191,21 +1196,94 @@ class _RPVoucherState extends State<RPVoucher> {
                   ),
                 );
               } else {
-                return Card(
-                  elevation: 2,
-                  child: ListTile(
-                    title: Text(dataDisplay[index]['Name']),
-                    subtitle: Text('Date: ' +
-                        dataDisplay[index]['Date'] +
-                        ' / EntryNo : ' +
-                        dataDisplay[index]['Id'].toString()),
-                    trailing: Text(
-                        'Amount : ' + dataDisplay[index]['Total'].toString()),
-                    onTap: () {
-                      showEditDialog(context, dataDisplay[index], mode);
-                    },
-                  ),
-                );
+                // return Card(
+                //   elevation: 2,
+                //   child: ListTile(
+                //     title: Text(dataDisplay[index]['Name']),
+                //     subtitle: Text('Date: ' +
+                //         dataDisplay[index]['Date'] +
+                //         ' / EntryNo : ' +
+                //         dataDisplay[index]['Id'].toString()),
+                //     trailing: Text(
+                //         'Amount : ' + dataDisplay[index]['Total'].toString()),
+                //     onTap: () {
+                //       showEditDialog(context, dataDisplay[index], mode);
+                //     },
+                //   ),
+                // );
+                return Container(
+                    margin: const EdgeInsets.symmetric(vertical: 2),
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          offset: const Offset(0, 5),
+                          blurRadius: 6,
+                          color: const Color(0xff000000).withOpacity(0.06),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(10),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: InkWell(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(dataDisplay[index]['Name'],
+                                    style: const TextStyle(
+                                      // fontSize: 16,
+                                      color: ColorPalette.timberGreen,
+                                    )),
+                                const SizedBox(
+                                  height: 5,
+                                ),
+                                Text('Date: ' +
+                                    dataDisplay[index]['Date'] +
+                                    ' / EntryNo : ' +
+                                    dataDisplay[index]['Id'].toString()),
+                              ],
+                            ),
+                            onTap: () {
+                              showEditDialog(context, dataDisplay[index], mode);
+                            },
+                          ),
+                        ),
+                        Expanded(
+                            flex: 2,
+                            child: InkWell(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  const Text(
+                                    'Amount',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: ColorPalette.nileBlue,
+                                    ),
+                                  ),
+                                  Expanded(
+                                      child: Align(
+                                          alignment: Alignment.centerRight,
+                                          child: Text('' +
+                                              dataDisplay[index]['Total']
+                                                  .toString()))),
+                                ],
+                              ),
+                              onTap: () {
+                                showDetails(
+                                    context,
+                                    mode,
+                                    int.tryParse(
+                                        dataDisplay[index]['Id'].toString()));
+                              },
+                            ))
+                      ],
+                    ));
               }
             },
             controller: _scrollController,
@@ -1374,6 +1452,14 @@ class _RPVoucherState extends State<RPVoucher> {
               ),
               onTap: () => _selectDate(),
             ),
+            Visibility(
+                visible: isAdminUser,
+                child: IconButton(
+                  icon: Icon(Icons.search),
+                  onPressed: () {
+                    inputEntryNo(mode);
+                  },
+                ))
           ],
         ),
         Row(
@@ -1777,5 +1863,154 @@ class _RPVoucherState extends State<RPVoucher> {
         ),
       ],
     );
+  }
+
+  void inputEntryNo(mode) {
+    String no = '';
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) => Padding(
+        padding:
+            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+            TextField(
+              decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'type EntryNo',
+                  labelText: 'Enter entry no'),
+              inputFormatters: [
+                FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                    allow: true, replacementString: '.')
+              ],
+              autofocus: true,
+              onChanged: (value) {
+                if (value.isNotEmpty) {
+                  no = value;
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  if (no.isNotEmpty) {
+                    var data = {'Id': int.tryParse(no ?? 0)};
+                    if (mode == 'Payment') {
+                      fetchVoucher(context, data, mode);
+                    } else {
+                      fetchVoucher(context, data, mode);
+                    }
+                  }
+                });
+              },
+              child: const Text("Done"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  showDetails(context, mode, int id) {
+    //fetchVoucher(context, data, mode) {
+    double voucherTotal = 0;
+    int row = 0;
+    api
+        .fetchVoucher(
+            id, mode == 'Payment' ? 'FindPv' : 'FindRv', voucherTypeData.id)
+        .then((value) {
+      if (value != null) {
+        var information = value[0][0];
+        var particulars = value[1];
+        var _footerMessage = value[2][0]['s_Value'];
+        List c = value[1].toList();
+        row = c.length;
+        formattedDate = DateUtil.dateDMY(information['DDate']);
+
+        dataDynamic = [
+          {
+            'RealEntryNo': information['EntryNo'],
+            'EntryNo': information['EntryNo'],
+            'InvoiceNo': information['EntryNo'],
+            'Type': '0'
+          }
+        ];
+
+        voucherTotal = double.tryParse(information['Total'].toString());
+        _dropDownValue = information['LedCode'].toString() +
+            '-' +
+            information['LedName'].toString();
+        accountName = information['LedName'].toString();
+        accountId = information['LedCode'].toString();
+        acId = information['LedCode'];
+        var particular = null;
+        if (isMultiRvPv) {
+          // for (var part in particulars) {
+          //   particularList.add(RpVoucherParticularModel(
+          //       id: part['LedCode'],
+          //       name: part['LedName'],
+          //       amount: double.tryParse(part['Amount'].toString()),
+          //       discount: double.tryParse(part['Discount'].toString()),
+          //       total: double.tryParse(part['Total'].toString()),
+          //       narration: part['Narration'].toString(),
+          //       balance: '0',
+          //       phone: ''));
+          //   ledData = LedgerModel(id: 0, name: '');
+          //   isSelected = false;
+          //   //   amount = double.tryParse(part['Amount'].toString());
+          //   //   discount = double.tryParse(part['Discount'].toString());
+          //   //   total = double.tryParse(part['Total'].toString());
+          //   //   narration = part['Narration'].toString();
+          // }
+        } else {
+          var part1 = particulars[0];
+          ledData = LedgerModel(id: part1['LedCode'], name: part1['LedName']);
+          amount = double.tryParse(part1['Amount'].toString());
+          discount = double.tryParse(part1['Discount'].toString());
+          total = double.tryParse(part1['Total'].toString());
+          narration = part1['Narration'].toString();
+          particular = '[' +
+              json.encode({
+                'amount': amount,
+                'discount': discount,
+                'total': total,
+                'narration': narration,
+                'Ledid': ledData.id
+              }) +
+              ']';
+        }
+        if (isMultiRvPv) {
+          // particularList
+        } else {
+          getOldBalance(
+              ledData.id,
+              (mode == 'Payment' ? 'SupplierOB' : 'CustomerOB'),
+              mode,
+              DateUtil.dateYMD(formattedDate),
+              information['EntryNo']);
+        }
+
+        var dataAll = [
+          {
+            'entryNo': dataDynamic[0]['EntryNo'].toString(),
+            'date': formatDMY(formattedDate),
+            'debitAccount': accountId,
+            'amount': amount,
+            'discount': discount,
+            'total': total,
+            'particular': particular,
+            'account': accountName,
+            'name': ledData.name,
+            'balance': 0,
+            'oldBalance': oldBalance,
+            'message': _footerMessage
+          }
+        ];
+        actionShow(mode, context, dataAll);
+      }
+    });
   }
 }

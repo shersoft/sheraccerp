@@ -27,6 +27,7 @@ import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/blue_thermal.dart';
 import 'package:sheraccerp/service/bt_print.dart';
+import 'package:sheraccerp/service/com_service.dart';
 import 'package:sheraccerp/service/pos_print.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
@@ -71,7 +72,10 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
   bool _isLoading = true;
   bool isQrCodeKSA = false;
   bool isEsQrCodeKSA = false;
-  bool isCashBill = false;
+  bool isCashBill = false,
+      enableMULTIUNIT = false,
+      cessOnNetAmount = false,
+      pRateBasedProfitInSales = false;
   int printerType = 0, printerDevice = 0, printModel = 2;
   bool toggle = true;
   var eNo = 0, type = 0;
@@ -124,6 +128,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
 
   var labelSerialNo = 'SerialNo';
   bool isItemSerialNo,
+      isFreeItem = false,
       isInvoiceDesigner = false,
       isQuantityBasedSerialNo = false,
       isPrintSerialNoLineByLine = false,
@@ -172,6 +177,12 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
     labelSerialNo =
         ComSettings.getValue('KEY ITEM SERIAL NO', settings).toString();
     labelSerialNo.isNotEmpty ?? 'SerialNo';
+
+    enableMULTIUNIT = ComSettings.getStatus('ENABLE MULTI-UNIT', settings);
+    pRateBasedProfitInSales =
+        ComSettings.getStatus('PRATE BASED PROFIT IN SALES', settings);
+    cessOnNetAmount = ComSettings.getStatus('CESS ON NET AMOUNT', settings);
+
     columnsVAT = [
       JsonTableColumn("slno", label: "No"),
       JsonTableColumn("itemname", label: "Description"),
@@ -229,7 +240,9 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         data = value;
         dataInformation = value['Information'][0];
         customerBalance = dataInformation['Balance'].toString();
-        dataParticularsAll = value['Particulars'];
+        dataParticularsAll = isFreeItem
+            ? value['Particulars']
+            : autoBatchItem(value['Particulars']);
         dataSerialNO = value['SerialNO'];
         dataDeliveryNote = value['DeliveryNote'];
         otherAmount = value['otherAmount'];
@@ -5403,6 +5416,92 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                       ))),
             ),
           );
+  }
+
+  List<dynamic> autoBatchItem(products) {
+    List<dynamic> items = [];
+    int index = -1;
+    for (var item in products) {
+      index = items.indexWhere((i) => i['itemId'] == item['itemId']);
+      if (index != -1) {
+        double qty = double.parse(items[index]['Qty'].toString()) +
+            double.parse(item['Qty'].toString());
+        items[index]['Qty'] = qty;
+        items[index]['Disc'] = double.parse(
+            (((qty * items[index]['RealRate']) * items[index]['DiscPersent']) /
+                    100)
+                .toStringAsFixed(2));
+
+        items[index]['GrossValue'] = CommonService.getRound(
+            4, (items[index]['RealRate'] * items[index]['Qty']));
+        items[index]['Net'] = CommonService.getRound(
+            4, (items[index]['GrossValue'] - items[index]['RDisc']));
+        if (items[index]['igst'] > 0) {
+          if (companyTaxMode == 'INDIA') {
+            items[index]['fCess'] = 0;
+            double csPer = items[index]['igst'] / 2;
+            double csGST = CommonService.getRound(
+                4, ((items[index]['Net'] * csPer) / 100));
+            items[index]['SGST'] = csGST;
+            items[index]['CGST'] = csGST;
+            if (cessOnNetAmount) {
+              if (items[index]['cessper'] > 0) {
+                items[index]['cess'] = CommonService.getRound(
+                    4, ((items[index]['Net'] * items[index]['cessper']) / 100));
+              } else {
+                items[index]['cess'] = 0;
+              }
+              if (items[index]['adcessper'] > 0) {
+                items[index]['adcess'] = CommonService.getRound(
+                    4, ((qty * items[index]['adcessper'])));
+              } else {
+                items[index]['adcess'] = 0;
+              }
+            }
+          } else if (companyTaxMode == 'GULF') {
+            items[index]['CGST'] = 0;
+            items[index]['SGST'] = 0;
+            items[index]['IGST'] = CommonService.getRound(
+                4, ((items[index]['Net'] * items[index]['igst']) / 100));
+          } else {
+            items[index]['CGST'] = 0;
+            items[index]['SGST'] = 0;
+            items[index]['Fcess'] = 0;
+          }
+        }
+        items[index]['Total'] = CommonService.getRound(
+            4,
+            (items[index]['Net'] +
+                items[index]['CGST'] +
+                items[index]['SGST'] +
+                items[index]['IGST'] +
+                items[index]['cess'] +
+                items[index]['Fcess'] +
+                items[index]['adcess']));
+
+        if (enableMULTIUNIT && items[index]['UnitValue'] > 0) {
+          items[index]['Profit'] = CommonService.getRound(
+              4,
+              items[index]['Total'] -
+                  (pRateBasedProfitInSales
+                          ? items[index]['Prate']
+                          : items[index]['Rprate']) *
+                      items[index]['UnitValue'] *
+                      items[index]['Qty']);
+        } else {
+          items[index]['Profit'] = CommonService.getRound(
+              4,
+              items[index]['Total'] -
+                  (pRateBasedProfitInSales
+                          ? items[index]['Prate']
+                          : items[index]['Rprate']) *
+                      items[index]['Qty']);
+        }
+      } else {
+        items.add(item);
+      }
+    }
+    return items;
   }
 }
 

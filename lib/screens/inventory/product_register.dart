@@ -1,18 +1,18 @@
 // @dart = 2.11
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:autocomplete_textfield/autocomplete_textfield.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_awesome_alert_box/flutter_awesome_alert_box.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:sheraccerp/models/company.dart';
 import 'package:sheraccerp/models/product_register_model.dart';
 import 'package:sheraccerp/models/tax_group_model.dart';
 import 'package:sheraccerp/models/unit_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
-import 'package:sheraccerp/screens/accounts/ledger.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
 import 'package:sheraccerp/shared/constants.dart';
@@ -37,6 +37,7 @@ class _ProductRegisterState extends State<ProductRegister> {
   bool _isLoading = false,
       isExist = false,
       buttonEvent = false,
+      isOtherDetailsInProduct = false,
       isGoogleTranslator = false;
   DataJson itemId,
       itemName,
@@ -73,6 +74,7 @@ class _ProductRegisterState extends State<ProductRegister> {
   List<DataJson> unitModel = [];
   List<UnitDetailModel> unitDetail = [];
   String isItemName = '';
+  XFile image;
 
   @override
   void initState() {
@@ -177,6 +179,8 @@ class _ProductRegisterState extends State<ProductRegister> {
     isGoogleTranslator =
         ComSettings.getStatus('USE GOOGLE TRANSLATE', settings);
     companyTaxMode = ComSettings.getValue('PACKAGE', settings);
+    isOtherDetailsInProduct = ComSettings.getStatus(
+        'SHOW OTHER DETAILS IN PRODUCT REGISTRATION', settings);
   }
 
   @override
@@ -505,6 +509,9 @@ class _ProductRegisterState extends State<ProductRegister> {
                     if (CommonService().isNumeric(result) &&
                         int.tryParse(result) > 0) {
                       showInSnackBar('Product Saved');
+                      if (isOtherDetailsInProduct) {
+                        addImage();
+                      }
                     } else {
                       showInSnackBar(result.toString());
                     }
@@ -809,6 +816,76 @@ class _ProductRegisterState extends State<ProductRegister> {
               ),
               const Divider(),
               const Text('Selling Rates'),
+              Visibility(
+                  visible: isOtherDetailsInProduct,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (image != null)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.file(
+                              File(image.path),
+                              width: 50,
+                              height: 50,
+                            ),
+                            const SizedBox(
+                              width: 20,
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  image = null;
+                                });
+                              },
+                              label: const Text('Remove Image'),
+                              icon: const Icon(Icons.close),
+                            )
+                          ],
+                        )
+                      else
+                        const SizedBox(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              final ImagePicker _picker = ImagePicker();
+                              final img = await _picker.pickImage(
+                                  source: ImageSource.gallery,
+                                  maxHeight: 480,
+                                  maxWidth: 640,
+                                  imageQuality: 50);
+                              setState(() {
+                                image = img;
+                              });
+                            },
+                            label: const Text('Choose Image'),
+                            icon: const Icon(Icons.image),
+                          ),
+                          const SizedBox(
+                            width: 50,
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              final ImagePicker _picker = ImagePicker();
+                              final img = await _picker.pickImage(
+                                  source: ImageSource.camera,
+                                  maxHeight: 480,
+                                  maxWidth: 640,
+                                  imageQuality: 50);
+                              setState(() {
+                                image = img;
+                              });
+                            },
+                            label: const Text('Take Photo'),
+                            icon: const Icon(Icons.camera_alt_outlined),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )),
               const Divider(),
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 Expanded(
@@ -1613,5 +1690,11 @@ class _ProductRegisterState extends State<ProductRegister> {
         );
       },
     );
+  }
+
+  addImage() {
+    if (image == null) {
+      api.addProductImageEComm(itemCodeController.text, null);
+    } else {}
   }
 }

@@ -480,6 +480,21 @@ class _LedgerSelectState extends State<LedgerSelect> {
                     showSearchBox: true,
                   ),
                 ),
+                Visibility(
+                    visible: !isAdminUser,
+                    child: Row(
+                      children: [
+                        const Text('Default Branch'),
+                        Checkbox(
+                          value: locationId == null,
+                          onChanged: (value) {
+                            setState(() {
+                              locationId = null;
+                            });
+                          },
+                        )
+                      ],
+                    )),
                 TextButton(
                   onPressed: () {
                     statement = _showQty ? 'Ledger_Report_Qty' : statement;
@@ -2025,6 +2040,29 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                                 })),
                                                                           ),
                                                                   ],
+                                                                ),
+                                                                DropdownSearch<
+                                                                    dynamic>(
+                                                                  maxHeight:
+                                                                      300,
+                                                                  onFind: (String
+                                                                          filter) =>
+                                                                      api.getSalesListData(
+                                                                          filter,
+                                                                          'sales_list/location'),
+                                                                  dropdownSearchDecoration: const InputDecoration(
+                                                                      border:
+                                                                          OutlineInputBorder(),
+                                                                      label: Text(
+                                                                          'Select Branch')),
+                                                                  onChanged:
+                                                                      (dynamic
+                                                                          data) {
+                                                                    locationId =
+                                                                        data;
+                                                                  },
+                                                                  showSearchBox:
+                                                                      true,
                                                                 ),
                                                                 TextButton(
                                                                   onPressed:
