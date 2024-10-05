@@ -1197,9 +1197,10 @@ class _SaleState extends State<Sale> {
             if (ledgerModel.cAmount > 0) {
               var bal0 = ledgerModel.balance.toString().split(' ');
               String bal = bal0[1] == 'Dr' ? bal0[0] : '0';
-              isCreditLimitedLedger =
-                  (double.tryParse(bal) + double.tryParse(order.grandTotal)) >
-                      ledgerModel.cAmount;
+              isCreditLimitedLedger = (double.tryParse(bal) +
+                      double.tryParse(order.grandTotal) -
+                      double.tryParse(order.cashReceived)) >
+                  ledgerModel.cAmount;
             }
           }
           if (!isCreditLimitedLedger) {
@@ -1598,9 +1599,10 @@ class _SaleState extends State<Sale> {
           if (ledgerModel.cAmount > 0) {
             var bal0 = ledgerModel.balance.toString().split(' ');
             String bal = bal0[1] == 'Dr' ? bal0[0] : '0';
-            isCreditLimitedLedger =
-                (double.tryParse(bal) + double.tryParse(order.grandTotal)) >
-                    ledgerModel.cAmount;
+            isCreditLimitedLedger = (double.tryParse(bal) +
+                    double.tryParse(order.grandTotal) -
+                    double.tryParse(order.cashReceived)) >
+                ledgerModel.cAmount;
           }
         }
         if (!isCreditLimitedLedger) {
@@ -10219,39 +10221,38 @@ class _SaleState extends State<Sale> {
                     double.tryParse(bal) > ledgerModel.cAmount;
               }
             }
-            if (!isCreditLimitedLedger) {
-              if (salesTypeData.type == 'SALES-BB') {
-                if (ledgerModel.taxNumber.isNotEmpty) {
-                  // if (salesTypeData.rateType.isNotEmpty) {
-                  //   rateTypeO = salesTypeData.id.toString();
-                  // }
-                  nextWidget = 2;
-                } else if (!blockTaxLedgerOnB2CorBOS) {
-                  // if (salesTypeData.rateType.isNotEmpty) {
-                  //   rateTypeO = salesTypeData.id.toString();
-                  // }
-                  nextWidget = 2;
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content:
-                          Text('B2B Invoice not allow without a TAX number')));
-                }
-              } else {
-                if (blockTaxLedgerOnB2CorBOS) {
-                  if ((salesTypeData.type == 'SALES-BC' ||
-                          salesTypeData.type == 'SALES-BOS') &&
-                      ledgerModel.taxNumber.isNotEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Tax Registered Ledger')));
-                    return;
-                  }
-                }
-                nextWidget = 2;
-              }
-            } else {
+            if (isCreditLimitedLedger) {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text(
                       'Balance Exceeds Credit Limit, Cannot Bill To This Customer')));
+            }
+            if (salesTypeData.type == 'SALES-BB') {
+              if (ledgerModel.taxNumber.isNotEmpty) {
+                // if (salesTypeData.rateType.isNotEmpty) {
+                //   rateTypeO = salesTypeData.id.toString();
+                // }
+                nextWidget = 2;
+              } else if (!blockTaxLedgerOnB2CorBOS) {
+                // if (salesTypeData.rateType.isNotEmpty) {
+                //   rateTypeO = salesTypeData.id.toString();
+                // }
+                nextWidget = 2;
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content:
+                        Text('B2B Invoice not allow without a TAX number')));
+              }
+            } else {
+              if (blockTaxLedgerOnB2CorBOS) {
+                if ((salesTypeData.type == 'SALES-BC' ||
+                        salesTypeData.type == 'SALES-BOS') &&
+                    ledgerModel.taxNumber.isNotEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Tax Registered Ledger')));
+                  return;
+                }
+              }
+              nextWidget = 2;
             }
           }
         });
