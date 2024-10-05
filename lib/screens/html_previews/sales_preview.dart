@@ -459,7 +459,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
       subTotalDiscount += double.tryParse(item['Disc'].toString());
       // subTotalMrp += 0;
       subTotalCGST += double.tryParse(item['CGST'].toString());
-      // subTotalIGST += double.tryParse(item['Disc'].toString());
+      subTotalIGST += double.tryParse(item['IGST'].toString());
       subTotalSGST += double.tryParse(item['SGST'].toString());
       subTotalGross += double.tryParse(item['GrossValue'].toString());
       if (!serialNoIsEmpty) {
@@ -486,8 +486,10 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         "SGSTP": (double.tryParse(item['igst'].toString()) / 2)
                 .toStringAsFixed(decimal) ??
             '0',
-        "IGST": '0',
-        "IGSTP": '0',
+        "IGST": item['IGST'].toString() ?? '0',
+        "IGSTP": (double.tryParse(item['igst'].toString()))
+                .toStringAsFixed(decimal) ??
+            '0',
         "KFC": item['Fcess'].toString() ?? '0',
         "KFCPer": "0",
         "Total": item['Total'].toString() ?? '0',
@@ -502,8 +504,9 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         "SerialNo": item['serialno'].toString() ?? '',
         "HSN": item['hsncode'].toString() ?? '',
         "AltQty": '0', //arabic
-        "RegItemName": '', //arabic
-        "isRegItemName": '', //arabic
+        "RegItemName": item['RegItemName'].toString() ?? '', //arabic
+        "isRegItemName":
+            (item['RegItemName'].toString() ?? '').isNotEmpty, //arabic
         "QtyArabic": '0', //arabic
         "RateArabic": '0', //arabic
         "TotalArabic": '0', //arabic
@@ -522,7 +525,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
         "UnitId": '',
         "UnitValue": item['UnitValue'].toString() ?? '1',
         "Remark": item['serialno'].toString() ?? '',
-        "isRegName": false
+        "isRegName": (item['RegItemName'].toString() ?? '').isNotEmpty
       });
 
       if (isPrintSerialNoInSales &&
@@ -5422,7 +5425,10 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
     List<dynamic> items = [];
     int index = -1;
     for (var item in products) {
-      index = items.indexWhere((i) => i['itemId'] == item['itemId']);
+      index = items.indexWhere((i) =>
+          i['itemId'] == item['itemId'] &&
+          i['Rate'] == item['Rate'] &&
+          i['DiscPersent'] == item['DiscPersent']);
       if (index != -1) {
         double qty = double.parse(items[index]['Qty'].toString()) +
             double.parse(item['Qty'].toString());
@@ -5498,6 +5504,7 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                       items[index]['Qty']);
         }
       } else {
+        item['slno'] = (items.length + 1).toString();
         items.add(item);
       }
     }

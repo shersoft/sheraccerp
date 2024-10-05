@@ -62,6 +62,7 @@ class _RPVoucherState extends State<RPVoucher> {
       isSalesManWiseLedger = false,
       isAdminUser = false,
       keyEditAndDeleteAdminOnlyDaysBefore = false,
+      isNarrationAsCalculator = false,
       daysBefore = false;
   int refNo = 0, acId = 0;
   int page = 1, pageTotal = 0, totalRecords = 0, valueDaysBefore = 0;
@@ -121,6 +122,10 @@ class _RPVoucherState extends State<RPVoucher> {
     salesManId = ComSettings.appSettings(
             'int', 'key-dropdown-default-salesman-view', 1) -
         1;
+    getDefaultSalesManId().then((value) {
+      salesManId = value;
+    });
+
     locationId = ComSettings.appSettings(
             'int', 'key-dropdown-default-location-view', 2) -
         1;
@@ -150,6 +155,8 @@ class _RPVoucherState extends State<RPVoucher> {
     if (companyUserData.userType.toUpperCase() == 'ADMIN') {
       isAdminUser = true;
     }
+    isNarrationAsCalculator =
+        ComSettings.getStatus('KEY NARRATION AS CALCULATOR', settings);
   }
 
   userDateCheck(String date) {
@@ -1455,7 +1462,7 @@ class _RPVoucherState extends State<RPVoucher> {
             Visibility(
                 visible: isAdminUser,
                 child: IconButton(
-                  icon: Icon(Icons.search),
+                  icon: const Icon(Icons.search),
                   onPressed: () {
                     inputEntryNo(mode);
                   },
@@ -1614,15 +1621,20 @@ class _RPVoucherState extends State<RPVoucher> {
             Expanded(
               child: TextField(
                 controller: _controllerNarration,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  label: Text('Narration'),
-                ),
+                decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    labelText: isNarrationAsCalculator
+                        ? 'Enter expression (e.g. 3+4)'
+                        : 'Narration'),
+                keyboardType: isNarrationAsCalculator
+                    ? TextInputType.number
+                    : TextInputType.text,
                 onChanged: (value) {
                   setState(() {
                     narration = value;
                   });
                 },
+                onSubmitted: (input) => _calculateResult(input),
               ),
             ),
           ],
@@ -2012,5 +2024,66 @@ class _RPVoucherState extends State<RPVoucher> {
         actionShow(mode, context, dataAll);
       }
     });
+  }
+
+  String _result = '';
+
+  // Function to parse the input and calculate
+  void _calculateResult(String input) {
+    try {
+      String operator = '';
+      double num1, num2;
+
+      if (input.contains('+')) {
+        operator = '+';
+      } else if (input.contains('-')) {
+        operator = '-';
+      } else if (input.contains('*')) {
+        operator = '*';
+      } else if (input.contains('/')) {
+        operator = '/';
+      }
+
+      if (operator.isNotEmpty) {
+        List<String> parts = input.split(operator);
+        num1 = double.parse(parts[0]);
+        num2 = double.parse(parts[1]);
+
+        double result;
+        switch (operator) {
+          case '+':
+            result = num1 + num2;
+            break;
+          case '-':
+            result = num1 - num2;
+            break;
+          case '*':
+            result = num1 * num2;
+            break;
+          case '/':
+            result = num1 / num2;
+            break;
+          default:
+            result = 0;
+        }
+
+        setState(() {
+          _result = '$result';
+        });
+      } else {
+        setState(() {
+          _result = 'Invalid Input!';
+        });
+      }
+
+      if (_result.isNotEmpty) {
+        narration = input + ' = ' + _result;
+        _controllerNarration.text = narration;
+      }
+    } catch (e) {
+      setState(() {
+        _result = 'Error: Invalid Expression!';
+      });
+    }
   }
 }

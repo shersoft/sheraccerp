@@ -752,7 +752,7 @@ class _SalesReturnState extends State<SalesReturn> {
                 'RealEntryNo': value1,
                 'EntryNo': value1,
                 'InvoiceNo': value1.toString(),
-                'Type': 1
+                'Type': saleReturnFormId
               }
             ];
             if (salesTypeData.accounts) {

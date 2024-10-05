@@ -36,17 +36,17 @@ import 'package:sheraccerp/util/number_to_word.dart';
 import 'package:sheraccerp/widget/loading.dart';
 import 'package:sheraccerp/widget/pdf_screen.dart';
 
-class RVPreviewShow extends StatefulWidget {
+class JvPreviewShow extends StatefulWidget {
   String title = '';
   dynamic dataAll;
-  RVPreviewShow({Key? key, required this.title, this.dataAll})
+  JvPreviewShow({Key? key, required this.title, this.dataAll})
       : super(key: key);
 
   @override
-  State<RVPreviewShow> createState() => _RVPreviewShowState();
+  State<JvPreviewShow> createState() => _JvPreviewShowState();
 }
 
-class _RVPreviewShowState extends State<RVPreviewShow> {
+class _JvPreviewShowState extends State<JvPreviewShow> {
   final GlobalKey _globalKey = GlobalKey();
   DioService api = DioService();
   late RPModel rvModel;
@@ -59,13 +59,12 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
   dynamic data;
   bool _isLoading = true;
   var bill = {}, dataParticulars = [];
-  String invoiceHead = '', form = '';
+  String invoiceHead = ''; //, form = '';
   double oldBalance = 0, balance = 0;
 
   Future<Uint8List> _capturePng() async {
     late Uint8List pngBytes;
     try {
-      // print('inside');
       RenderRepaintBoundary? boundary = _globalKey.currentContext!
           .findRenderObject() as RenderRepaintBoundary;
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
@@ -73,11 +72,6 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
           await image.toByteData(format: ui.ImageByteFormat.png);
       var pngBytes1 = byteData!.buffer.asUint8List();
       pngBytes = resizeImage(pngBytes1);
-      // var bs64 = base64Encode(pngBytes);
-      // print(pngBytes);
-      // print(bs64);
-      // setState(() {});
-      // return pngBytes;
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -87,7 +81,6 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
   Uint8List resizeImage(Uint8List data) {
     Uint8List resizedData = data;
     images.Image? img = images.decodeImage(data);
-    // images.Image img1 = images.fill(0);
     images.Image? resized = images.copyResize(img!, width: 500, height: 500);
     resizedData = images.encodePng(resized) as Uint8List;
     return resizedData;
@@ -112,68 +105,62 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
     var value = widget.dataAll;
     if (value != null) {
       bill = widget.dataAll[0][0];
-      form = widget.dataAll[1];
+      // form = widget.dataAll[1];
       eNo = int.tryParse(bill['entryNo'].toString()) ?? 0;
       dataParticulars = jsonDecode(bill['particular']);
       // dataParticulars = bill['particular'];
-      api
-          .getBalance(
-              dataParticulars[0]['Ledid'],
-              (form == 'PAYMENT' ? 'SupplierOB' : 'CustomerOB'),
-              form,
-              bill['date'],
-              eNo)
-          .then((obValue) {
-        setState(() {
-          data = value;
-          // dataInformation = value['Information'][0];
-          // customerBalance = dataInformation['Balance'].toString();
-          // dataParticularsAll = value['Particulars'];
+      // api
+      //     .getBalance(
+      //         dataParticulars[0]['Ledid'],
+      //         (form == 'PAYMENT' ? 'SupplierOB' : 'CustomerOB'),
+      //         form,
+      //         bill['date'],
+      //         eNo)
+      //     .then((obValue) {
+      //   setState(() {
+      data = value;
+      // dataInformation = value['Information'][0];
+      // customerBalance = dataInformation['Balance'].toString();
+      // dataParticularsAll = value['Particulars'];
 
-          // getOldBalance(
-          //     ledData.id,
-          //     '',
-          //     mode,
-          //     DateUtil.dateYMD(formattedDate),
-          //     information['EntryNo']);
+      // getOldBalance(
+      //     ledData.id,
+      //     '',
+      //     mode,
+      //     DateUtil.dateYMD(formattedDate),
+      //     information['EntryNo']);
 
-          oldBalance = double.parse(obValue['oldBalance'].toString());
-          // if (oldBalance > 0) {
-          bill['oldBalance'] = oldBalance;
-          // }
-          balance = double.parse(obValue['balance'].toString());
-          // if (balance > 0) {
-          bill['balance'] = balance;
-          // }
+      // oldBalance = double.parse(obValue['oldBalance'].toString());
+      // if (oldBalance > 0) {
+      // bill['oldBalance'] = oldBalance;
+      // }
+      // balance = double.parse(obValue['balance'].toString());
+      // if (balance > 0) {
+      // bill['balance'] = balance;
+      // }
 
-          // // var ledgerName = bill['name'];
-          // var bal = bill['balance'].toString().split(' ');
-          // if (bal[1] == 'Dr') {
-          //   // oldBalance = double.tryParse(bill['oldBalance'].toString()) ?? 0;
-          //   balance = oldBalance - bill['total'];
-          // } else {
-          //   // oldBalance = (double.tryParse(bill['oldBalance'].toString())! * (-1));
-          //   balance = oldBalance - bill['total'];
-          // }
-          invoiceHead = form == 'RECEIPT'
-              ? Settings.getValue<String>('key-receipt-voucher-head', 'RECEIPT')
-                      .isNotEmpty
-                  ? Settings.getValue<String>(
-                      'key-receipt-voucher-head', 'RECEIPT')
-                  : 'Receipt Invoice'
-              : Settings.getValue<String>('key-payment-voucher-head', 'PAYMENT')
-                      .isNotEmpty
-                  ? Settings.getValue<String>(
-                      'key-payment-voucher-head', 'PAYMENT')
-                  : 'Payment Invoice';
+      // // var ledgerName = bill['name'];
+      // var bal = bill['balance'].toString().split(' ');
+      // if (bal[1] == 'Dr') {
+      //   // oldBalance = double.tryParse(bill['oldBalance'].toString()) ?? 0;
+      //   balance = oldBalance - bill['total'];
+      // } else {
+      //   // oldBalance = (double.tryParse(bill['oldBalance'].toString())! * (-1));
+      //   balance = oldBalance - bill['total'];
+      // }
+      invoiceHead =
+          Settings.getValue<String>('key-journal-voucher-head', 'JOURNAL')
+                  .isNotEmpty
+              ? Settings.getValue<String>('key-payment-voucher-head', 'JOURNAL')
+              : 'Journal Voucher';
 
-          _isLoading = false;
+      _isLoading = false;
 
-          _createPDF(title + '_ref_$eNo', companySettings, settings, bill,
-                  dataParticulars, invoiceHead, form, dataParticulars)
-              .then((value) => pdfPath = value);
-        });
-      });
+      _createPDF(title + '_ref_$eNo', companySettings, settings, bill,
+              dataParticulars, invoiceHead, dataParticulars)
+          .then((value) => pdfPath = value);
+      // });
+      // });
     }
 
     loadAssets();
@@ -260,17 +247,8 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
           ],
         ),
         body: eNo > 0
-            ? previewWidget(
-                context,
-                _isLoading,
-                companySettings,
-                bill,
-                settings,
-                dataParticulars,
-                invoiceHead,
-                form,
-                oldBalance,
-                balance)
+            ? previewWidget(context, _isLoading, companySettings, bill,
+                settings, dataParticulars, invoiceHead, oldBalance, balance)
             // webView()
             : const Center(child: Text('Not Found')));
   }
@@ -738,18 +716,12 @@ previewWidget(
     List<CompanySettings> settings,
     dataParticulars,
     invoiceHead,
-    form,
     oldBalance,
     balance) {
-  invoiceHead = form == 'RECEIPT'
-      ? Settings.getValue<String>('key-receipt-voucher-head', 'RECEIPT')
-              .isNotEmpty
-          ? Settings.getValue<String>('key-receipt-voucher-head', 'RECEIPT')
-          : 'Receipt voucher'.toUpperCase()
-      : Settings.getValue<String>('key-payment-voucher-head', 'PAYMENT')
-              .isNotEmpty
-          ? Settings.getValue<String>('key-payment-voucher-head', 'PAYMENT')
-          : 'Payment voucher'.toUpperCase();
+  invoiceHead = Settings.getValue<String>('key-journal-voucher-head', 'JOURNAL')
+          .isNotEmpty
+      ? Settings.getValue<String>('key-journal-voucher-head', 'JOURNAL')
+      : 'Journal Voucher'.toUpperCase();
 
   return SafeArea(
     child: Padding(
@@ -856,17 +828,11 @@ previewWidget(
                   const SizedBox(
                     height: 10,
                   ),
-                  form == 'RECEIPT'
-                      ? const Text(
-                          "RECEIPT VOUCHER",
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, color: Colors.black),
-                        )
-                      : const Text(
-                          "PAYMENT VOUCHER",
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, color: Colors.black),
-                        ),
+                  const Text(
+                    "JOURNAL VOUCHER",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: Colors.black),
+                  ),
                   const SizedBox(
                     height: 10,
                   ),
@@ -875,22 +841,17 @@ previewWidget(
                     children: [
                       Row(
                         children: [
-                          SizedBox(
+                          const SizedBox(
                               width: 130,
-                              child: form == 'RECEIPT'
-                                  ? const Text(
-                                      "Received With Thanks From",
-                                      style: TextStyle(fontSize: 10),
-                                    )
-                                  : const Text(
-                                      "Paid To",
-                                      style: TextStyle(fontSize: 10),
-                                    )),
+                              child: Text(
+                                "  ",
+                                style: TextStyle(fontSize: 10),
+                              )),
                           const SizedBox(
                             width: 20,
                           ),
                           Text(
-                            "${bill["name"]}",
+                            "${bill["dName"]}",
                             style: const TextStyle(fontSize: 10),
                           ),
                         ],
@@ -910,7 +871,7 @@ previewWidget(
                           Expanded(
                             child: Text(
                               NumberToWord().convertDouble('en',
-                                  double.tryParse(bill['amount'].toString())),
+                                  double.tryParse(bill['total'].toString())),
                               style: const TextStyle(fontSize: 10),
                             ),
                           ),
@@ -978,14 +939,11 @@ previewWidget(
                       const SizedBox(
                         height: 10,
                       ),
-                      Text(
-                        "***Discount*** ${bill["discount"].toStringAsFixed(2)} ",
-                      ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: const [
                           Text(
-                            "All Cheque/DD are subject to realisation",
+                            "All Cheque/DD are subject to realization",
                             style: TextStyle(fontSize: 8),
                           ),
                           SizedBox(
@@ -1006,33 +964,33 @@ previewWidget(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Row(
-                                  children: [
-                                    const SizedBox(
+                                  children: const [
+                                    SizedBox(
                                       width: 100,
                                       child: Text(
-                                        "Old Balance    :",
+                                        " ",
                                         style: TextStyle(fontSize: 11),
                                       ),
                                     ),
                                     Text(
-                                      "${oldBalance.toStringAsFixed(2)}",
-                                      style: const TextStyle(fontSize: 11),
+                                      " ",
+                                      style: TextStyle(fontSize: 11),
                                     )
                                   ],
                                 ),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    const SizedBox(
+                                  children: const [
+                                    SizedBox(
                                       width: 100,
                                       child: Text(
-                                        "Balance           :",
+                                        " ",
                                         style: TextStyle(fontSize: 11),
                                       ),
                                     ),
                                     Text(
-                                      "${balance.toStringAsFixed(2)}",
-                                      style: const TextStyle(fontSize: 11),
+                                      " ",
+                                      style: TextStyle(fontSize: 11),
                                     )
                                   ],
                                 ),
@@ -1830,10 +1788,9 @@ Future<String> _createPDF(
     var information,
     var particular,
     String invoiceHead,
-    form,
     dataParticulars) async {
   return makePDF(title, companySettings, settings, information, particular,
-          invoiceHead, form, dataParticulars)
+          invoiceHead, dataParticulars)
       .then((value) => savePreviewPDF(value, title));
 }
 
@@ -1872,7 +1829,6 @@ Future<pw.Document> makePDF(
     var information,
     var particular,
     String invoiceHead,
-    form,
     dataParticulars) async {
   double oldBalance = 0, balance = 0;
   var bill = information;
@@ -1880,255 +1836,15 @@ Future<pw.Document> makePDF(
   //  var dataParticulars = bill['Particulars'];
   // var bal = information['balance'].toString().split(' ');
   // if (bal[1] == 'Dr') {
-  oldBalance = double.tryParse(information['oldBalance'].toString()) ?? 0;
-  balance = oldBalance - information['total'];
+  // oldBalance = double.tryParse(information['oldBalance'].toString()) ?? 0;
+  // balance = oldBalance - information['amount'];
   // } else {
   // oldBalance =
   //     (double.tryParse(information['oldBalance'].toString())! * (-1));
-  balance = oldBalance - information['total'];
+  // balance = oldBalance - information['total'];
   // }
   final pdf = pw.Document();
 
-  // pdf.addPage(pw.MultiPage(
-  //     /*company*/
-  //     header: (context) => pw.Column(children: [
-  //           pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.center, children: [
-  //             pw.Expanded(
-  //                 child: pw.Column(children: [
-  //               pw.Container(
-  //                   height: 80,
-  //                   padding: const pw.EdgeInsets.all(8),
-  //                   alignment: pw.Alignment.center,
-  //                   child: pw.RichText(
-  //                       textAlign: pw.TextAlign.center,
-  //                       text: pw.TextSpan(
-  //                           text: '${companySettings.name}\n',
-  //                           style: pw.TextStyle(
-  //                             // color: _darkColor,
-  //                             fontWeight: pw.FontWeight.bold,
-  //                             fontSize: 15,
-  //                           ),
-  //                           children: [
-  //                             const pw.TextSpan(
-  //                               text: '\n',
-  //                               style: pw.TextStyle(
-  //                                 fontSize: 5,
-  //                               ),
-  //                             ),
-  //                             pw.TextSpan(
-  //                                 text: companySettings.add2.toString().isEmpty
-  //                                     ? companySettings.add1
-  //                                     : companySettings.add1 +
-  //                                         '\n' +
-  //                                         companySettings.add2,
-  //                                 style: pw.TextStyle(
-  //                                   fontWeight: pw.FontWeight.bold,
-  //                                   fontSize: 10,
-  //                                 ),
-  //                                 children: [
-  //                                   companySettings.telephone
-  //                                           .toString()
-  //                                           .isNotEmpty
-  //                                       ? pw.TextSpan(
-  //                                           text: companySettings.telephone,
-  //                                           children: [
-  //                                               companySettings.mobile
-  //                                                       .toString()
-  //                                                       .isNotEmpty
-  //                                                   ? pw.TextSpan(
-  //                                                       text: ', ' +
-  //                                                           companySettings
-  //                                                               .mobile)
-  //                                                   : const pw.TextSpan(
-  //                                                       text: ' '),
-  //                                             ])
-  //                                       : const pw.TextSpan(
-  //                                           text: '\n',
-  //                                           style: pw.TextStyle(
-  //                                             fontSize: 5,
-  //                                           ),
-  //                                         ),
-  //                                 ]),
-  //                           ]))),
-  //               pw.Container(
-  //                   height: 80,
-  //                   padding: const pw.EdgeInsets.all(8),
-  //                   alignment: pw.Alignment.center,
-  //                   child: pw.Text(invoiceHead,
-  //                       style: pw.TextStyle(
-  //                           fontWeight: pw.FontWeight.bold,
-  //                           fontSize: 15,
-  //                           decoration: pw.TextDecoration.underline))),
-  //               pw.Container(
-  //                 padding: const pw.EdgeInsets.all(10),
-  //                 alignment: pw.Alignment.center,
-  //                 height: 10,
-  //                 child: pw.GridView(
-  //                   crossAxisCount: 2,
-  //                   children: [
-  //                     pw.Text('VoucherNo : ${information['entryNo']}',
-  //                         style: pw.TextStyle(
-  //                           fontWeight: pw.FontWeight.bold,
-  //                           fontSize: 10,
-  //                         ),
-  //                         textAlign: pw.TextAlign.left),
-  //                     pw.Text('Date : ' + DateUtil.dateDMY(information['date']),
-  //                         style: pw.TextStyle(
-  //                           fontWeight: pw.FontWeight.bold,
-  //                           fontSize: 10,
-  //                         ),
-  //                         textAlign: pw.TextAlign.right),
-  //                   ],
-  //                 ),
-  //               ),
-  //               pw.SizedBox(
-  //                 height: 5,
-  //               ),
-  //             ])),
-  //           ]),
-  //           if (context.pageNumber > 1) pw.SizedBox(height: 20)
-  //         ]),
-  //     build: (context) => [
-  //           /*customer*/
-  //           pw.Table(
-  //             border: pw.TableBorder.all(width: 0.2),
-  //             defaultColumnWidth: const pw.IntrinsicColumnWidth(),
-  //             children: [
-  //               pw.TableRow(children: [
-  //                 pw.Column(
-  //                     crossAxisAlignment: pw.CrossAxisAlignment.center,
-  //                     mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                     children: [
-  //                       pw.Text('Particulars',
-  //                           style: pw.TextStyle(
-  //                               fontSize: 9, fontWeight: pw.FontWeight.bold)),
-  //                       // pw.Divider(thickness: 1)
-  //                     ]),
-  //                 pw.Column(
-  //                     crossAxisAlignment: pw.CrossAxisAlignment.center,
-  //                     mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                     children: [
-  //                       pw.Text('Amount',
-  //                           style: pw.TextStyle(
-  //                               fontSize: 9, fontWeight: pw.FontWeight.bold)),
-  //                       // pw.Divider(thickness: 1)
-  //                     ]),
-  //                 pw.Column(
-  //                     crossAxisAlignment: pw.CrossAxisAlignment.center,
-  //                     mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                     children: [
-  //                       pw.Text('Discount',
-  //                           style: pw.TextStyle(
-  //                               fontSize: 9, fontWeight: pw.FontWeight.bold)),
-  //                       // pw.Divider(thickness: 1)
-  //                     ]),
-  //                 pw.Column(
-  //                     crossAxisAlignment: pw.CrossAxisAlignment.center,
-  //                     mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                     children: [
-  //                       pw.Text('Total',
-  //                           style: pw.TextStyle(
-  //                               fontSize: 9, fontWeight: pw.FontWeight.bold)),
-  //                       // pw.Divider(thickness: 1)
-  //                     ]),
-  //               ]),
-  //               // dataParticulars
-  //               pw.TableRow(children: [
-  //                 pw.Column(
-  //                     crossAxisAlignment: pw.CrossAxisAlignment.start,
-  //                     mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                     children: [
-  //                       pw.Padding(
-  //                         padding: const pw.EdgeInsets.all(2.0),
-  //                         child: pw.Text(
-  //                             information['name'] +
-  //                                 "\n" +
-  //                                 particular[0]['narration'].toString(),
-  //                             style: const pw.TextStyle(fontSize: 9)),
-  //                         // pw.Divider(thickness: 1)
-  //                       ),
-  //                     ]),
-  //                 pw.Column(
-  //                     crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                     mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                     children: [
-  //                       pw.Padding(
-  //                         padding: const pw.EdgeInsets.all(2.0),
-  //                         child: pw.Text(
-  //                             double.tryParse(
-  //                                     particular[0]['amount'].toString())!
-  //                                 .toStringAsFixed(2),
-  //                             style: const pw.TextStyle(fontSize: 9)),
-  //                         // pw.Divider(thickness: 1)
-  //                       )
-  //                     ]),
-  //                 pw.Column(
-  //                     crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                     mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                     children: [
-  //                       pw.Padding(
-  //                         padding: const pw.EdgeInsets.all(2.0),
-  //                         child: pw.Text(
-  //                             double.tryParse(
-  //                                     particular[0]['discount'].toString())!
-  //                                 .toStringAsFixed(2),
-  //                             style: const pw.TextStyle(fontSize: 9)),
-  //                         // pw.Divider(thickness: 1)
-  //                       )
-  //                     ]),
-  //                 pw.Column(
-  //                     crossAxisAlignment: pw.CrossAxisAlignment.end,
-  //                     mainAxisAlignment: pw.MainAxisAlignment.center,
-  //                     children: [
-  //                       pw.Padding(
-  //                         padding: const pw.EdgeInsets.all(2.0),
-  //                         child: pw.Text(
-  //                             double.tryParse(
-  //                                     particular[0]['total'].toString())!
-  //                                 .toStringAsFixed(2),
-  //                             style: const pw.TextStyle(fontSize: 9)),
-  //                         // pw.Divider(thickness: 1)
-  //                       )
-  //                     ]),
-  //               ])
-  //             ],
-  //           ),
-  //           pw.Container(
-  //               alignment: pw.Alignment.center,
-  //               child: pw.Text(
-  //                 ' Amount in Words: ${NumberToWord().convertDouble('en', double.tryParse(information['total'].toString()))}',
-  //               )),
-  //           pw.Column(children: [
-  //             pw.Row(
-  //               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-  //               children: [
-  //                 pw.Text(' Old Balance : ${oldBalance.toStringAsFixed(2)}',
-  //                     style: pw.TextStyle(
-  //                       fontWeight: pw.FontWeight.bold,
-  //                       fontSize: 10,
-  //                     ),
-  //                     textAlign: pw.TextAlign.left),
-  //                 pw.Text(' Balance : ${balance.toStringAsFixed(2)}',
-  //                     style: pw.TextStyle(
-  //                       fontWeight: pw.FontWeight.bold,
-  //                       fontSize: 10,
-  //                     ),
-  //                     textAlign: pw.TextAlign.right),
-  //               ],
-  //             )
-  //           ]),
-  //           pw.SizedBox(
-  //             height: 40.0,
-  //           ),
-  //           pw.Container(
-  //               alignment: pw.Alignment.center,
-  //               child: pw.Text(
-  //                   information['message'].toString().isNotEmpty
-  //                       ? information['message'].toString()
-  //                       : 'Thank you',
-  //                   textAlign: pw.TextAlign.center))
-  //         ],
-  //     footer: _buildFooter));
   pdf.addPage(pw.MultiPage(
       maxPages: 100,
       pageFormat: pw.PdfPageFormat.a4,
@@ -2213,17 +1929,11 @@ Future<pw.Document> makePDF(
                 pw.SizedBox(
                   height: 10,
                 ),
-                form == 'RECEIPT'
-                    ? pw.Text("RECEIPT VOUCHER",
-                        style: pw.TextStyle(
-                          fontWeight: pw.FontWeight.bold,
-                          color: const pw.PdfColor.fromInt(0xFF000000),
-                        ))
-                    : pw.Text("PAYMENT VOUCHER",
-                        style: pw.TextStyle(
-                          fontWeight: pw.FontWeight.bold,
-                          color: const pw.PdfColor.fromInt(0xFF000000),
-                        )),
+                pw.Text("JOURNAL VOUCHER",
+                    style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold,
+                      color: const pw.PdfColor.fromInt(0xFF000000),
+                    )),
                 pw.SizedBox(
                   height: 10,
                 ),
@@ -2234,20 +1944,15 @@ Future<pw.Document> makePDF(
                       children: [
                         pw.SizedBox(
                             width: 180,
-                            child: form == 'RECEIPT'
-                                ? pw.Text(
-                                    "Received With Thanks From",
-                                    style: const pw.TextStyle(fontSize: 10),
-                                  )
-                                : pw.Text(
-                                    "Paid To",
-                                    style: const pw.TextStyle(fontSize: 10),
-                                  )),
+                            child: pw.Text(
+                              " ",
+                              style: const pw.TextStyle(fontSize: 10),
+                            )),
                         pw.SizedBox(
                           width: 20,
                         ),
                         pw.Text(
-                          "${bill["name"]}",
+                          "${bill["dName"]}",
                           style: const pw.TextStyle(fontSize: 10),
                         ),
                       ],
@@ -2333,9 +2038,6 @@ Future<pw.Document> makePDF(
                     pw.SizedBox(
                       height: 15,
                     ),
-                    pw.Text(
-                      "***Discount*** ${bill["discount"].toStringAsFixed(2)} ",
-                    ),
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
@@ -2361,75 +2063,7 @@ Future<pw.Document> makePDF(
                             : pw.Container(),
                       ],
                     ),
-                    oldBalance > 0 || balance > 0
-                        ? pw.Container(
-                            padding:
-                                const pw.EdgeInsets.symmetric(horizontal: 10),
-                            height: 50,
-                            width: double.infinity,
-                            decoration:
-                                pw.BoxDecoration(border: pw.Border.all()),
-                            child: pw.Row(
-                              mainAxisAlignment:
-                                  pw.MainAxisAlignment.spaceBetween,
-                              children: [
-                                pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.start,
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.center,
-                                  children: [
-                                    pw.Row(
-                                      children: [
-                                        pw.SizedBox(
-                                          width: 100,
-                                          child: pw.Text(
-                                            "Old Balance    :",
-                                            style: const pw.TextStyle(
-                                                fontSize: 11),
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          oldBalance.toStringAsFixed(2),
-                                          style:
-                                              const pw.TextStyle(fontSize: 11),
-                                        )
-                                      ],
-                                    ),
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.end,
-                                      children: [
-                                        pw.SizedBox(
-                                          width: 100,
-                                          child: pw.Text(
-                                            "Balance           :",
-                                            style: const pw.TextStyle(
-                                                fontSize: 11),
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          balance.toStringAsFixed(2),
-                                          style:
-                                              const pw.TextStyle(fontSize: 11),
-                                        )
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                pw.Column(
-                                  mainAxisAlignment: pw.MainAxisAlignment.end,
-                                  children: [
-                                    pw.Text(
-                                      "Receiver Signature   ",
-                                      style: const pw.TextStyle(fontSize: 8),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          )
-                        : pw.Container(),
+                    pw.Container(),
                   ],
                 ),
                 pw.SizedBox(

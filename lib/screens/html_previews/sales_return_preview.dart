@@ -277,7 +277,7 @@ class _SalesReturnPreviewShowState extends State<SalesReturnPreviewShow> {
     //   });
     // });
     api
-        .fetchSalesReturnInvoice(dataDynamic[0]['EntryNo'].toString(), 1)
+        .fetchSalesReturnInvoice(dataDynamic[0]['EntryNo'].toString(), type)
         .then((value) {
       if (value != null) {
         setState(() {

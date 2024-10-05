@@ -983,6 +983,56 @@ class _SalesManHomeState extends State<SalesManHome> {
                               ),
                             ),
                           ),
+                          Visibility(
+                            visible: ComSettings.userControl('PAYABLE'),
+                            child: Card(
+                              elevation: 2,
+                              shape: const StadiumBorder(
+                                  side: BorderSide(
+                                color: blue,
+                                width: 2.0,
+                              )),
+                              child: TextButton(
+                                child: const Text('PAYABLE',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                    )),
+                                onPressed: () {
+                                  argumentsPass = {'mode': 'Payable'};
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/select_ledger',
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          Visibility(
+                            visible: ComSettings.userControl('RECEIVABLE'),
+                            child: Card(
+                              elevation: 2,
+                              shape: const StadiumBorder(
+                                  side: BorderSide(
+                                color: blue,
+                                width: 2.0,
+                              )),
+                              child: TextButton(
+                                child: const Text('RECEIVABLE',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                    )),
+                                onPressed: () {
+                                  argumentsPass = {'mode': 'Receivable'};
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/select_ledger',
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
                           Card(
                             elevation: 2,
                             shape: const StadiumBorder(

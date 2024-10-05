@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:pdf/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:sheraccerp/app_settings_page.dart';
 import 'package:sheraccerp/models/company.dart';
@@ -829,3 +830,21 @@ set logeUserName(String value) => _logeUserName = value;
 String _customerId = "";
 get customerId => _customerId;
 set customerId(String value) => _customerId = value;
+
+Future<int> getDefaultSalesManId() async {
+  int result = 0;
+  SharedPreferences pref = await SharedPreferences.getInstance();
+  if ((pref.getString('default-salesman') ?? "").isNotEmpty) {
+    String val = pref.getString('default-salesman').split('-')[1];
+    var id = otherRegSalesManList
+        .firstWhere(
+            (element) => element['Name'].toString() == val.toString())['Auto']
+        .toString();
+    result = int.parse(id);
+  } else {
+    result = ComSettings.appSettings(
+            'int', 'key-dropdown-default-salesman-view', 1) -
+        1;
+  }
+  return result;
+}

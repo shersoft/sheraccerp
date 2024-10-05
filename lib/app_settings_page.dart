@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sheraccerp/screens/settings/add_logo.dart';
 import 'package:sheraccerp/shared/constants.dart';
 import 'package:sheraccerp/util/res_color.dart';
@@ -138,6 +139,9 @@ class AppSettings extends StatelessWidget {
                       salesmanList.isNotEmpty ? salesmanList[0].key + 1 : 2,
                   onChange: (value) {
                     debugPrint('key-dropdown-default-salesman-view: $value');
+                    var val = salesmanList
+                        .firstWhere((element) => element.key == value - 1);
+                    savePref('default-salesman', '${val.key}-${val.value}');
                   },
                 ),
                 DropDownSettingsTileNew<int>(
@@ -153,6 +157,9 @@ class AppSettings extends StatelessWidget {
                       locationList.isNotEmpty ? locationList[0].key + 1 : 2,
                   onChange: (value) {
                     debugPrint('key-dropdown-default-location-view: $value');
+                    var val = salesmanList
+                        .firstWhere((element) => element.key == value - 1);
+                    savePref('default-location', '${val.e}-${val.value}');
                   },
                 ),
                 DropDownSettingsTileNew<int>(
@@ -167,6 +174,9 @@ class AppSettings extends StatelessWidget {
                   selected: cashAccount.isNotEmpty ? cashAccount[0].key + 1 : 2,
                   onChange: (value) {
                     debugPrint('key-dropdown-default-cash-ac: $value');
+                    var val = salesmanList
+                        .firstWhere((element) => element.key == value - 1);
+                    savePref('default-cash-ac', '${val.e}-${val.value}');
                   },
                 ),
                 DropDownSettingsTileNew<int>(
@@ -181,6 +191,9 @@ class AppSettings extends StatelessWidget {
                   selected: areaList.isNotEmpty ? areaList[0].key + 1 : 2,
                   onChange: (value) {
                     debugPrint('key-dropdown-default-area-view: $value');
+                    var val = salesmanList
+                        .firstWhere((element) => element.key == value - 1);
+                    savePref('default-area', '${val.e}-${val.value}');
                   },
                 ),
                 DropDownSettingsTileNew<int>(
@@ -195,6 +208,9 @@ class AppSettings extends StatelessWidget {
                   selected: groupList.isNotEmpty ? groupList[0].key + 1 : 2,
                   onChange: (value) {
                     debugPrint('key-dropdown-default-group-view: $value');
+                    var val = salesmanList
+                        .firstWhere((element) => element.key == value - 1);
+                    savePref('default-group', '${val.e}-${val.value}');
                   },
                 ),
                 DropDownSettingsTileNew<int>(
@@ -209,6 +225,9 @@ class AppSettings extends StatelessWidget {
                   selected: routeList.isNotEmpty ? routeList[0].key + 1 : 2,
                   onChange: (value) {
                     debugPrint('key-dropdown-default-route-view: $value');
+                    var val = salesmanList
+                        .firstWhere((element) => element.key == value - 1);
+                    savePref('default-route', '${val.e}-${val.value}');
                   },
                 ),
               ],
@@ -1627,6 +1646,11 @@ class AppSettings extends StatelessWidget {
         )
       ],
     );
+  }
+
+  savePref(String key, String value) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    await pref.setString(key, value);
   }
 }
 

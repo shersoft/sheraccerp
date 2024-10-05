@@ -236,6 +236,13 @@ class _LedgerSelectState extends State<LedgerSelect> {
           {'id': '2', 'name': 'Invoice Wise'},
           {'id': '3', 'name': 'Detailed'},
           {'id': '4', 'name': 'Due Bill Date'},
+          {'id': '5', 'name': 'Due Bills'},
+          // {'id': '6', 'name': 'Ageing Report'},
+          // {'id': '7', 'name': 'Receipt Wise Invoice Balance'},
+          // {'id': '8', 'name': 'Payment Wise Invoice Balance'},
+          // {'id': '9', 'name': 'B2B Customer Balance'},
+          // {'id': '10', 'name': 'Bill Ageing Creditors'},
+          // {'id': '11', 'name': 'Nearly Due Report'},
         ];
         // List<dynamic> stockValue = [
         //   {'id': '13', 'name': 'SUPPLIERS'},
@@ -262,6 +269,13 @@ class _LedgerSelectState extends State<LedgerSelect> {
           {'id': '2', 'name': 'Invoice Wise'},
           {'id': '3', 'name': 'Detailed'},
           {'id': '4', 'name': 'Due Bill Date'},
+          {'id': '5', 'name': 'Due Bills'},
+          // {'id': '6', 'name': 'Ageing Report'},
+          // {'id': '7', 'name': 'Receipt Wise Invoice Balance'},
+          // {'id': '8', 'name': 'Payment Wise Invoice Balance'},
+          // {'id': '9', 'name': 'B2B Customer Balance'},
+          // {'id': '10', 'name': 'Bill Ageing Creditors'},
+          // {'id': '11', 'name': 'Nearly Due Report'},
         ];
         setState(() {
           items.addAll(groupValues);
@@ -515,7 +529,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                 salesMan,
                                 branches,
                                 area,
-                                route)));
+                                route,
+                                '0')));
                   },
                   child: const Text('Show'),
                   style: ButtonStyle(
@@ -622,7 +637,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                         ? [locationId.id]
                                         : [_dropDownBranchId],
                                     area,
-                                    route)));
+                                    route,
+                                    '0')));
                       },
                       child: const Text('Show'),
                       style: ButtonStyle(
@@ -719,7 +735,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                 ? [locationId.id]
                                                 : [_dropDownBranchId],
                                             area,
-                                            route)));
+                                            route,
+                                            '0')));
                           },
                           child: const Text('Show'),
                           style: ButtonStyle(
@@ -800,7 +817,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                     ? [locationId.id]
                                                     : [_dropDownBranchId],
                                                 area,
-                                                route)));
+                                                route,
+                                                '0')));
                               },
                               child: const Text('Show'),
                               style: ButtonStyle(
@@ -912,7 +930,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                         ? [locationId.id]
                                                         : [_dropDownBranchId],
                                                     area,
-                                                    route)));
+                                                    route,
+                                                    '0')));
                                   },
                                   child: const Text('Show'),
                                   style: ButtonStyle(
@@ -995,7 +1014,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                 _dropDownBranchId
                                                               ],
                                                         area,
-                                                        route)));
+                                                        route,
+                                                        '0')));
                                       },
                                       child: const Text('Show'),
                                       style: ButtonStyle(
@@ -1086,7 +1106,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                     _dropDownBranchId
                                                                   ],
                                                             area,
-                                                            route)));
+                                                            route,
+                                                            '0')));
                                           },
                                           child: const Text('Show'),
                                           style: ButtonStyle(
@@ -1327,7 +1348,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                         _dropDownBranchId
                                                                       ],
                                                                 area,
-                                                                route)));
+                                                                route,
+                                                                '0')));
                                               },
                                               child: const Text('Show'),
                                               style: ButtonStyle(
@@ -1568,7 +1590,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                             _dropDownBranchId
                                                                           ],
                                                                     area,
-                                                                    route)));
+                                                                    route,
+                                                                    '0')));
                                                       },
                                                       child: const Text('Show'),
                                                       style: ButtonStyle(
@@ -1740,7 +1763,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                                 _dropDownBranchId
                                                                               ],
                                                                         area,
-                                                                        route)));
+                                                                        route,
+                                                                        '0')));
                                                           },
                                                           child: const Text(
                                                               'Show'),
@@ -1900,7 +1924,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                                     _dropDownBranchId
                                                                                   ],
                                                                             area,
-                                                                            route)));
+                                                                            route,
+                                                                            '0')));
                                                               },
                                                               child: const Text(
                                                                   'Show'),
@@ -2049,6 +2074,33 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                           filter) =>
                                                                       api.getSalesListData(
                                                                           filter,
+                                                                          'sales_list/customer'),
+                                                                  dropdownSearchDecoration: const InputDecoration(
+                                                                      border:
+                                                                          OutlineInputBorder(),
+                                                                      labelText:
+                                                                          "Select Customer"),
+                                                                  onChanged:
+                                                                      (dynamic
+                                                                          data) {
+                                                                    // _ledger = itemDisplay[index].name;
+                                                                    // _id = itemDisplay[index].id;
+                                                                    // customer = data;
+                                                                    _id =
+                                                                        data.id;
+                                                                  },
+                                                                  showSearchBox:
+                                                                      true,
+                                                                ),
+                                                                const Divider(),
+                                                                DropdownSearch<
+                                                                    dynamic>(
+                                                                  maxHeight:
+                                                                      300,
+                                                                  onFind: (String
+                                                                          filter) =>
+                                                                      api.getSalesListData(
+                                                                          filter,
                                                                           'sales_list/location'),
                                                                   dropdownSearchDecoration: const InputDecoration(
                                                                       border:
@@ -2076,20 +2128,48 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                                 ? 'Receivable_Details'
                                                                                 : selectedGroupValues == 'Due Bill Date'
                                                                                     ? 'DueBillBalance_Report'
-                                                                                    : 'ReceivblesCreditOnly'
+                                                                                    : selectedGroupValues == 'Due Bills'
+                                                                                        ? 'DueBills_Receivable'
+                                                                                        : selectedGroupValues == 'Ageing Report'
+                                                                                            ? 'Receivable_Ageing'
+                                                                                            : selectedGroupValues == 'Receipt Wise Invoice Balance'
+                                                                                                ? 'ReceiptWiseCustomerbalance'
+                                                                                                : selectedGroupValues == 'Payment Wise Invoice Balance'
+                                                                                                    ? 'PaymentWiseSupplierbalance'
+                                                                                                    : selectedGroupValues == 'B2B Customer Balance'
+                                                                                                        ? 'B2B_Customer_Balance'
+                                                                                                        : selectedGroupValues == 'Bill Ageing Creditors'
+                                                                                                            ? 'Bill_Ageing_Creditors'
+                                                                                                            : selectedGroupValues == 'Nearly Due Report'
+                                                                                                                ? 'Nearly_Due_Report'
+                                                                                                                : 'ReceivblesCreditOnly'
                                                                         : selectedGroupValues == 'Invoice Wise'
                                                                             ? 'InvoiceWiseBalanceCustomers'
                                                                             : selectedGroupValues == 'Detailed'
                                                                                 ? 'Receivable_Master_Detail'
                                                                                 : selectedGroupValues == 'Due Bill Date'
                                                                                     ? 'DueBillBalance_Report'
-                                                                                    : 'ReceivblesDebitOnly';
+                                                                                    : selectedGroupValues == 'Due Bills'
+                                                                                        ? 'DueBills_Receivable'
+                                                                                        : selectedGroupValues == 'Ageing Report'
+                                                                                            ? 'DueBills_Receivable'
+                                                                                            : selectedGroupValues == 'Receipt Wise Invoice Balance'
+                                                                                                ? 'DueBills_Receivable'
+                                                                                                : selectedGroupValues == 'Payment Wise Invoice Balance'
+                                                                                                    ? 'DueBills_Receivable'
+                                                                                                    : selectedGroupValues == 'B2B Customer Balance'
+                                                                                                        ? 'DueBills_Receivable'
+                                                                                                        : selectedGroupValues == 'Bill Ageing Creditors'
+                                                                                                            ? 'DueBills_Receivable'
+                                                                                                            : selectedGroupValues == 'Nearly Due Report'
+                                                                                                                ? 'DueBills_Receivable'
+                                                                                                                : 'ReceivblesDebitOnly';
 
                                                                     Navigator.push(
                                                                         context,
                                                                         MaterialPageRoute(
                                                                             builder: (BuildContext context) => ReportView(
-                                                                                selectedItem.id.toString(),
+                                                                                selectedGroupValues == 'Due Bills' ? (_id != null ? _id.toString() : '0') : selectedItem.id.toString(),
                                                                                 (_ob ? '1' : '0'),
                                                                                 DateUtil.dateDMY2YMD(fromDate),
                                                                                 DateUtil.dateDMY2YMD(toDate),
@@ -2099,7 +2179,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                                 salesMan,
                                                                                 locationId != null ? [locationId.id] : [_dropDownBranchId],
                                                                                 area,
-                                                                                route)));
+                                                                                route,
+                                                                                _id != null ? _id.toString() : '0')));
                                                                   },
                                                                   child:
                                                                       const Text(
@@ -2259,7 +2340,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                           () {
                                                                         Navigator.push(
                                                                             context,
-                                                                            MaterialPageRoute(builder: (BuildContext context) => ReportView('0', (_ob ? '1' : '0'), DateUtil.dateDMY2YMD(fromDate), DateUtil.dateDMY2YMD(toDate), statement, '', statement, salesMan, locationId != null ? [locationId.id] : [_dropDownBranchId], area, route)));
+                                                                            MaterialPageRoute(builder: (BuildContext context) => ReportView('0', (_ob ? '1' : '0'), DateUtil.dateDMY2YMD(fromDate), DateUtil.dateDMY2YMD(toDate), statement, '', statement, salesMan, locationId != null ? [locationId.id] : [_dropDownBranchId], area, route, '0')));
                                                                       },
                                                                       child: const Text(
                                                                           'Show'),
@@ -2374,7 +2455,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                                                           () {
                                                                         Navigator.push(
                                                                             context,
-                                                                            MaterialPageRoute(builder: (BuildContext context) => ReportView('0', (_ob ? '1' : '0'), DateUtil.dateDMY2YMD(fromDate), DateUtil.dateDMY2YMD(toDate), statement, '', statement, salesMan, locationId != null ? [locationId.id] : [_dropDownBranchId], area, route)));
+                                                                            MaterialPageRoute(builder: (BuildContext context) => ReportView('0', (_ob ? '1' : '0'), DateUtil.dateDMY2YMD(fromDate), DateUtil.dateDMY2YMD(toDate), statement, '', statement, salesMan, locationId != null ? [locationId.id] : [_dropDownBranchId], area, route, '0')));
                                                                       },
                                                                       child: const Text(
                                                                           'Show'),

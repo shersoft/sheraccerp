@@ -208,8 +208,19 @@ class Report extends StatelessWidget {
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (BuildContext context) => const ReportView('0',
-                        '1', '', '', 'Cheque', '', '', '', [0], '0', '0')));
+                    builder: (BuildContext context) => const ReportView(
+                        '0',
+                        '1',
+                        '',
+                        '',
+                        'Cheque',
+                        '',
+                        '',
+                        '',
+                        [0],
+                        '0',
+                        '0',
+                        '0')));
           },
         ),
         GestureDetector(
@@ -249,6 +260,7 @@ class Report extends StatelessWidget {
                           '',
                           '',
                           [0],
+                          '0',
                           '0',
                           '0')));
             }
@@ -325,6 +337,7 @@ class Report extends StatelessWidget {
                               '',
                               '',
                               location != null ? [location.id] : [0],
+                              '0',
                               '0',
                               '0')));
                 },

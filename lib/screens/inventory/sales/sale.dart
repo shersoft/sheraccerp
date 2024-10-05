@@ -112,7 +112,9 @@ class _SaleState extends State<Sale> {
       keySwitchSalesRateTypeSet = false,
       keyEditAndDeleteAdminOnlyDaysBefore = false,
       daysBefore = false,
-      manualInvoiceNumberInSales = false;
+      manualInvoiceNumberInSales = false,
+      disableEditForGeneratedEInvoice = false,
+      isCreditLimitedLedger = false;
   final List<TextEditingController> _controllers = [];
   DateTime now = DateTime.now();
   String formattedDate;
@@ -167,11 +169,20 @@ class _SaleState extends State<Sale> {
     }
 
     loadSettings();
+    api.fetchDetailAmount().then((value) {
+      otherAmountList = value;
+      setState(() {
+        otherAmountLoaded = true;
+      });
+    });
 
     api.getUnregisteredNameList().then((value) => unregisteredNameList = value);
     salesManId = ComSettings.appSettings(
             'int', 'key-dropdown-default-salesman-view', 1) -
         1;
+    getDefaultSalesManId().then((value) {
+      salesManId = value;
+    });
     lId = ComSettings.appSettings(
             'int', 'key-dropdown-default-location-view', 2) -
         1;
@@ -308,6 +319,8 @@ class _SaleState extends State<Sale> {
         ComSettings.getStatus('USE SALESMAN AS VEHICLE', settings);
     isLedgerWiseLastSRate =
         ComSettings.getStatus('ENABLE CUSTOMER WISE LAST S.RATE', settings);
+    disableEditForGeneratedEInvoice =
+        ComSettings.getStatus('Disable Edit For Generated E-Invoice', settings);
     isQuantityBasedSerialNo =
         ComSettings.getStatus('ENABLE QUANTITY BASED SERIAL NO', settings);
     keyEditAndDeleteAdminOnlyDaysBefore = ComSettings.getStatus(
@@ -534,16 +547,42 @@ class _SaleState extends State<Sale> {
                         if (companyUserData.updateData) {
                           if (!daysBefore) {
                             if (totalItem > 0) {
-                              setState(() {
-                                _isLoading = true;
-                                buttonEvent = true;
-                              });
-                              _insert(
-                                  'Edit DateTime:$formattedDate $timeIs location:${lId.toString()} ledger:${ledgerModel.id} ' +
-                                      CartItem.encodeCartToJson(cartItem)
-                                          .toString(),
-                                  0);
-                              if (currentFinancialYear != null) {
+                              if (companyTaxMode == 'INDIA' &&
+                                  salesTypeData.eInvoice &&
+                                  disableEditForGeneratedEInvoice) {
+                                String irnNo = salesData['Information'][0]
+                                            ['IRNNO']
+                                        .toString() ??
+                                    '';
+                                if (irnNo.toString().isNotEmpty) {
+                                  Fluttertoast.showToast(
+                                      msg:
+                                          "e-Invoice Generated For This Bill, You Can't Edit");
+                                  setState(() {
+                                    buttonEvent = false;
+                                  });
+                                } else {
+                                  setState(() {
+                                    _isLoading = true;
+                                    buttonEvent = true;
+                                  });
+                                  _insert(
+                                      'Edit DateTime:$formattedDate $timeIs location:${lId.toString()} ledger:${ledgerModel.id} ' +
+                                          CartItem.encodeCartToJson(cartItem)
+                                              .toString(),
+                                      0);
+                                  updateSale();
+                                }
+                              } else {
+                                setState(() {
+                                  _isLoading = true;
+                                  buttonEvent = true;
+                                });
+                                _insert(
+                                    'Edit DateTime:$formattedDate $timeIs location:${lId.toString()} ledger:${ledgerModel.id} ' +
+                                        CartItem.encodeCartToJson(cartItem)
+                                            .toString(),
+                                    0);
                                 updateSale();
                               }
                             } else {
@@ -1153,27 +1192,48 @@ class _SaleState extends State<Sale> {
       };
       if (saleAccountId != '0') {
         if (order.cashAC != '0') {
-          if (checkFinancialYear(DateUtil.dateYMD(formattedDate))) {
-            if (manualInvoiceNumberInSales) {
-              api.checkManualInvoiceNoStatus(invoiceNo).then((value) {
-                if (!value) {
-                  postSale(body, otherAmount, order, saleFormType, saleFormId);
-                } else {
-                  showErrorDialog(context, 'Duplicate Invoice No');
+          if (!(salesTypeData.type == 'SALES-O' ||
+              salesTypeData.type == 'SALES-Q')) {
+            if (ledgerModel.cAmount > 0) {
+              var bal0 = ledgerModel.balance.toString().split(' ');
+              String bal = bal0[1] == 'Dr' ? bal0[0] : '0';
+              isCreditLimitedLedger =
+                  (double.tryParse(bal) + double.tryParse(order.grandTotal)) >
+                      ledgerModel.cAmount;
+            }
+          }
+          if (!isCreditLimitedLedger) {
+            if (checkFinancialYear(DateUtil.dateYMD(formattedDate))) {
+              if (manualInvoiceNumberInSales) {
+                api.checkManualInvoiceNoStatus(invoiceNo).then((value) {
+                  if (!value) {
+                    postSale(
+                        body, otherAmount, order, saleFormType, saleFormId);
+                  } else {
+                    showErrorDialog(context, 'Duplicate Invoice No');
 
-                  setState(() {
-                    _isLoading = false;
-                    buttonEvent = false;
-                  });
-                }
-              });
+                    setState(() {
+                      _isLoading = false;
+                      buttonEvent = false;
+                    });
+                  }
+                });
+              } else {
+                postSale(body, otherAmount, order, saleFormType, saleFormId);
+              }
             } else {
-              postSale(body, otherAmount, order, saleFormType, saleFormId);
+              showErrorDialog(
+                  context, "Date Is Incompatible With This Financial Year");
+
+              setState(() {
+                _isLoading = false;
+                buttonEvent = false;
+              });
             }
           } else {
-            showErrorDialog(
-                context, "Date Is Incompatible With This Financial Year");
-
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text(
+                    'Balance Exceeds Credit Limit, Cannot Bill To This Customer')));
             setState(() {
               _isLoading = false;
               buttonEvent = false;
@@ -1533,21 +1593,49 @@ class _SaleState extends State<Sale> {
         'serialNoData': json.encode(SerialNOModel.encodedToJson(serialNoData)),
       };
       if (saleAccountId != '0' && order.cashAC != '0') {
-        api.editSale(body).then((result) {
-          if (CommonService().isNumeric(result) && int.tryParse(result) > 0) {
-            final bodyJsonAmount = {
-              'statement': 'SalesUpdate',
-              'entryNo': dataDynamic[0]['EntryNo'].toString(),
-              'data': otherAmount,
-              'date': order.dated.toString(),
-              'saleFormType': saleFormType,
-              'narration': order.narration,
-              'location': order.location.toString(),
-              'id': order.customerModel[0].id.toString(),
-              'fyId': currentFinancialYear.id.toString()
-            };
-            if (salesTypeData.accounts) {
-              api.addOtherAmount(bodyJsonAmount).then((retNotUsed) {
+        if (!(salesTypeData.type == 'SALES-O' ||
+            salesTypeData.type == 'SALES-Q')) {
+          if (ledgerModel.cAmount > 0) {
+            var bal0 = ledgerModel.balance.toString().split(' ');
+            String bal = bal0[1] == 'Dr' ? bal0[0] : '0';
+            isCreditLimitedLedger =
+                (double.tryParse(bal) + double.tryParse(order.grandTotal)) >
+                    ledgerModel.cAmount;
+          }
+        }
+        if (!isCreditLimitedLedger) {
+          api.editSale(body).then((result) {
+            if (CommonService().isNumeric(result) && int.tryParse(result) > 0) {
+              final bodyJsonAmount = {
+                'statement': 'SalesUpdate',
+                'entryNo': dataDynamic[0]['EntryNo'].toString(),
+                'data': otherAmount,
+                'date': order.dated.toString(),
+                'saleFormType': saleFormType,
+                'narration': order.narration,
+                'location': order.location.toString(),
+                'id': order.customerModel[0].id.toString(),
+                'fyId': currentFinancialYear.id.toString()
+              };
+              if (salesTypeData.accounts) {
+                api.addOtherAmount(bodyJsonAmount).then((retNotUsed) {
+                  final bodyJson = {
+                    'statement': 'CheckPrint',
+                    'entryNo': dataDynamic[0]['EntryNo'].toString(),
+                    'sType': dataDynamic[0]['Type'].toString(),
+                    'grandTotal': ComSettings.appSettings(
+                            'bool', 'key-round-off-amount', false)
+                        ? grandTotal.toStringAsFixed(decimal)
+                        : grandTotal.roundToDouble().toString()
+                  };
+                  api.checkBill(bodyJson).then((data) {
+                    if (data) {
+                      clearCart();
+                      showMore(context, false);
+                    }
+                  });
+                });
+              } else {
                 final bodyJson = {
                   'statement': 'CheckPrint',
                   'entryNo': dataDynamic[0]['EntryNo'].toString(),
@@ -1563,33 +1651,26 @@ class _SaleState extends State<Sale> {
                     showMore(context, false);
                   }
                 });
+              }
+              setState(() {
+                _isLoading = false;
               });
             } else {
-              final bodyJson = {
-                'statement': 'CheckPrint',
-                'entryNo': dataDynamic[0]['EntryNo'].toString(),
-                'sType': dataDynamic[0]['Type'].toString(),
-                'grandTotal': ComSettings.appSettings(
-                        'bool', 'key-round-off-amount', false)
-                    ? grandTotal.toStringAsFixed(decimal)
-                    : grandTotal.roundToDouble().toString()
-              };
-              api.checkBill(bodyJson).then((data) {
-                if (data) {
-                  clearCart();
-                  showMore(context, false);
-                }
-              });
+              showErrorDialog(context, result.toString());
             }
-            setState(() {
-              _isLoading = false;
-            });
-          } else {
-            showErrorDialog(context, result.toString());
-          }
-        }).catchError((e) {
-          showErrorDialog(context, e.toString());
-        });
+          }).catchError((e) {
+            showErrorDialog(context, e.toString());
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text(
+                  'Balance Exceeds Credit Limit, Cannot Bill To This Customer')));
+
+          setState(() {
+            _isLoading = false;
+            buttonEvent = false;
+          });
+        }
       } else {
         Fluttertoast.showToast(msg: "select SalesAccount or CashAccount");
       }
@@ -2039,7 +2120,11 @@ class _SaleState extends State<Sale> {
                   stateCode: snapshot.data.stateCode,
                   taxNumber: snapshot.data.taxNumber,
                   remarks: snapshot.data.remarks,
-                  pinNo: snapshot.data.pinNo);
+                  pinNo: snapshot.data.pinNo,
+                  cAmount: snapshot.data.cAmount,
+                  cDays: snapshot.data.cDays,
+                  orderDate: snapshot.data.orderDate,
+                  deliveryDate: snapshot.data.deliveryDate);
               addressControl.text =
                   snapshot.data.address1 + " " + snapshot.data.address2;
               siteNameControl.text =
@@ -3308,7 +3393,55 @@ class _SaleState extends State<Sale> {
                           ),
                         ]),
                       )
-                    : showAddMore(context, snapshot.data[0]);
+                    : showAddMore(
+                        context,
+                        (oldBill
+                            ? (cartModel != null
+                                ? snapshot.data.firstWhere(
+                                    (element) =>
+                                        element.productId ==
+                                        cartModel.uniqueCode,
+                                    orElse: () => StockProduct(
+                                        adCessPer: cartModel.adCessPer,
+                                        branch: 0,
+                                        brand: 0,
+                                        buyingPrice: cartModel.pRate,
+                                        buyingPriceReal: cartModel.rPRate,
+                                        categoryId: 0,
+                                        cess: cartModel.cess,
+                                        cessPer: cartModel.cessPer,
+                                        color: 0,
+                                        company: 0,
+                                        estUniqueCode: 0,
+                                        expDate: cartModel.expDate,
+                                        free: cartModel.free,
+                                        hsnCode: cartModel.hashCode.toString(),
+                                        itemId: cartModel.itemId,
+                                        locationId: snapshot.data[0].locationId,
+                                        locked: 'N',
+                                        mfrId: 0,
+                                        minimumRate: cartModel.minimumRate,
+                                        name: cartModel.itemName,
+                                        oBarcode: '',
+                                        productId: cartModel.uniqueCode,
+                                        quantity: 0,
+                                        rackId: 0,
+                                        retailPrice: cartModel.rate,
+                                        sellingPrice: cartModel.rate,
+                                        serialNo: cartModel.serialNo,
+                                        size: 0,
+                                        spRetailPrice: cartModel.rate,
+                                        stockValuation:
+                                            snapshot.data[0].stockValuation,
+                                        subcategoryId: 0,
+                                        supplierId: snapshot.data[0].supplierId,
+                                        tax: cartModel.taxP,
+                                        taxType: snapshot.data[0].taxType,
+                                        unitId: cartModel.unitId,
+                                        wholeSalePrice: cartModel.rate),
+                                  )
+                                : snapshot.data[0])
+                            : snapshot.data[0]));
           } else {
             return oldBill
                 ? showAddMore(
@@ -3336,7 +3469,7 @@ class _SaleState extends State<Sale> {
                         name: cartModel.itemName,
                         oBarcode: '',
                         productId: cartModel.uniqueCode,
-                        quantity: cartModel.quantity,
+                        quantity: 0,
                         rackId: 0,
                         retailPrice: cartModel.rate,
                         sellingPrice: cartModel.rate,
@@ -4500,6 +4633,19 @@ class _SaleState extends State<Sale> {
                                                     cartItem.removeAt(indexed);
                                                     break;
                                                   }
+                                                } else if (!oldBill) {
+                                                  double rated = rate;
+                                                  if (element.itemId ==
+                                                          product.itemId &&
+                                                      element.rate == rated) {
+                                                    cartItem.removeWhere(
+                                                        (item) =>
+                                                            item.itemId ==
+                                                                product
+                                                                    .itemId &&
+                                                            item.rate == rated);
+                                                    break;
+                                                  }
                                                 }
                                               }
                                             }
@@ -4580,90 +4726,154 @@ class _SaleState extends State<Sale> {
                                           } else if (oldBill &&
                                               autoBatchSelection) {
                                             if (cartModelList != null) {
-                                              double qty = 0,
-                                                  tQty = 0,
-                                                  balanceQty = 0;
-                                              for (CartItem variantProduct
-                                                  in cartModelList) {
-                                                qty = (variantProduct
-                                                            .quantity) >
-                                                        quantity
-                                                    ? quantity
-                                                    : variantProduct.quantity;
-                                                uniqueCode =
-                                                    variantProduct.uniqueCode;
-                                                double addQuantity =
-                                                    balanceQty > 0
-                                                        ? (balanceQty == qty
-                                                            ? qty
-                                                            : (balanceQty >= qty
-                                                                ? qty
-                                                                : balanceQty))
-                                                        : qty;
-                                                for (CartItem item
+                                              if (cartModelList.isNotEmpty) {
+                                                double qty = 0,
+                                                    tQty = 0,
+                                                    balanceQty = 0;
+                                                for (CartItem variantProduct
                                                     in cartModelList) {
-                                                  int j = cartItem.indexWhere(
-                                                      (i) =>
-                                                          i.itemId ==
-                                                          item.itemId);
-                                                  cartItem.removeAt(j);
-                                                }
+                                                  qty = (variantProduct
+                                                              .quantity) >
+                                                          quantity
+                                                      ? quantity
+                                                      : variantProduct.quantity;
+                                                  uniqueCode =
+                                                      variantProduct.uniqueCode;
+                                                  double addQuantity =
+                                                      balanceQty > 0
+                                                          ? (balanceQty == qty
+                                                              ? qty
+                                                              : (balanceQty >=
+                                                                      qty
+                                                                  ? qty
+                                                                  : balanceQty))
+                                                          : qty;
+                                                  for (CartItem item
+                                                      in cartModelList) {
+                                                    int j = cartItem.indexWhere(
+                                                        (i) =>
+                                                            i.itemId ==
+                                                            item.itemId);
+                                                    cartItem.removeAt(j);
+                                                  }
 
-                                                calculateTextBatch(
-                                                    product, addQuantity);
-                                                cartItem.add(CartItem(
-                                                    id: totalItem + 1,
-                                                    itemId: product.itemId,
-                                                    itemName: product.name,
-                                                    quantity: addQuantity,
-                                                    rate: rate,
-                                                    rRate: rRate,
-                                                    uniqueCode: uniqueCode,
-                                                    gross: gross,
-                                                    discount: discount,
-                                                    discountPercent:
-                                                        discountPercent,
-                                                    rDiscount: rDisc,
-                                                    fCess: kfc,
-                                                    serialNo:
-                                                        _serialNoController
-                                                            .text,
-                                                    tax: tax,
-                                                    taxP: taxP,
-                                                    unitId: _dropDownUnit,
-                                                    unitValue: unitValue ?? 1,
-                                                    pRate: pRate,
-                                                    rPRate: rPRate,
-                                                    barcode: barcode,
-                                                    expDate: expDate,
-                                                    free: freeQty,
-                                                    fUnitId: fUnitId,
-                                                    cdPer: cdPer,
-                                                    cDisc: cDisc,
-                                                    net: subTotal,
-                                                    cess: cess,
-                                                    total: total,
-                                                    profitPer: profitPer,
-                                                    fUnitValue: fUnitValue,
-                                                    adCess: adCess,
-                                                    iGST: iGST,
-                                                    cGST: csGST,
-                                                    sGST: csGST,
-                                                    stock: product.quantity,
-                                                    minimumRate:
-                                                        product.minimumRate,
-                                                    adCessPer:
-                                                        product.adCessPer,
-                                                    cessPer: product.cessPer));
+                                                  calculateTextBatch(
+                                                      product, addQuantity);
+                                                  cartItem.add(CartItem(
+                                                      id: totalItem + 1,
+                                                      itemId: product.itemId,
+                                                      itemName: product.name,
+                                                      quantity: addQuantity,
+                                                      rate: rate,
+                                                      rRate: rRate,
+                                                      uniqueCode: uniqueCode,
+                                                      gross: gross,
+                                                      discount: discount,
+                                                      discountPercent:
+                                                          discountPercent,
+                                                      rDiscount: rDisc,
+                                                      fCess: kfc,
+                                                      serialNo:
+                                                          _serialNoController
+                                                              .text,
+                                                      tax: tax,
+                                                      taxP: taxP,
+                                                      unitId: _dropDownUnit,
+                                                      unitValue: unitValue ?? 1,
+                                                      pRate: pRate,
+                                                      rPRate: rPRate,
+                                                      barcode: barcode,
+                                                      expDate: expDate,
+                                                      free: freeQty,
+                                                      fUnitId: fUnitId,
+                                                      cdPer: cdPer,
+                                                      cDisc: cDisc,
+                                                      net: subTotal,
+                                                      cess: cess,
+                                                      total: total,
+                                                      profitPer: profitPer,
+                                                      fUnitValue: fUnitValue,
+                                                      adCess: adCess,
+                                                      iGST: iGST,
+                                                      cGST: csGST,
+                                                      sGST: csGST,
+                                                      stock: product.quantity,
+                                                      minimumRate:
+                                                          product.minimumRate,
+                                                      adCessPer:
+                                                          product.adCessPer,
+                                                      cessPer:
+                                                          product.cessPer));
 
-                                                tQty += addQuantity;
-                                                balanceQty = quantity - tQty;
-                                                if (tQty >= quantity ||
-                                                    balanceQty == 0) {
-                                                  break;
-                                                } else {
-                                                  //
+                                                  tQty += addQuantity;
+                                                  balanceQty = quantity - tQty;
+                                                  if (tQty >= quantity ||
+                                                      balanceQty == 0) {
+                                                    break;
+                                                  } else {
+                                                    //
+                                                  }
                                                 }
+                                              } else {
+                                                cartItem[position].adCess =
+                                                    adCess;
+                                                cartItem[position].quantity =
+                                                    quantity;
+                                                cartItem[position].rate = rate;
+                                                cartItem[position].rRate =
+                                                    rRate;
+                                                cartItem[position].uniqueCode =
+                                                    uniqueCode;
+                                                cartItem[position].gross =
+                                                    gross;
+                                                cartItem[position].discount =
+                                                    discount;
+                                                cartItem[position]
+                                                        .discountPercent =
+                                                    discountPercent;
+                                                cartItem[position].rDiscount =
+                                                    rDisc;
+                                                cartItem[position].fCess = kfc;
+                                                cartItem[position].serialNo =
+                                                    _serialNoController.text;
+                                                cartItem[position].tax = tax;
+                                                cartItem[position].taxP = taxP;
+                                                cartItem[position].unitId =
+                                                    _dropDownUnit;
+                                                cartItem[position].unitValue =
+                                                    unitValue ?? 1;
+                                                cartItem[position].pRate =
+                                                    pRate;
+                                                cartItem[position].rPRate =
+                                                    rPRate;
+                                                cartItem[position].barcode =
+                                                    barcode;
+                                                cartItem[position].expDate =
+                                                    expDate;
+                                                cartItem[position].free =
+                                                    freeQty;
+                                                cartItem[position].fUnitId =
+                                                    fUnitId;
+                                                cartItem[position].cdPer =
+                                                    cdPer;
+                                                cartItem[position].cDisc =
+                                                    cDisc;
+                                                cartItem[position].net =
+                                                    subTotal;
+                                                cartItem[position].cess = cess;
+                                                cartItem[position].total =
+                                                    total;
+                                                cartItem[position].profitPer =
+                                                    profitPer;
+                                                cartItem[position].fUnitValue =
+                                                    fUnitValue;
+                                                cartItem[position].adCess =
+                                                    adCess;
+                                                cartItem[position].iGST = iGST;
+                                                cartItem[position].cGST = csGST;
+                                                cartItem[position].sGST = csGST;
+                                                cartItem[position].stock =
+                                                    product.quantity;
                                               }
                                             }
                                           } else {
@@ -4816,13 +5026,16 @@ class _SaleState extends State<Sale> {
                                               element.unitValue) +
                                           element.free;
                                       cartS = oldBill
-                                          ? (cartQt + product.quantity)
+                                          ? (element.quantity +
+                                              product.quantity)
                                           : element.stock;
                                     }
                                   }
                                   if (cartS > 0) {
                                     if (cartS <
-                                        (double.tryParse(value) * unitValue)) {
+                                        cartQt +
+                                            (double.tryParse(value) *
+                                                unitValue)) {
                                       cartQ = true;
                                     }
                                   }
@@ -4869,7 +5082,7 @@ class _SaleState extends State<Sale> {
                                                         ? _autoStockVariant.fold(
                                                             0.0, (a, b) => a + double.parse(b.quantity.toString()))
                                                         : oldBill
-                                                            ? product.quantity + (cartModelBatch.quantity * cartModelBatch.unitValue)
+                                                            ? product.quantity + (cartModel.quantity * cartModel.unitValue)
                                                             : product.quantity)
                                                 ? true
                                                 : cartQ
@@ -7161,10 +7374,10 @@ class _SaleState extends State<Sale> {
                                             removeProduct(index);
                                           });
                                         },
-                                        onEdit: () {
+                                        onEdit: () async {
                                           CartItem selectedItem =
                                               cartItem.elementAt(index);
-                                          if (autoBatchSelection) {
+                                          if (autoBatchSelection && !oldBill) {
                                             List<CartItem> selectedCartItem =
                                                 cartItem
                                                     .where((element) =>
@@ -7215,25 +7428,45 @@ class _SaleState extends State<Sale> {
                                                       item.total;
                                                 }
                                               }
-                                              if (oldBill) {
-                                                cartModelList =
-                                                    selectedCartItem;
-                                              } else {
-                                                for (CartItem item
-                                                    in selectedCartItem) {
-                                                  int j = cartItem.indexWhere(
-                                                      (i) =>
-                                                          i.itemId ==
-                                                          item.itemId);
-                                                  cartItem.removeAt(j);
-                                                }
+                                              // if (oldBill) {
+                                              //   cartModelList =
+                                              //       selectedCartItem;
+                                              // } else {
+                                              for (CartItem item
+                                                  in selectedCartItem) {
+                                                int j = cartItem.indexWhere(
+                                                    (i) =>
+                                                        i.itemId ==
+                                                        item.itemId);
+                                                cartItem.removeAt(j);
                                               }
+                                              // }
                                               editItem = false;
                                             } else {
+                                              String named =
+                                                  selectedCartItem[0].itemName;
+                                              List<StockItem> productData =
+                                                  await api
+                                                      .fetchStockProductLike(
+                                                          DateUtil.dateDMY2YMD(
+                                                              formattedDate),
+                                                          named);
+                                              if (productData != null) {
+                                                if (productData.isNotEmpty) {
+                                                  _autoVariantSelect =
+                                                      productData[0].hasVariant;
+                                                  //selectedCartItem[0].quantity=productData[0].quantity;
+                                                } else {
+                                                  editItem = true;
+                                                }
+                                              } else {
+                                                editItem = true;
+                                              }
                                               cartModelBatch =
                                                   selectedCartItem[0];
+                                              position = index;
                                               // cartModel = cartModelBatch;
-                                              // editItem = true;
+
                                             }
                                             setState(() {
                                               editItem = false;
@@ -9145,7 +9378,11 @@ class _SaleState extends State<Sale> {
             route: '',
             state: '',
             stateCode: '',
-            taxNumber: information['gstno']);
+            taxNumber: information['gstno'],
+            cAmount: 0.0,
+            cDays: 0.0,
+            orderDate: 0,
+            deliveryDate: 0);
         ledgerModel = cModel;
         addressControl.text = cModel.address1;
         siteNameControl.text = cModel.address2;
@@ -9973,33 +10210,48 @@ class _SaleState extends State<Sale> {
             // }
             nextWidget = 2;
           } else {
-            if (salesTypeData.type == 'SALES-BB') {
-              if (ledgerModel.taxNumber.isNotEmpty) {
-                // if (salesTypeData.rateType.isNotEmpty) {
-                //   rateTypeO = salesTypeData.id.toString();
-                // }
-                nextWidget = 2;
-              } else if (!blockTaxLedgerOnB2CorBOS) {
-                // if (salesTypeData.rateType.isNotEmpty) {
-                //   rateTypeO = salesTypeData.id.toString();
-                // }
-                nextWidget = 2;
+            if (!(salesTypeData.type == 'SALES-O' ||
+                salesTypeData.type == 'SALES-Q')) {
+              if (ledgerModel.cAmount > 0) {
+                var bal0 = ledgerModel.balance.toString().split(' ');
+                String bal = bal0[1] == 'Dr' ? bal0[0] : '0';
+                isCreditLimitedLedger =
+                    double.tryParse(bal) > ledgerModel.cAmount;
+              }
+            }
+            if (!isCreditLimitedLedger) {
+              if (salesTypeData.type == 'SALES-BB') {
+                if (ledgerModel.taxNumber.isNotEmpty) {
+                  // if (salesTypeData.rateType.isNotEmpty) {
+                  //   rateTypeO = salesTypeData.id.toString();
+                  // }
+                  nextWidget = 2;
+                } else if (!blockTaxLedgerOnB2CorBOS) {
+                  // if (salesTypeData.rateType.isNotEmpty) {
+                  //   rateTypeO = salesTypeData.id.toString();
+                  // }
+                  nextWidget = 2;
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content:
+                          Text('B2B Invoice not allow without a TAX number')));
+                }
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content:
-                        Text('B2B Invoice not allow without a TAX number')));
+                if (blockTaxLedgerOnB2CorBOS) {
+                  if ((salesTypeData.type == 'SALES-BC' ||
+                          salesTypeData.type == 'SALES-BOS') &&
+                      ledgerModel.taxNumber.isNotEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Tax Registered Ledger')));
+                    return;
+                  }
+                }
+                nextWidget = 2;
               }
             } else {
-              if (blockTaxLedgerOnB2CorBOS) {
-                if ((salesTypeData.type == 'SALES-BC' ||
-                        salesTypeData.type == 'SALES-BOS') &&
-                    ledgerModel.taxNumber.isNotEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Tax Registered Ledger')));
-                  return;
-                }
-              }
-              nextWidget = 2;
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text(
+                      'Balance Exceeds Credit Limit, Cannot Bill To This Customer')));
             }
           }
         });

@@ -112,7 +112,8 @@ class _SaleState extends State<Sale> {
       keySwitchSalesRateTypeSet = false,
       keyEditAndDeleteAdminOnlyDaysBefore = false,
       daysBefore = false,
-      manualInvoiceNumberInSales = false;
+      manualInvoiceNumberInSales = false,
+      disableEditForGeneratedEInvoice = false;
   final List<TextEditingController> _controllers = [];
   DateTime now = DateTime.now();
   String formattedDate;
@@ -167,11 +168,20 @@ class _SaleState extends State<Sale> {
     }
 
     loadSettings();
+    api.fetchDetailAmount().then((value) {
+      otherAmountList = value;
+      setState(() {
+        otherAmountLoaded = true;
+      });
+    });
 
     api.getUnregisteredNameList().then((value) => unregisteredNameList = value);
     salesManId = ComSettings.appSettings(
             'int', 'key-dropdown-default-salesman-view', 1) -
         1;
+    getDefaultSalesManId().then((value) {
+      salesManId = value;
+    });
     lId = ComSettings.appSettings(
             'int', 'key-dropdown-default-location-view', 2) -
         1;
@@ -308,6 +318,8 @@ class _SaleState extends State<Sale> {
         ComSettings.getStatus('USE SALESMAN AS VEHICLE', settings);
     isLedgerWiseLastSRate =
         ComSettings.getStatus('ENABLE CUSTOMER WISE LAST S.RATE', settings);
+    disableEditForGeneratedEInvoice =
+        ComSettings.getStatus('Disable Edit For Generated E-Invoice', settings);
     isQuantityBasedSerialNo =
         ComSettings.getStatus('ENABLE QUANTITY BASED SERIAL NO', settings);
     keyEditAndDeleteAdminOnlyDaysBefore = ComSettings.getStatus(
@@ -532,16 +544,42 @@ class _SaleState extends State<Sale> {
                         if (companyUserData.updateData) {
                           if (!daysBefore) {
                             if (totalItem > 0) {
-                              setState(() {
-                                _isLoading = true;
-                                buttonEvent = true;
-                              });
-                              _insert(
-                                  'Edit DateTime:$formattedDate $timeIs location:${lId.toString()} ledger:${ledgerModel.id} ' +
-                                      CartItem.encodeCartToJson(cartItem)
-                                          .toString(),
-                                  0);
-                              if (currentFinancialYear != null) {
+                              if (companyTaxMode == 'INDIA' &&
+                                  salesTypeData.eInvoice &&
+                                  disableEditForGeneratedEInvoice) {
+                                String irnNo = salesData['Information'][0]
+                                            ['IRNNO']
+                                        .toString() ??
+                                    '';
+                                if (irnNo.toString().isNotEmpty) {
+                                  Fluttertoast.showToast(
+                                      msg:
+                                          "e-Invoice Generated For This Bill, You Can't Edit");
+                                  setState(() {
+                                    buttonEvent = false;
+                                  });
+                                } else {
+                                  setState(() {
+                                    _isLoading = true;
+                                    buttonEvent = true;
+                                  });
+                                  _insert(
+                                      'Edit DateTime:$formattedDate $timeIs location:${lId.toString()} ledger:${ledgerModel.id} ' +
+                                          CartItem.encodeCartToJson(cartItem)
+                                              .toString(),
+                                      0);
+                                  updateSale();
+                                }
+                              } else {
+                                setState(() {
+                                  _isLoading = true;
+                                  buttonEvent = true;
+                                });
+                                _insert(
+                                    'Edit DateTime:$formattedDate $timeIs location:${lId.toString()} ledger:${ledgerModel.id} ' +
+                                        CartItem.encodeCartToJson(cartItem)
+                                            .toString(),
+                                    0);
                                 updateSale();
                               }
                             } else {

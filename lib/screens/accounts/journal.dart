@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_awesome_alert_box/flutter_awesome_alert_box.dart';
 import 'package:intl/intl.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:sheraccerp/screens/html_previews/jv_preview.dart';
 
 import '../../models/company.dart';
 import '../../models/ledger_name_model.dart';
@@ -40,7 +41,8 @@ class _JournalState extends State<Journal> {
       valueMore = false,
       widgetID = true,
       lastRecord = false,
-      buttonEvent = false;
+      buttonEvent = false,
+      isNarrationAsCalculator = false;
   int refNo = 0;
   int page = 1, pageTotal = 0, totalRecords = 0;
   int locationId = 1, salesManId = 0, decimal = 2;
@@ -66,12 +68,17 @@ class _JournalState extends State<Journal> {
     salesManId = ComSettings.appSettings(
             'int', 'key-dropdown-default-salesman-view', 1) -
         1;
+    getDefaultSalesManId().then((value) {
+      salesManId = value;
+    });
     locationId = ComSettings.appSettings(
             'int', 'key-dropdown-default-location-view', 2) -
         1;
     decimal = ComSettings.getValue('DECIMAL', settings).toString().isNotEmpty
         ? int.tryParse(ComSettings.getValue('DECIMAL', settings).toString())
         : 2;
+    isNarrationAsCalculator =
+        ComSettings.getStatus('KEY NARRATION AS CALCULATOR', settings);
 
     loadLedgerData();
   }
@@ -315,15 +322,20 @@ class _JournalState extends State<Journal> {
                 Expanded(
                   child: TextField(
                     controller: _controllerNarration,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      label: Text('Narration'),
-                    ),
+                    decoration: InputDecoration(
+                        border: const OutlineInputBorder(),
+                        labelText: isNarrationAsCalculator
+                            ? 'Enter expression (e.g. 3+4)'
+                            : 'Narration'),
+                    keyboardType: isNarrationAsCalculator
+                        ? TextInputType.number
+                        : TextInputType.text,
                     onChanged: (value) {
                       setState(() {
                         narration = value;
                       });
                     },
+                    onSubmitted: (input) => _calculateResult(input),
                   ),
                 ),
               ],
@@ -566,7 +578,9 @@ class _JournalState extends State<Journal> {
                 'date': formatDMY(formattedDate),
                 'amount': amount,
                 'particular': particular,
-                'message': footerMessage
+                'message': footerMessage,
+                'dName': ledgerDebitData.name,
+                'cName': ledgerCreditData.name
               }
             ];
             actionShow(context, dataAll);
@@ -696,10 +710,10 @@ class _JournalState extends State<Journal> {
 
   sentToPreview(String title, String form, var data) {
     var dataAll = [data, form];
-    // Navigator.push(
-    //     context,
-    //     MaterialPageRoute(
-    //         builder: (_) => RVPreviewShow(title: title, dataAll: dataAll)));
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) => JvPreviewShow(title: title, dataAll: dataAll)));
   }
 
   Uint8List byteImage;
@@ -708,6 +722,67 @@ class _JournalState extends State<Journal> {
     ByteData bytes = await rootBundle.load('assets/logo.png');
     final buffer = bytes.buffer;
     byteImage = Uint8List.view(buffer);
+  }
+
+  String _result = '';
+
+  // Function to parse the input and calculate
+  void _calculateResult(String input) {
+    try {
+      String operator = '';
+      double num1, num2;
+
+      if (input.contains('+')) {
+        operator = '+';
+      } else if (input.contains('-')) {
+        operator = '-';
+      } else if (input.contains('*')) {
+        operator = '*';
+      } else if (input.contains('/')) {
+        operator = '/';
+      }
+
+      if (operator.isNotEmpty) {
+        List<String> parts = input.split(operator);
+        num1 = double.parse(parts[0]);
+        num2 = double.parse(parts[1]);
+
+        double result;
+        switch (operator) {
+          case '+':
+            result = num1 + num2;
+            break;
+          case '-':
+            result = num1 - num2;
+            break;
+          case '*':
+            result = num1 * num2;
+            break;
+          case '/':
+            result = num1 / num2;
+            break;
+          default:
+            result = 0;
+        }
+
+        setState(() {
+          _result = '$result';
+        });
+      } else {
+        setState(() {
+          _result = 'Invalid Input!';
+        });
+      }
+
+      if (_result.isNotEmpty) {
+        narration = input + ' = ' + _result;
+        _controllerNarration.text = narration;
+      }
+    } catch (e) {
+      setState(() {
+        _result = 'Error: Invalid Expression!';
+      });
+    }
   }
 
   getFilterItems(String text) {}

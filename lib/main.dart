@@ -177,6 +177,7 @@ class MyApp extends StatelessWidget {
                   '0',
                   [0],
                   '0',
+                  '0',
                   '0'),
               '/RPVoucher': (context) => const RPVoucher(),
               '/SalesList': (context) => const SalesList(),
