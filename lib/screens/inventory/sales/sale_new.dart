@@ -42,20 +42,20 @@ import 'package:sheraccerp/widget/loading.dart';
 import 'package:sheraccerp/widget/popup_menu_action.dart';
 import 'package:sheraccerp/widget/progress_hud.dart';
 
-class Sale extends StatefulWidget {
+class SaleNew extends StatefulWidget {
   final bool thisSale;
   final bool oldSale;
-  const Sale({
+  const SaleNew({
     Key key,
     @required this.thisSale,
     @required this.oldSale,
   }) : super(key: key);
 
   @override
-  _SaleState createState() => _SaleState();
+  _SaleNewState createState() => _SaleNewState();
 }
 
-class _SaleState extends State<Sale> {
+class _SaleNewState extends State<SaleNew> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   List<SalesType> salesTypeDisplay = [];
   dynamic salesData;
@@ -64,7 +64,8 @@ class _SaleState extends State<Sale> {
       _isLoading = false,
       isCustomForm = false,
       buttonEvent = false,
-      isSerialNoInStockVariant = false;
+      isSerialNoInStockVariant = false,
+      isRoundOffInSales=false;
   bool _autoVariantSelect = false, autoBatchSelection = false;
   DioService api = DioService();
   Size deviceSize;
@@ -72,7 +73,7 @@ class _SaleState extends State<Sale> {
   CustomerModel ledgerModel;
   LedgerModel ledgerDataModel;
   CartItem cartModel, cartModelBatch;
-  String vehicleName = '', invoiceNo = '';
+  String vehicleName = '', invoiceNo = '', projectId = '-1';
   StockItem productModel;
   List<CartItem> cartItem = [], cartModelList = [];
   List<String> unregisteredNameList = [];
@@ -113,7 +114,9 @@ class _SaleState extends State<Sale> {
       keyEditAndDeleteAdminOnlyDaysBefore = false,
       daysBefore = false,
       manualInvoiceNumberInSales = false,
-      disableEditForGeneratedEInvoice = false;
+      disableEditForGeneratedEInvoice = false,
+      isProjectSoftware = false,
+      isCreditLimitedLedger = false;
   final List<TextEditingController> _controllers = [];
   DateTime now = DateTime.now();
   String formattedDate;
@@ -135,6 +138,7 @@ class _SaleState extends State<Sale> {
   List<LedgerModel> ledgerDisplay = [];
   List<LedgerModel> _ledger = [];
   List<dynamic> itemDisplay = [];
+  List<DataJson> projectList = [];
   List<dynamic> items = [];
   List<LedgerModel> cashBankACList = [];
   List<SerialNOModel> serialNoData = [];
@@ -331,6 +335,9 @@ class _SaleState extends State<Sale> {
         ComSettings.getStatus('MANNUAL INVOICE NUMBER IN SALES', settings);
     autoBatchSelection =
         ComSettings.getStatus('KEY AUTOMATIC BATCH SELECTION', settings);
+    isProjectSoftware = ComSettings.getStatus('PROJECT SOFTWARE', settings);
+    isRoundOffInSales =
+        ComSettings.getStatus('DISABLE ROUND OFF IN SALES', settings);
 
     if (widget.oldSale != null && widget.oldSale) {
       _isLoading = true;
@@ -348,6 +355,12 @@ class _SaleState extends State<Sale> {
     api.getVehicleNameList().then((value) {
       vehicleNameListDisplay.addAll(value);
     });
+
+    if (isProjectSoftware) {
+      api.getProject().then((value) {
+        projectList = value;
+      });
+    }
   }
 
   getOldBalance(int id, String type, String entryNo) {
@@ -585,8 +598,7 @@ class _SaleState extends State<Sale> {
                                 updateSale();
                               }
                             } else {
-                              Fluttertoast.showToast(
-                                  msg: 'Please select atleast one bill');
+                              Fluttertoast.showToast(msg: 'Please add an item');
                               setState(() {
                                 buttonEvent = false;
                               });
@@ -1179,7 +1191,8 @@ class _SaleState extends State<Sale> {
             'bankAmount': bankAmountController.text.isEmpty
                 ? 0
                 : bankAmountController.text,
-            'eVehicleNo': vehicleNameControl.text
+            'eVehicleNo': vehicleNameControl.text,
+            'project': projectId
           }) +
           ']';
 
@@ -1191,31 +1204,63 @@ class _SaleState extends State<Sale> {
       };
       if (saleAccountId != '0') {
         if (order.cashAC != '0') {
-          if (checkFinancialYear(DateUtil.dateYMD(formattedDate))) {
-            if (manualInvoiceNumberInSales) {
-              api.checkManualInvoiceNoStatus(invoiceNo).then((value) {
-                if (!value) {
-                  postSale(body, otherAmount, order, saleFormType, saleFormId);
-                } else {
-                  showErrorDialog(context, 'Duplicate Invoice No');
-
-                  setState(() {
-                    _isLoading = false;
-                    buttonEvent = false;
-                  });
-                }
-              });
-            } else {
-              postSale(body, otherAmount, order, saleFormType, saleFormId);
+          if (!(salesTypeData.type == 'SALES-O' ||
+              salesTypeData.type == 'SALES-Q')) {
+            if (ledgerModel.cAmount > 0) {
+              var bal0 = ledgerModel.balance.toString().split(' ');
+              String bal = bal0[1] == 'Dr' ? bal0[0] : '0';
+              isCreditLimitedLedger = (double.tryParse(bal) +
+                      double.tryParse(order.grandTotal) -
+                      double.tryParse(order.cashReceived)) >
+                  ledgerModel.cAmount;
             }
-          } else {
-            showErrorDialog(
-                context, "Date Is Incompatible With This Financial Year");
+          }
+          if (isProjectSoftware && int.tryParse(projectId) <= 0) {
+            ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Please Select Project')));
 
             setState(() {
               _isLoading = false;
               buttonEvent = false;
             });
+          } else {
+            if (!isCreditLimitedLedger) {
+              if (checkFinancialYear(DateUtil.dateYMD(formattedDate))) {
+                if (manualInvoiceNumberInSales) {
+                  api.checkManualInvoiceNoStatus(invoiceNo).then((value) {
+                    if (!value) {
+                      postSale(
+                          body, otherAmount, order, saleFormType, saleFormId);
+                    } else {
+                      showErrorDialog(context, 'Duplicate Invoice No');
+
+                      setState(() {
+                        _isLoading = false;
+                        buttonEvent = false;
+                      });
+                    }
+                  });
+                } else {
+                  postSale(body, otherAmount, order, saleFormType, saleFormId);
+                }
+              } else {
+                showErrorDialog(
+                    context, "Date Is Incompatible With This Financial Year");
+
+                setState(() {
+                  _isLoading = false;
+                  buttonEvent = false;
+                });
+              }
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text(
+                      'Balance Exceeds Credit Limit, Cannot Bill To This Customer')));
+              setState(() {
+                _isLoading = false;
+                buttonEvent = false;
+              });
+            }
           }
         } else {
           Fluttertoast.showToast(msg: "set CashAccount");
@@ -1560,7 +1605,8 @@ class _SaleState extends State<Sale> {
             'bankAmount': bankAmountController.text.isEmpty
                 ? 0
                 : bankAmountController.text,
-            'eVehicleNo': vehicleNameControl.text
+            'eVehicleNo': vehicleNameControl.text,
+            'project': projectId
           }) +
           ']';
 
@@ -1571,63 +1617,94 @@ class _SaleState extends State<Sale> {
         'serialNoData': json.encode(SerialNOModel.encodedToJson(serialNoData)),
       };
       if (saleAccountId != '0' && order.cashAC != '0') {
-        api.editSale(body).then((result) {
-          if (CommonService().isNumeric(result) && int.tryParse(result) > 0) {
-            final bodyJsonAmount = {
-              'statement': 'SalesUpdate',
-              'entryNo': dataDynamic[0]['EntryNo'].toString(),
-              'data': otherAmount,
-              'date': order.dated.toString(),
-              'saleFormType': saleFormType,
-              'narration': order.narration,
-              'location': order.location.toString(),
-              'id': order.customerModel[0].id.toString(),
-              'fyId': currentFinancialYear.id.toString()
-            };
-            if (salesTypeData.accounts) {
-              api.addOtherAmount(bodyJsonAmount).then((retNotUsed) {
-                final bodyJson = {
-                  'statement': 'CheckPrint',
-                  'entryNo': dataDynamic[0]['EntryNo'].toString(),
-                  'sType': dataDynamic[0]['Type'].toString(),
-                  'grandTotal': ComSettings.appSettings(
-                          'bool', 'key-round-off-amount', false)
-                      ? grandTotal.toStringAsFixed(decimal)
-                      : grandTotal.roundToDouble().toString()
-                };
-                api.checkBill(bodyJson).then((data) {
-                  if (data) {
-                    clearCart();
-                    showMore(context, false);
-                  }
-                });
-              });
-            } else {
-              final bodyJson = {
-                'statement': 'CheckPrint',
-                'entryNo': dataDynamic[0]['EntryNo'].toString(),
-                'sType': dataDynamic[0]['Type'].toString(),
-                'grandTotal': ComSettings.appSettings(
-                        'bool', 'key-round-off-amount', false)
-                    ? grandTotal.toStringAsFixed(decimal)
-                    : grandTotal.roundToDouble().toString()
-              };
-              api.checkBill(bodyJson).then((data) {
-                if (data) {
-                  clearCart();
-                  showMore(context, false);
-                }
-              });
-            }
+        if (!(salesTypeData.type == 'SALES-O' ||
+            salesTypeData.type == 'SALES-Q')) {
+          if (ledgerModel.cAmount > 0) {
+            isCreditLimitedLedger = (double.tryParse(oldBalance) +
+                    double.tryParse(order.grandTotal) -
+                    double.tryParse(order.cashReceived)) >
+                ledgerModel.cAmount;
+          }
+        }
+        if (!isCreditLimitedLedger) {
+          if (isProjectSoftware && int.tryParse(projectId) <= 0) {
+            ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Please Select Project')));
+
             setState(() {
               _isLoading = false;
+              buttonEvent = false;
             });
           } else {
-            showErrorDialog(context, result.toString());
+            api.editSale(body).then((result) {
+              if (CommonService().isNumeric(result) &&
+                  int.tryParse(result) > 0) {
+                final bodyJsonAmount = {
+                  'statement': 'SalesUpdate',
+                  'entryNo': dataDynamic[0]['EntryNo'].toString(),
+                  'data': otherAmount,
+                  'date': order.dated.toString(),
+                  'saleFormType': saleFormType,
+                  'narration': order.narration,
+                  'location': order.location.toString(),
+                  'id': order.customerModel[0].id.toString(),
+                  'fyId': currentFinancialYear.id.toString()
+                };
+                if (salesTypeData.accounts) {
+                  api.addOtherAmount(bodyJsonAmount).then((retNotUsed) {
+                    final bodyJson = {
+                      'statement': 'CheckPrint',
+                      'entryNo': dataDynamic[0]['EntryNo'].toString(),
+                      'sType': dataDynamic[0]['Type'].toString(),
+                      'grandTotal': ComSettings.appSettings(
+                              'bool', 'key-round-off-amount', false)
+                          ? grandTotal.toStringAsFixed(decimal)
+                          : grandTotal.roundToDouble().toString()
+                    };
+                    api.checkBill(bodyJson).then((data) {
+                      if (data) {
+                        clearCart();
+                        showMore(context, false);
+                      }
+                    });
+                  });
+                } else {
+                  final bodyJson = {
+                    'statement': 'CheckPrint',
+                    'entryNo': dataDynamic[0]['EntryNo'].toString(),
+                    'sType': dataDynamic[0]['Type'].toString(),
+                    'grandTotal': ComSettings.appSettings(
+                            'bool', 'key-round-off-amount', false)
+                        ? grandTotal.toStringAsFixed(decimal)
+                        : grandTotal.roundToDouble().toString()
+                  };
+                  api.checkBill(bodyJson).then((data) {
+                    if (data) {
+                      clearCart();
+                      showMore(context, false);
+                    }
+                  });
+                }
+                setState(() {
+                  _isLoading = false;
+                });
+              } else {
+                showErrorDialog(context, result.toString());
+              }
+            }).catchError((e) {
+              showErrorDialog(context, e.toString());
+            });
           }
-        }).catchError((e) {
-          showErrorDialog(context, e.toString());
-        });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text(
+                  'Balance Exceeds Credit Limit, Cannot Bill To This Customer')));
+
+          setState(() {
+            _isLoading = false;
+            buttonEvent = false;
+          });
+        }
       } else {
         Fluttertoast.showToast(msg: "select SalesAccount or CashAccount");
       }
@@ -1686,7 +1763,8 @@ class _SaleState extends State<Sale> {
                                   'bool', 'key-simple-sales', false)
                               ? '/SimpleSale'
                               : '/sales',
-                          arguments: Sale(thisSale: thisSale, oldSale: true));
+                          arguments:
+                              SaleNew(thisSale: thisSale, oldSale: true));
                     },
                     child: const Text('CANCEL'),
                   )
@@ -2077,7 +2155,11 @@ class _SaleState extends State<Sale> {
                   stateCode: snapshot.data.stateCode,
                   taxNumber: snapshot.data.taxNumber,
                   remarks: snapshot.data.remarks,
-                  pinNo: snapshot.data.pinNo);
+                  pinNo: snapshot.data.pinNo,
+                  cAmount: snapshot.data.cAmount,
+                  cDays: snapshot.data.cDays,
+                  orderDate: snapshot.data.orderDate,
+                  deliveryDate: snapshot.data.deliveryDate);
               addressControl.text =
                   snapshot.data.address1 + " " + snapshot.data.address2;
               siteNameControl.text =
@@ -2230,6 +2312,10 @@ class _SaleState extends State<Sale> {
                           height: 5,
                         ),
                         siteLineWidget(),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        projectWidget(),
                         const SizedBox(
                           height: 5,
                         ),
@@ -2426,6 +2512,10 @@ class _SaleState extends State<Sale> {
                               ],
                             ),
                           ),
+                        ),
+                        projectWidget(),
+                        const SizedBox(
+                          height: 5,
                         ),
                         salesManVehicle(),
                         const SizedBox(
@@ -3346,7 +3436,55 @@ class _SaleState extends State<Sale> {
                           ),
                         ]),
                       )
-                    : showAddMore(context, snapshot.data[0]);
+                    : showAddMore(
+                        context,
+                        (oldBill
+                            ? (cartModel != null
+                                ? snapshot.data.firstWhere(
+                                    (element) =>
+                                        element.productId ==
+                                        cartModel.uniqueCode,
+                                    orElse: () => StockProduct(
+                                        adCessPer: cartModel.adCessPer,
+                                        branch: 0,
+                                        brand: 0,
+                                        buyingPrice: cartModel.pRate,
+                                        buyingPriceReal: cartModel.rPRate,
+                                        categoryId: 0,
+                                        cess: cartModel.cess,
+                                        cessPer: cartModel.cessPer,
+                                        color: 0,
+                                        company: 0,
+                                        estUniqueCode: 0,
+                                        expDate: cartModel.expDate,
+                                        free: cartModel.free,
+                                        hsnCode: cartModel.hashCode.toString(),
+                                        itemId: cartModel.itemId,
+                                        locationId: snapshot.data[0].locationId,
+                                        locked: 'N',
+                                        mfrId: 0,
+                                        minimumRate: cartModel.minimumRate,
+                                        name: cartModel.itemName,
+                                        oBarcode: '',
+                                        productId: cartModel.uniqueCode,
+                                        quantity: 0,
+                                        rackId: 0,
+                                        retailPrice: cartModel.rate,
+                                        sellingPrice: cartModel.rate,
+                                        serialNo: cartModel.serialNo,
+                                        size: 0,
+                                        spRetailPrice: cartModel.rate,
+                                        stockValuation:
+                                            snapshot.data[0].stockValuation,
+                                        subcategoryId: 0,
+                                        supplierId: snapshot.data[0].supplierId,
+                                        tax: cartModel.taxP,
+                                        taxType: snapshot.data[0].taxType,
+                                        unitId: cartModel.unitId,
+                                        wholeSalePrice: cartModel.rate),
+                                  )
+                                : snapshot.data[0])
+                            : snapshot.data[0]));
           } else {
             return oldBill
                 ? showAddMore(
@@ -3374,7 +3512,7 @@ class _SaleState extends State<Sale> {
                         name: cartModel.itemName,
                         oBarcode: '',
                         productId: cartModel.uniqueCode,
-                        quantity: cartModel.quantity,
+                        quantity: 0,
                         rackId: 0,
                         retailPrice: cartModel.rate,
                         sellingPrice: cartModel.rate,
@@ -4538,6 +4676,19 @@ class _SaleState extends State<Sale> {
                                                     cartItem.removeAt(indexed);
                                                     break;
                                                   }
+                                                } else if (!oldBill) {
+                                                  double rated = rate;
+                                                  if (element.itemId ==
+                                                          product.itemId &&
+                                                      element.rate == rated) {
+                                                    cartItem.removeWhere(
+                                                        (item) =>
+                                                            item.itemId ==
+                                                                product
+                                                                    .itemId &&
+                                                            item.rate == rated);
+                                                    break;
+                                                  }
                                                 }
                                               }
                                             }
@@ -4618,90 +4769,154 @@ class _SaleState extends State<Sale> {
                                           } else if (oldBill &&
                                               autoBatchSelection) {
                                             if (cartModelList != null) {
-                                              double qty = 0,
-                                                  tQty = 0,
-                                                  balanceQty = 0;
-                                              for (CartItem variantProduct
-                                                  in cartModelList) {
-                                                qty = (variantProduct
-                                                            .quantity) >
-                                                        quantity
-                                                    ? quantity
-                                                    : variantProduct.quantity;
-                                                uniqueCode =
-                                                    variantProduct.uniqueCode;
-                                                double addQuantity =
-                                                    balanceQty > 0
-                                                        ? (balanceQty == qty
-                                                            ? qty
-                                                            : (balanceQty >= qty
-                                                                ? qty
-                                                                : balanceQty))
-                                                        : qty;
-                                                for (CartItem item
+                                              if (cartModelList.isNotEmpty) {
+                                                double qty = 0,
+                                                    tQty = 0,
+                                                    balanceQty = 0;
+                                                for (CartItem variantProduct
                                                     in cartModelList) {
-                                                  int j = cartItem.indexWhere(
-                                                      (i) =>
-                                                          i.itemId ==
-                                                          item.itemId);
-                                                  cartItem.removeAt(j);
-                                                }
+                                                  qty = (variantProduct
+                                                              .quantity) >
+                                                          quantity
+                                                      ? quantity
+                                                      : variantProduct.quantity;
+                                                  uniqueCode =
+                                                      variantProduct.uniqueCode;
+                                                  double addQuantity =
+                                                      balanceQty > 0
+                                                          ? (balanceQty == qty
+                                                              ? qty
+                                                              : (balanceQty >=
+                                                                      qty
+                                                                  ? qty
+                                                                  : balanceQty))
+                                                          : qty;
+                                                  for (CartItem item
+                                                      in cartModelList) {
+                                                    int j = cartItem.indexWhere(
+                                                        (i) =>
+                                                            i.itemId ==
+                                                            item.itemId);
+                                                    cartItem.removeAt(j);
+                                                  }
 
-                                                calculateTextBatch(
-                                                    product, addQuantity);
-                                                cartItem.add(CartItem(
-                                                    id: totalItem + 1,
-                                                    itemId: product.itemId,
-                                                    itemName: product.name,
-                                                    quantity: addQuantity,
-                                                    rate: rate,
-                                                    rRate: rRate,
-                                                    uniqueCode: uniqueCode,
-                                                    gross: gross,
-                                                    discount: discount,
-                                                    discountPercent:
-                                                        discountPercent,
-                                                    rDiscount: rDisc,
-                                                    fCess: kfc,
-                                                    serialNo:
-                                                        _serialNoController
-                                                            .text,
-                                                    tax: tax,
-                                                    taxP: taxP,
-                                                    unitId: _dropDownUnit,
-                                                    unitValue: unitValue ?? 1,
-                                                    pRate: pRate,
-                                                    rPRate: rPRate,
-                                                    barcode: barcode,
-                                                    expDate: expDate,
-                                                    free: freeQty,
-                                                    fUnitId: fUnitId,
-                                                    cdPer: cdPer,
-                                                    cDisc: cDisc,
-                                                    net: subTotal,
-                                                    cess: cess,
-                                                    total: total,
-                                                    profitPer: profitPer,
-                                                    fUnitValue: fUnitValue,
-                                                    adCess: adCess,
-                                                    iGST: iGST,
-                                                    cGST: csGST,
-                                                    sGST: csGST,
-                                                    stock: product.quantity,
-                                                    minimumRate:
-                                                        product.minimumRate,
-                                                    adCessPer:
-                                                        product.adCessPer,
-                                                    cessPer: product.cessPer));
+                                                  calculateTextBatch(
+                                                      product, addQuantity);
+                                                  cartItem.add(CartItem(
+                                                      id: totalItem + 1,
+                                                      itemId: product.itemId,
+                                                      itemName: product.name,
+                                                      quantity: addQuantity,
+                                                      rate: rate,
+                                                      rRate: rRate,
+                                                      uniqueCode: uniqueCode,
+                                                      gross: gross,
+                                                      discount: discount,
+                                                      discountPercent:
+                                                          discountPercent,
+                                                      rDiscount: rDisc,
+                                                      fCess: kfc,
+                                                      serialNo:
+                                                          _serialNoController
+                                                              .text,
+                                                      tax: tax,
+                                                      taxP: taxP,
+                                                      unitId: _dropDownUnit,
+                                                      unitValue: unitValue ?? 1,
+                                                      pRate: pRate,
+                                                      rPRate: rPRate,
+                                                      barcode: barcode,
+                                                      expDate: expDate,
+                                                      free: freeQty,
+                                                      fUnitId: fUnitId,
+                                                      cdPer: cdPer,
+                                                      cDisc: cDisc,
+                                                      net: subTotal,
+                                                      cess: cess,
+                                                      total: total,
+                                                      profitPer: profitPer,
+                                                      fUnitValue: fUnitValue,
+                                                      adCess: adCess,
+                                                      iGST: iGST,
+                                                      cGST: csGST,
+                                                      sGST: csGST,
+                                                      stock: product.quantity,
+                                                      minimumRate:
+                                                          product.minimumRate,
+                                                      adCessPer:
+                                                          product.adCessPer,
+                                                      cessPer:
+                                                          product.cessPer));
 
-                                                tQty += addQuantity;
-                                                balanceQty = quantity - tQty;
-                                                if (tQty >= quantity ||
-                                                    balanceQty == 0) {
-                                                  break;
-                                                } else {
-                                                  //
+                                                  tQty += addQuantity;
+                                                  balanceQty = quantity - tQty;
+                                                  if (tQty >= quantity ||
+                                                      balanceQty == 0) {
+                                                    break;
+                                                  } else {
+                                                    //
+                                                  }
                                                 }
+                                              } else {
+                                                cartItem[position].adCess =
+                                                    adCess;
+                                                cartItem[position].quantity =
+                                                    quantity;
+                                                cartItem[position].rate = rate;
+                                                cartItem[position].rRate =
+                                                    rRate;
+                                                cartItem[position].uniqueCode =
+                                                    uniqueCode;
+                                                cartItem[position].gross =
+                                                    gross;
+                                                cartItem[position].discount =
+                                                    discount;
+                                                cartItem[position]
+                                                        .discountPercent =
+                                                    discountPercent;
+                                                cartItem[position].rDiscount =
+                                                    rDisc;
+                                                cartItem[position].fCess = kfc;
+                                                cartItem[position].serialNo =
+                                                    _serialNoController.text;
+                                                cartItem[position].tax = tax;
+                                                cartItem[position].taxP = taxP;
+                                                cartItem[position].unitId =
+                                                    _dropDownUnit;
+                                                cartItem[position].unitValue =
+                                                    unitValue ?? 1;
+                                                cartItem[position].pRate =
+                                                    pRate;
+                                                cartItem[position].rPRate =
+                                                    rPRate;
+                                                cartItem[position].barcode =
+                                                    barcode;
+                                                cartItem[position].expDate =
+                                                    expDate;
+                                                cartItem[position].free =
+                                                    freeQty;
+                                                cartItem[position].fUnitId =
+                                                    fUnitId;
+                                                cartItem[position].cdPer =
+                                                    cdPer;
+                                                cartItem[position].cDisc =
+                                                    cDisc;
+                                                cartItem[position].net =
+                                                    subTotal;
+                                                cartItem[position].cess = cess;
+                                                cartItem[position].total =
+                                                    total;
+                                                cartItem[position].profitPer =
+                                                    profitPer;
+                                                cartItem[position].fUnitValue =
+                                                    fUnitValue;
+                                                cartItem[position].adCess =
+                                                    adCess;
+                                                cartItem[position].iGST = iGST;
+                                                cartItem[position].cGST = csGST;
+                                                cartItem[position].sGST = csGST;
+                                                cartItem[position].stock =
+                                                    product.quantity;
                                               }
                                             }
                                           } else {
@@ -4854,13 +5069,16 @@ class _SaleState extends State<Sale> {
                                               element.unitValue) +
                                           element.free;
                                       cartS = oldBill
-                                          ? (cartQt + product.quantity)
+                                          ? (element.quantity +
+                                              product.quantity)
                                           : element.stock;
                                     }
                                   }
                                   if (cartS > 0) {
                                     if (cartS <
-                                        (double.tryParse(value) * unitValue)) {
+                                        cartQt +
+                                            (double.tryParse(value) *
+                                                unitValue)) {
                                       cartQ = true;
                                     }
                                   }
@@ -4907,7 +5125,7 @@ class _SaleState extends State<Sale> {
                                                         ? _autoStockVariant.fold(
                                                             0.0, (a, b) => a + double.parse(b.quantity.toString()))
                                                         : oldBill
-                                                            ? product.quantity + (cartModelBatch.quantity * cartModelBatch.unitValue)
+                                                            ? product.quantity + (cartModel != null ? (cartModel.quantity * cartModel.unitValue) : 0)
                                                             : product.quantity)
                                                 ? true
                                                 : cartQ
@@ -7199,10 +7417,10 @@ class _SaleState extends State<Sale> {
                                             removeProduct(index);
                                           });
                                         },
-                                        onEdit: () {
+                                        onEdit: () async {
                                           CartItem selectedItem =
                                               cartItem.elementAt(index);
-                                          if (autoBatchSelection) {
+                                          if (autoBatchSelection && !oldBill) {
                                             List<CartItem> selectedCartItem =
                                                 cartItem
                                                     .where((element) =>
@@ -7253,25 +7471,45 @@ class _SaleState extends State<Sale> {
                                                       item.total;
                                                 }
                                               }
-                                              if (oldBill) {
-                                                cartModelList =
-                                                    selectedCartItem;
-                                              } else {
-                                                for (CartItem item
-                                                    in selectedCartItem) {
-                                                  int j = cartItem.indexWhere(
-                                                      (i) =>
-                                                          i.itemId ==
-                                                          item.itemId);
-                                                  cartItem.removeAt(j);
-                                                }
+                                              // if (oldBill) {
+                                              //   cartModelList =
+                                              //       selectedCartItem;
+                                              // } else {
+                                              for (CartItem item
+                                                  in selectedCartItem) {
+                                                int j = cartItem.indexWhere(
+                                                    (i) =>
+                                                        i.itemId ==
+                                                        item.itemId);
+                                                cartItem.removeAt(j);
                                               }
+                                              // }
                                               editItem = false;
                                             } else {
+                                              String named =
+                                                  selectedCartItem[0].itemName;
+                                              List<StockItem> productData =
+                                                  await api
+                                                      .fetchStockProductLike(
+                                                          DateUtil.dateDMY2YMD(
+                                                              formattedDate),
+                                                          named);
+                                              if (productData != null) {
+                                                if (productData.isNotEmpty) {
+                                                  _autoVariantSelect =
+                                                      productData[0].hasVariant;
+                                                  //selectedCartItem[0].quantity=productData[0].quantity;
+                                                } else {
+                                                  editItem = true;
+                                                }
+                                              } else {
+                                                editItem = true;
+                                              }
                                               cartModelBatch =
                                                   selectedCartItem[0];
+                                              position = index;
                                               // cartModel = cartModelBatch;
-                                              // editItem = true;
+
                                             }
                                             setState(() {
                                               editItem = false;
@@ -8239,6 +8477,7 @@ class _SaleState extends State<Sale> {
             ],
           ),
         ),
+        projectWidget(),
         InkWell(
             child: const SizedBox(
               height: 26,
@@ -9020,7 +9259,7 @@ class _SaleState extends State<Sale> {
         onPressedNo: () {
           Navigator.of(context).pop();
           Navigator.of(context).pushReplacement(MaterialPageRoute(
-              builder: (context) => Sale(
+              builder: (context) => SaleNew(
                     oldSale: false,
                     thisSale: thisSale,
                   )));
@@ -9113,6 +9352,7 @@ class _SaleState extends State<Sale> {
         formattedDate = DateUtil.dateDMY(information['DDate']);
         rateTypeItem = rateTypeList.firstWhere((element) =>
             element.id.toString() == information["Stype"].toString());
+        projectId = information['Project'].toString();
 
         dataDynamic = [
           {
@@ -9169,6 +9409,8 @@ class _SaleState extends State<Sale> {
           commissionAccount = 0;
         }
 
+        var ledData =
+            salesData['ledger'][0] != null ? salesData['ledger'][0] : null;
         CustomerModel cModel = CustomerModel(
             id: information['Customer'],
             name: information['ToName'],
@@ -9177,13 +9419,21 @@ class _SaleState extends State<Sale> {
             address3: information['Add3'],
             address4: information['Add4'],
             balance: information['Balance'].toString(),
-            city: '',
-            email: '',
-            phone: '',
-            route: '',
-            state: '',
-            stateCode: '',
-            taxNumber: information['gstno']);
+            city: ledData != null ? ledData['city'].toString() : '',
+            email: ledData != null ? ledData['Email'].toString() : '',
+            phone: ledData != null ? ledData['Mobile'].toString() : '',
+            route: ledData != null ? ledData['route'].toString() : '',
+            state: ledData != null ? ledData['state'].toString() : '',
+            stateCode: ledData != null ? ledData['stateCode'].toString() : '',
+            taxNumber: information['gstno'],
+            cAmount: ledData != null
+                ? double.tryParse(ledData['CAmount'].toString())
+                : 0.0,
+            cDays: ledData != null
+                ? double.tryParse(ledData['CDays'].toString())
+                : 0.0,
+            orderDate: ledData != null ? ledData['OrderDate'] : 0,
+            deliveryDate: ledData != null ? ledData['DeliveryDate'] : 0);
         ledgerModel = cModel;
         addressControl.text = cModel.address1;
         siteNameControl.text = cModel.address2;
@@ -9444,6 +9694,51 @@ class _SaleState extends State<Sale> {
     for (var data in dd) {
       dataResult.add(
           DataJson(id: data['Auto'], name: data['Name'].trim().toString()));
+    }
+    return dataResult;
+  }
+
+  projectWidget() {
+    return isProjectSoftware
+        ? Padding(
+            padding: const EdgeInsets.only(left: 5, right: 5),
+            child: SizedBox(
+              child: DropdownSearch<dynamic>(
+                maxHeight: 300,
+                onFind: (String filter) => getProjectListData(filter),
+                dropdownSearchDecoration: const InputDecoration(
+                    border: OutlineInputBorder(), labelText: 'Select Project'),
+                onChanged: (dynamic data) {
+                  projectId = data.id.toString();
+                },
+                showSearchBox: true,
+                selectedItem: int.tryParse(projectId) > 0
+                    ? DataJson(
+                        id: int.tryParse(projectId),
+                        name: projectList
+                            .firstWhere(
+                                (element) => element.id.toString() == projectId,
+                                orElse: () => DataJson(id: 0, name: ''))
+                            .name)
+                    : DataJson(id: 0, name: ''),
+              ),
+            ),
+          )
+        : Container();
+  }
+
+  Future<List<dynamic>> getProjectListData(String filter) async {
+    var dd = filter.isEmpty
+        ? projectList
+        : projectList
+            .where((element) => element.name
+                .toString()
+                .toLowerCase()
+                .contains(filter.toLowerCase()))
+            .toList();
+    List<DataJson> dataResult = [];
+    for (var data in dd) {
+      dataResult.add(DataJson(id: data.id, name: data.name.trim().toString()));
     }
     return dataResult;
   }
@@ -10011,6 +10306,20 @@ class _SaleState extends State<Sale> {
             // }
             nextWidget = 2;
           } else {
+            if (!(salesTypeData.type == 'SALES-O' ||
+                salesTypeData.type == 'SALES-Q')) {
+              if (ledgerModel.cAmount > 0) {
+                var bal0 = ledgerModel.balance.toString().split(' ');
+                String bal = bal0[1] == 'Dr' ? bal0[0] : '0';
+                isCreditLimitedLedger =
+                    double.tryParse(bal) > ledgerModel.cAmount;
+              }
+            }
+            if (isCreditLimitedLedger) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text(
+                      'Balance Exceeds Credit Limit, Cannot Bill To This Customer')));
+            }
             if (salesTypeData.type == 'SALES-BB') {
               if (ledgerModel.taxNumber.isNotEmpty) {
                 // if (salesTypeData.rateType.isNotEmpty) {

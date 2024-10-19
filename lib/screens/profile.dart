@@ -152,7 +152,7 @@ class _ProfileState extends State<Profile> {
             title: Text(
               companyTaxMode == 'INDIA'
                   ? 'GSTNO : ${ComSettings.getValue('GST-NO', settings)}'
-                  : 'TRN : ${ComSettings.getValue('GST-NO', settings)}',
+                  : 'VATNO : ${ComSettings.getValue('GST-NO', settings)}',
               style: const TextStyle(
                 color: blueAccent,
                 fontSize: 15,
@@ -264,7 +264,7 @@ class _ProfileState extends State<Profile> {
     // _telephoneC.text = (companySettings.telephone);
     _tinC.text = (companySettings.tin);
     _taxNoC.text = '${ComSettings.getValue('GST-NO', settings)}';
-    _taxNoHint = companyTaxMode == 'INDIA' ? 'GSTNO ' : 'TRN ';
+    _taxNoHint = companyTaxMode == 'INDIA' ? 'GSTNO ' : 'VATNO ';
     var _gstStateM = GSTStateModel(
         state: ComSettings.getValue('COMP-STATE', settings),
         code: ComSettings.getValue('COMP-STATECODE', settings));

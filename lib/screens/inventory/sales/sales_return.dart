@@ -1,6 +1,7 @@
 // @dart = 2.11
 import 'dart:convert';
 
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_awesome_alert_box/flutter_awesome_alert_box.dart';
@@ -63,6 +64,7 @@ class _SalesReturnState extends State<SalesReturn> {
       keyEditAndDeleteAdminOnlyDaysBefore = false,
       daysBefore = false,
       isFreeQty = false,
+      isProjectSoftware = false,
       manualInvoiceNumberInSales = false;
   final List<TextEditingController> _controllers = [];
   DateTime now = DateTime.now();
@@ -79,13 +81,14 @@ class _SalesReturnState extends State<SalesReturn> {
   List<ProductPurchaseModel> itemDisplay = [];
   List<ProductPurchaseModel> items = [];
   List<UnitModel> unitList = [];
+  List<DataJson> projectList = [];
   int saleAccount = 0;
   int lId = 0, groupId = 0, acId = 0;
   var salesManId = 0;
   int saleReturnFormId = 1;
   int printerType = 0, printerDevice = 0, printModel = 2;
   String labelSerialNo = 'SerialNo';
-  String labelSpRate = 'SpRetail';
+  String labelSpRate = 'SpRetail', projectId = '-1';
   CartItem cartModel;
   // final TextEditingController invoiceNoController = TextEditingController();
   final TextEditingController controllerNarration = TextEditingController();
@@ -196,8 +199,14 @@ class _SalesReturnState extends State<SalesReturn> {
     manualInvoiceNumberInSales =
         ComSettings.getStatus('MANNUAL INVOICE NUMBER IN SALES', settings);
 
+    isProjectSoftware = ComSettings.getStatus('PROJECT SOFTWARE', settings);
     salesTypeDisplay = salesReturnTypeList;
     loadAsset();
+    if (isProjectSoftware) {
+      api.getProject().then((value) {
+        projectList = value;
+      });
+    }
   }
 
   userDateCheck(String date) {
@@ -703,7 +712,8 @@ class _SalesReturnState extends State<SalesReturn> {
             'commissionAccount': 0,
             'commissionAmount': 0,
             'bankName': '',
-            'bankAmount': 0
+            'bankAmount': 0,
+            'project': projectId
           }) +
           ']';
 
@@ -898,7 +908,8 @@ class _SalesReturnState extends State<SalesReturn> {
             'billType': order.billType,
             'returnNo': 0,
             'returnAmount': 0,
-            'fyId': currentFinancialYear.id
+            'fyId': currentFinancialYear.id,
+            'project': projectId
           }) +
           ']';
 
@@ -991,15 +1002,6 @@ class _SalesReturnState extends State<SalesReturn> {
         );
       }
     });
-    // dio.deleteSale(dataDynamic[0]['EntryNo'], saleReturnFormId, '').then((value) {
-    //   setState(() {
-    //     _isLoading = false;
-    //   });
-    //   if (value) {
-    //     clearCart();
-
-    //   }
-    // });
   }
 
   int nextWidget = 0;
@@ -1194,6 +1196,10 @@ class _SalesReturnState extends State<SalesReturn> {
                       style: const TextStyle(fontSize: 18)),
                   Text("Balance : " + snapshot.data.balance,
                       style: const TextStyle(fontSize: 18)),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  projectWidget(),
                   ElevatedButton(
                     onPressed: () {
                       setState(() {
@@ -2650,7 +2656,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                           cartModel.discountPercent.toString();
                                       _serialNoController.text =
                                           cartModel.serialNo;
-
+                                      calculateSubOut();
                                       nextWidget = 3;
                                     });
                                   },
@@ -3574,8 +3580,7 @@ class _SalesReturnState extends State<SalesReturn> {
                   fUnitId: int.tryParse(product['Funit'].toString()),
                   cdPer: 0, //product['']cdPer,
                   cDisc: 0, //product['']cDisc,
-                  net: double.tryParse(
-                      product['GrossValue'].toString()), //subTotal,
+                  net: double.tryParse(product['Net'].toString()), //subTotal,
                   cess: double.tryParse(product['cess'].toString()), //cess,
                   total: double.tryParse(product['Total'].toString()), //total,
                   profitPer: 0,
@@ -3587,7 +3592,9 @@ class _SalesReturnState extends State<SalesReturn> {
                   cGST: double.tryParse(product['CGST'].toString()),
                   sGST: double.tryParse(product['SGST'].toString()),
                   minimumRate: 0,
-                  stock: 0),
+                  stock: 0,
+                  adCessPer: double.tryParse(product['cessper'].toString()),
+                  cessPer: double.tryParse(product['cessper'].toString())),
               -1);
         }
 
@@ -3863,6 +3870,129 @@ class _SalesReturnState extends State<SalesReturn> {
     //     invoiceNoController.text = invoiceNo;
     //   });
     // });
+  }
+
+  calculateSubOut() {
+    if (enableMULTIUNIT) {
+      if (saleRate > 0) {
+        if (_conversion > 0) {
+          rate = double.tryParse(_rateController.text);
+          pRate = productModelPrize['prate'] * _conversion;
+          rPRate = productModelPrize['realprate'] * _conversion;
+        } else {
+          rate = _rateController.text.isNotEmpty
+              ? (double.tryParse(_rateController.text))
+              : 0;
+        }
+      } else {
+        rate = _rateController.text.isNotEmpty
+            ? (double.tryParse(_rateController.text))
+            : 0;
+      }
+    } else {
+      if (_focusNodeRate.hasFocus) {
+        rate = double.tryParse(_rateController.text);
+      } else if (saleRate > 0) {
+        _rateController.text = saleRate.toStringAsFixed(decimal);
+        rate = saleRate;
+      } else {
+        rate = _rateController.text.isNotEmpty
+            ? double.tryParse(_rateController.text)
+            : 0;
+      }
+    }
+    quantity = _quantityController.text.isNotEmpty
+        ? double.tryParse(_quantityController.text)
+        : 0;
+    freeQty = _freeQuantityController.text.isNotEmpty
+        ? double.tryParse(_freeQuantityController.text)
+        : 0;
+    rRate = taxMethod == 'MINUS'
+        ? cessOnNetAmount
+            ? CommonService.getRound(
+                4, (100 * rate) / (100 + taxP + kfcP + cessPer))
+            : CommonService.getRound(4, (100 * rate) / (100 + taxP + kfcP))
+        : rate;
+    discount = _discountController.text.isNotEmpty
+        ? double.tryParse(_discountController.text)
+        : 0;
+    double discP = _discountPercentController.text.isNotEmpty
+        ? double.tryParse(_discountPercentController.text)
+        : 0;
+    double disc = _discountController.text.isNotEmpty
+        ? double.tryParse(_discountController.text)
+        : 0;
+    double qt = _quantityController.text.isNotEmpty
+        ? double.tryParse(_quantityController.text)
+        : 0;
+    double sRate = _rateController.text.isNotEmpty
+        ? double.tryParse(_rateController.text)
+        : 0;
+
+    discount = _discountController.text.isNotEmpty
+        ? double.tryParse(_discountController.text)
+        : 0;
+    discountPercent = _discountPercentController.text.isNotEmpty
+        ? double.tryParse(_discountPercentController.text)
+        : 0;
+    taxP = cartModel.taxP;
+    cessPer = cartModel.cessPer;
+    adCessPer = cartModel.adCessPer;
+    rDisc = cartModel.rDiscount;
+    gross = cartModel.gross;
+    subTotal = cartModel.net;
+    iGST = cartModel.iGST;
+    csGST = cartModel.cGST;
+    kfc = 0;
+    tax = cartModel.tax;
+    cess = cartModel.cess;
+    adCess = cartModel.adCessPer;
+    total = cartModel.total;
+    if (enableMULTIUNIT && _conversion > 0) {
+      profitPer = pRateBasedProfitInSales
+          ? CommonService.getRound(
+              2, (total - (cartModel.pRate * _conversion * quantity)))
+          : CommonService.getRound(
+              decimal, (total - (cartModel.rPRate * _conversion * quantity)));
+    } else {
+      profitPer = pRateBasedProfitInSales
+          ? CommonService.getRound(2, (total - (cartModel.pRate * quantity)))
+          : CommonService.getRound(2, (total - (cartModel.rPRate * quantity)));
+    }
+    unitValue = _conversion > 0 ? _conversion : 1;
+  }
+
+  projectWidget() {
+    return isProjectSoftware
+        ? SizedBox(
+            child: DropdownSearch<dynamic>(
+              maxHeight: 300,
+              onFind: (String filter) => getProjectListData(filter),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(), labelText: 'Select Project'),
+              onChanged: (dynamic data) {
+                projectId = data.id.toString();
+              },
+              showSearchBox: true,
+            ),
+          )
+        : Container();
+  }
+
+  Future<List<dynamic>> getProjectListData(String filter) async {
+    var dd = filter.isEmpty
+        ? projectList
+        : projectList
+            .where((element) => element.name
+                .toString()
+                .toLowerCase()
+                .contains(filter.toLowerCase()))
+            .toList();
+    List<DataJson> dataResult = [];
+    for (var data in dd) {
+      dataResult.add(DataJson(id: data.id, name: data.name.trim().toString()));
+    }
+    return dataResult;
   }
 }
 

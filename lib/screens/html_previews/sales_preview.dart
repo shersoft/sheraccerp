@@ -3312,266 +3312,219 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                             child: Column(
                               // crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                SingleChildScrollView(
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 10, horizontal: 8),
-                                        width:
-                                            MediaQuery.of(context).size.width,
-                                        decoration: const BoxDecoration(
-                                          border: Border(
-                                            top: BorderSide(
-                                                color: Colors.black, width: 2),
-                                            right: BorderSide(
-                                                color: Colors.black, width: 2),
-                                            left: BorderSide(
-                                                color: Colors.black, width: 2),
-                                          ),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            companySettings.name,
-                                            style: const TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                        ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 3, horizontal: 8),
-                                        width:
-                                            MediaQuery.of(context).size.width,
-                                        decoration: const BoxDecoration(
-                                          border: Border(
-                                            top: BorderSide(
-                                                color: Colors.black, width: 2),
-                                            right: BorderSide(
-                                                color: Colors.black, width: 2),
-                                            left: BorderSide(
-                                                color: Colors.black, width: 2),
-                                          ),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            invoiceHead,
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 10),
-                                          ),
-                                        ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 5),
-                                        width:
-                                            MediaQuery.of(context).size.width,
-                                        decoration: const BoxDecoration(
-                                          border: Border(
-                                            top: BorderSide(
-                                                color: Colors.black, width: 2),
-                                            right: BorderSide(
-                                                color: Colors.black, width: 2),
-                                            left: BorderSide(
-                                                color: Colors.black, width: 2),
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    const SizedBox(
-                                                      width: 35,
-                                                      child: Text(
-                                                        "T.R.No",
-                                                        style: TextStyle(
-                                                            fontSize: 7),
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      ": $companyTaxNo",
-                                                      style: const TextStyle(
-                                                          fontSize: 7),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  children: [
-                                                    const SizedBox(
-                                                      width: 35,
-                                                      child: Text(
-                                                        "Phone",
-                                                        style: TextStyle(
-                                                            fontSize: 7),
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      ": ${companySettings.telephone}",
-                                                      style: const TextStyle(
-                                                          fontSize: 7),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  children: [
-                                                    const SizedBox(
-                                                      width: 35,
-                                                      child: Text(
-                                                        "Mobile",
-                                                        style: TextStyle(
-                                                            fontSize: 7),
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      ": ${companySettings.mobile}",
-                                                      style: const TextStyle(
-                                                          fontSize: 7),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  children: [
-                                                    const SizedBox(
-                                                      width: 35,
-                                                      child: Text(
-                                                        "Email",
-                                                        style: TextStyle(
-                                                            fontSize: 7),
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      ": ${companySettings.email}",
-                                                      style: const TextStyle(
-                                                          fontSize: 7),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Container(
-                                        padding:
-                                            const EdgeInsetsDirectional.all(8),
-                                        decoration: const BoxDecoration(
-                                          border: Border(
-                                            top: BorderSide(
-                                                color: Colors.black, width: 2),
-                                            right: BorderSide(
-                                                color: Colors.black, width: 2),
-                                            left: BorderSide(
-                                                color: Colors.black, width: 2),
-                                            bottom: BorderSide(
-                                                color: Colors.black, width: 2),
-                                          ),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    const SizedBox(
-                                                      width: 50,
-                                                      child: Text(
-                                                        " Invoice No",
-                                                        style: TextStyle(
-                                                            fontSize: 6),
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      ":  ${dataInformation['InvoiceNo']}",
-                                                      style: const TextStyle(
-                                                          fontSize: 6),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  children: [
-                                                    const SizedBox(
-                                                      width: 50,
-                                                      child: Text(
-                                                        " Date & Time",
-                                                        style: TextStyle(
-                                                            fontSize: 6),
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      ":  ${DateUtil.dateDMY(dataInformation['DDate'])}",
-                                                      style: const TextStyle(
-                                                          fontSize: 6),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Container(
-                                        decoration: const BoxDecoration(
-                                          border: Border(
-                                            right: BorderSide(
-                                                color: Colors.black, width: 2),
-                                            left: BorderSide(
-                                                color: Colors.black, width: 2),
-                                            bottom: BorderSide(
-                                                color: Colors.black, width: 1),
-                                          ),
-                                        ),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(8),
+                                RepaintBoundary(
+                                  key: _globalKey,
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 10, horizontal: 8),
                                           width:
                                               MediaQuery.of(context).size.width,
-                                          child: Column(
+                                          decoration: const BoxDecoration(
+                                            border: Border(
+                                              top: BorderSide(
+                                                  color: Colors.black,
+                                                  width: 2),
+                                              right: BorderSide(
+                                                  color: Colors.black,
+                                                  width: 2),
+                                              left: BorderSide(
+                                                  color: Colors.black,
+                                                  width: 2),
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              companySettings.name,
+                                              style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 3, horizontal: 8),
+                                          width:
+                                              MediaQuery.of(context).size.width,
+                                          decoration: const BoxDecoration(
+                                            border: Border(
+                                              top: BorderSide(
+                                                  color: Colors.black,
+                                                  width: 2),
+                                              right: BorderSide(
+                                                  color: Colors.black,
+                                                  width: 2),
+                                              left: BorderSide(
+                                                  color: Colors.black,
+                                                  width: 2),
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              invoiceHead,
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 10),
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 10, vertical: 5),
+                                          width:
+                                              MediaQuery.of(context).size.width,
+                                          decoration: const BoxDecoration(
+                                            border: Border(
+                                              top: BorderSide(
+                                                  color: Colors.black,
+                                                  width: 2),
+                                              right: BorderSide(
+                                                  color: Colors.black,
+                                                  width: 2),
+                                              left: BorderSide(
+                                                  color: Colors.black,
+                                                  width: 2),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Row(
+                                              Column(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
                                                 children: [
-                                                  const SizedBox(
-                                                    width: 35,
-                                                    child: Text(
-                                                      'To(cal)',
-                                                      style: TextStyle(
-                                                          fontSize: 6),
-                                                    ),
-                                                  ),
-                                                  Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
+                                                  Row(
                                                     children: [
+                                                      const SizedBox(
+                                                        width: 35,
+                                                        child: Text(
+                                                          "T.R.No",
+                                                          style: TextStyle(
+                                                              fontSize: 7),
+                                                        ),
+                                                      ),
                                                       Text(
-                                                        ': ${dataLedger[0]['add1']}',
+                                                        ": $companyTaxNo",
+                                                        style: const TextStyle(
+                                                            fontSize: 7),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      const SizedBox(
+                                                        width: 35,
+                                                        child: Text(
+                                                          "Phone",
+                                                          style: TextStyle(
+                                                              fontSize: 7),
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        ": ${companySettings.telephone}",
+                                                        style: const TextStyle(
+                                                            fontSize: 7),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      const SizedBox(
+                                                        width: 35,
+                                                        child: Text(
+                                                          "Mobile",
+                                                          style: TextStyle(
+                                                              fontSize: 7),
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        ": ${companySettings.mobile}",
+                                                        style: const TextStyle(
+                                                            fontSize: 7),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      const SizedBox(
+                                                        width: 35,
+                                                        child: Text(
+                                                          "Email",
+                                                          style: TextStyle(
+                                                              fontSize: 7),
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        ": ${companySettings.email}",
+                                                        style: const TextStyle(
+                                                            fontSize: 7),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Container(
+                                          padding:
+                                              const EdgeInsetsDirectional.all(
+                                                  8),
+                                          decoration: const BoxDecoration(
+                                            border: Border(
+                                              top: BorderSide(
+                                                  color: Colors.black,
+                                                  width: 2),
+                                              right: BorderSide(
+                                                  color: Colors.black,
+                                                  width: 2),
+                                              left: BorderSide(
+                                                  color: Colors.black,
+                                                  width: 2),
+                                              bottom: BorderSide(
+                                                  color: Colors.black,
+                                                  width: 2),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      const SizedBox(
+                                                        width: 50,
+                                                        child: Text(
+                                                          " Invoice No",
+                                                          style: TextStyle(
+                                                              fontSize: 6),
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        ":  ${dataInformation['InvoiceNo']}",
                                                         style: const TextStyle(
                                                             fontSize: 6),
                                                       ),
-                                                      Text(
-                                                        '  ${dataLedger[0]['add2']}',
-                                                        style: const TextStyle(
-                                                            fontSize: 6),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      const SizedBox(
+                                                        width: 50,
+                                                        child: Text(
+                                                          " Date & Time",
+                                                          style: TextStyle(
+                                                              fontSize: 6),
+                                                        ),
                                                       ),
                                                       Text(
-                                                        '  ${dataLedger[0]['add3']}',
-                                                        style: const TextStyle(
-                                                            fontSize: 6),
-                                                      ),
-                                                      Text(
-                                                        '  ${dataLedger[0]['add4']}',
+                                                        ":  ${DateUtil.dateDMY(dataInformation['DDate'])}",
                                                         style: const TextStyle(
                                                             fontSize: 6),
                                                       ),
@@ -3579,263 +3532,133 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                   ),
                                                 ],
                                               ),
-                                              Row(
-                                                children: [
-                                                  const SizedBox(
-                                                    width: 35,
-                                                    child: Text(
-                                                      'TRN No',
-                                                      style: TextStyle(
-                                                          fontSize: 6),
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    ':  ${dataLedger[0]['gstno']}',
-                                                    style: const TextStyle(
-                                                        fontSize: 6),
-                                                  ),
-                                                ],
-                                              ),
                                             ],
                                           ),
                                         ),
-                                      ),
-                                      Container(
-                                        decoration:
-                                            BoxDecoration(border: Border.all()),
-                                        child: Table(
-                                          border: const TableBorder(
-                                            horizontalInside: BorderSide
-                                                .none, // Remove horizontal borders inside the table
-
-                                            verticalInside:
-                                                BorderSide(), // Keep vertical borders
+                                        Container(
+                                          decoration: const BoxDecoration(
+                                            border: Border(
+                                              right: BorderSide(
+                                                  color: Colors.black,
+                                                  width: 2),
+                                              left: BorderSide(
+                                                  color: Colors.black,
+                                                  width: 2),
+                                              bottom: BorderSide(
+                                                  color: Colors.black,
+                                                  width: 1),
+                                            ),
                                           ),
-                                          columnWidths: const {
-                                            0: FixedColumnWidth(10),
-                                            1: FlexColumnWidth(22),
-                                            2: FlexColumnWidth(7),
-                                            3: FlexColumnWidth(7),
-                                            4: FlexColumnWidth(7),
-                                            5: FlexColumnWidth(10),
-                                            6: FlexColumnWidth(10),
-                                            7: FlexColumnWidth(13),
-                                            8: FlexColumnWidth(20),
-                                            9: FlexColumnWidth(15),
-                                          },
-                                          children: [
-                                            TableRow(children: [
-                                              Center(
-                                                  child: Column(
-                                                children: const [
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsets.all(2.0),
-                                                    child: Text(
-                                                      "No",
-                                                      style: TextStyle(
-                                                          fontSize: 4,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                ],
-                                              )),
-                                              const Padding(
-                                                padding: EdgeInsets.all(2.0),
-                                                child: Text(
-                                                  "Description /Itemname",
-                                                  style: TextStyle(
-                                                      fontSize: 4,
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                ),
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: const [
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsets.all(2.0),
-                                                    child: Text(
-                                                      'Qty',
-                                                      style: TextStyle(
-                                                          fontSize: 4,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: const [
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsets.all(2.0),
-                                                    child: Text(
-                                                      'Unit',
-                                                      style: TextStyle(
-                                                          fontSize: 4,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const Padding(
-                                                padding: EdgeInsets.all(2.0),
-                                                child: Center(
-                                                  child: Text(
-                                                    'Price',
-                                                    style: TextStyle(
-                                                        fontSize: 4,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  ),
-                                                ),
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: const [
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsets.all(2.0),
-                                                    child: Text(
-                                                      'Total',
-                                                      style: TextStyle(
-                                                          fontSize: 4,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: const [
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsets.all(2.0),
-                                                    child: Text(
-                                                      'Discount',
-                                                      style: TextStyle(
-                                                          fontSize: 4,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: const [
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsets.all(2.0),
-                                                    child: Text(
-                                                      'Taxable Value',
-                                                      style: TextStyle(
-                                                          fontSize: 4,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            2.0),
-                                                    child: Center(
-                                                      child: Column(
-                                                        children: const [
-                                                          Text(
-                                                            'Tax',
-                                                            style: TextStyle(
-                                                                fontSize: 4,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold),
-                                                          ),
-                                                        ],
+                                          child: Container(
+                                            padding: const EdgeInsets.all(8),
+                                            width: MediaQuery.of(context)
+                                                .size
+                                                .width,
+                                            child: Column(
+                                              children: [
+                                                Row(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    const SizedBox(
+                                                      width: 35,
+                                                      child: Text(
+                                                        'To(cal)',
+                                                        style: TextStyle(
+                                                            fontSize: 6),
                                                       ),
                                                     ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: const [
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsets.all(2.0),
-                                                    child: Text(
-                                                      'Amount',
-                                                      style: TextStyle(
-                                                          fontSize: 5,
-                                                          color: Colors.black,
-                                                          fontWeight:
-                                                              FontWeight.bold),
+                                                    Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          ': ${dataLedger[0]['add1']}',
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontSize: 6),
+                                                        ),
+                                                        Text(
+                                                          '  ${dataLedger[0]['add2']}',
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontSize: 6),
+                                                        ),
+                                                        Text(
+                                                          '  ${dataLedger[0]['add3']}',
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontSize: 6),
+                                                        ),
+                                                        Text(
+                                                          '  ${dataLedger[0]['add4']}',
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontSize: 6),
+                                                        ),
+                                                      ],
                                                     ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ]),
-                                          ],
-                                        ),
-                                      ),
-                                      Container(
-                                        decoration:
-                                            BoxDecoration(border: Border.all()),
-                                        child: Table(
-                                          border: const TableBorder(
-                                            horizontalInside: BorderSide
-                                                .none, // Remove horizontal borders inside the table
-
-                                            verticalInside:
-                                                BorderSide(), // Keep vertical borders
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    const SizedBox(
+                                                      width: 35,
+                                                      child: Text(
+                                                        'TRN No',
+                                                        style: TextStyle(
+                                                            fontSize: 6),
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      ':  ${dataLedger[0]['gstno']}',
+                                                      style: const TextStyle(
+                                                          fontSize: 6),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                          columnWidths: const {
-                                            0: FixedColumnWidth(10),
-                                            1: FlexColumnWidth(22),
-                                            2: FlexColumnWidth(7),
-                                            3: FlexColumnWidth(7),
-                                            4: FlexColumnWidth(7),
-                                            5: FlexColumnWidth(10),
-                                            6: FlexColumnWidth(10),
-                                            7: FlexColumnWidth(13),
-                                            8: FlexColumnWidth(7),
-                                            9: FlexColumnWidth(13),
-                                            10: FlexColumnWidth(15),
-                                          },
-                                          children: [
-                                            for (var i = 0;
-                                                i < dataParticulars.length;
-                                                i++)
+                                        ),
+                                        Container(
+                                          decoration: BoxDecoration(
+                                              border: Border.all()),
+                                          child: Table(
+                                            border: const TableBorder(
+                                              horizontalInside: BorderSide
+                                                  .none, // Remove horizontal borders inside the table
+
+                                              verticalInside:
+                                                  BorderSide(), // Keep vertical borders
+                                            ),
+                                            columnWidths: const {
+                                              0: FixedColumnWidth(10),
+                                              1: FlexColumnWidth(22),
+                                              2: FlexColumnWidth(7),
+                                              3: FlexColumnWidth(7),
+                                              4: FlexColumnWidth(7),
+                                              5: FlexColumnWidth(10),
+                                              6: FlexColumnWidth(10),
+                                              7: FlexColumnWidth(13),
+                                              8: FlexColumnWidth(20),
+                                              9: FlexColumnWidth(15),
+                                            },
+                                            children: [
                                               TableRow(children: [
                                                 Center(
                                                     child: Column(
-                                                  children: [
+                                                  children: const [
                                                     Padding(
                                                       padding:
-                                                          const EdgeInsets.all(
-                                                              2.0),
+                                                          EdgeInsets.all(2.0),
                                                       child: Text(
-                                                        dataParticulars[i]
-                                                            ['slno'],
-                                                        style: const TextStyle(
-                                                            fontSize: 3,
+                                                        "No",
+                                                        style: TextStyle(
+                                                            fontSize: 4,
                                                             fontWeight:
                                                                 FontWeight
                                                                     .bold),
@@ -3843,32 +3666,111 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                     ),
                                                   ],
                                                 )),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(2.0),
+                                                const Padding(
+                                                  padding: EdgeInsets.all(2.0),
                                                   child: Text(
-                                                    dataParticulars[i]
-                                                        ['itemname'],
-                                                    style: const TextStyle(
-                                                        fontSize: 3,
+                                                    "Description /Itemname",
+                                                    style: TextStyle(
+                                                        fontSize: 4,
                                                         fontWeight:
                                                             FontWeight.bold),
                                                   ),
                                                 ),
                                                 Row(
                                                   mainAxisAlignment:
-                                                      MainAxisAlignment.end,
-                                                  children: [
+                                                      MainAxisAlignment.center,
+                                                  children: const [
                                                     Padding(
                                                       padding:
-                                                          const EdgeInsets.all(
-                                                              2.0),
+                                                          EdgeInsets.all(2.0),
                                                       child: Text(
-                                                        dataParticulars[i]
-                                                                ['Qty']
-                                                            .toStringAsFixed(2),
-                                                        style: const TextStyle(
-                                                            fontSize: 3,
+                                                        'Qty',
+                                                        style: TextStyle(
+                                                            fontSize: 4,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        'Unit',
+                                                        style: TextStyle(
+                                                            fontSize: 4,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const Padding(
+                                                  padding: EdgeInsets.all(2.0),
+                                                  child: Center(
+                                                    child: Text(
+                                                      'Price',
+                                                      style: TextStyle(
+                                                          fontSize: 4,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        'Total',
+                                                        style: TextStyle(
+                                                            fontSize: 4,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        'Discount',
+                                                        style: TextStyle(
+                                                            fontSize: 4,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        'Taxable Value',
+                                                        style: TextStyle(
+                                                            fontSize: 4,
                                                             fontWeight:
                                                                 FontWeight
                                                                     .bold),
@@ -3884,158 +3786,34 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                       padding:
                                                           const EdgeInsets.all(
                                                               2.0),
-                                                      child: Text(
-                                                        dataParticulars[i]
-                                                            ['unitName'],
-                                                        style: const TextStyle(
-                                                            fontSize: 3,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold),
+                                                      child: Center(
+                                                        child: Column(
+                                                          children: const [
+                                                            Text(
+                                                              'Tax',
+                                                              style: TextStyle(
+                                                                  fontSize: 4,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold),
+                                                            ),
+                                                          ],
+                                                        ),
                                                       ),
                                                     ),
                                                   ],
                                                 ),
                                                 Row(
                                                   mainAxisAlignment:
-                                                      MainAxisAlignment.end,
-                                                  children: [
+                                                      MainAxisAlignment.center,
+                                                  children: const [
                                                     Padding(
                                                       padding:
-                                                          const EdgeInsets.all(
-                                                              2.0),
+                                                          EdgeInsets.all(2.0),
                                                       child: Text(
-                                                        dataParticulars[i]
-                                                                ['RealRate']
-                                                            .toStringAsFixed(2),
-                                                        style: const TextStyle(
-                                                            fontSize: 3,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.end,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              2.0),
-                                                      child: Text(
-                                                        dataParticulars[i]
-                                                                ['GrossValue']
-                                                            .toStringAsFixed(2),
-                                                        style: const TextStyle(
-                                                            fontSize: 3,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.end,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              2.0),
-                                                      child: Text(
-                                                        dataParticulars[i]
-                                                                ['DiscPersent']
-                                                            .toStringAsFixed(2),
-                                                        style: const TextStyle(
-                                                            fontSize: 3,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.end,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              2.0),
-                                                      child: Text(
-                                                        dataParticulars[i]
-                                                                ['Net']
-                                                            .toStringAsFixed(2),
-                                                        style: const TextStyle(
-                                                            fontSize: 3,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.end,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              2.0),
-                                                      child: Text(
-                                                        dataParticulars[i]
-                                                                ['igst']
-                                                            .toStringAsFixed(2),
-                                                        style: const TextStyle(
-                                                            fontSize: 3,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.end,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              2.0),
-                                                      child: Text(
-                                                        dataParticulars[i]
-                                                                ['IGST']
-                                                            .toStringAsFixed(2),
-                                                        style: const TextStyle(
-                                                            fontSize: 3,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.end,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              2.0),
-                                                      child: Text(
-                                                        dataParticulars[i]
-                                                                ['Total']
-                                                            .toStringAsFixed(2),
-                                                        style: const TextStyle(
-                                                            fontSize: 4,
+                                                        'Amount',
+                                                        style: TextStyle(
+                                                            fontSize: 5,
                                                             color: Colors.black,
                                                             fontWeight:
                                                                 FontWeight
@@ -4045,19 +3823,50 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                   ],
                                                 ),
                                               ]),
-                                            if (dataParticulars.length < 10)
-                                              for (var k = 0; k < 4; k++)
+                                            ],
+                                          ),
+                                        ),
+                                        Container(
+                                          decoration: BoxDecoration(
+                                              border: Border.all()),
+                                          child: Table(
+                                            border: const TableBorder(
+                                              horizontalInside: BorderSide
+                                                  .none, // Remove horizontal borders inside the table
+
+                                              verticalInside:
+                                                  BorderSide(), // Keep vertical borders
+                                            ),
+                                            columnWidths: const {
+                                              0: FixedColumnWidth(10),
+                                              1: FlexColumnWidth(22),
+                                              2: FlexColumnWidth(7),
+                                              3: FlexColumnWidth(7),
+                                              4: FlexColumnWidth(7),
+                                              5: FlexColumnWidth(10),
+                                              6: FlexColumnWidth(10),
+                                              7: FlexColumnWidth(13),
+                                              8: FlexColumnWidth(7),
+                                              9: FlexColumnWidth(13),
+                                              10: FlexColumnWidth(15),
+                                            },
+                                            children: [
+                                              for (var i = 0;
+                                                  i < dataParticulars.length;
+                                                  i++)
                                                 TableRow(children: [
                                                   Center(
                                                       child: Column(
-                                                    children: const [
+                                                    children: [
                                                       Padding(
                                                         padding:
-                                                            EdgeInsets.all(2.0),
+                                                            const EdgeInsets
+                                                                .all(2.0),
                                                         child: Text(
-                                                          '\n',
-                                                          style: TextStyle(
-                                                              fontSize: 11,
+                                                          dataParticulars[i]
+                                                              ['slno'],
+                                                          style: const TextStyle(
+                                                              fontSize: 3,
                                                               fontWeight:
                                                                   FontWeight
                                                                       .bold),
@@ -4065,24 +3874,15 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                       ),
                                                     ],
                                                   )),
-                                                  const Padding(
+                                                  Padding(
                                                     padding:
-                                                        EdgeInsets.all(2.0),
+                                                        const EdgeInsets.all(
+                                                            2.0),
                                                     child: Text(
-                                                      "",
-                                                      style: TextStyle(
-                                                          fontSize: 5,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                  const Padding(
-                                                    padding:
-                                                        EdgeInsets.all(2.0),
-                                                    child: Text(
-                                                      "",
-                                                      style: TextStyle(
-                                                          fontSize: 5,
+                                                      dataParticulars[i]
+                                                          ['itemname'],
+                                                      style: const TextStyle(
+                                                          fontSize: 3,
                                                           fontWeight:
                                                               FontWeight.bold),
                                                     ),
@@ -4090,54 +3890,18 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                   Row(
                                                     mainAxisAlignment:
                                                         MainAxisAlignment.end,
-                                                    children: const [
+                                                    children: [
                                                       Padding(
                                                         padding:
-                                                            EdgeInsets.all(2.0),
+                                                            const EdgeInsets
+                                                                .all(2.0),
                                                         child: Text(
-                                                          "",
-                                                          style: TextStyle(
-                                                              fontSize: 5,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const Padding(
-                                                    padding:
-                                                        EdgeInsets.all(2.0),
-                                                    child: Text(
-                                                      "",
-                                                      style: TextStyle(
-                                                          fontSize: 5,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                  const Padding(
-                                                    padding:
-                                                        EdgeInsets.all(2.0),
-                                                    child: Text(
-                                                      "",
-                                                      style: TextStyle(
-                                                          fontSize: 5,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.end,
-                                                    children: const [
-                                                      Padding(
-                                                        padding:
-                                                            EdgeInsets.all(2.0),
-                                                        child: Text(
-                                                          "",
-                                                          style: TextStyle(
-                                                              fontSize: 5,
+                                                          dataParticulars[i]
+                                                                  ['Qty']
+                                                              .toStringAsFixed(
+                                                                  2),
+                                                          style: const TextStyle(
+                                                              fontSize: 3,
                                                               fontWeight:
                                                                   FontWeight
                                                                       .bold),
@@ -4149,55 +3913,16 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                     mainAxisAlignment:
                                                         MainAxisAlignment
                                                             .center,
-                                                    children: const [
+                                                    children: [
                                                       Padding(
                                                         padding:
-                                                            EdgeInsets.all(2.0),
-                                                        child: Center(
-                                                          child: Text(
-                                                            '',
-                                                            style: TextStyle(
-                                                                fontSize: 5,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: const [
-                                                      Padding(
-                                                        padding:
-                                                            EdgeInsets.all(2.0),
-                                                        child: Center(
-                                                          child: Text(
-                                                            '',
-                                                            style: TextStyle(
-                                                                fontSize: 5,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.end,
-                                                    children: const [
-                                                      Padding(
-                                                        padding:
-                                                            EdgeInsets.all(2.0),
+                                                            const EdgeInsets
+                                                                .all(2.0),
                                                         child: Text(
-                                                          '',
-                                                          style: TextStyle(
-                                                              fontSize: 5,
+                                                          dataParticulars[i]
+                                                              ['unitName'],
+                                                          style: const TextStyle(
+                                                              fontSize: 3,
                                                               fontWeight:
                                                                   FontWeight
                                                                       .bold),
@@ -4208,14 +3933,152 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                   Row(
                                                     mainAxisAlignment:
                                                         MainAxisAlignment.end,
-                                                    children: const [
+                                                    children: [
                                                       Padding(
                                                         padding:
-                                                            EdgeInsets.all(2.0),
+                                                            const EdgeInsets
+                                                                .all(2.0),
                                                         child: Text(
-                                                          "",
-                                                          style: TextStyle(
-                                                              fontSize: 6,
+                                                          dataParticulars[i]
+                                                                  ['RealRate']
+                                                              .toStringAsFixed(
+                                                                  2),
+                                                          style: const TextStyle(
+                                                              fontSize: 3,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.end,
+                                                    children: [
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(2.0),
+                                                        child: Text(
+                                                          dataParticulars[i]
+                                                                  ['GrossValue']
+                                                              .toStringAsFixed(
+                                                                  2),
+                                                          style: const TextStyle(
+                                                              fontSize: 3,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.end,
+                                                    children: [
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(2.0),
+                                                        child: Text(
+                                                          dataParticulars[i][
+                                                                  'DiscPersent']
+                                                              .toStringAsFixed(
+                                                                  2),
+                                                          style: const TextStyle(
+                                                              fontSize: 3,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.end,
+                                                    children: [
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(2.0),
+                                                        child: Text(
+                                                          dataParticulars[i]
+                                                                  ['Net']
+                                                              .toStringAsFixed(
+                                                                  2),
+                                                          style: const TextStyle(
+                                                              fontSize: 3,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.end,
+                                                    children: [
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(2.0),
+                                                        child: Text(
+                                                          dataParticulars[i]
+                                                                  ['igst']
+                                                              .toStringAsFixed(
+                                                                  2),
+                                                          style: const TextStyle(
+                                                              fontSize: 3,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.end,
+                                                    children: [
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(2.0),
+                                                        child: Text(
+                                                          dataParticulars[i]
+                                                                  ['IGST']
+                                                              .toStringAsFixed(
+                                                                  2),
+                                                          style: const TextStyle(
+                                                              fontSize: 3,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.end,
+                                                    children: [
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(2.0),
+                                                        child: Text(
+                                                          dataParticulars[i]
+                                                                  ['Total']
+                                                              .toStringAsFixed(
+                                                                  2),
+                                                          style: const TextStyle(
+                                                              fontSize: 4,
+                                                              color:
+                                                                  Colors.black,
                                                               fontWeight:
                                                                   FontWeight
                                                                       .bold),
@@ -4224,153 +4087,271 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                     ],
                                                   ),
                                                 ]),
-                                          ],
-                                        ),
-                                      ),
-                                      Container(
-                                        decoration:
-                                            BoxDecoration(border: Border.all()),
-                                        child: Table(
-                                          border: const TableBorder(
-                                            horizontalInside: BorderSide
-                                                .none, // Remove horizontal borders inside the table
-
-                                            verticalInside:
-                                                BorderSide(), // Keep vertical borders
+                                              if (dataParticulars.length < 10)
+                                                for (var k = 0; k < 4; k++)
+                                                  TableRow(children: [
+                                                    Center(
+                                                        child: Column(
+                                                      children: const [
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  2.0),
+                                                          child: Text(
+                                                            '\n',
+                                                            style: TextStyle(
+                                                                fontSize: 11,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    )),
+                                                    const Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        "",
+                                                        style: TextStyle(
+                                                            fontSize: 5,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                    const Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        "",
+                                                        style: TextStyle(
+                                                            fontSize: 5,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment.end,
+                                                      children: const [
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  2.0),
+                                                          child: Text(
+                                                            "",
+                                                            style: TextStyle(
+                                                                fontSize: 5,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        "",
+                                                        style: TextStyle(
+                                                            fontSize: 5,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                    const Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        "",
+                                                        style: TextStyle(
+                                                            fontSize: 5,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment.end,
+                                                      children: const [
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  2.0),
+                                                          child: Text(
+                                                            "",
+                                                            style: TextStyle(
+                                                                fontSize: 5,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: const [
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  2.0),
+                                                          child: Center(
+                                                            child: Text(
+                                                              '',
+                                                              style: TextStyle(
+                                                                  fontSize: 5,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: const [
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  2.0),
+                                                          child: Center(
+                                                            child: Text(
+                                                              '',
+                                                              style: TextStyle(
+                                                                  fontSize: 5,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment.end,
+                                                      children: const [
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  2.0),
+                                                          child: Text(
+                                                            '',
+                                                            style: TextStyle(
+                                                                fontSize: 5,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment.end,
+                                                      children: const [
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  2.0),
+                                                          child: Text(
+                                                            "",
+                                                            style: TextStyle(
+                                                                fontSize: 6,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ]),
+                                            ],
                                           ),
-                                          columnWidths: const {
-                                            0: FixedColumnWidth(10),
-                                            1: FlexColumnWidth(22),
-                                            2: FlexColumnWidth(7),
-                                            3: FlexColumnWidth(7),
-                                            4: FlexColumnWidth(7),
-                                            5: FlexColumnWidth(10),
-                                            6: FlexColumnWidth(10),
-                                            7: FlexColumnWidth(13),
-                                            8: FlexColumnWidth(7),
-                                            9: FlexColumnWidth(13),
-                                            10: FlexColumnWidth(15),
-                                          },
-                                          children: [
-                                            TableRow(children: [
-                                              Center(
-                                                  child: Column(
-                                                children: const [
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsets.all(2.0),
-                                                    child: Text(
-                                                      '',
-                                                      style: TextStyle(
-                                                          fontSize: 11,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                ],
-                                              )),
-                                              Center(
-                                                  child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: const [
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsets.all(2.0),
-                                                    child: Text(
-                                                      'Total',
-                                                      style: TextStyle(
-                                                          fontSize: 7,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                ],
-                                              )),
-                                              Padding(
-                                                padding: const EdgeInsets.all(
-                                                  2.0,
-                                                ),
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.end,
-                                                  children: [
-                                                    Text(
-                                                      totalQuantity
-                                                          ?.toStringAsFixed(2),
-                                                      style: const TextStyle(
-                                                          fontSize: 5,
-                                                          fontWeight:
-                                                              FontWeight.bold),
+                                        ),
+                                        Container(
+                                          decoration: BoxDecoration(
+                                              border: Border.all()),
+                                          child: Table(
+                                            border: const TableBorder(
+                                              horizontalInside: BorderSide
+                                                  .none, // Remove horizontal borders inside the table
+
+                                              verticalInside:
+                                                  BorderSide(), // Keep vertical borders
+                                            ),
+                                            columnWidths: const {
+                                              0: FixedColumnWidth(10),
+                                              1: FlexColumnWidth(22),
+                                              2: FlexColumnWidth(7),
+                                              3: FlexColumnWidth(7),
+                                              4: FlexColumnWidth(7),
+                                              5: FlexColumnWidth(10),
+                                              6: FlexColumnWidth(10),
+                                              7: FlexColumnWidth(13),
+                                              8: FlexColumnWidth(7),
+                                              9: FlexColumnWidth(13),
+                                              10: FlexColumnWidth(15),
+                                            },
+                                            children: [
+                                              TableRow(children: [
+                                                Center(
+                                                    child: Column(
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        '',
+                                                        style: TextStyle(
+                                                            fontSize: 11,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
                                                     ),
                                                   ],
-                                                ),
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.end,
-                                                children: const [
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsets.all(2.0),
-                                                    child: Text(
-                                                      "",
-                                                      style: TextStyle(
-                                                          fontSize: 5,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const Padding(
-                                                padding: EdgeInsets.all(2.0),
-                                                child: Text(
-                                                  "",
-                                                  style: TextStyle(
-                                                      fontSize: 5,
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                ),
-                                              ),
-                                              const Padding(
-                                                padding: EdgeInsets.all(2.0),
-                                                child: Text(
-                                                  "",
-                                                  style: TextStyle(
-                                                      fontSize: 5,
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                ),
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.end,
-                                                children: const [
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsets.all(2.0),
-                                                    child: Text(
-                                                      '',
-                                                      style: TextStyle(
-                                                          fontSize: 5,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.end,
-                                                children: [
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            2.0),
-                                                    child: Center(
+                                                )),
+                                                Center(
+                                                    child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
                                                       child: Text(
-                                                        totalTaxablevalue
+                                                        'Total',
+                                                        style: TextStyle(
+                                                            fontSize: 7,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                )),
+                                                Padding(
+                                                  padding: const EdgeInsets.all(
+                                                    2.0,
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.end,
+                                                    children: [
+                                                      Text(
+                                                        totalQuantity
                                                             ?.toStringAsFixed(
                                                                 2),
                                                         style: const TextStyle(
@@ -4379,18 +4360,54 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                                 FontWeight
                                                                     .bold),
                                                       ),
-                                                    ),
+                                                    ],
                                                   ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: const [
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsets.all(2.0),
-                                                    child: Center(
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Text(
+                                                        "",
+                                                        style: TextStyle(
+                                                            fontSize: 5,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const Padding(
+                                                  padding: EdgeInsets.all(2.0),
+                                                  child: Text(
+                                                    "",
+                                                    style: TextStyle(
+                                                        fontSize: 5,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ),
+                                                const Padding(
+                                                  padding: EdgeInsets.all(2.0),
+                                                  child: Text(
+                                                    "",
+                                                    style: TextStyle(
+                                                        fontSize: 5,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
                                                       child: Text(
                                                         '',
                                                         style: TextStyle(
@@ -4400,222 +4417,277 @@ class _SalesPreviewShowState extends State<SalesPreviewShow> {
                                                                     .bold),
                                                       ),
                                                     ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.end,
-                                                children: [
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            2.0),
-                                                    child: Text(
-                                                      totalVAt
-                                                          .toStringAsFixed(2),
-                                                      style: const TextStyle(
-                                                          fontSize: 5,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.end,
-                                                children: [
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            2.0),
-                                                    child: Text(
-                                                      '${dataInformation['Total'].toStringAsFixed(2)}',
-                                                      style: const TextStyle(
-                                                          fontSize: 6,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ]),
-                                          ],
-                                        ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration:
-                                            BoxDecoration(border: Border.all()),
-                                        child: Row(
-                                          mainAxisAlignment: isQrCodeKSA
-                                              ? MainAxisAlignment.spaceBetween
-                                              : MainAxisAlignment.end,
-                                          children: [
-                                            Column(children: [
-                                              byteImageQr != null
-                                                  ? Image.memory(byteImageQr,
-                                                      height: 50, width: 50)
-                                                  : const Text('\n\n\n\n'),
-                                            ]),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Row(
-                                                      children: [
-                                                        const SizedBox(
-                                                            width: 70,
-                                                            child: Text(
-                                                              "Discount",
-                                                              style: TextStyle(
-                                                                  fontSize: 7),
-                                                            )),
-                                                        Text(
-                                                          "${dataInformation['Discount'].toStringAsFixed(2)}",
-                                                          style:
-                                                              const TextStyle(
-                                                                  fontSize: 7),
-                                                          textAlign:
-                                                              TextAlign.end,
-                                                        )
-                                                      ],
-                                                    )
                                                   ],
                                                 ),
-                                                Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
                                                   children: [
-                                                    Row(
-                                                      children: [
-                                                        const SizedBox(
-                                                            width: 70,
-                                                            child: Text(
-                                                              "VAT Total",
-                                                              style: TextStyle(
-                                                                  fontSize: 7),
-                                                            )),
-                                                        Text(
-                                                          totalVAt
-                                                              .toStringAsFixed(
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              2.0),
+                                                      child: Center(
+                                                        child: Text(
+                                                          totalTaxablevalue
+                                                              ?.toStringAsFixed(
                                                                   2),
-                                                          style:
-                                                              const TextStyle(
-                                                                  fontSize: 7),
-                                                        )
-                                                      ],
-                                                    )
-                                                  ],
-                                                ),
-                                                Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Row(
-                                                      children: [
-                                                        const SizedBox(
-                                                            width: 70,
-                                                            child: Text(
-                                                              "Round To",
-                                                              style: TextStyle(
-                                                                  fontSize: 7),
-                                                            )),
-                                                        Text(
-                                                          '${dataInformation['Roundoff'].toStringAsFixed(2)}',
-                                                          style:
-                                                              const TextStyle(
-                                                                  fontSize: 7),
-                                                        )
-                                                      ],
-                                                    ),
-                                                    Row(
-                                                      children: [
-                                                        const SizedBox(
-                                                            width: 70,
-                                                            child: Text(
-                                                              "NetAmount",
-                                                              style: TextStyle(
-                                                                  fontSize: 7,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold),
-                                                            )),
-                                                        Text(
-                                                          "${dataInformation['GrandTotal'].toStringAsFixed(2)} ",
                                                           style: const TextStyle(
-                                                              fontSize: 7,
+                                                              fontSize: 5,
                                                               fontWeight:
                                                                   FontWeight
                                                                       .bold),
-                                                        )
-                                                      ],
+                                                        ),
+                                                      ),
                                                     ),
                                                   ],
-                                                )
-                                              ],
-                                            )
-                                          ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: const [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(2.0),
+                                                      child: Center(
+                                                        child: Text(
+                                                          '',
+                                                          style: TextStyle(
+                                                              fontSize: 5,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: [
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              2.0),
+                                                      child: Text(
+                                                        totalVAt
+                                                            .toStringAsFixed(2),
+                                                        style: const TextStyle(
+                                                            fontSize: 5,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: [
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              2.0),
+                                                      child: Text(
+                                                        '${dataInformation['Total'].toStringAsFixed(2)}',
+                                                        style: const TextStyle(
+                                                            fontSize: 6,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ]),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.all(3),
-                                        width:
-                                            MediaQuery.of(context).size.width,
-                                        decoration: const BoxDecoration(
-                                            border: Border(
-                                                left: BorderSide(),
-                                                right: BorderSide(),
-                                                bottom: BorderSide())),
-                                        child: Text(
-                                            NumberToWord().convertDouble(
-                                                'en',
-                                                double.tryParse(dataInformation[
-                                                        'GrandTotal']
-                                                    .toString())),
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                              border: Border.all()),
+                                          child: Row(
+                                            mainAxisAlignment: isQrCodeKSA
+                                                ? MainAxisAlignment.spaceBetween
+                                                : MainAxisAlignment.end,
+                                            children: [
+                                              Column(children: [
+                                                byteImageQr != null
+                                                    ? Image.memory(byteImageQr,
+                                                        height: 50, width: 50)
+                                                    : const Text('\n\n\n\n'),
+                                              ]),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          const SizedBox(
+                                                              width: 70,
+                                                              child: Text(
+                                                                "Discount",
+                                                                style: TextStyle(
+                                                                    fontSize:
+                                                                        7),
+                                                              )),
+                                                          Text(
+                                                            "${dataInformation['Discount'].toStringAsFixed(2)}",
+                                                            style:
+                                                                const TextStyle(
+                                                                    fontSize:
+                                                                        7),
+                                                            textAlign:
+                                                                TextAlign.end,
+                                                          )
+                                                        ],
+                                                      )
+                                                    ],
+                                                  ),
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          const SizedBox(
+                                                              width: 70,
+                                                              child: Text(
+                                                                "VAT Total",
+                                                                style: TextStyle(
+                                                                    fontSize:
+                                                                        7),
+                                                              )),
+                                                          Text(
+                                                            totalVAt
+                                                                .toStringAsFixed(
+                                                                    2),
+                                                            style:
+                                                                const TextStyle(
+                                                                    fontSize:
+                                                                        7),
+                                                          )
+                                                        ],
+                                                      )
+                                                    ],
+                                                  ),
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          const SizedBox(
+                                                              width: 70,
+                                                              child: Text(
+                                                                "Round To",
+                                                                style: TextStyle(
+                                                                    fontSize:
+                                                                        7),
+                                                              )),
+                                                          Text(
+                                                            '${dataInformation['Roundoff'].toStringAsFixed(2)}',
+                                                            style:
+                                                                const TextStyle(
+                                                                    fontSize:
+                                                                        7),
+                                                          )
+                                                        ],
+                                                      ),
+                                                      Row(
+                                                        children: [
+                                                          const SizedBox(
+                                                              width: 70,
+                                                              child: Text(
+                                                                "NetAmount",
+                                                                style: TextStyle(
+                                                                    fontSize: 7,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold),
+                                                              )),
+                                                          Text(
+                                                            "${dataInformation['GrandTotal'].toStringAsFixed(2)} ",
+                                                            style: const TextStyle(
+                                                                fontSize: 7,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold),
+                                                          )
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  )
+                                                ],
+                                              )
+                                            ],
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.all(3),
+                                          width:
+                                              MediaQuery.of(context).size.width,
+                                          decoration: const BoxDecoration(
+                                              border: Border(
+                                                  left: BorderSide(),
+                                                  right: BorderSide(),
+                                                  bottom: BorderSide())),
+                                          child: Text(
+                                              NumberToWord().convertDouble(
+                                                  'en',
+                                                  double.tryParse(
+                                                      dataInformation[
+                                                              'GrandTotal']
+                                                          .toString())),
+                                              style: const TextStyle(
+                                                fontSize: 8,
+                                              )),
+                                        ),
+                                        Container(
+                                          height: 50,
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 15),
+                                          width:
+                                              MediaQuery.of(context).size.width,
+                                          decoration: const BoxDecoration(
+                                              border: Border(
+                                                  left: BorderSide(),
+                                                  right: BorderSide(),
+                                                  bottom: BorderSide())),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: const [
+                                              Text("Buyers Signature",
+                                                  style: TextStyle(
+                                                    fontSize: 8,
+                                                  )),
+                                              Text("Seller's Signature",
+                                                  style: TextStyle(
+                                                    fontSize: 8,
+                                                  )),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          height: 10,
+                                        ),
+                                        Text('${data['message']}',
                                             style: const TextStyle(
                                               fontSize: 8,
                                             )),
-                                      ),
-                                      Container(
-                                        height: 50,
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 15),
-                                        width:
-                                            MediaQuery.of(context).size.width,
-                                        decoration: const BoxDecoration(
-                                            border: Border(
-                                                left: BorderSide(),
-                                                right: BorderSide(),
-                                                bottom: BorderSide())),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: const [
-                                            Text("Buyers Signature",
-                                                style: TextStyle(
-                                                  fontSize: 8,
-                                                )),
-                                            Text("Seller's Signature",
-                                                style: TextStyle(
-                                                  fontSize: 8,
-                                                )),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        height: 10,
-                                      ),
-                                      Text('${data['message']}',
-                                          style: const TextStyle(
-                                            fontSize: 8,
-                                          )),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ],

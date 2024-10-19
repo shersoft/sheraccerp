@@ -3585,7 +3585,8 @@ class _PurchasePreviewShowState extends State<PurchasePreviewShow> {
                                                               2.0),
                                                       child: Text(
                                                         dataParticulars[i]
-                                                            ['slno'],
+                                                                ['GridID']
+                                                            .toString(),
                                                         style: const TextStyle(
                                                             fontSize: 3,
                                                             fontWeight:
@@ -3600,7 +3601,7 @@ class _PurchasePreviewShowState extends State<PurchasePreviewShow> {
                                                       const EdgeInsets.all(2.0),
                                                   child: Text(
                                                     dataParticulars[i]
-                                                        ['itemname'],
+                                                        ['ProductName'],
                                                     style: const TextStyle(
                                                         fontSize: 4,
                                                         fontWeight:
@@ -3658,7 +3659,7 @@ class _PurchasePreviewShowState extends State<PurchasePreviewShow> {
                                                               2.0),
                                                       child: Text(
                                                         dataParticulars[i]
-                                                                ['RealRate']
+                                                                ['RealPrate']
                                                             .toStringAsFixed(2),
                                                         style: const TextStyle(
                                                             fontSize: 3,
@@ -3742,7 +3743,7 @@ class _PurchasePreviewShowState extends State<PurchasePreviewShow> {
                                                               2.0),
                                                       child: Text(
                                                         dataParticulars[i]
-                                                                ['igst']
+                                                                ['tax']
                                                             .toStringAsFixed(2),
                                                         style: const TextStyle(
                                                             fontSize: 3,
@@ -4279,7 +4280,7 @@ class _PurchasePreviewShowState extends State<PurchasePreviewShow> {
                                                                   fontSize: 7),
                                                             )),
                                                         Text(
-                                                          '${dataInformation['Roundoff'].toStringAsFixed(2)}',
+                                                          '${dataInformation['ROUNDOFF'].toStringAsFixed(2)}',
                                                           style:
                                                               const TextStyle(
                                                                   fontSize: 7),

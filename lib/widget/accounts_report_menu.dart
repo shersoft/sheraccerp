@@ -142,119 +142,6 @@ class AccountsReportMenu extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
                   Icon(
-                    Icons.account_balance_rounded,
-                    color: Colors.red[300],
-                    size: 90.0,
-                  ),
-                  const Text(
-                    'Trial Balance',
-                    style: TextStyle(
-                        color: Colors.black, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          onTap: () {
-            argumentsPass = {'mode': 'TrialBalance'};
-            Navigator.pushNamed(
-              context,
-              '/select_ledger',
-            );
-          },
-        ),
-        GestureDetector(
-          child: Card(
-            elevation: 5.0,
-            child: Container(
-              padding: const EdgeInsets.all(0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[
-                  Icon(
-                    Icons.account_balance_rounded,
-                    color: Colors.blue[300],
-                    size: 90.0,
-                  ),
-                  const Text(
-                    'Balance Sheet',
-                    style: TextStyle(
-                        color: Colors.black, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          onTap: () {
-            argumentsPass = {'mode': 'BalanceSheet'};
-            Navigator.pushNamed(
-              context,
-              '/select_ledger',
-            );
-          },
-        ),
-        GestureDetector(
-          child: Card(
-            elevation: 5.0,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[
-                  Image.asset('assets/icons/ic_report.png'),
-                  const Text(
-                    'P&L Account',
-                    style: TextStyle(
-                        color: Colors.black, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          onTap: () {
-            argumentsPass = {'mode': 'P&LAccount'};
-            Navigator.pushNamed(context, '/select_ledger');
-          },
-        ),
-        GestureDetector(
-          child: Card(
-            elevation: 5.0,
-            child: Container(
-              padding: const EdgeInsets.all(0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[
-                  Icon(
-                    Icons.balance_rounded,
-                    color: Colors.blue[300],
-                    size: 90.0,
-                  ),
-                  const Text(
-                    'Balance Report',
-                    style: TextStyle(
-                        color: Colors.black, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          onTap: () {
-            argumentsPass = {'mode': 'BalanceReport'};
-            Navigator.pushNamed(
-              context,
-              '/select_ledger',
-            );
-          },
-        ),
-        GestureDetector(
-          child: Card(
-            elevation: 5.0,
-            child: Container(
-              padding: const EdgeInsets.all(0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[
-                  Icon(
                     Icons.payments_rounded,
                     color: Colors.green[500],
                     size: 90.0,
@@ -326,67 +213,6 @@ class AccountsReportMenu extends StatelessWidget {
             //             '0',
             //             1)));
             argumentsPass = {'mode': 'ReceiptList'};
-            Navigator.pushNamed(
-              context,
-              '/select_ledger',
-            );
-          },
-        ),
-        GestureDetector(
-          child: Card(
-            elevation: 5.0,
-            child: Container(
-              padding: const EdgeInsets.all(0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[
-                  Icon(
-                    Icons.show_chart_rounded,
-                    color: Colors.green[300],
-                    size: 90.0,
-                  ),
-                  const Text(
-                    'Cash Flow',
-                    style: TextStyle(
-                        color: Colors.black, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          onTap: () {
-            argumentsPass = {'mode': 'CashFlow'};
-            Navigator.pushNamed(
-              context,
-              '/select_ledger',
-            );
-          },
-        ),
-        GestureDetector(
-          child: Card(
-            elevation: 5.0,
-            child: Container(
-              padding: const EdgeInsets.all(0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[
-                  Icon(
-                    Icons.trending_up_rounded,
-                    color: Colors.red[300],
-                    size: 90.0,
-                  ),
-                  const Text(
-                    'Fund Flow',
-                    style: TextStyle(
-                        color: Colors.black, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          onTap: () {
-            // _showDialog(context);
-            argumentsPass = {'mode': 'FundFlow'};
             Navigator.pushNamed(
               context,
               '/select_ledger',
@@ -534,6 +360,180 @@ class AccountsReportMenu extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
                   Icon(
+                    Icons.show_chart_rounded,
+                    color: Colors.green[300],
+                    size: 90.0,
+                  ),
+                  const Text(
+                    'Cash Flow',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            argumentsPass = {'mode': 'CashFlow'};
+            Navigator.pushNamed(
+              context,
+              '/select_ledger',
+            );
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Icon(
+                    Icons.trending_up_rounded,
+                    color: Colors.red[300],
+                    size: 90.0,
+                  ),
+                  const Text(
+                    'Fund Flow',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            // _showDialog(context);
+            argumentsPass = {'mode': 'FundFlow'};
+            Navigator.pushNamed(
+              context,
+              '/select_ledger',
+            );
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Icon(
+                    Icons.account_balance_rounded,
+                    color: Colors.red[300],
+                    size: 90.0,
+                  ),
+                  const Text(
+                    'Trial Balance',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            argumentsPass = {'mode': 'TrialBalance'};
+            Navigator.pushNamed(
+              context,
+              '/select_ledger',
+            );
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Icon(
+                    Icons.account_balance_rounded,
+                    color: Colors.blue[300],
+                    size: 90.0,
+                  ),
+                  const Text(
+                    'Balance Sheet',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            argumentsPass = {'mode': 'BalanceSheet'};
+            Navigator.pushNamed(
+              context,
+              '/select_ledger',
+            );
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Image.asset('assets/icons/ic_report.png'),
+                  const Text(
+                    'P&L Account',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            argumentsPass = {'mode': 'P&LAccount'};
+            Navigator.pushNamed(context, '/select_ledger');
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Icon(
+                    Icons.balance_rounded,
+                    color: Colors.blue[300],
+                    size: 90.0,
+                  ),
+                  const Text(
+                    'Balance Report',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          onTap: () {
+            argumentsPass = {'mode': 'BalanceReport'};
+            Navigator.pushNamed(
+              context,
+              '/select_ledger',
+            );
+          },
+        ),
+        GestureDetector(
+          child: Card(
+            elevation: 5.0,
+            child: Container(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Icon(
                     Icons.ballot_rounded,
                     color: kPrimaryColor[300],
                     size: 90.0,
@@ -628,7 +628,7 @@ class AccountsReportMenu extends StatelessWidget {
                     size: 90.0,
                   ),
                   const Text(
-                    'Verify Cash Book',
+                    'Project Profit Loss',
                     style: TextStyle(
                         color: Colors.black, fontWeight: FontWeight.bold),
                   ),
@@ -637,13 +637,42 @@ class AccountsReportMenu extends StatelessWidget {
             ),
           ),
           onTap: () {
-            // argumentsPass = {'mode': 'InvoiceWiseBalanceSuppliers'};
-            // Navigator.pushNamed(
-            //   context,
-            //   '/select_ledger',
-            // );
+            Navigator.pushNamed(
+              context,
+              '/project_profit_loss',
+            );
           },
         ),
+        // GestureDetector(
+        //   child: Card(
+        //     elevation: 5.0,
+        //     child: Container(
+        //       padding: const EdgeInsets.all(0),
+        //       child: Column(
+        //         mainAxisAlignment: MainAxisAlignment.spaceAround,
+        //         children: <Widget>[
+        //           Icon(
+        //             Icons.auto_stories,
+        //             color: Colors.yellow[800],
+        //             size: 90.0,
+        //           ),
+        //           const Text(
+        //             'Verify Cash Book',
+        //             style: TextStyle(
+        //                 color: Colors.black, fontWeight: FontWeight.bold),
+        //           ),
+        //         ],
+        //       ),
+        //     ),
+        //   ),
+        //   onTap: () {
+        //     // argumentsPass = {'mode': 'InvoiceWiseBalanceSuppliers'};
+        //     // Navigator.pushNamed(
+        //     //   context,
+        //     //   '/select_ledger',
+        //     // );
+        //   },
+        // ),
       ],
     );
   }

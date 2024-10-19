@@ -24,6 +24,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
   TextEditingController editingController = TextEditingController();
   List<dynamic> items = [];
   List<dynamic> itemDisplay = [];
+  List<DataJson> projectList = [];
   DioService api = DioService();
   bool _loading = true,
       _showQty = false,
@@ -31,9 +32,15 @@ class _LedgerSelectState extends State<LedgerSelect> {
       _gAll = true,
       isSalesManWiseLedger = false,
       isAdminUser = false,
+      isProjectSoftware = false,
       _0b = false;
   var _ledger, _id, locationId, _dropDownBranchId;
-  String fromDate, toDate, sType = 'Summery', area = '0', route = '0';
+  String fromDate,
+      toDate,
+      sType = 'Summery',
+      area = '0',
+      route = '0',
+      projectId = '0';
   dynamic areaModel, routeModel;
   var statement = '';
   var salesMan = '0';
@@ -324,6 +331,13 @@ class _LedgerSelectState extends State<LedgerSelect> {
         routeModel = otherRegRouteDataList.last;
       }
     }
+
+    isProjectSoftware = ComSettings.getStatus('PROJECT SOFTWARE', settings);
+    if (isProjectSoftware) {
+      api.getProject().then((value) {
+        projectList = value;
+      });
+    }
   }
 
   @override
@@ -509,6 +523,8 @@ class _LedgerSelectState extends State<LedgerSelect> {
                         )
                       ],
                     )),
+                const Divider(),
+                projectWidget(),
                 TextButton(
                   onPressed: () {
                     statement = _showQty ? 'Ledger_Report_Qty' : statement;
@@ -530,7 +546,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
                                 branches,
                                 area,
                                 route,
-                                '0')));
+                                projectId)));
                   },
                   child: const Text('Show'),
                   style: ButtonStyle(
@@ -2525,6 +2541,23 @@ class _LedgerSelectState extends State<LedgerSelect> {
     );
   }
 
+  projectWidget() {
+    return isProjectSoftware
+        ? SizedBox(
+            child: DropdownSearch<dynamic>(
+              maxHeight: 300,
+              onFind: (String filter) => getProjectListData(filter),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(), labelText: 'Select Project'),
+              onChanged: (dynamic data) {
+                projectId = data.id.toString();
+              },
+              showSearchBox: true,
+            ),
+          )
+        : Container();
+  }
+
   Future _selectDate(String type) async {
     DateTime picked = await showDatePicker(
         context: context,
@@ -2539,5 +2572,21 @@ class _LedgerSelectState extends State<LedgerSelect> {
               {toDate = DateUtil.datePickerDMY(picked)}
           });
     }
+  }
+
+  Future<List<dynamic>> getProjectListData(String filter) async {
+    var dd = filter.isEmpty
+        ? projectList
+        : projectList
+            .where((element) => element.name
+                .toString()
+                .toLowerCase()
+                .contains(filter.toLowerCase()))
+            .toList();
+    List<DataJson> dataResult = [];
+    for (var data in dd) {
+      dataResult.add(DataJson(id: data.id, name: data.name.trim().toString()));
+    }
+    return dataResult;
   }
 }

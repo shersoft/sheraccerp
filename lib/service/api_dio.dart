@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:cross_file/src/types/interface.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7419,6 +7418,61 @@ class DioService {
       debugPrint(errorMessage.toString());
     }
     return ret;
+  }
+
+  Future<List<DataJson>> getProject() async {
+    List<DataJson> ret = [];
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'project/All/$dataBase');
+
+      if (response.statusCode == 200) {
+        if (response.data != null && response.data.isNotEmpty) {
+          ret = DataJson.fromJsonList(response.data);
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
+  Future<List<dynamic>> fetchProjectReport(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'project_report/$dataBase',
+          queryParameters: data,
+          options: Options(headers: {'Content-Type': 'application/json'}));
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        return data;
+      } else {
+        debugPrint('Failed to load data');
+        return [];
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return [];
+    }
   }
 
   Future<bool> addProductImageEComm(id, XFile image) async {

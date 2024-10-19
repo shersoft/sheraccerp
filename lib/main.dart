@@ -19,6 +19,7 @@ import 'package:sheraccerp/scoped-models/main.dart';
 import 'package:sheraccerp/screens/accounts/bank_voucher.dart';
 import 'package:sheraccerp/screens/accounts/group_register.dart';
 import 'package:sheraccerp/screens/accounts/journal.dart';
+import 'package:sheraccerp/screens/accounts/project_profit_loss.dart';
 import 'package:sheraccerp/screens/accounts/salesman_report.dart';
 import 'package:sheraccerp/screens/accounts/tax_report.dart';
 import 'package:sheraccerp/screens/html_previews/purchase_preview.dart';
@@ -26,6 +27,7 @@ import 'package:sheraccerp/screens/html_previews/purchase_return_preview.dart';
 import 'package:sheraccerp/screens/html_previews/sales_return_preview.dart';
 import 'package:sheraccerp/screens/inventory/delivery_note.dart';
 import 'package:sheraccerp/screens/inventory/invoice_design.dart';
+import 'package:sheraccerp/screens/inventory/sales/sale_new.dart';
 import 'package:sheraccerp/screens/inventory/serial_no_list.dart';
 import 'package:sheraccerp/screens/other_registration.dart';
 import 'package:sheraccerp/screens/settings/software_settings.dart';
@@ -153,6 +155,8 @@ class MyApp extends StatelessWidget {
               '/expense_list': (context) => ExpenseList(null, 0),
               '/sales': (context) =>
                   const Sale(oldSale: false, thisSale: false),
+              '/sales_new': (context) =>
+                  const SaleNew(oldSale: false, thisSale: false),
               '/AlignmentEntry': (context) => AlignmentEntry(),
               '/ServiceEntry': (context) => ServiceEntry(),
               '/purchase': (context) => const Purchase(),
@@ -218,6 +222,7 @@ class MyApp extends StatelessWidget {
               '/purchasePreviewShow': (context) => const PurchasePreviewShow(),
               '/salesManReport': (context) => const SalesManReport(),
               '/groupRegistration': (context) => const GroupRegistration(),
+              '/project_profit_loss': (context) => const ProjectProfitLoss(),
             },
             theme: isDarkTheme
                 ? ThemeData(

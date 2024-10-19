@@ -1,6 +1,7 @@
 // @dart = 2.11
 import 'dart:convert';
 
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -46,6 +47,7 @@ class _PurchaseState extends State<Purchase> {
   CartItemP cartModel;
   ProductPurchaseModel productModel;
   List<dynamic> purchaseAccountList = [];
+  List<DataJson> projectList = [];
   DateTime now = DateTime.now();
   String formattedDate, invDate = '';
   double _balance = 0;
@@ -63,6 +65,7 @@ class _PurchaseState extends State<Purchase> {
       lastRecord = false,
       isItemSerialNo = false,
       isFreeQty = false,
+      isProjectSoftware = false,
       isFreeItem = false,
       realPRateBasedProfitPercentage = false,
       mrpBasedProfit = false,
@@ -83,7 +86,7 @@ class _PurchaseState extends State<Purchase> {
       itemCodeViseChecked = false,
       enableBarcode = false;
   int locationId = 1, salesManId = 0, decimal = 2;
-  String labelSerialNo = 'SerialNo';
+  String labelSerialNo = 'SerialNo', projectId = '-1';
 
   Barcode result;
   QRViewController controller;
@@ -149,7 +152,12 @@ class _PurchaseState extends State<Purchase> {
       fetchPurchase(context, dataDynamic[0]);
       _isLoading = false;
     }
-
+    isProjectSoftware = ComSettings.getStatus('PROJECT SOFTWARE', settings);
+    if (isProjectSoftware) {
+      api.getProject().then((value) {
+        projectList = value;
+      });
+    }
     voucherTypeData = voucherTypeList.firstWhere(
       (element) => element.voucher.toLowerCase() == 'purchase',
       orElse: () => VoucherType(
@@ -319,7 +327,8 @@ class _PurchaseState extends State<Purchase> {
                                 'location': locationId,
                                 'statementtype': stType,
                                 'fyId': currentFinancialYear.id,
-                                'frmId': voucherTypeData.id
+                                'frmId': voucherTypeData.id,
+                                'projectId': projectId
                               }) +
                               ']';
 
@@ -414,7 +423,8 @@ class _PurchaseState extends State<Purchase> {
                                 'location': locationId,
                                 'statementtype': stType,
                                 'fyId': currentFinancialYear.id,
-                                'frmId': voucherTypeData.id
+                                'frmId': voucherTypeData.id,
+                                'projectId': projectId
                               }) +
                               ']';
 
@@ -1295,6 +1305,32 @@ class _PurchaseState extends State<Purchase> {
         );
       },
     );
+  }
+
+  projectWidget() {
+    return isProjectSoftware
+        ? SizedBox(
+            child: DropdownSearch<dynamic>(
+              maxHeight: 300,
+              onFind: (String filter) => getProjectListData(filter),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(), labelText: 'Select Project'),
+              onChanged: (dynamic data) {
+                projectId = data.id.toString();
+              },
+              showSearchBox: true,
+              selectedItem: int.tryParse(projectId) > 0
+                  ? DataJson(
+                      id: int.tryParse(projectId),
+                      name: projectList
+                          .firstWhere(
+                              (element) => element.id.toString() == projectId,
+                              orElse: () => DataJson(id: 0, name: ''))
+                          .name)
+                  : DataJson(id: 0, name: ''),
+            ),
+          )
+        : Container();
   }
 
   bool isItemData = false, isBarcodePicker = false;
@@ -3810,6 +3846,13 @@ class _PurchaseState extends State<Purchase> {
                     )),
               ),
             ),
+            const Divider(
+              height: 2,
+            ),
+            projectWidget(),
+            const Divider(
+              height: 2,
+            ),
             Card(
               child: SizedBox(
                 height: 38,
@@ -4476,6 +4519,7 @@ class _PurchaseState extends State<Purchase> {
         invDate = DateUtil.dateDMY(information['InvDate']);
         entryNo = information['EntryNo'].toString();
         invNoController.text = information['Sup_Inv'].toString();
+        projectId = information['Project'].toString();
 
         dataDynamic = [
           {
@@ -5596,6 +5640,22 @@ class _PurchaseState extends State<Purchase> {
         const SnackBar(content: Text('no Permission')),
       );
     }
+  }
+
+  Future<List<dynamic>> getProjectListData(String filter) async {
+    var dd = filter.isEmpty
+        ? projectList
+        : projectList
+            .where((element) => element.name
+                .toString()
+                .toLowerCase()
+                .contains(filter.toLowerCase()))
+            .toList();
+    List<DataJson> dataResult = [];
+    for (var data in dd) {
+      dataResult.add(DataJson(id: data.id, name: data.name.trim().toString()));
+    }
+    return dataResult;
   }
 
   showDetails(BuildContext context, data) {

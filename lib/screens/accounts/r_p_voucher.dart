@@ -41,6 +41,7 @@ class _RPVoucherState extends State<RPVoucher> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   List<LedgerModel> cashBankACList = [];
   List<RpVoucherParticularModel> particularList = [];
+  List<DataJson> projectList = [];
   Size deviceSize;
   List<dynamic> items = [];
   List<dynamic> itemDisplay = [];
@@ -63,6 +64,7 @@ class _RPVoucherState extends State<RPVoucher> {
       isAdminUser = false,
       keyEditAndDeleteAdminOnlyDaysBefore = false,
       isNarrationAsCalculator = false,
+      isProjectSoftware = false,
       daysBefore = false;
   int refNo = 0, acId = 0;
   int page = 1, pageTotal = 0, totalRecords = 0, valueDaysBefore = 0;
@@ -157,6 +159,12 @@ class _RPVoucherState extends State<RPVoucher> {
     }
     isNarrationAsCalculator =
         ComSettings.getStatus('KEY NARRATION AS CALCULATOR', settings);
+    isProjectSoftware = ComSettings.getStatus('PROJECT SOFTWARE', settings);
+    if (isProjectSoftware) {
+      api.getProject().then((value) {
+        projectList = value;
+      });
+    }
   }
 
   userDateCheck(String date) {
@@ -1162,6 +1170,48 @@ class _RPVoucherState extends State<RPVoucher> {
     );
   }
 
+  projectWidget() {
+    return isProjectSoftware
+        ? SizedBox(
+            child: DropdownSearch<dynamic>(
+              maxHeight: 300,
+              onFind: (String filter) => getProjectListData(filter),
+              dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(), labelText: 'Select Project'),
+              onChanged: (dynamic data) {
+                projectId = data.id.toString();
+              },
+              showSearchBox: true,
+              selectedItem: int.tryParse(projectId) > 0
+                  ? DataJson(
+                      id: int.tryParse(projectId),
+                      name: projectList
+                          .firstWhere(
+                              (element) => element.id.toString() == projectId,
+                              orElse: () => DataJson(id: 0, name: ''))
+                          .name)
+                  : DataJson(id: 0, name: ''),
+            ),
+          )
+        : Container();
+  }
+
+  Future<List<dynamic>> getProjectListData(String filter) async {
+    var dd = filter.isEmpty
+        ? projectList
+        : projectList
+            .where((element) => element.name
+                .toString()
+                .toLowerCase()
+                .contains(filter.toLowerCase()))
+            .toList();
+    List<DataJson> dataResult = [];
+    for (var data in dd) {
+      dataResult.add(DataJson(id: data.id, name: data.name.trim().toString()));
+    }
+    return dataResult;
+  }
+
   Future _selectDate() async {
     DateTime picked = await showDatePicker(
         context: context,
@@ -1365,6 +1415,8 @@ class _RPVoucherState extends State<RPVoucher> {
         accountName = information['LedName'].toString();
         accountId = information['LedCode'].toString();
         acId = information['LedCode'];
+        projectId = information['Project'].toString();
+
         if (isMultiRvPv) {
           for (var part in particulars) {
             particularList.add(RpVoucherParticularModel(
@@ -1504,6 +1556,7 @@ class _RPVoucherState extends State<RPVoucher> {
             ],
           ),
         ),
+        projectWidget(),
         const Divider(),
         DropdownSearch<LedgerModel>(
           maxHeight: 300,
@@ -1624,11 +1677,8 @@ class _RPVoucherState extends State<RPVoucher> {
                 decoration: InputDecoration(
                     border: const OutlineInputBorder(),
                     labelText: isNarrationAsCalculator
-                        ? 'Enter expression (e.g. 3+4)'
+                        ? 'Enter expression (e.g. 3+4 abcd)'
                         : 'Narration'),
-                keyboardType: isNarrationAsCalculator
-                    ? TextInputType.number
-                    : TextInputType.text,
                 onChanged: (value) {
                   setState(() {
                     narration = value;
@@ -1699,6 +1749,7 @@ class _RPVoucherState extends State<RPVoucher> {
             ],
           ),
         ),
+        projectWidget(),
         const Divider(),
         DropdownSearch<LedgerModel>(
           maxHeight: 300,
@@ -2032,6 +2083,7 @@ class _RPVoucherState extends State<RPVoucher> {
   void _calculateResult(String input) {
     try {
       String operator = '';
+      String word = '';
       double num1, num2;
 
       if (input.contains('+')) {
@@ -2047,7 +2099,8 @@ class _RPVoucherState extends State<RPVoucher> {
       if (operator.isNotEmpty) {
         List<String> parts = input.split(operator);
         num1 = double.parse(parts[0]);
-        num2 = double.parse(parts[1]);
+        num2 = double.parse(parts[1].split(' ')[0]);
+        word = parts[1].split(' ')[1];
 
         double result;
         switch (operator) {
@@ -2072,17 +2125,20 @@ class _RPVoucherState extends State<RPVoucher> {
         });
       } else {
         setState(() {
-          _result = 'Invalid Input!';
+          _result = '';
         });
       }
 
       if (_result.isNotEmpty) {
-        narration = input + ' = ' + _result;
+        narration = '$num1 $operator $num2 = ' + _result + ' ' + word;
+        _controllerNarration.text = narration;
+      } else {
+        narration = input;
         _controllerNarration.text = narration;
       }
     } catch (e) {
       setState(() {
-        _result = 'Error: Invalid Expression!';
+        _result = '';
       });
     }
   }

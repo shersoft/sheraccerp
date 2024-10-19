@@ -289,6 +289,11 @@ class _ReportViewState extends State<ReportView> {
         classic = false;
       }
     }
+
+    project = [
+      {'id': widget.partyId}
+    ];
+
     var dataJson = '[' +
         json.encode({
           'statementType': widget.statement.isEmpty ? '' : widget.statement,

@@ -1,10 +1,13 @@
 // @dart = 2.11
+import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,6 +18,7 @@ import 'package:sheraccerp/util/number_to_word.dart';
 import '../util/dateUtil.dart';
 import 'printerenum.dart' as Enu;
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 
 class BlueThermalPrint extends StatefulWidget {
   final data;
@@ -400,7 +404,11 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
         file = File('$dir/logo.png');
       }
 
-      bluetooth.isConnected.then((isConnected) {
+      var arabicWord = 'السلام flutter';
+
+      Uint8List bytes = await getCanvasImage(arabicWord, 500.0, 20, 25);
+      // debugPrint(base64.encode(bytes));
+      bluetooth.isConnected.then((isConnected) async {
         if (isConnected == true) {
           String line = "0";
           try {
@@ -824,6 +832,177 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
                 var itemName = dataParticulars[i]['itemname'].toString();
                 bluetooth.printCustom(
                     itemName, Enu.Size.bold.val, Enu.Align.left.val);
+                // bluetooth.print4Column(itemName, "", "", "", Enu.Size.bold.val,
+                //     format: "%35s %-1s %1s %1s %n");
+                bluetooth.print5Column(
+                    "",
+                    '${dataParticulars[i]['Qty']}',
+                    '${dataParticulars[i]['RealRate'].toStringAsFixed(2)}',
+                    (double.tryParse(dataInformation['CGST'].toString()) +
+                            double.tryParse(
+                                dataInformation['SGST'].toString()) +
+                            double.tryParse(dataInformation['IGST'].toString()))
+                        .toStringAsFixed(2),
+                    '${dataParticulars[i]['Total'].toStringAsFixed(2)}',
+                    Enu.Size.bold.val,
+                    format: "%-20s %4s %4s %4s %6s %n");
+              }
+              line = "11";
+              // bluetooth.printNewLine();
+              bluetooth.printCustom(
+                  '----------------------------------------------------------',
+                  Enu.Size.medium.val,
+                  Enu.Align.center.val);
+              bluetooth.printCustom(
+                  'Gross Total:${dataInformation['NetAmount'].toStringAsFixed(2)}',
+                  Enu.Size.bold.val,
+                  Enu.Align.right.val);
+              line = "12";
+              bluetooth.printCustom(
+                  'VAT:' +
+                      (double.tryParse(dataInformation['CGST'].toString()) +
+                              double.tryParse(
+                                  dataInformation['SGST'].toString()) +
+                              double.tryParse(
+                                  dataInformation['IGST'].toString()))
+                          .toStringAsFixed(2),
+                  Enu.Size.bold.val,
+                  Enu.Align.right.val);
+              line = "13";
+              bluetooth.printCustom(
+                  'Discount:${dataInformation['OtherDiscount'].toStringAsFixed(2)}',
+                  Enu.Size.bold.val,
+                  Enu.Align.right.val);
+              line = "14";
+              bluetooth.printCustom(
+                  'NET TOTAL:${dataInformation['GrandTotal'].toStringAsFixed(2)}',
+                  Enu.Size.bold.val,
+                  Enu.Align.right.val);
+              // bluetooth.printNewLine();
+              line = "15";
+              bluetooth.printCustom('${bill['message']}', Enu.Size.bold.val,
+                  Enu.Align.center.val);
+              line = "16";
+              bluetooth.printNewLine();
+              if (isQrCodeKSA) {
+                bluetooth.printQRcode(
+                    SaudiConversion.getBase64(
+                        companySettings.name,
+                        ComSettings.getValue('GST-NO', settings),
+                        DateUtil.dateTimeQrDMY(
+                            DateUtil.datedYMD(dataInformation['DDate']) +
+                                ' ' +
+                                DateUtil.timeHMS(dataInformation['BTime'])),
+                        double.tryParse(
+                                dataInformation['GrandTotal'].toString())
+                            .toStringAsFixed(2),
+                        (double.tryParse(dataInformation['CGST'].toString()) +
+                                double.tryParse(
+                                    dataInformation['SGST'].toString()) +
+                                double.tryParse(
+                                    dataInformation['IGST'].toString()))
+                            .toStringAsFixed(2)),
+                    200,
+                    200,
+                    Enu.Align.center.val);
+              }
+              bluetooth.printNewLine();
+              bluetooth.printNewLine();
+              // bluetooth
+              //     .paperCut(); //some printer not supported (sometime making image not centered)
+              //bluetooth.drawerPin2(); // or you can use bluetooth.drawerPin5();
+              // }else{}
+            } else if (printerModel == 19) {
+              bluetooth.printNewLine();
+              bluetooth.printImageBytes(bytes);
+              // bluetooth.printImage(tempFile.path);
+              bluetooth.printNewLine();
+            } else if (printerModel == 9) {
+              var bal = double.tryParse(dataInformation['Balance'].toString());
+              if (isLogo) {
+                bluetooth.printNewLine();
+                if (file != null) {
+                  bluetooth.printImage(file.path); //path of your image/logo
+                }
+                bluetooth.printNewLine();
+              }
+              bluetooth.printNewLine();
+              bluetooth.printCustom(companySettings.name,
+                  Enu.Size.boldLarge.val, Enu.Align.center.val);
+              bluetooth.printNewLine();
+              line = "1";
+              if (companySettings.add1.toString().trim().isNotEmpty) {
+                bluetooth.printCustom(companySettings.add1.toString().trim(),
+                    Enu.Size.bold.val, Enu.Align.center.val);
+              }
+              if (companySettings.add2.toString().trim().isNotEmpty) {
+                bluetooth.printCustom(companySettings.add2.toString().trim(),
+                    Enu.Size.bold.val, Enu.Align.center.val);
+              }
+              bluetooth.printCustom(
+                  'Phone No: ${companySettings.telephone + ',' + companySettings.mobile}',
+                  Enu.Size.bold.val,
+                  Enu.Align.center.val);
+              line = "2";
+              bluetooth.printCustom(
+                  companyTaxMode == 'INDIA'
+                      ? 'GSTNO: ${ComSettings.getValue('GST-NO', settings)}'
+                      : 'VAT NO: ${ComSettings.getValue('GST-NO', settings)}',
+                  Enu.Size.bold.val,
+                  Enu.Align.center.val);
+              line = "3";
+              bluetooth.printCustom(
+                  invoiceHead, Enu.Size.boldMedium.val, Enu.Align.center.val);
+              // bluetooth.printLeftRight("LEFT", "RIGHT", Size.medium.val);
+              // bluetooth.printLeftRight("LEFT", "RIGHT", Size.bold.val);
+              line = "4";
+              bluetooth.print3Column(
+                  "Invoice No:${dataInformation['InvoiceNo']}",
+                  " ",
+                  'Date:${DateUtil.dateDMY(dataInformation['DDate'])}',
+                  Enu.Size.bold.val,
+                  format: "%-10s %-4s %-18s %n");
+              line = "5";
+              bluetooth.printCustom(
+                  '----------------------------------------------------------',
+                  Enu.Size.medium.val,
+                  Enu.Align.center.val);
+              line = "6";
+              bluetooth.printCustom('${dataInformation['ToName']}',
+                  Enu.Size.bold.val, Enu.Align.left.val);
+              line = "7";
+              bluetooth.printCustom(
+                  companyTaxMode == 'INDIA'
+                      ? 'GSTNO:${dataInformation['gstno'].toString().trim()}'
+                      : 'VAT NO:${dataInformation['gstno'].toString().trim()}',
+                  Enu.Size.bold.val,
+                  Enu.Align.left.val);
+              line = "8";
+              // bluetooth.printNewLine();
+              bluetooth.printCustom(
+                  '----------------------------------------------------------',
+                  Enu.Size.medium.val,
+                  Enu.Align.center.val);
+              line = "9";
+              bluetooth.print5Column("Description", "Qty", "Price", "Vat",
+                  "Total", Enu.Size.bold.val,
+                  format: "%-20s %-4s %-4s %-4s %-6s %n");
+              bluetooth.printCustom(
+                  '----------------------------------------------------------',
+                  Enu.Size.medium.val,
+                  Enu.Align.center.val);
+              line = "10";
+              for (var i = 0; i < dataParticulars.length; i++) {
+                if (dataParticulars[i]['RegItemName'].toString().isNotEmpty) {
+                  var itemName = dataParticulars[i]['RegItemName'].toString();
+                  Uint8List bytes =
+                      await getCanvasImage(itemName, 500.0, 25, 30);
+                  bluetooth.printImageBytes(bytes);
+                } else {
+                  var itemName = dataParticulars[i]['itemname'].toString();
+                  bluetooth.printCustom(
+                      itemName, Enu.Size.bold.val, Enu.Align.left.val);
+                }
                 // bluetooth.print4Column(itemName, "", "", "", Enu.Size.bold.val,
                 //     format: "%35s %-1s %1s %1s %n");
                 bluetooth.print5Column(
@@ -2092,5 +2271,86 @@ class _BlueThermalPrintState extends State<BlueThermalPrint> {
         }
       });
     }
+  }
+
+  Future<Uint8List> getCanvasImage(
+      String text, double _size, double fontSize, int height) async {
+    Uint8List result;
+    final recorder = PictureRecorder();
+    var newCanvas = Canvas(recorder);
+    newCanvas.drawColor(Colors.white, BlendMode.darken);
+
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: fontSize),
+      ),
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout(minWidth: 0, maxWidth: _size);
+    textPainter.paint(newCanvas, Offset.zero);
+    final picture = recorder.endRecording();
+    var res = await picture.toImage(_size.toInt(), height);
+    ByteData data = await res.toByteData(format: ImageByteFormat.png);
+
+    if (data != null) {
+      result = Uint8List.view(data.buffer);
+    }
+    return result;
+  }
+
+  Future<Uint8List> getCanvasImage0(String str, double sized) async {
+    int height = 0;
+    int width = 0;
+    Uint8List result;
+    var style =
+        const TextStyle(color: Colors.blue, backgroundColor: Colors.brown);
+    var builder = ParagraphBuilder(ParagraphStyle(fontStyle: FontStyle.normal));
+    builder.addText(str);
+    builder.pushStyle(style.getTextStyle());
+    Paragraph paragraph = builder.build();
+    paragraph.layout(const ParagraphConstraints(width: 100));
+
+    final recorder = PictureRecorder();
+    var newCanvas = Canvas(recorder);
+
+    newCanvas.drawParagraph(paragraph, Offset.zero);
+    newCanvas.drawColor(Colors.black, BlendMode.darken);
+
+    final picture = recorder.endRecording();
+    var res = await picture.toImage(100, 20);
+    ByteData data = await res.toByteData(format: ImageByteFormat.png);
+
+    if (data != null) {
+      var result0 = Uint8List.view(
+          data.buffer); //, data.offsetInBytes, data.lengthInBytes);
+      // img.Image image = img.decodePng(result0);
+      // var pixels = result0;
+      // height = image.height;
+      // width = image.width;
+      // if (image.width > image.height) {
+      //   return pixels;
+      // }
+      // if (pixels[3] == 0) {
+      //   return pixels;
+      // }
+      // int red = pixels[0], green = pixels[1], blue = pixels[2];
+      // if (red != 255 && green != 255 && blue != 255) {
+      //   return pixels;
+      // }
+      // for (int i = 0, len = pixels.length; i < len; i += 4) {
+      //   if (pixels[i] == red &&
+      //       pixels[i + 1] == green &&
+      //       pixels[i + 2] == blue) {
+      //     pixels[i + 3] = 0;
+      //   }
+      // }
+      result = result0; //pixels;
+    }
+    return result;
   }
 }
