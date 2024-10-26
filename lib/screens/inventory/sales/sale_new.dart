@@ -65,7 +65,7 @@ class _SaleNewState extends State<SaleNew> {
       isCustomForm = false,
       buttonEvent = false,
       isSerialNoInStockVariant = false,
-      isRoundOffInSales=false;
+      isRoundOffInSales = false;
   bool _autoVariantSelect = false, autoBatchSelection = false;
   DioService api = DioService();
   Size deviceSize;
@@ -3913,9 +3913,12 @@ class _SaleNewState extends State<SaleNew> {
     if (cessOnNetAmount) {
       if (cessPer > 0) {
         cess = CommonService.getRound(4, ((subTotal * cessPer) / 100));
-        adCess = CommonService.getRound(4, (quantity * adCessPer));
       } else {
         cess = 0;
+      }
+      if (adCessPer > 0) {
+        adCess = CommonService.getRound(4, (quantity * adCessPer));
+      } else {
         adCess = 0;
       }
     } else {
@@ -4174,9 +4177,12 @@ class _SaleNewState extends State<SaleNew> {
       if (cessOnNetAmount) {
         if (cessPer > 0) {
           cess = CommonService.getRound(4, ((subTotal * cessPer) / 100));
-          adCess = CommonService.getRound(4, (quantity * adCessPer));
         } else {
           cess = 0;
+        }
+        if (adCessPer > 0) {
+          adCess = CommonService.getRound(4, (quantity * adCessPer));
+        } else {
           adCess = 0;
         }
       } else {

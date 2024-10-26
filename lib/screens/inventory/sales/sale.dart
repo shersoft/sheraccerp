@@ -172,6 +172,12 @@ class _SaleState extends State<Sale> {
     }
 
     loadSettings();
+    api.fetchDetailAmount().then((value) {
+      otherAmountList = value;
+      setState(() {
+        otherAmountLoaded = true;
+      });
+    });
 
     api.getUnregisteredNameList().then((value) => unregisteredNameList = value);
     salesManId = ComSettings.appSettings(
@@ -2631,7 +2637,6 @@ class _SaleState extends State<Sale> {
       }).toList(),
       onChanged: (value) {
         setState(() {
-          rateType = value.name;
           rateTypeItem = value;
         });
       },
@@ -3142,7 +3147,9 @@ class _SaleState extends State<Sale> {
             ? showBarcodeProduct()
             : (salesTypeData.type == 'SALES-O' ||
                     salesTypeData.type == 'SALES-Q')
-                ? selectNoStockLedger()
+                ? isStockProductOnlyInSalesQO
+                    ? selectStockLedger()
+                    : selectNoStockLedger()
                 : productModel.hasVariant
                     ? showVariantDialog(productModel.id, productModel.name,
                         productModel.quantity.toString())
@@ -3361,7 +3368,7 @@ class _SaleState extends State<Sale> {
   showVariantDialog(int id, String name, String quantity) {
     _stockVariantQuantity = double.tryParse(quantity);
     return FutureBuilder<List<StockProduct>>(
-      future: api.fetchStockVariant(id),
+      future: api.fetchStockVariantList(id),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
@@ -3412,17 +3419,106 @@ class _SaleState extends State<Sale> {
                           ),
                         ]),
                       )
-                    : showAddMore(context, snapshot.data[0]);
+                    : showAddMore(
+                        context,
+                        (oldBill
+                            ? (cartModel != null
+                                ? snapshot.data.firstWhere(
+                                    (element) =>
+                                        element.productId ==
+                                        cartModel.uniqueCode,
+                                    orElse: () => StockProduct(
+                                        adCessPer: cartModel.adCessPer,
+                                        branch: 0,
+                                        brand: 0,
+                                        buyingPrice: cartModel.pRate,
+                                        buyingPriceReal: cartModel.rPRate,
+                                        categoryId: 0,
+                                        cess: cartModel.cess,
+                                        cessPer: cartModel.cessPer,
+                                        color: 0,
+                                        company: 0,
+                                        estUniqueCode: 0,
+                                        expDate: cartModel.expDate,
+                                        free: cartModel.free,
+                                        hsnCode: cartModel.hashCode.toString(),
+                                        itemId: cartModel.itemId,
+                                        locationId: snapshot.data[0].locationId,
+                                        locked: 'N',
+                                        mfrId: 0,
+                                        minimumRate: cartModel.minimumRate,
+                                        name: cartModel.itemName,
+                                        oBarcode: '',
+                                        productId: cartModel.uniqueCode,
+                                        quantity: 0,
+                                        rackId: 0,
+                                        retailPrice: cartModel.rate,
+                                        sellingPrice: cartModel.rate,
+                                        serialNo: cartModel.serialNo,
+                                        size: 0,
+                                        spRetailPrice: cartModel.rate,
+                                        stockValuation:
+                                            snapshot.data[0].stockValuation,
+                                        subcategoryId: 0,
+                                        supplierId: snapshot.data[0].supplierId,
+                                        tax: cartModel.taxP,
+                                        taxType: snapshot.data[0].taxType,
+                                        unitId: cartModel.unitId,
+                                        wholeSalePrice: cartModel.rate),
+                                  )
+                                : snapshot.data[0])
+                            : snapshot.data[0]));
+            //showAddMore(context, snapshot.data[0]);
           } else {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const <Widget>[
-                  SizedBox(height: 20),
-                  Text('No Data Found..')
-                ],
-              ),
-            );
+            return oldBill
+                ? showAddMore(
+                    context,
+                    StockProduct(
+                        adCessPer: cartModel.adCessPer,
+                        branch: 0,
+                        brand: 0,
+                        buyingPrice: cartModel.pRate,
+                        buyingPriceReal: cartModel.rPRate,
+                        categoryId: 0,
+                        cess: cartModel.cess,
+                        cessPer: cartModel.cessPer,
+                        color: 0,
+                        company: 0,
+                        estUniqueCode: 0,
+                        expDate: cartModel.expDate,
+                        free: cartModel.free,
+                        hsnCode: cartModel.hashCode.toString(),
+                        itemId: cartModel.itemId,
+                        locationId: lId,
+                        locked: 'N',
+                        mfrId: 0,
+                        minimumRate: cartModel.minimumRate,
+                        name: cartModel.itemName,
+                        oBarcode: '',
+                        productId: cartModel.uniqueCode,
+                        quantity: 0,
+                        rackId: 0,
+                        retailPrice: cartModel.rate,
+                        sellingPrice: cartModel.rate,
+                        serialNo: cartModel.serialNo,
+                        size: 0,
+                        spRetailPrice: cartModel.rate,
+                        stockValuation: '',
+                        subcategoryId: 0,
+                        supplierId: 0,
+                        tax: cartModel.taxP,
+                        taxType: 'T',
+                        unitId: cartModel.unitId,
+                        wholeSalePrice: cartModel.rate))
+                : Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const <Widget>[
+                        SizedBox(height: 20),
+                        Text('No Data Found..')
+                      ],
+                    ),
+                  );
           }
         } else if (snapshot.hasError) {
           return AlertDialog(
@@ -3560,7 +3656,7 @@ class _SaleState extends State<Sale> {
       pRate = 0,
       rPRate = 0;
 
-  calculate(StockProduct product) {
+  calculateOut(StockProduct product) {
     if (enableMULTIUNIT) {
       if (saleRate > 0) {
         if (_conversion > 0) {
@@ -3573,7 +3669,10 @@ class _SaleState extends State<Sale> {
           } else {
             //r = (saleRate * _conversion);
             // rate = saleRate * _conversion;
-            rate = editItem ? saleRate : (saleRate * _conversion);
+            rate = editItem
+                ? saleRate
+                : double.tryParse(
+                    (saleRate * _conversion).toStringAsFixed(decimal));
             _rateController.text = rate.toStringAsFixed(decimal);
           }
           //rate = r;
@@ -3691,9 +3790,12 @@ class _SaleState extends State<Sale> {
     if (cessOnNetAmount) {
       if (cessPer > 0) {
         cess = CommonService.getRound(4, ((subTotal * cessPer) / 100));
-        adCess = CommonService.getRound(4, (quantity * adCessPer));
       } else {
         cess = 0;
+      }
+      if (adCessPer > 0) {
+        adCess = CommonService.getRound(4, (quantity * adCessPer));
+      } else {
         adCess = 0;
       }
     } else {
@@ -3795,9 +3897,12 @@ class _SaleState extends State<Sale> {
     if (cessOnNetAmount) {
       if (cessPer > 0) {
         cess = CommonService.getRound(4, ((subTotal * cessPer) / 100));
-        adCess = CommonService.getRound(4, (quantity * adCessPer));
       } else {
         cess = 0;
+      }
+      if (adCessPer > 0) {
+        adCess = CommonService.getRound(4, (quantity * adCessPer));
+      } else {
         adCess = 0;
       }
     } else {
@@ -3824,13 +3929,179 @@ class _SaleState extends State<Sale> {
 
   bool lastRateStatus = true, lastRateSelected = false, rateEdited = false;
   showAddMore(BuildContext context, StockProduct product) {
+    calculateSub() {
+      if (enableMULTIUNIT) {
+        if (saleRate > 0) {
+          if (_conversion > 0) {
+            //var r = 0.0;
+            if (_focusNodeRate.hasFocus) {
+              rate = double.tryParse(_rateController.text);
+              // rate = double.tryParse(_rateController.text) * _conversion;
+              lastRateStatus = false;
+              lastRateSelected = false;
+            } else {
+              //r = (saleRate * _conversion);
+              // rate = saleRate * _conversion;
+              rate = editItem
+                  ? saleRate
+                  : double.tryParse(
+                      (saleRate * _conversion).toStringAsFixed(decimal));
+              _rateController.text = rate.toStringAsFixed(decimal);
+            }
+            //rate = r;
+            // _rateController.text = r.toStringAsFixed(decimal);
+            pRate = product.buyingPrice * _conversion;
+            rPRate = product.buyingPriceReal * _conversion;
+          } else {
+            rate = _rateController.text.isNotEmpty
+                ? (double.tryParse(_rateController.text))
+                : 0;
+          }
+        } else {
+          rate = _rateController.text.isNotEmpty
+              ? (double.tryParse(_rateController.text))
+              : 0;
+        }
+      } else {
+        if (_focusNodeRate.hasFocus) {
+          rate = double.tryParse(_rateController.text);
+
+          lastRateStatus = false;
+          lastRateSelected = false;
+        } else if (saleRate > 0) {
+          _rateController.text = saleRate.toStringAsFixed(decimal);
+          rate = saleRate;
+        } else {
+          rate = _rateController.text.isNotEmpty
+              ? double.tryParse(_rateController.text)
+              : 0;
+        }
+      }
+      if (_focusNodeQuantity.hasFocus) {
+        quantity = _quantityController.text.isNotEmpty
+            ? double.tryParse(_quantityController.text)
+            : 0;
+      } else {
+        quantity = _quantityController.text.isNotEmpty
+            ? double.tryParse(_quantityController.text)
+            : 0;
+      }
+      freeQty = _freeQuantityController.text.isNotEmpty
+          ? double.tryParse(_freeQuantityController.text)
+          : 0;
+      rRate = taxMethod == 'MINUS'
+          ? cessOnNetAmount
+              ? CommonService.getRound(
+                  4, (100 * rate) / (100 + taxP + kfcP + cessPer))
+              : CommonService.getRound(4, (100 * rate) / (100 + taxP + kfcP))
+          : rate;
+      discount = _discountController.text.isNotEmpty
+          ? double.tryParse(_discountController.text)
+          : 0;
+      double discP = _discountPercentController.text.isNotEmpty
+          ? double.tryParse(_discountPercentController.text)
+          : 0;
+      double disc = _discountController.text.isNotEmpty
+          ? double.tryParse(_discountController.text)
+          : 0;
+      double qt = _quantityController.text.isNotEmpty
+          ? double.tryParse(_quantityController.text)
+          : 0;
+      double sRate = _rateController.text.isNotEmpty
+          ? double.tryParse(_rateController.text)
+          : 0;
+      if (_focusNodeDiscountPer.hasFocus) {
+        _discountController.text = _discountPercentController.text.isNotEmpty
+            ? (((qt * sRate) * discP) / 100).toStringAsFixed(2)
+            : '';
+        discount = _discountController.text.isNotEmpty
+            ? double.tryParse(_discountController.text)
+            : 0;
+        discountPercent = double.tryParse(_discountPercentController.text);
+      }
+
+      if (_focusNodeDiscount.hasFocus) {
+        _discountPercentController.text = _discountController.text.isNotEmpty
+            ? ((disc * 100) / (qt * sRate)).toStringAsFixed(2)
+            : '';
+        discountPercent = _discountController.text.isNotEmpty
+            ? double.tryParse(_discountPercentController.text)
+            : 0;
+        // discount = discountPercent > 0
+        // ?
+        double.tryParse(_discountController.text);
+        // : discount;
+      }
+      rDisc = taxMethod == 'MINUS'
+          ? CommonService.getRound(
+              4,
+              ((discount * 100) /
+                  (cessOnNetAmount
+                      ? (taxP + 100 + cessPer + kfcP)
+                      : (taxP + 100 + kfcP))))
+          : discount;
+      gross = CommonService.getRound(decimal, ((rRate * quantity)));
+      subTotal = CommonService.getRound(decimal, (gross - rDisc));
+      if (taxP > 0) {
+        tax = CommonService.getRound(4, ((subTotal * taxP) / 100));
+      }
+      if (companyTaxMode == 'INDIA') {
+        kfc = isKFC ? CommonService.getRound(4, ((subTotal * kfcP) / 100)) : 0;
+        double csPer = taxP / 2;
+        iGST = 0;
+        csGST = CommonService.getRound(4, ((subTotal * csPer) / 100));
+      } else if (companyTaxMode == 'GULF') {
+        iGST = CommonService.getRound(4, ((subTotal * taxP) / 100));
+        csGST = 0;
+        kfc = 0;
+      } else {
+        iGST = 0;
+        csGST = 0;
+        kfc = 0;
+        tax = 0;
+      }
+      if (cessOnNetAmount) {
+        if (cessPer > 0) {
+          cess = CommonService.getRound(4, ((subTotal * cessPer) / 100));
+        } else {
+          cess = 0;
+        }
+        if (adCessPer > 0) {
+          adCess = CommonService.getRound(4, (quantity * adCessPer));
+        } else {
+          adCess = 0;
+        }
+      } else {
+        cess = 0;
+        adCess = 0;
+      }
+      total = CommonService.getRound(
+          2, (subTotal + csGST + csGST + iGST + cess + kfc + adCess));
+      if (enableMULTIUNIT && _conversion > 0) {
+        profitPer = pRateBasedProfitInSales
+            ? CommonService.getRound(
+                2, (total - (product.buyingPrice * _conversion * quantity)))
+            : CommonService.getRound(decimal,
+                (total - (product.buyingPriceReal * _conversion * quantity)));
+      } else {
+        profitPer = pRateBasedProfitInSales
+            ? CommonService.getRound(
+                2, (total - (product.buyingPrice * quantity)))
+            : CommonService.getRound(
+                2, (total - (product.buyingPriceReal * quantity)));
+      }
+      unitValue = _conversion > 0 ? _conversion : 1;
+    }
+
     List<UnitModel> unitListData = [];
-    if (product.unitId > 0) {
-      defaultUnitItem = true;
-      _dropDownUnit = product.unitId;
-    } else {
-      defaultUnitItem = false;
-      _dropDownUnit = 0;
+    if (!enableMULTIUNIT) {
+      if (product.unitId > 0) {
+        defaultUnitItem = true;
+        _dropDownUnit = product.unitId;
+      } else {
+        defaultUnitItem = false;
+        _dropDownUnit = 0;
+      }
     }
     if (editItem) {
       pRate = product.buyingPrice;
@@ -3856,7 +4127,7 @@ class _SaleState extends State<Sale> {
       if (isLedgerWiseLastSRate && lastRateStatus) {
         lastRateOfLedger(product);
       }
-      calculate(product);
+      calculateSub();
     } else {
       pRate = product.buyingPrice;
       rPRate = product.buyingPriceReal;
@@ -4221,7 +4492,9 @@ class _SaleState extends State<Sale> {
                                                   sGST: csGST,
                                                   stock: product.quantity,
                                                   minimumRate:
-                                                      product.minimumRate),
+                                                      product.minimumRate,
+                                                  cessPer: cessPer,
+                                                  adCessPer: adCessPer),
                                               -1);
                                           // }
 
@@ -4317,7 +4590,9 @@ class _SaleState extends State<Sale> {
                                   }
                                   if (cartS > 0) {
                                     if (cartS <
-                                        cartQt + double.tryParse(value)) {
+                                        cartQt +
+                                            double.tryParse(value) *
+                                                unitValue) {
                                       cartQ = true;
                                     }
                                   }
@@ -4367,7 +4642,7 @@ class _SaleState extends State<Sale> {
                                                 : cartQ
                                                     ? true
                                                     : false;
-                                calculate(product);
+                                calculateSub();
                               });
                             }
                           },
@@ -4452,7 +4727,7 @@ class _SaleState extends State<Sale> {
                                                   : cartQ
                                                       ? true
                                                       : false;
-                                  calculate(product);
+                                  calculateSub();
                                 });
                               }
                             },
@@ -4477,6 +4752,13 @@ class _SaleState extends State<Sale> {
                                       if (snapshot.data[i].id ==
                                           defaultUnitID - 1) {
                                         _dropDownUnit = snapshot.data[i].id;
+                                        _conversion =
+                                            snapshot.data[i].conversion;
+                                      }
+                                    } else {
+                                      if (snapshot.data[i].id ==
+                                          _dropDownUnit) {
+                                        // _dropDownUnit = snapshot.data[i].id;
                                         _conversion =
                                             snapshot.data[i].conversion;
                                       }
@@ -4533,30 +4815,40 @@ class _SaleState extends State<Sale> {
                                                                         '1'
                                                                     ? product
                                                                         .sellingPrice
-                                                                    : rateType ==
-                                                                            '2'
+                                                                    : _unit.rate ==
+                                                                            'BRANCH'
                                                                         ? product
-                                                                            .retailPrice
-                                                                        : rateType ==
-                                                                                '3'
-                                                                            ? product.wholeSalePrice
-                                                                            : rateType == '8'
-                                                                                ? product.wholeSalePrice
-                                                                                : rate;
+                                                                            .branch
+                                                                        : rateTypeItem.name ==
+                                                                                'MRP'
+                                                                            ? product.sellingPrice
+                                                                            : rateTypeItem.name == 'RETAIL'
+                                                                                ? product.retailPrice
+                                                                                : rateTypeItem.name == 'SPRETAIL'
+                                                                                    ? product.spRetailPrice
+                                                                                    : rateTypeItem.name == 'BRANCH'
+                                                                                        ? product.branch
+                                                                                        : rateTypeItem.name == 'WHOLESALE'
+                                                                                            ? product.wholeSalePrice
+                                                                                            : rate;
                                                 if (_unit.rate.isNotEmpty) {
                                                   rateTypeItem = rateTypeList
                                                       .firstWhere((element) =>
                                                           element.name ==
                                                           _unit.rate);
                                                 }
-                                                rate = _rate;
-                                                saleRate = _rate;
+                                                _conversion = _unit.conversion;
+                                                rate = editItem
+                                                    ? (_rate * _conversion)
+                                                        .toDouble()
+                                                    : _rate;
+                                                saleRate =
+                                                    editItem ? rate : _rate;
                                                 _rateController.text =
                                                     saleRate > 0
                                                         ? saleRate
                                                             .toStringAsFixed(2)
                                                         : '';
-                                                _conversion = _unit.conversion;
                                                 if (quantity > 0 ||
                                                     freeQty > 0) {
                                                   if (totalItem > 0) {
@@ -4623,7 +4915,7 @@ class _SaleState extends State<Sale> {
                                                 break;
                                               }
                                             }
-                                            calculate(product);
+                                            calculateSub();
                                           });
                                         },
                                       )
@@ -4653,7 +4945,7 @@ class _SaleState extends State<Sale> {
                                                 break;
                                               }
                                             }
-                                            // calculate();
+                                            // calculateSub();
                                           });
                                         },
                                       );
@@ -4727,7 +5019,7 @@ class _SaleState extends State<Sale> {
                                       minRate) {
                                     setState(() {
                                       isMinimumRatedLock = false;
-                                      calculate(product);
+                                      calculateSub();
                                     });
                                   } else {
                                     setState(() {
@@ -4736,7 +5028,7 @@ class _SaleState extends State<Sale> {
                                   }
                                 } else {
                                   setState(() {
-                                    calculate(product);
+                                    calculateSub();
                                   });
                                 }
                               }
@@ -4854,7 +5146,7 @@ class _SaleState extends State<Sale> {
                                                           saleRate
                                                               .toStringAsFixed(
                                                                   2);
-                                                      calculate(product);
+                                                      calculateSub();
                                                     });
                                                   }),
                                             );
@@ -4914,7 +5206,7 @@ class _SaleState extends State<Sale> {
                                 hintText: '0.0'),
                             onChanged: (value) {
                               setState(() {
-                                calculate(product);
+                                calculateSub();
                               });
                             },
                           ),
@@ -4937,7 +5229,7 @@ class _SaleState extends State<Sale> {
                                 hintText: '0.0'),
                             onChanged: (value) {
                               setState(() {
-                                calculate(product);
+                                calculateSub();
                               });
                             },
                           ),
@@ -5121,234 +5413,254 @@ class _SaleState extends State<Sale> {
                                           ],
                                         ),
                                       ),
-                                      PlusMinusButtons(
-                                        addQuantity: () {
-                                          if (oldBill) {
-                                            api
-                                                .getStockOf(
-                                                    cartItem[index].itemId)
-                                                .then((value) {
-                                              cartItem[index].stock = value;
-                                              setState(() {
-                                                bool cartQ = false;
-                                                if (totalItem > 0) {
-                                                  double cartS = 0, cartQt = 0;
-                                                  for (var element
-                                                      in cartItem) {
-                                                    if (element.itemId ==
-                                                        cartItem[index]
-                                                            .itemId) {
-                                                      cartQt += (element
-                                                              .quantity *
-                                                          element.unitValue);
-                                                      cartS = element.stock;
-                                                    }
-                                                  }
-                                                  cartS =
-                                                      oldBill ? value : cartS;
-                                                  if (cartS > 0) {
-                                                    if (cartS < cartQt + 1) {
-                                                      cartQ = true;
-                                                    }
-                                                  }
-                                                }
-                                                outOfStock =
-                                                    isLockQtyOnlyInSales
-                                                        ? cartItem[index]
-                                                                        .quantity +
-                                                                    1 >
-                                                                cartItem[index]
-                                                                    .stock
-                                                            ? true
-                                                            : cartQ
-                                                                ? true
-                                                                : false
-                                                        : negativeStock
-                                                            ? false
-                                                            : salesTypeData.type ==
-                                                                        'SALES-O' ||
-                                                                    salesTypeData
-                                                                            .type ==
-                                                                        'SALES-Q'
-                                                                ? isStockProductOnlyInSalesQO
-                                                                    ? cartItem[index].quantity +
-                                                                                1 >
-                                                                            cartItem[index]
-                                                                                .stock
-                                                                        ? true
-                                                                        : cartQ
-                                                                            ? true
-                                                                            : false
-                                                                    : false
-                                                                : cartItem[index].quantity +
-                                                                            1 >
-                                                                        cartItem[index]
-                                                                            .stock
-                                                                    ? true
-                                                                    : cartQ
-                                                                        ? true
-                                                                        : false;
-                                                if (outOfStock) {
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(SnackBar(
-                                                    content: const Text(
-                                                        'Sorry stock not available.'),
-                                                    duration: const Duration(
-                                                        seconds: 10),
-                                                    action: SnackBarAction(
-                                                      label: 'Click',
-                                                      onPressed: () {
-                                                        // print('Action is clicked');
-                                                      },
-                                                      textColor: Colors.white,
-                                                      disabledTextColor:
-                                                          Colors.grey,
-                                                    ),
-                                                    backgroundColor: Colors.red,
-                                                  ));
-                                                } else {
-                                                  updateProduct(
-                                                      cartItem[index],
-                                                      cartItem[index].quantity +
-                                                          1,
-                                                      index);
-                                                }
-                                              });
-                                            });
-                                          } else {
-                                            setState(() {
-                                              bool cartQ = false;
-                                              if (totalItem > 0) {
-                                                double cartS = 0, cartQt = 0;
-                                                for (var element in cartItem) {
-                                                  if (element.itemId ==
-                                                      cartItem[index].itemId) {
-                                                    cartQt += element.quantity *
-                                                        element.unitValue;
-                                                    cartS = element.stock;
-                                                  }
-                                                }
-                                                // cartS = oldBill?:cartS;
-                                                if (cartS > 0) {
-                                                  if (cartS < cartQt + 1) {
-                                                    cartQ = true;
-                                                  }
-                                                }
-                                              }
-                                              outOfStock = isLockQtyOnlyInSales
-                                                  ? ((cartItem[index].quantity *
-                                                                      cartItem[index]
-                                                                          .unitValue) +
-                                                                  cartItem[index]
-                                                                      .free) +
-                                                              1 >
-                                                          cartItem[index].stock
-                                                      ? true
-                                                      : cartQ
-                                                          ? true
-                                                          : false
-                                                  : negativeStock
-                                                      ? false
-                                                      : salesTypeData.type ==
-                                                                  'SALES-O' ||
-                                                              salesTypeData
-                                                                      .type ==
-                                                                  'SALES-Q'
-                                                          ? isStockProductOnlyInSalesQO
-                                                              ? ((cartItem[index].quantity * cartItem[index].unitValue) +
-                                                                              cartItem[index]
-                                                                                  .free) +
-                                                                          1 >
-                                                                      cartItem[index]
-                                                                          .stock
-                                                                  ? true
-                                                                  : cartQ
-                                                                      ? true
-                                                                      : false
-                                                              : false
-                                                          : cartItem[index]
-                                                                          .quantity +
-                                                                      1 >
-                                                                  cartItem[
-                                                                          index]
-                                                                      .stock
-                                                              ? true
-                                                              : cartQ
-                                                                  ? true
-                                                                  : false;
-                                              if (outOfStock) {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(SnackBar(
-                                                  content: const Text(
-                                                      'Sorry stock not available.'),
-                                                  duration: const Duration(
-                                                      seconds: 10),
-                                                  action: SnackBarAction(
-                                                    label: 'Click',
-                                                    onPressed: () {
-                                                      // print('Action is clicked');
-                                                    },
-                                                    textColor: Colors.white,
-                                                    disabledTextColor:
-                                                        Colors.grey,
-                                                  ),
-                                                  backgroundColor: Colors.red,
-                                                ));
-                                              } else {
-                                                updateProduct(
-                                                    cartItem[index],
-                                                    cartItem[index].quantity +
-                                                        1,
-                                                    index);
-                                              }
-                                            });
-                                          }
+                                      // PlusMinusButtons(
+                                      //   addQuantity: () {
+                                      //     if (oldBill) {
+                                      //       api
+                                      //           .getStockOf(
+                                      //               cartItem[index].itemId)
+                                      //           .then((value) {
+                                      //         cartItem[index].stock = value;
+                                      //         setState(() {
+                                      //           bool cartQ = false;
+                                      //           if (totalItem > 0) {
+                                      //             double cartS = 0, cartQt = 0;
+                                      //             for (var element
+                                      //                 in cartItem) {
+                                      //               if (element.itemId ==
+                                      //                   cartItem[index]
+                                      //                       .itemId) {
+                                      //                 cartQt += (element
+                                      //                         .quantity *
+                                      //                     element.unitValue);
+                                      //                 cartS = element.stock;
+                                      //               }
+                                      //             }
+                                      //             cartS =
+                                      //                 oldBill ? value : cartS;
+                                      //             if (cartS > 0) {
+                                      //               if (cartS < cartQt + 1) {
+                                      //                 cartQ = true;
+                                      //               }
+                                      //             }
+                                      //           }
+                                      //           outOfStock =
+                                      //               isLockQtyOnlyInSales
+                                      //                   ? cartItem[index]
+                                      //                                   .quantity +
+                                      //                               1 >
+                                      //                           cartItem[index]
+                                      //                               .stock
+                                      //                       ? true
+                                      //                       : cartQ
+                                      //                           ? true
+                                      //                           : false
+                                      //                   : negativeStock
+                                      //                       ? false
+                                      //                       : salesTypeData.type ==
+                                      //                                   'SALES-O' ||
+                                      //                               salesTypeData
+                                      //                                       .type ==
+                                      //                                   'SALES-Q'
+                                      //                           ? isStockProductOnlyInSalesQO
+                                      //                               ? cartItem[index].quantity +
+                                      //                                           1 >
+                                      //                                       cartItem[index]
+                                      //                                           .stock
+                                      //                                   ? true
+                                      //                                   : cartQ
+                                      //                                       ? true
+                                      //                                       : false
+                                      //                               : false
+                                      //                           : cartItem[index].quantity +
+                                      //                                       1 >
+                                      //                                   cartItem[index]
+                                      //                                       .stock
+                                      //                               ? true
+                                      //                               : cartQ
+                                      //                                   ? true
+                                      //                                   : false;
+                                      //           if (outOfStock) {
+                                      //             ScaffoldMessenger.of(context)
+                                      //                 .showSnackBar(SnackBar(
+                                      //               content: const Text(
+                                      //                   'Sorry stock not available.'),
+                                      //               duration: const Duration(
+                                      //                   seconds: 10),
+                                      //               action: SnackBarAction(
+                                      //                 label: 'Click',
+                                      //                 onPressed: () {
+                                      //                   // print('Action is clicked');
+                                      //                 },
+                                      //                 textColor: Colors.white,
+                                      //                 disabledTextColor:
+                                      //                     Colors.grey,
+                                      //               ),
+                                      //               backgroundColor: Colors.red,
+                                      //             ));
+                                      //           } else {
+                                      //             updateProduct(
+                                      //                 cartItem[index],
+                                      //                 cartItem[index].quantity +
+                                      //                     1,
+                                      //                 index);
+                                      //           }
+                                      //         });
+                                      //       });
+                                      //     } else {
+                                      //       setState(() {
+                                      //         bool cartQ = false;
+                                      //         if (totalItem > 0) {
+                                      //           double cartS = 0, cartQt = 0;
+                                      //           for (var element in cartItem) {
+                                      //             if (element.itemId ==
+                                      //                 cartItem[index].itemId) {
+                                      //               cartQt += element.quantity *
+                                      //                   element.unitValue;
+                                      //               cartS = element.stock;
+                                      //             }
+                                      //           }
+                                      //           // cartS = oldBill?:cartS;
+                                      //           if (cartS > 0) {
+                                      //             if (cartS < cartQt + 1) {
+                                      //               cartQ = true;
+                                      //             }
+                                      //           }
+                                      //         }
+                                      //         outOfStock = isLockQtyOnlyInSales
+                                      //             ? ((cartItem[index].quantity *
+                                      //                                 cartItem[index]
+                                      //                                     .unitValue) +
+                                      //                             cartItem[index]
+                                      //                                 .free) +
+                                      //                         1 >
+                                      //                     cartItem[index].stock
+                                      //                 ? true
+                                      //                 : cartQ
+                                      //                     ? true
+                                      //                     : false
+                                      //             : negativeStock
+                                      //                 ? false
+                                      //                 : salesTypeData.type ==
+                                      //                             'SALES-O' ||
+                                      //                         salesTypeData
+                                      //                                 .type ==
+                                      //                             'SALES-Q'
+                                      //                     ? isStockProductOnlyInSalesQO
+                                      //                         ? ((cartItem[index].quantity * cartItem[index].unitValue) +
+                                      //                                         cartItem[index]
+                                      //                                             .free) +
+                                      //                                     1 >
+                                      //                                 cartItem[index]
+                                      //                                     .stock
+                                      //                             ? true
+                                      //                             : cartQ
+                                      //                                 ? true
+                                      //                                 : false
+                                      //                         : false
+                                      //                     : cartItem[index]
+                                      //                                     .quantity +
+                                      //                                 1 >
+                                      //                             cartItem[
+                                      //                                     index]
+                                      //                                 .stock
+                                      //                         ? true
+                                      //                         : cartQ
+                                      //                             ? true
+                                      //                             : false;
+                                      //         if (outOfStock) {
+                                      //           ScaffoldMessenger.of(context)
+                                      //               .showSnackBar(SnackBar(
+                                      //             content: const Text(
+                                      //                 'Sorry stock not available.'),
+                                      //             duration: const Duration(
+                                      //                 seconds: 10),
+                                      //             action: SnackBarAction(
+                                      //               label: 'Click',
+                                      //               onPressed: () {
+                                      //                 // print('Action is clicked');
+                                      //               },
+                                      //               textColor: Colors.white,
+                                      //               disabledTextColor:
+                                      //                   Colors.grey,
+                                      //             ),
+                                      //             backgroundColor: Colors.red,
+                                      //           ));
+                                      //         } else {
+                                      //           updateProduct(
+                                      //               cartItem[index],
+                                      //               cartItem[index].quantity +
+                                      //                   1,
+                                      //               index);
+                                      //         }
+                                      //       });
+                                      //     }
 
-                                          //  cart.addQuantity(
-                                          //      cartItem[index].id!);
-                                          //  dbHelper!
-                                          //      .updateQuantity(Cart(
-                                          //          id: index,
-                                          //          productId: index.toString(),
-                                          //          productName: provider
-                                          //              .cart[index].productName,
-                                          //          initialPrice: provider
-                                          //              .cart[index].initialPrice,
-                                          //          productPrice: provider
-                                          //              .cart[index].productPrice,
-                                          //          quantity: ValueNotifier(
-                                          //              cartItem[index]
-                                          //                  .quantity!.value),
-                                          //          unitTag: provider
-                                          //              .cart[index].unitTag,
-                                          //          image: provider
-                                          //              .cart[index].image))
-                                          //      .then((value) {
-                                          //    setState(() {
-                                          //      cart.addTotalPrice(double.parse(
-                                          //          provider
-                                          //              .cart[index].productPrice
-                                          //              .toString()));
-                                          //    });
-                                          //  });
-                                        },
-                                        deleteQuantity: () {
-                                          setState(() {
-                                            updateProduct(
-                                                cartItem[index],
-                                                cartItem[index].quantity - 1,
-                                                index);
-                                          });
+                                      //     //  cart.addQuantity(
+                                      //     //      cartItem[index].id!);
+                                      //     //  dbHelper!
+                                      //     //      .updateQuantity(Cart(
+                                      //     //          id: index,
+                                      //     //          productId: index.toString(),
+                                      //     //          productName: provider
+                                      //     //              .cart[index].productName,
+                                      //     //          initialPrice: provider
+                                      //     //              .cart[index].initialPrice,
+                                      //     //          productPrice: provider
+                                      //     //              .cart[index].productPrice,
+                                      //     //          quantity: ValueNotifier(
+                                      //     //              cartItem[index]
+                                      //     //                  .quantity!.value),
+                                      //     //          unitTag: provider
+                                      //     //              .cart[index].unitTag,
+                                      //     //          image: provider
+                                      //     //              .cart[index].image))
+                                      //     //      .then((value) {
+                                      //     //    setState(() {
+                                      //     //      cart.addTotalPrice(double.parse(
+                                      //     //          provider
+                                      //     //              .cart[index].productPrice
+                                      //     //              .toString()));
+                                      //     //    });
+                                      //     //  });
+                                      //   },
+                                      //   deleteQuantity: () {
+                                      //     setState(() {
+                                      //       updateProduct(
+                                      //           cartItem[index],
+                                      //           cartItem[index].quantity - 1,
+                                      //           index);
+                                      //     });
 
-                                          //  cart.deleteQuantity(
-                                          //      cartItem[index].id!);
-                                          //  cart.removeTotalPrice(double.parse(
-                                          //      cartItem[index].productPrice
-                                          //          .toString()));
-                                        },
-                                        text:
-                                            cartItem[index].quantity.toString(),
-                                      ),
+                                      //     //  cart.deleteQuantity(
+                                      //     //      cartItem[index].id!);
+                                      //     //  cart.removeTotalPrice(double.parse(
+                                      //     //      cartItem[index].productPrice
+                                      //     //          .toString()));
+                                      //   },
+                                      //   text:
+                                      //       cartItem[index].quantity.toString(),
+                                      // ),
+
+                                      RichText(
+                                          maxLines: 1,
+                                          text: TextSpan(
+                                              text: 'Qty: ',
+                                              style: TextStyle(
+                                                  color:
+                                                      Colors.blueGrey.shade800,
+                                                  fontSize: 13.0),
+                                              children: [
+                                                TextSpan(
+                                                  text: cartItem[index]
+                                                      .quantity
+                                                      .toString(),
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 12.0),
+                                                ),
+                                              ])),
                                       RichText(
                                         maxLines: 1,
                                         text: TextSpan(
@@ -5944,7 +6256,7 @@ class _SaleState extends State<Sale> {
                             // }
                             saleRate = rate;
                             _rateController.text = saleRate.toStringAsFixed(2);
-                            calculate(product);
+                            calculateOut(product);
                           });
                         },
                       ),
@@ -6043,7 +6355,7 @@ class _SaleState extends State<Sale> {
             rate = rate / _conversion;
             saleRate = rate;
           }
-          calculate(product);
+          calculateOut(product);
         });
       }
     });
@@ -6088,6 +6400,11 @@ class _SaleState extends State<Sale> {
     }
   }
 
+  void addProductAll(product) {
+    cartItem.add(product);
+    calculateTotal();
+  }
+
   void removeProduct(int index) {
     // int index = cartItem.indexWhere((i) => i.itemId == product.itemId);
     // cartItem[index].quantity = 1;
@@ -6117,6 +6434,20 @@ class _SaleState extends State<Sale> {
             CommonService.getRound(4, ((cartItem[index].net * csPer) / 100));
         cartItem[index].sGST = csGST;
         cartItem[index].cGST = csGST;
+        if (cessOnNetAmount) {
+          if (cartItem[index].cessPer > 0) {
+            cartItem[index].cess = CommonService.getRound(
+                4, ((cartItem[index].net * cartItem[index].cessPer) / 100));
+            cartItem[index].adCess =
+                CommonService.getRound(4, (qty * cartItem[index].adCessPer));
+          } else {
+            cartItem[index].cess = 0;
+            cartItem[index].adCess = 0;
+          }
+        } else {
+          cartItem[index].cess = 0;
+          cartItem[index].adCess = 0;
+        }
       } else if (companyTaxMode == 'GULF') {
         cartItem[index].cGST = 0;
         cartItem[index].sGST = 0;
@@ -6137,11 +6468,24 @@ class _SaleState extends State<Sale> {
             cartItem[index].cess +
             cartItem[index].fCess +
             cartItem[index].adCess));
-    cartItem[index].profitPer = CommonService.getRound(
-        4,
-        cartItem[index].total -
-            cartItem[index].rPRate * cartItem[index].quantity);
-
+    if (enableMULTIUNIT && cartItem[index].unitValue > 0) {
+      cartItem[index].profitPer = CommonService.getRound(
+          4,
+          cartItem[index].total -
+              (pRateBasedProfitInSales
+                      ? cartItem[index].pRate
+                      : cartItem[index].rPRate) *
+                  cartItem[index].unitValue *
+                  cartItem[index].quantity);
+    } else {
+      cartItem[index].profitPer = CommonService.getRound(
+          4,
+          cartItem[index].total -
+              (pRateBasedProfitInSales
+                      ? cartItem[index].pRate
+                      : cartItem[index].rPRate) *
+                  cartItem[index].quantity);
+    }
     if (cartItem[index].quantity == 0) removeProduct(index);
 
     calculateTotal();
@@ -7141,7 +7485,6 @@ class _SaleState extends State<Sale> {
   }
 
   fetchSale(context, data) {
-    rateType = salesTypeData.id.toString();
     double billTotal = 0, billCash = 0;
 
     api.fetchSalesInvoice(data['Id'], salesTypeData.id).then((value) {
@@ -7155,6 +7498,9 @@ class _SaleState extends State<Sale> {
         otherAmountList = value['otherAmount'];
 
         formattedDate = DateUtil.dateDMY(information['DDate']);
+        rateTypeItem = rateTypeList.firstWhere((element) =>
+            element.id.toString() == information["Stype"].toString());
+        projectId = information['Project'].toString();
 
         dataDynamic = [
           {
@@ -7243,53 +7589,51 @@ class _SaleState extends State<Sale> {
             information['EntryNo'].toString());
         ScopedModel.of<MainModel>(context).addCustomer(cModel);
         for (var product in particulars) {
-          addProduct(
-              CartItem(
-                  stock: 0,
-                  minimumRate: 0,
-                  id: totalItem + 1,
-                  itemId: product['itemId'],
-                  itemName: product['itemname'],
-                  quantity: double.tryParse(product['Qty'].toString()),
-                  rate: double.tryParse(product['Rate'].toString()),
-                  rRate: double.tryParse(product['RealRate'].toString()),
-                  uniqueCode: product['UniqueCode'],
-                  gross: double.tryParse(product['GrossValue'].toString()),
-                  discount: double.tryParse(product['Disc'].toString()),
-                  discountPercent:
-                      double.tryParse(product['DiscPersent'].toString()),
-                  rDiscount: double.tryParse(product['RDisc'].toString()),
-                  fCess: double.tryParse(product['Fcess'].toString()),
-                  serialNo: product['serialno'].toString(),
-                  tax: taxable
-                      ? (double.tryParse(product['CGST'].toString()) +
-                          double.tryParse(product['SGST'].toString()) +
-                          double.tryParse(product['IGST'].toString()))
-                      : 0,
-                  taxP:
-                      taxable ? double.tryParse(product['igst'].toString()) : 0,
-                  unitId: product['Unit'],
-                  unitValue: double.tryParse(product['UnitValue'].toString()),
-                  pRate: double.tryParse(product['Prate'].toString()),
-                  rPRate: double.tryParse(product['Rprate'].toString()),
-                  barcode: product['UniqueCode'],
-                  expDate: '2020-01-01',
-                  free: double.tryParse(product['freeQty'].toString()),
-                  fUnitId: int.tryParse(product['Funit'].toString()),
-                  cdPer: 0, //product['']cdPer,
-                  cDisc: 0, //product['']cDisc,
-                  net: double.tryParse(product['Net'].toString()), //subTotal,
-                  cess: double.tryParse(product['cess'].toString()), //cess,
-                  total: double.tryParse(product['Total'].toString()), //total,
-                  profitPer: double.tryParse(product['Profit'].toString()),
-                  fUnitValue: double.tryParse(
-                      product['FValue'].toString()), //fUnitValue,
-                  adCess:
-                      double.tryParse(product['adcess'].toString()), //adCess,
-                  iGST: double.tryParse(product['IGST'].toString()),
-                  cGST: double.tryParse(product['CGST'].toString()),
-                  sGST: double.tryParse(product['SGST'].toString())),
-              -1);
+          addProductAll(CartItem(
+              stock: 0,
+              minimumRate: 0,
+              id: totalItem + 1,
+              itemId: product['itemId'],
+              itemName: product['itemname'],
+              quantity: double.tryParse(product['Qty'].toString()),
+              rate: double.tryParse(product['Rate'].toString()),
+              rRate: double.tryParse(product['RealRate'].toString()),
+              uniqueCode: product['UniqueCode'],
+              gross: double.tryParse(product['GrossValue'].toString()),
+              discount: double.tryParse(product['Disc'].toString()),
+              discountPercent:
+                  double.tryParse(product['DiscPersent'].toString()),
+              rDiscount: double.tryParse(product['RDisc'].toString()),
+              fCess: double.tryParse(product['Fcess'].toString()),
+              serialNo: product['serialno'].toString(),
+              tax: taxable
+                  ? (double.tryParse(product['CGST'].toString()) +
+                      double.tryParse(product['SGST'].toString()) +
+                      double.tryParse(product['IGST'].toString()))
+                  : 0,
+              taxP: taxable ? double.tryParse(product['igst'].toString()) : 0,
+              unitId: product['Unit'],
+              unitValue: double.tryParse(product['UnitValue'].toString()),
+              pRate: double.tryParse(product['Prate'].toString()),
+              rPRate: double.tryParse(product['Rprate'].toString()),
+              barcode: product['UniqueCode'],
+              expDate: '2020-01-01',
+              free: double.tryParse(product['freeQty'].toString()),
+              fUnitId: int.tryParse(product['Funit'].toString()),
+              cdPer: 0, //product['']cdPer,
+              cDisc: 0, //product['']cDisc,
+              net: double.tryParse(product['Net'].toString()), //subTotal,
+              cess: double.tryParse(product['cess'].toString()), //cess,
+              total: double.tryParse(product['Total'].toString()), //total,
+              profitPer: double.tryParse(product['Profit'].toString()),
+              fUnitValue:
+                  double.tryParse(product['FValue'].toString()), //fUnitValue,
+              adCess: double.tryParse(product['adcess'].toString()), //adCess,
+              iGST: double.tryParse(product['IGST'].toString()),
+              cGST: double.tryParse(product['CGST'].toString()),
+              sGST: double.tryParse(product['SGST'].toString()),
+              cessPer: double.tryParse(product['cessper'].toString()),
+              adCessPer: double.tryParse(product['adcessper'].toString())));
         }
 
         userDateCheck(information['DDate'].toString());
@@ -8030,21 +8374,35 @@ class _SaleState extends State<Sale> {
       onPressed: () {
         setState(() {
           if (ledgerDataModel.name.toUpperCase() == 'CASH') {
-            if (salesTypeData.rateType.isNotEmpty) {
-              rateType = salesTypeData.id.toString();
-            }
+            // if (salesTypeData.rateType.isNotEmpty) {
+            //   rateType = salesTypeData.id.toString();
+            // }
             nextWidget = 2;
           } else {
+            if (!(salesTypeData.type == 'SALES-O' ||
+                salesTypeData.type == 'SALES-Q')) {
+              if (ledgerModel.cAmount > 0) {
+                var bal0 = ledgerModel.balance.toString().split(' ');
+                String bal = bal0[1] == 'Dr' ? bal0[0] : '0';
+                isCreditLimitedLedger =
+                    double.tryParse(bal) > ledgerModel.cAmount;
+              }
+            }
+            if (isCreditLimitedLedger) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text(
+                      'Balance Exceeds Credit Limit, Cannot Bill To This Customer')));
+            }
             if (salesTypeData.type == 'SALES-BB') {
               if (ledgerModel.taxNumber.isNotEmpty) {
-                if (salesTypeData.rateType.isNotEmpty) {
-                  rateType = salesTypeData.id.toString();
-                }
+                // if (salesTypeData.rateType.isNotEmpty) {
+                //   rateType = salesTypeData.id.toString();
+                // }
                 nextWidget = 2;
               } else if (!blockTaxLedgerOnB2CorBOS) {
-                if (salesTypeData.rateType.isNotEmpty) {
-                  rateType = salesTypeData.id.toString();
-                }
+                // if (salesTypeData.rateType.isNotEmpty) {
+                //   rateType = salesTypeData.id.toString();
+                // }
                 nextWidget = 2;
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -8061,9 +8419,9 @@ class _SaleState extends State<Sale> {
                   return;
                 }
               }
-              if (salesTypeData.rateType.isNotEmpty) {
-                rateType = salesTypeData.id.toString();
-              }
+              // if (salesTypeData.rateType.isNotEmpty) {
+              //   rateType = salesTypeData.id.toString();
+              // }
               nextWidget = 2;
             }
           }

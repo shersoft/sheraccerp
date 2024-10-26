@@ -3287,10 +3287,42 @@ class DioService {
       if (response.statusCode == 200) {
         var jsonResponse = response.data;
         for (var product in jsonResponse) {
-          _items.add(StockItem.fromJson(product));
+          if (product['qty'] > 0) {
+            _items.add(StockItem.fromJson(product));
+          }
         }
       } else {
         debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<List<StockProduct>> fetchStockTransferItemVariant(
+      int id, String location) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+
+    List<StockProduct> _items = [];
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'stock/getStockVariant/$dataBase',
+          queryParameters: {'Id': id, 'location': location});
+      if (response.statusCode == 200) {
+        var jsonResponse = response.data;
+        for (var product in jsonResponse) {
+          _items.add(StockProduct.fromJson(product));
+        }
+      } else {
+        debugPrint('Unexpected error occurred!');
       }
     } catch (e) {
       final errorMessage = DioExceptions.fromDioError(e).toString();

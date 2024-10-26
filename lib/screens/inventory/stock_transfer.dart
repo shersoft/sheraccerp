@@ -696,7 +696,8 @@ class _StockTransferState extends State<StockTransfer> {
 
   selectStockLedger() {
     return FutureBuilder(
-        future: dio.fetchStockVariant(productModel.id),
+        future: dio.fetchStockTransferItemVariant(
+            productModel.id, locationFromId.toString()),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data.length > 0) {
