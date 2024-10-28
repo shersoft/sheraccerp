@@ -1655,7 +1655,7 @@ class _PurchaseState extends State<Purchase> {
     return lockItemDetails
         ? itemDetailWidget()
         : FutureBuilder(
-            future: api.fetchProductPrize(id),
+            future: api.fetchProductPrizeStock(id, locationId),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 if (snapshot.connectionState == ConnectionState.done) {
@@ -1858,28 +1858,57 @@ class _PurchaseState extends State<Purchase> {
       kfcP =
           isTax ? 0 : 0; //double.tryParse(productModel['KFC'].toString()) : 0;
       pRate = double.tryParse(productModelPrize['prate'].toString());
-      if (pRate > 0 && !editableRate) {
-        controllerRate.text = pRate.toString();
+      if (pRate > 0 && !focusNodeRate.hasFocus && controllerRate.text.isEmpty) {
+        pRate = double.tryParse(productModelPrize['prate'].toString());
+        if (pRate > 0 && !editableRate) {
+          controllerRate.text = pRate.toString();
+        }
       }
       if (double.tryParse(productModelPrize['realprate'].toString()) > 0) {
         rPRate = double.tryParse(productModelPrize['realprate'].toString());
       }
       mrp = double.tryParse(productModelPrize['mrp'].toString());
-      if (mrp > 0 && !focusNodeMrp.hasFocus) {
-        controllerMrp.text = mrp.toString();
+      if (mrp > 0 && !focusNodeMrp.hasFocus && controllerMrp.text.isEmpty) {
+        mrp = double.tryParse(productModelPrize['mrp'].toString());
+        if (mrp > 0 && !focusNodeMrp.hasFocus) {
+          controllerMrp.text = mrp.toString();
+        }
       }
       retail = double.tryParse(productModelPrize['retail'].toString());
-      if (retail > 0 && !focusNodeRetail.hasFocus) {
-        controllerRetail.text = retail.toString();
+      if (retail > 0 &&
+          !focusNodeRetail.hasFocus &&
+          controllerRetail.text.isEmpty) {
+        retail = double.tryParse(productModelPrize['retail'].toString());
+        if (retail > 0 && !focusNodeRetail.hasFocus) {
+          controllerRetail.text = retail.toString();
+        }
       }
       wholeSale = double.tryParse(productModelPrize['wsrate'].toString());
-      if (wholeSale > 0 && !focusNodeWholeSale.hasFocus) {
-        controllerWholeSale.text = wholeSale.toString();
+      if (wholeSale > 0 &&
+          !focusNodeWholeSale.hasFocus &&
+          controllerWholeSale.text.isEmpty) {
+        wholeSale = double.tryParse(productModelPrize['wsrate'].toString());
+        if (wholeSale > 0 && !focusNodeWholeSale.hasFocus) {
+          controllerWholeSale.text = wholeSale.toString();
+        }
       }
       spRetail = double.tryParse(productModelPrize['spretail'].toString());
+      if (spRetail > 0 &&
+          !focusNodeSPRetail.hasFocus &&
+          controllerSPRetail.text.isEmpty) {
+        spRetail = double.tryParse(productModelPrize['spretail'].toString());
+        if (spRetail > 0 && !focusNodeSPRetail.hasFocus) {
+          controllerSPRetail.text = spRetail.toString();
+        }
+      }
       branch = double.tryParse(productModelPrize['branch'].toString());
-      if (branch > 0 && !focusNodeBranch.hasFocus) {
-        controllerBranch.text = branch.toString();
+      if (branch > 0 &&
+          !focusNodeBranch.hasFocus &&
+          controllerBranch.text.isEmpty) {
+        branch = double.tryParse(productModelPrize['branch'].toString());
+        if (branch > 0 && !focusNodeBranch.hasFocus) {
+          controllerBranch.text = branch.toString();
+        }
       }
     }
 
@@ -1994,6 +2023,129 @@ class _PurchaseState extends State<Purchase> {
       unitValue = _conversion > 0 ? _conversion : 1;
     }
 
+    calculateMultiUnit() {
+      quantity = controllerQuantity.text.isNotEmpty
+          ? double.tryParse(controllerQuantity.text)
+          : 0;
+      freeQuantity = controllerFreeQuantity.text.isNotEmpty
+          ? double.tryParse(controllerFreeQuantity.text)
+          : 0;
+      pRate = controllerRate.text.isNotEmpty
+          ? double.tryParse(controllerRate.text)
+          : 0;
+      discount = controllerDiscount.text.isNotEmpty
+          ? double.tryParse(controllerDiscount.text)
+          : 0;
+      double discP = controllerDiscountPer.text.isNotEmpty
+          ? double.tryParse(controllerDiscountPer.text)
+          : 0;
+      double disc = controllerDiscount.text.isNotEmpty
+          ? double.tryParse(controllerDiscount.text)
+          : 0;
+      double qt = controllerQuantity.text.isNotEmpty
+          ? double.tryParse(controllerQuantity.text)
+          : 0;
+      double rate = controllerRate.text.isNotEmpty
+          ? double.tryParse(controllerRate.text)
+          : 0;
+
+      rPRate = taxMethod == 'MINUS'
+          ? cessOnNetAmount
+              ? CommonService.getRound(
+                  4, (100 * pRate) / (100 + taxP + kfcP + cessPer))
+              : CommonService.getRound(4, (100 * pRate) / (100 + taxP + kfcP))
+          : pRate;
+
+      if (focusNodeDiscountPer.hasFocus) {
+        controllerDiscount.text = controllerDiscountPer.text.isNotEmpty
+            ? (((qt * rate) * discP) / 100).toStringAsFixed(2)
+            : '';
+        discount = controllerDiscount.text.isNotEmpty
+            ? double.tryParse(controllerDiscount.text)
+            : 0;
+        discountPer = double.tryParse(controllerDiscountPer.text);
+      }
+
+      if (focusNodeDiscount.hasFocus) {
+        controllerDiscountPer.text = controllerDiscount.text.isNotEmpty
+            ? ((disc * 100) / (qt * rate)).toStringAsFixed(2)
+            : '';
+        discountPer = controllerDiscount.text.isNotEmpty
+            ? double.tryParse(controllerDiscount.text)
+            : 0;
+        double.tryParse(controllerDiscount.text);
+      }
+
+      grossTotal = CommonService.getRound(decimal, (pRate * quantity));
+      net = CommonService.getRound(decimal, (grossTotal - discount));
+      if (taxP > 0) {
+        tax = CommonService.getRound(decimal, ((net * taxP) / 100));
+      }
+      if (companyTaxMode == 'INDIA') {
+        double csPer = taxP / 2;
+        iGST = 0;
+        csGST = CommonService.getRound(decimal, ((grossTotal * csPer) / 100));
+      } else if (companyTaxMode == 'GULF') {
+        iGST = CommonService.getRound(decimal, ((grossTotal * taxP) / 100));
+        csGST = 0;
+      } else {
+        iGST = 0;
+        csGST = 0;
+        tax = 0;
+      }
+      total = CommonService.getRound(
+          decimal, (net + csGST + csGST + iGST + cess + adCess));
+      if (_conversion > 1) {
+        mrp = mrp * _conversion;
+        controllerMrp.text = mrp.toStringAsFixed(2);
+        retail = retail * _conversion;
+        controllerRetail.text = retail.toStringAsFixed(2);
+        wholeSale = wholeSale * _conversion;
+        controllerWholeSale.text = wholeSale.toStringAsFixed(2);
+        spRetail = spRetail * _conversion;
+        controllerSPRetail.text = spRetail.toStringAsFixed(2);
+        branch = branch * _conversion;
+        controllerBranch.text = branch.toStringAsFixed(2);
+      }
+      if (mrp > 0) {
+        mrpPercentage = realPRateBasedProfitPercentage
+            ? CommonService.getRound(decimal, (((mrp - rPRate) * 100) / rPRate))
+            : CommonService.getRound(decimal, (((mrp - pRate) * 100) / pRate));
+      }
+      if (retail > 0) {
+        retailPercentage = realPRateBasedProfitPercentage
+            ? CommonService.getRound(
+                decimal, (((retail - rPRate) * 100) / rPRate))
+            : CommonService.getRound(
+                decimal, (((retail - pRate) * 100) / pRate));
+      }
+      if (wholeSale > 0) {
+        wholeSalePercentage = realPRateBasedProfitPercentage
+            ? CommonService.getRound(
+                decimal, (((wholeSale - rPRate) * 100) / rPRate))
+            : CommonService.getRound(
+                decimal, (((wholeSale - pRate) * 100) / pRate));
+      }
+      if (spRetail > 0) {
+        spRetailPercentage = realPRateBasedProfitPercentage
+            ? CommonService.getRound(
+                decimal, (((spRetail - rPRate) * 100) / rPRate))
+            : CommonService.getRound(
+                decimal, (((spRetail - pRate) * 100) / pRate));
+      }
+      if (branch > 0) {
+        branchPercentage = realPRateBasedProfitPercentage
+            ? CommonService.getRound(
+                decimal, (((branch - rPRate) * 100) / rPRate))
+            : CommonService.getRound(
+                decimal, (((branch - pRate) * 100) / pRate));
+      }
+      serialNo =
+          controllerSerialNo.text.isNotEmpty ? controllerSerialNo.text : '';
+
+      unitValue = _conversion > 0 ? _conversion : 1;
+    }
+
     calculateRate() {
       mrp = controllerMrp.text.isNotEmpty
           ? double.tryParse(controllerMrp.text)
@@ -2064,12 +2216,12 @@ class _PurchaseState extends State<Purchase> {
               2, (rPRate + rPRate * mrpPercentage / 100));
           controllerMrp.text = mrp.toStringAsFixed(2);
         } else if (mrpBasedProfit) {
-          // textboxValue = WsPer;
-          // string ptp = textboxValue.ToString();
-          // textboxValue = (mrp * ptp) / 100;
-          // string str = textboxValue.ToString();
-          // textboxValue = mrp - str;
-          // this.txtWsrate.Text = str;
+          // controllerWholeSalePercentage.text =
+          //     wholeSalePercentage.toStringAsFixed(2);
+          // controllerMrpPercentage.text =
+          //     ((mrp * pRate) / 100).toStringAsFixed(2);
+          // controllerMrpPercentage.text = (mrp - pRate).toStringAsFixed(2);
+          // controllerWholeSale.text = wholeSale.toStringAsFixed(2);
         } else {
           mrp =
               CommonService.getRound(2, (pRate + pRate * mrpPercentage / 100));
@@ -2088,6 +2240,43 @@ class _PurchaseState extends State<Purchase> {
               : controllerBranch.text;
         }
       }
+      // if (retail > 0) {
+      //   retailPercentage = realPRateBasedProfitPercentage
+      //       ? CommonService.getRound(2, (((retail - rPRate) * 100) / rPRate))
+      //       : CommonService.getRound(2, (((retail - pRate) * 100) / pRate));
+      //   if (focusNodeRetail.hasFocus) {
+      //     controllerRetailPercentage.text = retailPercentage.toStringAsFixed(2);
+      //   }
+      // }
+      // if (wholeSale > 0) {
+      //   wholeSalePercentage = realPRateBasedProfitPercentage
+      //       ? CommonService.getRound(2, (((wholeSale - rPRate) * 100) / rPRate))
+      //       : CommonService.getRound(2, (((wholeSale - pRate) * 100) / pRate));
+      //   if (focusNodeWholeSale.hasFocus) {
+      //     controllerWholeSalePercentage.text =
+      //         wholeSalePercentage.toStringAsFixed(2);
+      //   }
+      // }
+      // if (spRetail > 0) {
+      //   spRetailPercentage = realPRateBasedProfitPercentage
+      //       ? CommonService.getRound(2, (((spRetail - rPRate) * 100) / rPRate))
+      //       : CommonService.getRound(2, (((spRetail - pRate) * 100) / pRate));
+      //   if (focusNodeSPRetail.hasFocus) {
+      //     controllerSPRetailPercentage.text =
+      //         spRetailPercentage.toStringAsFixed(2);
+      //   }
+      // }
+      // if (branch > 0) {
+      //   branchPercentage = realPRateBasedProfitPercentage
+      //       ? CommonService.getRound(2, (((branch - rPRate) * 100) / rPRate))
+      //       : CommonService.getRound(2, (((branch - pRate) * 100) / pRate));
+      //   if (focusNodeBranch.hasFocus) {
+      //     controllerBranchPercentage.text = branchPercentage.toStringAsFixed(2);
+      //   }
+      // }
+    }
+
+    calculateRetailRate() {
       if (retail > 0) {
         retailPercentage = realPRateBasedProfitPercentage
             ? CommonService.getRound(2, (((retail - rPRate) * 100) / rPRate))
@@ -2096,6 +2285,13 @@ class _PurchaseState extends State<Purchase> {
           controllerRetailPercentage.text = retailPercentage.toStringAsFixed(2);
         }
       }
+    }
+
+    calculateRetailRatePer() {
+      calculateRetailRate();
+    }
+
+    calculateWholeSaleRate() {
       if (wholeSale > 0) {
         wholeSalePercentage = realPRateBasedProfitPercentage
             ? CommonService.getRound(2, (((wholeSale - rPRate) * 100) / rPRate))
@@ -2105,6 +2301,13 @@ class _PurchaseState extends State<Purchase> {
               wholeSalePercentage.toStringAsFixed(2);
         }
       }
+    }
+
+    calculateWholeSaleRatePer() {
+      calculateWholeSaleRate();
+    }
+
+    calculateSPRetailRate() {
       if (spRetail > 0) {
         spRetailPercentage = realPRateBasedProfitPercentage
             ? CommonService.getRound(2, (((spRetail - rPRate) * 100) / rPRate))
@@ -2114,6 +2317,13 @@ class _PurchaseState extends State<Purchase> {
               spRetailPercentage.toStringAsFixed(2);
         }
       }
+    }
+
+    calculateSPRetailRatePer() {
+      calculateSPRetailRate();
+    }
+
+    calculateBranchRate() {
       if (branch > 0) {
         branchPercentage = realPRateBasedProfitPercentage
             ? CommonService.getRound(2, (((branch - rPRate) * 100) / rPRate))
@@ -2122,6 +2332,10 @@ class _PurchaseState extends State<Purchase> {
           controllerBranchPercentage.text = branchPercentage.toStringAsFixed(2);
         }
       }
+    }
+
+    calculateBranchRatePer() {
+      calculateBranchRate();
     }
 
     List<UnitModel> unitListData = [];
@@ -2613,7 +2827,18 @@ class _PurchaseState extends State<Purchase> {
                                         // break;
                                         // }
                                         // }
-                                        calculate();
+                                        double _rate =
+                                            productModelPrize['prate'];
+                                        double rate = editItem
+                                            ? (_rate / _conversion).toDouble()
+                                            : (pRate * _conversion).toDouble();
+                                        pRate = editItem
+                                            ? rate
+                                            : (_rate * _conversion).toDouble();
+                                        controllerRate.text = pRate > 0
+                                            ? pRate.toStringAsFixed(2)
+                                            : '';
+                                        calculateMultiUnit();
                                       });
                                     },
                                   )
@@ -3123,10 +3348,12 @@ class _PurchaseState extends State<Purchase> {
                                       allow: true, replacementString: '.')
                                 ],
                                 onChanged: (value) {
-                                  setState(() {
-                                    mrpPercentage = double.tryParse(value);
-                                    calculateRate();
-                                  });
+                                  if (value.isNotEmpty) {
+                                    setState(() {
+                                      mrpPercentage = double.tryParse(value);
+                                      calculateRate();
+                                    });
+                                  }
                                 },
                                 style: const TextStyle(fontSize: 15),
                               ),
@@ -3148,10 +3375,12 @@ class _PurchaseState extends State<Purchase> {
                                       allow: true, replacementString: '.')
                                 ],
                                 onChanged: (value) {
-                                  setState(() {
-                                    mrp = double.tryParse(value);
-                                    calculateRate();
-                                  });
+                                  if (value.isNotEmpty) {
+                                    setState(() {
+                                      mrp = double.tryParse(value);
+                                      calculateRate();
+                                    });
+                                  }
                                 },
                               ),
                             ),
@@ -3192,10 +3421,12 @@ class _PurchaseState extends State<Purchase> {
                                       allow: true, replacementString: '.')
                                 ],
                                 onChanged: (value) {
-                                  setState(() {
-                                    retailPercentage = double.tryParse(value);
-                                    calculateRate();
-                                  });
+                                  if (value.isNotEmpty) {
+                                    setState(() {
+                                      retailPercentage = double.tryParse(value);
+                                      calculateRetailRatePer();
+                                    });
+                                  }
                                 },
                                 style: const TextStyle(fontSize: 15),
                               ),
@@ -3217,10 +3448,12 @@ class _PurchaseState extends State<Purchase> {
                                       allow: true, replacementString: '.')
                                 ],
                                 onChanged: (value) {
-                                  setState(() {
-                                    retail = double.tryParse(value);
-                                    calculateRate();
-                                  });
+                                  if (value.isNotEmpty) {
+                                    setState(() {
+                                      retail = double.tryParse(value);
+                                      calculateRetailRate();
+                                    });
+                                  }
                                 },
                               ),
                             ),
@@ -3271,11 +3504,13 @@ class _PurchaseState extends State<Purchase> {
                                         replacementString: '.')
                                   ],
                                   onChanged: (value) {
-                                    setState(() {
-                                      wholeSalePercentage =
-                                          double.tryParse(value);
-                                      calculateRate();
-                                    });
+                                    if (value.isNotEmpty) {
+                                      setState(() {
+                                        wholeSalePercentage =
+                                            double.tryParse(value);
+                                        calculateWholeSaleRatePer();
+                                      });
+                                    }
                                   },
                                   style: const TextStyle(fontSize: 15),
                                 ),
@@ -3299,10 +3534,12 @@ class _PurchaseState extends State<Purchase> {
                                         replacementString: '.')
                                   ],
                                   onChanged: (value) {
-                                    setState(() {
-                                      wholeSale = double.tryParse(value);
-                                      calculateRate();
-                                    });
+                                    if (value.isNotEmpty) {
+                                      setState(() {
+                                        wholeSale = double.tryParse(value);
+                                        calculateWholeSaleRate();
+                                      });
+                                    }
                                   },
                                 ),
                               ),
@@ -3344,10 +3581,13 @@ class _PurchaseState extends State<Purchase> {
                                         replacementString: '.')
                                   ],
                                   onChanged: (value) {
-                                    setState(() {
-                                      branchPercentage = double.tryParse(value);
-                                      calculateRate();
-                                    });
+                                    if (value.isNotEmpty) {
+                                      setState(() {
+                                        branchPercentage =
+                                            double.tryParse(value);
+                                        calculateBranchRatePer();
+                                      });
+                                    }
                                   },
                                 ),
                               ),
@@ -3370,10 +3610,12 @@ class _PurchaseState extends State<Purchase> {
                                         replacementString: '.')
                                   ],
                                   onChanged: (value) {
-                                    setState(() {
-                                      branch = double.tryParse(value);
-                                      calculateRate();
-                                    });
+                                    if (value.isNotEmpty) {
+                                      setState(() {
+                                        branch = double.tryParse(value);
+                                        calculateBranchRate();
+                                      });
+                                    }
                                   },
                                   style: const TextStyle(fontSize: 15),
                                 ),
@@ -3420,10 +3662,12 @@ class _PurchaseState extends State<Purchase> {
                                     allow: true, replacementString: '.')
                               ],
                               onChanged: (value) {
-                                setState(() {
-                                  branchPercentage = double.tryParse(value);
-                                  calculateRate();
-                                });
+                                if (value.isNotEmpty) {
+                                  setState(() {
+                                    branchPercentage = double.tryParse(value);
+                                    calculateSPRetailRatePer();
+                                  });
+                                }
                               },
                             ),
                           ),
@@ -3444,10 +3688,12 @@ class _PurchaseState extends State<Purchase> {
                                     allow: true, replacementString: '.')
                               ],
                               onChanged: (value) {
-                                setState(() {
-                                  branch = double.tryParse(value);
-                                  calculateRate();
-                                });
+                                if (value.isNotEmpty) {
+                                  setState(() {
+                                    spRetail = double.tryParse(value);
+                                    calculateSPRetailRate();
+                                  });
+                                }
                               },
                             ),
                           ),
