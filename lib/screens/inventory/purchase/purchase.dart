@@ -19,6 +19,7 @@ import 'package:sheraccerp/models/sales_model.dart';
 import 'package:sheraccerp/models/unit_model.dart';
 import 'package:sheraccerp/models/voucher_type_model.dart';
 import 'package:sheraccerp/scoped-models/main.dart';
+import 'package:sheraccerp/screens/inventory/serial_no_list.dart';
 import 'package:sheraccerp/service/api_dio.dart';
 import 'package:sheraccerp/service/com_service.dart';
 import 'package:sheraccerp/shared/constants.dart';
@@ -70,7 +71,8 @@ class _PurchaseState extends State<Purchase> {
       realPRateBasedProfitPercentage = false,
       mrpBasedProfit = false,
       isQuantityBasedSerialNo = false,
-      isAccountLedger = false;
+      isAccountLedger = false,
+      isAllowWithOutSerialNo = false;
   List<CartItemP> cartItem = [];
   int page = 1, pageTotal = 0, totalRecords = 0, _dropDownUnit = 0;
   List<ProductPurchaseModel> itemDisplay = [];
@@ -145,6 +147,8 @@ class _PurchaseState extends State<Purchase> {
 
     isFreeItem = ComSettings.getStatus('KEY FREE ITEM', settings);
     isFreeQty = ComSettings.getStatus('KEY FREE QTY IN PURCHASE', settings);
+    isAllowWithOutSerialNo =
+        ComSettings.getStatus('ALLOW WITHOUT SERIAL NO', settings);
     isQuantityBasedSerialNo =
         ComSettings.getStatus('ENABLE QUANTITY BASED SERIAL NO', settings);
     if (widget.oldPurchase != null && widget.oldPurchase) {
@@ -2716,15 +2720,32 @@ class _PurchaseState extends State<Purchase> {
                       });
                     },
                     onSubmitted: (value) {
-                      bool state = editItem
-                          ? (isQuantityBasedSerialNo)
-                          : (isQuantityBasedSerialNo && productModel.serialNo);
-                      // editItem ? 'Edit SerialNo' : 'Add SerialNo'),
-                      if (state) {
-                        if (controllerQuantity.text.isNotEmpty) {
-                          setState(() {
-                            nextWidget = 10;
-                          });
+                      if (isQuantityBasedSerialNo) {
+                        var named = editItem
+                            ? cartItem.elementAt(position).itemId.toString()
+                            : '0';
+                        bool state = false;
+
+                        state = oldBill
+                            ? (serialNoData
+                                        .firstWhere(
+                                            (element) =>
+                                                element.itemName.toString() ==
+                                                named,
+                                            orElse: () =>
+                                                SerialNOModel.emptyData())
+                                        .gId >
+                                    0
+                                ? true
+                                : false)
+                            : (productModel.serialNo);
+                        // editItem ? 'Edit SerialNo' : 'Add SerialNo'),}
+                        if (state) {
+                          if (controllerQuantity.text.isNotEmpty) {
+                            setState(() {
+                              nextWidget = 10;
+                            });
+                          }
                         }
                       }
                     },
@@ -4242,24 +4263,24 @@ class _PurchaseState extends State<Purchase> {
                                                   RichText(
                                                     maxLines: 1,
                                                     text: TextSpan(
-                                                        text:
-                                                            '${cartItem[index].id}/',
-                                                        style: TextStyle(
-                                                            color: Colors
-                                                                .blueGrey
-                                                                .shade800,
-                                                            fontSize: 10.0),
-                                                        children: [
-                                                          TextSpan(
-                                                              text:
-                                                                  '${cartItem[index].uniqueCode}/${cartItem[index].itemId}',
-                                                              style: const TextStyle(
-                                                                  fontSize:
-                                                                      10.0,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold)),
-                                                        ]),
+                                                      text:
+                                                          '${cartItem[index].id}',
+                                                      style: TextStyle(
+                                                          color: Colors.blueGrey
+                                                              .shade800,
+                                                          fontSize: 10.0),
+                                                      // children: [
+                                                      //   TextSpan(
+                                                      //       text:
+                                                      //           '${cartItem[index].uniqueCode}/${cartItem[index].itemId}',
+                                                      //       style: const TextStyle(
+                                                      //           fontSize:
+                                                      //               10.0,
+                                                      //           fontWeight:
+                                                      //               FontWeight
+                                                      //                   .bold)),
+                                                      // ]
+                                                    ),
                                                   ),
                                                   RichText(
                                                     maxLines: 1,
@@ -4285,29 +4306,29 @@ class _PurchaseState extends State<Purchase> {
                                                 ],
                                               ),
                                             ),
-                                            PlusMinusButtons(
-                                              addQuantity: () {
-                                                setState(() {
-                                                  updateProduct(
-                                                      cartItem[index],
-                                                      cartItem[index].quantity +
-                                                          1,
-                                                      index);
-                                                });
-                                              },
-                                              deleteQuantity: () {
-                                                setState(() {
-                                                  updateProduct(
-                                                      cartItem[index],
-                                                      cartItem[index].quantity -
-                                                          1,
-                                                      index);
-                                                });
-                                              },
-                                              text: cartItem[index]
-                                                  .quantity
-                                                  .toString(),
-                                            ),
+                                            // PlusMinusButtons(
+                                            //   addQuantity: () {
+                                            //     setState(() {
+                                            //       updateProduct(
+                                            //           cartItem[index],
+                                            //           cartItem[index].quantity +
+                                            //               1,
+                                            //           index);
+                                            //     });
+                                            //   },
+                                            //   deleteQuantity: () {
+                                            //     setState(() {
+                                            //       updateProduct(
+                                            //           cartItem[index],
+                                            //           cartItem[index].quantity -
+                                            //               1,
+                                            //           index);
+                                            //     });
+                                            //   },
+                                            //   text: cartItem[index]
+                                            //       .quantity
+                                            //       .toString(),
+                                            // ),
                                             RichText(
                                               maxLines: 1,
                                               text: TextSpan(
@@ -4365,7 +4386,9 @@ class _PurchaseState extends State<Purchase> {
                                                   controllerWholeSale.text =
                                                       cartModel.wholesale
                                                           .toString();
-                                                  // controller.text = cartModel..toString();
+                                                  controllerSPRetail.text =
+                                                      cartModel.spRetail
+                                                          .toString();
 
                                                   _dropDownUnit = 0;
                                                   unit =
@@ -5006,12 +5029,15 @@ class _PurchaseState extends State<Purchase> {
 
   bool isSerialNoScanner = false;
   serialNoWidget() {
+    newSerialNoController.text = '';
     int gId = 0;
     if (editItem) {
       gId = cartItem[position].id;
     } else {
       gId = cartItem.length + 1;
     }
+    List<SerialNOModel> serialNoListItem =
+        serialNoData.where((element) => element.gId == gId).toList();
     return isSerialNoScanner
         ? scanSerialNumber(context)
         : Container(
@@ -5029,7 +5055,7 @@ class _PurchaseState extends State<Purchase> {
                       int qtyTotal =
                           int.parse(controllerQuantity.text.split('.')[0]);
 
-                      if (qtyTotal == serialNoData.length) {
+                      if (qtyTotal == serialNoListItem.length) {
                         setState(() {
                           nextWidget = 4;
                         });
@@ -5062,47 +5088,55 @@ class _PurchaseState extends State<Purchase> {
                         )),
                   ),
                   IconButton(
-                      onPressed: () {
+                      onPressed: () async {
                         int qtyTotal =
                             int.parse(controllerQuantity.text.split('.')[0]);
-                        if (qtyTotal == serialNoData.length) {
+                        if (qtyTotal == serialNoListItem.length) {
                           showInSnackBar('qty already full');
                         } else {
                           if (newSerialNoController.text.isNotEmpty) {
                             bool serialNoIn = false;
-                            serialNoIn = serialNoData
-                                    .firstWhere(
-                                      (element) =>
-                                          element.serialNo
-                                              .toString()
-                                              .trim()
-                                              .toLowerCase() ==
-                                          newSerialNoController.text
-                                              .trim()
-                                              .toLowerCase(),
-                                      orElse: () => SerialNOModel.emptyData(),
-                                    )
-                                    .serialNo
-                                    .isNotEmpty
-                                ? true
-                                : false;
-                            if (!serialNoIn) {
-                              setState(() {
-                                serialNoData.add(SerialNOModel(
-                                    entryNo: 0,
-                                    gId: gId,
-                                    itemName: editItem
+                            bool result = false;
+                            if (!isAllowWithOutSerialNo) {
+                              result = await api.checkSerialNo(
+                                  newSerialNoController.text.toString(),
+                                  'CheckDupSerialNoinDb');
+                            }
+                            if (!result) {
+                              serialNoIn = serialNoListItem
+                                      .firstWhere(
+                                        (element) =>
+                                            element.serialNo
+                                                .toString()
+                                                .trim()
+                                                .toLowerCase() ==
+                                            newSerialNoController.text
+                                                .trim()
+                                                .toLowerCase(),
+                                        orElse: () => SerialNOModel.emptyData(),
+                                      )
+                                      .serialNo
+                                      .isNotEmpty
+                                  ? true
+                                  : false;
+
+                              if (!serialNoIn) {
+                                addSerialNo(
+                                    serialNoListItem,
+                                    gId,
+                                    (editItem
                                         ? cartItem[position].itemId
-                                        : productModel.slNo,
-                                    serialNo: newSerialNoController.text,
-                                    slNo: serialNoData.length + 1,
-                                    tType: 'P',
-                                    uniqueCode: editItem
+                                        : productModel.slNo),
+                                    newSerialNoController.text,
+                                    (editItem
                                         ? cartItem[position].uniqueCode
                                         : 0));
-                              });
+                              } else {
+                                showInSnackBar('already exists');
+                              }
                             } else {
-                              showInSnackBar('already exists');
+                              serialNoIn = false;
+                              showInSnackBar('Duplicate Serial No');
                             }
                           }
                         }
@@ -5113,12 +5147,12 @@ class _PurchaseState extends State<Purchase> {
               const Divider(),
               Expanded(
                   child: ListView.builder(
-                      itemCount: serialNoData.length,
+                      itemCount: serialNoListItem.length,
                       itemBuilder: (context, index) {
                         return InkWell(
                           onDoubleTap: () {
                             setState(() {
-                              serialNoData.removeAt(index);
+                              serialNoListItem.removeAt(index);
                             });
                           },
                           child: Card(
@@ -5126,7 +5160,8 @@ class _PurchaseState extends State<Purchase> {
                             child: Padding(
                               padding: const EdgeInsets.all(5.0),
                               child: Center(
-                                  child: Text(serialNoData[index].serialNo)),
+                                  child:
+                                      Text(serialNoListItem[index].serialNo)),
                             ),
                           ),
                         );
@@ -5840,8 +5875,11 @@ class _PurchaseState extends State<Purchase> {
           } else {
             gId = cartItem.length + 1;
           }
+          List<SerialNOModel> serialNoListItem =
+              serialNoData.where((element) => element.gId == gId).toList();
+
           int qtyTotal = int.parse(controllerQuantity.text.split('.')[0]);
-          if (qtyTotal == serialNoData.length) {
+          if (qtyTotal == serialNoListItem.length) {
             showInSnackBar('qty already full');
           } else {
             bool serialNoIn = false;
@@ -5915,6 +5953,29 @@ class _PurchaseState extends State<Purchase> {
     ];
     Navigator.pushReplacementNamed(context, '/purchasePreviewShow',
         arguments: {'title': 'Purchase'});
+  }
+
+  List<SerialNOModel> addSerialNo(
+      _serialNoListItem, _gId, _name, _serialNo, _uniqueCode) {
+    setState(() {
+      serialNoData.add(SerialNOModel(
+          entryNo: 0,
+          gId: _gId,
+          itemName: _name,
+          serialNo: _serialNo,
+          slNo: serialNoData.length + 1,
+          tType: 'P',
+          uniqueCode: _uniqueCode));
+    });
+    _serialNoListItem.add(SerialNOModel(
+        entryNo: 0,
+        gId: _gId,
+        itemName: _name,
+        serialNo: _serialNo,
+        slNo: serialNoData.length + 1,
+        tType: 'P',
+        uniqueCode: _uniqueCode));
+    return _serialNoListItem;
   }
 }
 

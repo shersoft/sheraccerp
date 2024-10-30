@@ -7533,6 +7533,68 @@ class DioService {
       return false;
     }
   }
+
+  Future<bool> checkSerialNo(String serialNo, String type) async {
+    bool ret = false;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+        pref.getString('api' ?? '127.0.0.1:80/api/') +
+            apiV +
+            'purchase/checkSerialNo/$dataBase',
+        queryParameters: {'serialno': serialNo, 'type': type},
+      );
+      if (response.statusCode == 200) {
+        ret = response.data['returnValue'] > 0 ? true : false;
+      } else {
+        ret = false;
+        debugPrint('Unexpected error occurred!');
+      }
+    } catch (ex) {
+      ex.toString();
+      ret = false;
+    }
+    return ret;
+  }
+
+  Future<List<String>> getSelectedItemSerialNoList(
+      uniqueCode, itemId, statementType) async {
+    List<String> ret = [];
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'sale/serialNoList/$dataBase',
+          queryParameters: {
+            'uniqueCode': uniqueCode,
+            'itemId': itemId,
+            'statementType': statementType
+          });
+
+      if (response.statusCode == 200) {
+        if (response.data != null && response.data.isNotEmpty) {
+          ret = List<String>.from(response.data
+              .map((item) => item['SerialNO'].toString())
+              .toList());
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
 }
 
 class DataJson {

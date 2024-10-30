@@ -65,7 +65,8 @@ class _SaleState extends State<Sale> {
       isCustomForm = false,
       buttonEvent = false,
       isSerialNoInStockVariant = false,
-      disableRoundOffInSales = false;
+      disableRoundOffInSales = false,
+      isSerialNoItem = false;
   bool _autoVariantSelect = false;
   DioService api = DioService();
   Size deviceSize;
@@ -130,6 +131,7 @@ class _SaleState extends State<Sale> {
   final siteNameControl = TextEditingController();
   final taxNoControl = TextEditingController();
   final mobileNoControl = TextEditingController();
+  TextEditingController newSerialNoController = TextEditingController();
   final FocusNode _focusNodeCashReceived = FocusNode();
   String oldBalance = '0';
 
@@ -142,6 +144,7 @@ class _SaleState extends State<Sale> {
   List<dynamic> items = [];
   List<LedgerModel> cashBankACList = [];
   List<SerialNOModel> serialNoData = [];
+  List<String> selectedItemSerialNoData = [];
   List<String> vehicleNameListDisplay = [];
   int lId = 0, groupId = 0, areaId = 0, routeId = 0;
   var salesManId = 0;
@@ -155,6 +158,8 @@ class _SaleState extends State<Sale> {
   final dbHelper = DatabaseHelper.instance;
   GlobalKey<AutoCompleteTextFieldState<String>> keyVehicleName = GlobalKey();
   GlobalKey<AutoCompleteTextFieldState<String>> keyCustomerName = GlobalKey();
+  GlobalKey<AutoCompleteTextFieldState<String>> keySelectedItemSerialNo =
+      GlobalKey();
 
   @override
   void initState() {
@@ -1772,11 +1777,9 @@ class _SaleState extends State<Sale> {
                     ? itemDetailWidget()
                     : nextWidget == 4
                         ? cartProduct()
-                        : nextWidget == 5
-                            ? const Text('No Data 5')
-                            : nextWidget == 6
-                                ? const Text('No Data 6')
-                                : const Text('No Widget');
+                        : nextWidget == 10
+                            ? serialNoWidget()
+                            : const Center(child: Text('No Widget'));
   }
 
   getEntryNo(saleFormId) {
@@ -2657,8 +2660,10 @@ class _SaleState extends State<Sale> {
       isMinimumRatedLock = false;
 
   bool isItemData = false;
-  String itemLike = 'a';
+  String itemLikeX = 'a';
+  var cItemName = TextEditingController();
   selectProductWidget() {
+    var itemNameText = cItemName.text.isNotEmpty ? cItemName.text : 'a';
     if (salesmanAsVehicle) {
       double squareFeet =
           vehicleData != null ? vehicleData['Salary'].toDouble() : 0;
@@ -2673,11 +2678,11 @@ class _SaleState extends State<Sale> {
             (salesTypeData.type == 'SALES-O' || salesTypeData.type == 'SALES-Q')
                 ? isStockProductOnlyInSalesQO
                     ? api.fetchStockProductLike(
-                        DateUtil.dateDMY2YMD(formattedDate), itemLike)
+                        DateUtil.dateDMY2YMD(formattedDate), itemNameText)
                     : api.fetchNoStockProductLike(
-                        DateUtil.dateDMY2YMD(formattedDate), itemLike)
+                        DateUtil.dateDMY2YMD(formattedDate), itemNameText)
                 : api.fetchStockProductLike(
-                    DateUtil.dateDMY2YMD(formattedDate), itemLike),
+                    DateUtil.dateDMY2YMD(formattedDate), itemNameText),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data.isNotEmpty) {
@@ -2727,6 +2732,11 @@ class _SaleState extends State<Sale> {
                                           lastRateStatus = true;
                                           lastRateSelected = false;
                                           nextWidget = 3;
+                                          if (isQuantityBasedSerialNo) {
+                                            isSerialNoItem = false;
+                                            fetchProductDetails(
+                                                productModel.name);
+                                          }
                                         });
                                       });
                                       // setState(() {
@@ -2744,6 +2754,7 @@ class _SaleState extends State<Sale> {
                               ),
                               Flexible(
                                 child: TextField(
+                                  controller: cItemName,
                                   decoration: InputDecoration(
                                       suffixIcon: Visibility(
                                         visible: enableBarcode,
@@ -2759,7 +2770,7 @@ class _SaleState extends State<Sale> {
                                   onChanged: (text) {
                                     text = text.toLowerCase();
                                     setState(() {
-                                      itemLike = text.toLowerCase();
+                                      // cItemName.text = text.toLowerCase();
 
                                       //   itemDisplay = items.where((item) {
                                       //     // var itemName = itemCodeVise
@@ -2839,6 +2850,7 @@ class _SaleState extends State<Sale> {
                             ),
                           ),
                           onTap: () {
+                            cItemName.text = '';
                             setState(() {
                               productModel = itemDisplay[index - 1];
                               // _autoVariantSelect =
@@ -2846,6 +2858,10 @@ class _SaleState extends State<Sale> {
                               lastRateStatus = true;
                               lastRateSelected = false;
                               nextWidget = 3;
+                              if (isQuantityBasedSerialNo) {
+                                isSerialNoItem = false;
+                                fetchProductDetails(productModel.name);
+                              }
                             });
                           },
                         );
@@ -2858,6 +2874,7 @@ class _SaleState extends State<Sale> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: TextField(
+                      controller: cItemName,
                       decoration: InputDecoration(
                           suffixIcon: Visibility(
                             visible: enableBarcode,
@@ -2870,9 +2887,9 @@ class _SaleState extends State<Sale> {
                           border: const OutlineInputBorder(),
                           label: const Text('Search...')),
                       onChanged: (text) {
-                        text = text.toLowerCase();
+                        //   text = itemLike.toLowerCase();
                         setState(() {
-                          itemLike = text.toLowerCase();
+                          //     itemLike = text.toLowerCase();
                         });
                       },
                       autofocus: true,
@@ -3082,8 +3099,8 @@ class _SaleState extends State<Sale> {
                     ElevatedButton(
                         onPressed: () {
                           setState(() {
-                            itemLike =
-                                itemLike.substring(0, itemLike.length - 1);
+                            cItemName.text = cItemName.text
+                                .substring(0, cItemName.text.length - 1);
                             nextWidget = 2;
                           });
                         },
@@ -4190,6 +4207,13 @@ class _SaleState extends State<Sale> {
       }
     }
 
+    if (isQuantityBasedSerialNo) {
+      var itemId = product.itemId;
+      api
+          .getSelectedItemSerialNoList(uniqueCode, itemId, 'SelectSerialNo')
+          .then((value) => selectedItemSerialNoData = value);
+    }
+
     return Container(
       padding: const EdgeInsets.all(8.0),
       child: ListView(
@@ -4644,6 +4668,44 @@ class _SaleState extends State<Sale> {
                                                     : false;
                                 calculateSub();
                               });
+                            }
+                          },
+                          onFieldSubmitted: (value) {
+                            if (isQuantityBasedSerialNo) {
+                              var named = editItem
+                                  ? cartItem
+                                      .elementAt(position)
+                                      .itemId
+                                      .toString()
+                                  : '0';
+                              bool state = false;
+
+                              state = oldBill
+                                  ? (serialNoData
+                                              .firstWhere(
+                                                  (element) =>
+                                                      element.itemName
+                                                          .toString() ==
+                                                      named,
+                                                  orElse: () =>
+                                                      SerialNOModel.emptyData())
+                                              .gId >
+                                          0
+                                      ? true
+                                      : false)
+                                  : (isSerialNoItem);
+                              if (state) {
+                                if (_quantityController.text.isNotEmpty) {
+                                  // editing = true;
+                                  serialNoListOfSelectedItem = serialNoData
+                                      .where((element) =>
+                                          element.itemName == productModel.id)
+                                      .toList();
+                                  setState(() {
+                                    nextWidget = 10;
+                                  });
+                                }
+                              }
                             }
                           },
                         ),
@@ -7665,6 +7727,109 @@ class _SaleState extends State<Sale> {
     });
   }
 
+  scanSerialNumber(context) {
+    return Column(
+      children: <Widget>[
+        Expanded(flex: 4, child: _buildQrViewSerialNo(context)),
+        Expanded(
+          flex: 1,
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                if (result != null)
+                  Text(
+                      'Barcode Type: ${describeEnum(result.format)}   Data: ${result.code}')
+                else
+                  const Text('Scan a code'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Container(
+                      margin: const EdgeInsets.all(8),
+                      child: ElevatedButton(
+                          onPressed: () async {
+                            await controller?.toggleFlash();
+                            setState(() {});
+                          },
+                          child: FutureBuilder(
+                            future: controller?.getFlashStatus(),
+                            builder: (context, snapshot) {
+                              return Text('Flash: ${snapshot.data}');
+                            },
+                          )),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.all(8),
+                      child: ElevatedButton(
+                          onPressed: () async {
+                            await controller?.flipCamera();
+                            setState(() {});
+                          },
+                          child: FutureBuilder(
+                            future: controller?.getCameraInfo(),
+                            builder: (context, snapshot) {
+                              if (snapshot.data != null) {
+                                return Text(
+                                    'Camera facing ${describeEnum(snapshot.data)}');
+                              } else {
+                                return const Text('loading');
+                              }
+                            },
+                          )),
+                    )
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Container(
+                      margin: const EdgeInsets.all(8),
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          await controller?.pauseCamera();
+                        },
+                        child:
+                            const Text('pause', style: TextStyle(fontSize: 20)),
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.all(8),
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          await controller?.resumeCamera();
+                        },
+                        child: const Text('resume',
+                            style: TextStyle(fontSize: 20)),
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.all(8),
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          await controller?.stopCamera();
+                          setState(() {
+                            result = null;
+                            isSerialNoScanner = false;
+                          });
+                        },
+                        child: const Text('Cancel',
+                            style: TextStyle(fontSize: 20)),
+                      ),
+                    )
+                  ],
+                ),
+              ],
+            ),
+          ),
+        )
+      ],
+    );
+  }
+
   Widget _buildQrViewLedger(BuildContext context) {
     // For this example we check how width or tall the device is and change the scanArea and overlay accordingly.
     var scanArea = (MediaQuery.of(context).size.width < 400 ||
@@ -8523,6 +8688,334 @@ class _SaleState extends State<Sale> {
     } else {
       return '';
     }
+  }
+
+  void fetchProductDetails(String pItemName) {
+    api.getProductByName(pItemName).then((value) {
+      if (value != null) {
+        if (value.slno > 0) {
+          isSerialNoItem = value.serialno > 0 ? true : false;
+        }
+      }
+    });
+  }
+
+  bool isSerialNoScanner = false, editingX = false;
+  List<SerialNOModel> serialNoListOfSelectedItem = [];
+  serialNoWidget() {
+    newSerialNoController.text = '';
+    int gId = 0;
+    if (editItem) {
+      gId = cartItem[position].id;
+    } else {
+      gId = cartItem.length + 1;
+    }
+
+    return isSerialNoScanner
+        ? scanSerialNumber(context)
+        : Container(
+            padding: const EdgeInsets.all(5.0),
+            child: Column(children: [
+              const Text(
+                'SerialNo List',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                      child: MaterialButton(
+                    onPressed: () {
+                      int qtyTotal =
+                          int.parse(_quantityController.text.split('.')[0]);
+
+                      if (qtyTotal == serialNoListOfSelectedItem.length) {
+                        for (SerialNOModel sData
+                            in serialNoListOfSelectedItem) {
+                          serialNoData.removeWhere((element) =>
+                              element.itemName == sData.itemName &&
+                              element.serialNo == sData.serialNo);
+
+                          serialNoData.add(SerialNOModel(
+                              entryNo: sData.entryNo,
+                              gId: sData.gId,
+                              itemName: sData.itemName,
+                              serialNo: sData.serialNo,
+                              slNo: sData.slNo,
+                              tType: sData.tType,
+                              uniqueCode: sData.uniqueCode));
+                        }
+                        // editing = false;
+                        setState(() {
+                          nextWidget = 3;
+                        });
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text(
+                                    'Quantity not equal\nAdd more serialNo')));
+                      }
+                    },
+                    child: const Text("OK"),
+                    color: blue[400],
+                  )),
+                ],
+              ),
+              const Divider(),
+              Row(
+                children: [
+                  Expanded(
+                    child: SimpleAutoCompleteTextField(
+                      key: keySelectedItemSerialNo,
+                      suggestions: selectedItemSerialNoData,
+                      controller: newSerialNoController,
+                      clearOnSubmit: false,
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Type SerialNo',
+                          hintText: 'Type SerialNo'),
+                      textSubmitted: (data) {
+                        // editing = true;
+                        int qtyTotal =
+                            int.parse(_quantityController.text.split('.')[0]);
+                        if (qtyTotal == serialNoListOfSelectedItem.length) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('qty already full')));
+                        } else {
+                          if (newSerialNoController.text.isNotEmpty) {
+                            bool serialNoIn = serialNoListOfSelectedItem
+                                    .firstWhere(
+                                      (element) =>
+                                          element.serialNo
+                                              .toString()
+                                              .trim()
+                                              .toLowerCase() ==
+                                          newSerialNoController.text
+                                              .trim()
+                                              .toLowerCase(),
+                                      orElse: () => SerialNOModel.emptyData(),
+                                    )
+                                    .serialNo
+                                    .isNotEmpty
+                                ? true
+                                : false;
+
+                            if (!serialNoIn) {
+                              serialNoListOfSelectedItem.add(SerialNOModel(
+                                  entryNo: 0,
+                                  gId: gId,
+                                  itemName: (editItem
+                                      ? cartItem[position].itemId
+                                      : productModel.id),
+                                  serialNo: newSerialNoController.text,
+                                  slNo: serialNoData.length + 1,
+                                  tType: 'P',
+                                  uniqueCode: (editItem
+                                      ? cartItem[position].uniqueCode
+                                      : 0)));
+                              setState(() {
+                                //
+                              });
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('already exists')));
+                            }
+                          }
+                        }
+                      },
+                    ),
+                    // child: TextField(
+                    //     controller: newSerialNoController,
+                    //     decoration: InputDecoration(
+                    //       suffixIcon: IconButton(
+                    //         icon: const Icon(Icons.document_scanner),
+                    //         onPressed: () {
+                    //           setState(() {
+                    //             isSerialNoScanner = true;
+                    //           });
+                    //         },
+                    //       ),
+                    //       label: const Text('Type SerialNo'),
+                    //       border: const OutlineInputBorder(),
+                    //     )),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.document_scanner),
+                    onPressed: () {
+                      setState(() {
+                        isSerialNoScanner = true;
+                      });
+                    },
+                  ),
+                  // IconButton(
+                  //     onPressed: () async {
+                  //       int qtyTotal =
+                  //           int.parse(_quantityController.text.split('.')[0]);
+                  //       if (qtyTotal == serialNoListOfSelectedItem.length) {
+                  //         ScaffoldMessenger.of(context).showSnackBar(
+                  //             const SnackBar(
+                  //                 content: Text('qty already full')));
+                  //       } else {
+                  //         if (newSerialNoController.text.isNotEmpty) {
+                  //           bool serialNoIn = serialNoListOfSelectedItem
+                  //                   .firstWhere(
+                  //                     (element) =>
+                  //                         element.serialNo
+                  //                             .toString()
+                  //                             .trim()
+                  //                             .toLowerCase() ==
+                  //                         newSerialNoController.text
+                  //                             .trim()
+                  //                             .toLowerCase(),
+                  //                     orElse: () => SerialNOModel.emptyData(),
+                  //                   )
+                  //                   .serialNo
+                  //                   .isNotEmpty
+                  //               ? true
+                  //               : false;
+
+                  //           if (!serialNoIn) {
+                  //             setState(() {
+                  //               serialNoData.add(SerialNOModel(
+                  //                   entryNo: 0,
+                  //                   gId: gId,
+                  //                   itemName: (editItem
+                  //                       ? cartItem[position].itemId
+                  //                       : productModel.id),
+                  //                   serialNo: newSerialNoController.text,
+                  //                   slNo: serialNoData.length + 1,
+                  //                   tType: 'P',
+                  //                   uniqueCode: (editItem
+                  //                       ? cartItem[position].uniqueCode
+                  //                       : 0)));
+                  //             });
+                  //             serialNoListOfSelectedItem.add(SerialNOModel(
+                  //                 entryNo: 0,
+                  //                 gId: gId,
+                  //                 itemName: (editItem
+                  //                     ? cartItem[position].itemId
+                  //                     : productModel.id),
+                  //                 serialNo: newSerialNoController.text,
+                  //                 slNo: serialNoData.length + 1,
+                  //                 tType: 'P',
+                  //                 uniqueCode: (editItem
+                  //                     ? cartItem[position].uniqueCode
+                  //                     : 0)));
+                  //           } else {
+                  //             ScaffoldMessenger.of(context).showSnackBar(
+                  //                 const SnackBar(
+                  //                     content: Text('already exists')));
+                  //           }
+                  //         }
+                  //       }
+                  //     },
+                  //     icon: const Icon(Icons.add))
+                ],
+              ),
+              const Divider(),
+              Expanded(
+                  child: ListView.builder(
+                      itemCount: serialNoListOfSelectedItem.length,
+                      itemBuilder: (context, index) {
+                        return InkWell(
+                          onDoubleTap: () {
+                            setState(() {
+                              serialNoListOfSelectedItem.removeAt(index);
+                            });
+                          },
+                          child: Card(
+                            elevation: 5,
+                            child: Padding(
+                              padding: const EdgeInsets.all(5.0),
+                              child: Center(
+                                  child: Text(serialNoListOfSelectedItem[index]
+                                      .serialNo)),
+                            ),
+                          ),
+                        );
+                      }))
+            ]),
+          );
+  }
+
+  Widget _buildQrViewSerialNo(BuildContext context) {
+    // For this example we check how width or tall the device is and change the scanArea and overlay accordingly.
+    var scanArea = (MediaQuery.of(context).size.width < 400 ||
+            MediaQuery.of(context).size.height < 400)
+        ? 150.0
+        : 300.0;
+    // To ensure the Scanner view is properly sizes after rotation
+    // we need to listen for Flutter SizeChanged notification and update controller
+    return QRView(
+      key: qrKey,
+      onQRViewCreated: _onQRViewCreatedSerialNo,
+      overlay: QrScannerOverlayShape(
+          borderColor: Colors.red,
+          borderRadius: 10,
+          borderLength: 30,
+          borderWidth: 10,
+          cutOutSize: scanArea),
+      onPermissionSet: (ctrl, p) => _onPermissionSet(context, ctrl, p),
+    );
+  }
+
+  void _onQRViewCreatedSerialNo(QRViewController controller) {
+    setState(() {
+      this.controller = controller;
+    });
+    controller.scannedDataStream.listen((scanData) {
+      setState(() {
+        result = scanData;
+        String code = result.code;
+        if (code.isNotEmpty) {
+          int gId = 0;
+          if (editItem) {
+            gId = cartItem[position].id;
+          } else {
+            gId = cartItem.length + 1;
+          }
+          List<SerialNOModel> serialNoListOfSelectedItem =
+              serialNoData.where((element) => element.gId == gId).toList();
+
+          int qtyTotal = int.parse(_quantityController.text.split('.')[0]);
+          if (qtyTotal == serialNoListOfSelectedItem.length) {
+            ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('qty already full')));
+          } else {
+            bool serialNoIn = false;
+            serialNoIn = serialNoData
+                    .firstWhere(
+                      (element) =>
+                          element.serialNo.toString().trim().toLowerCase() ==
+                          code.trim().toLowerCase(),
+                      orElse: () => SerialNOModel.emptyData(),
+                    )
+                    .serialNo
+                    .isNotEmpty
+                ? true
+                : false;
+            if (!serialNoIn) {
+              setState(() {
+                serialNoData.add(SerialNOModel(
+                    entryNo: 0,
+                    gId: gId,
+                    itemName:
+                        editItem ? cartItem[position].itemId : productModel.id,
+                    serialNo: code,
+                    slNo: serialNoData.length + 1,
+                    tType: 'P',
+                    uniqueCode: editItem ? cartItem[position].uniqueCode : 0));
+              });
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('already exists')));
+            }
+          }
+        }
+        isSerialNoScanner = false;
+      });
+    });
   }
 }
 
