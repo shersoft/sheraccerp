@@ -158,7 +158,7 @@ class CompanyInformation {
           tin: dataJson['tin'] ?? '',
           pin: dataJson['pin'] ?? '',
           taxCalculation: dataJson['TaxCalculation'] ?? 'MINUS',
-          sCurrency: dataJson['s_currency'] ?? '',
+          sCurrency: dataJson['currencyType'] ?? '',
           sDate: dataJson['sDate'] ?? '',
           eDate: dataJson['eDate'] ?? '',
           customerCode: dataJson['customerCode'] ?? '',

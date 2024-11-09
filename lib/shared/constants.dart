@@ -24,7 +24,7 @@ import 'package:sheraccerp/service/api_dio.dart';
 import 'package:intl/intl.dart';
 import 'package:sheraccerp/util/dateUtil.dart';
 
-const String apiV = 'v25/';
+const String apiV = 'v26/';
 
 const gstBaseApi = "https://api.mastergst.com";
 const gstApi = "https://api.mastergst.com/einvoice/authenticate"; //get
@@ -39,7 +39,9 @@ const gstEWayBillApi = "/einvoice/type/GENERATE_EWAYBILL/version/V1_03"; //post
 const gstEWayDetailsByIrnApi =
     "/einvoice/type/GETEWAYBILLIRN/version/V1_03"; //get
 const gstB2BQRDetailsApi = "/einvoice/qrcode";
-const invoiceUrl = 'http://148.72.210.101:888/Home/DownloadPdf';
+const invoiceUrl =
+    //'http://202.21.37.226:96/Home/DownloadPdf';
+    'http://148.72.210.101:888/Home/DownloadPdf';
 const geoMapUrl = 'http://148.72.210.101:8228/';
 const geoApiFy =
     'https://api.geoapify.com/v1/geocode/search?text=pin&lang=en&limit=1&type=postcode&format=json&apiKey=d1f13eb6d5b04bcdbe6cfdad0d01cbaa';

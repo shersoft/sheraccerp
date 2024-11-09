@@ -57,8 +57,8 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
   int decimal = 2;
   int eNo = 0;
   dynamic data;
-  bool _isLoading = true;
-  var bill = {}, dataParticulars = [];
+  bool _isLoading = true, isPointForCustomers = false;
+  var bill = {}, dataParticulars = [], pointData = [];
   String invoiceHead = '', form = '';
   double oldBalance = 0, balance = 0;
 
@@ -103,6 +103,10 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
     decimal = (ComSettings.getValue('DECIMAL', settings).toString().isNotEmpty
         ? int.tryParse(ComSettings.getValue('DECIMAL', settings).toString())
         : 2)!;
+
+    bool isPointForCustomers = ComSettings.getStatus(
+        'ENABLE POINT FOR CUSTOMER CASH COLLECTION', settings);
+
     columns = [
       JsonTableColumn("particulars", label: "Particulars"),
       JsonTableColumn("Amount", label: "Amount")
@@ -167,11 +171,47 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
                       'key-payment-voucher-head', 'PAYMENT')
                   : 'Payment Invoice';
 
-          _isLoading = false;
+          bool isPointForCustomers = ComSettings.getStatus(
+              'ENABLE POINT FOR CUSTOMER CASH COLLECTION', settings);
 
-          _createPDF(title + '_ref_$eNo', companySettings, settings, bill,
-                  dataParticulars, invoiceHead, form, dataParticulars)
-              .then((value) => pdfPath = value);
+          if (isPointForCustomers) {
+            api
+                .findPoint(dataParticulars[0]['Ledid'], eNo,
+                    (form == 'RECEIPT' ? 'RV' : 'PV'))
+                .then((pointDataValue) {
+              if (pointDataValue.isNotEmpty) {
+                setState(() {
+                  pointData.add(pointDataValue);
+                });
+              }
+              _createPDF(
+                      title + '_ref_$eNo',
+                      companySettings,
+                      settings,
+                      bill,
+                      dataParticulars,
+                      invoiceHead,
+                      form,
+                      dataParticulars,
+                      pointData,
+                      isPointForCustomers)
+                  .then((value) => pdfPath = value);
+            });
+          } else {
+            _createPDF(
+                    title + '_ref_$eNo',
+                    companySettings,
+                    settings,
+                    bill,
+                    dataParticulars,
+                    invoiceHead,
+                    form,
+                    dataParticulars,
+                    [],
+                    false)
+                .then((value) => pdfPath = value);
+          }
+          _isLoading = false;
         });
       });
     }
@@ -270,7 +310,8 @@ class _RVPreviewShowState extends State<RVPreviewShow> {
                 invoiceHead,
                 form,
                 oldBalance,
-                balance)
+                balance,
+                pointData)
             // webView()
             : const Center(child: Text('Not Found')));
   }
@@ -740,7 +781,8 @@ previewWidget(
     invoiceHead,
     form,
     oldBalance,
-    balance) {
+    balance,
+    pointData) {
   invoiceHead = form == 'RECEIPT'
       ? Settings.getValue<String>('key-receipt-voucher-head', 'RECEIPT')
               .isNotEmpty
@@ -750,6 +792,9 @@ previewWidget(
               .isNotEmpty
           ? Settings.getValue<String>('key-payment-voucher-head', 'PAYMENT')
           : 'Payment voucher'.toUpperCase();
+
+  bool isPointForCustomers = ComSettings.getStatus(
+      'ENABLE POINT FOR CUSTOMER CASH COLLECTION', settings);
 
   return SafeArea(
     child: Padding(
@@ -975,9 +1020,6 @@ previewWidget(
                           ],
                         ),
                       ),
-                      const SizedBox(
-                        height: 10,
-                      ),
                       Text(
                         "***Discount*** ${bill["discount"].toStringAsFixed(2)} ",
                       ),
@@ -992,6 +1034,48 @@ previewWidget(
                             height: 15,
                           ),
                         ],
+                      ),
+                      Visibility(
+                        visible: isPointForCustomers,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(
+                              height: 5,
+                            ),
+                            Row(
+                              // mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                const Text('Point Earned : '),
+                                Text(
+                                  (pointData.isNotEmpty
+                                      ? pointData[0][0]['point'].toString()
+                                      : '0'),
+                                  textAlign: TextAlign.right,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 5,
+                            ),
+                            Row(
+                              // mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                const Text('Total Point    : '),
+                                Text(
+                                  (pointData.isNotEmpty
+                                      ? pointData[0][0]['total'].toString()
+                                      : '0'),
+                                  textAlign: TextAlign.right,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 5,
+                            ),
+                          ],
+                        ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -1831,9 +1915,11 @@ Future<String> _createPDF(
     var particular,
     String invoiceHead,
     form,
-    dataParticulars) async {
+    dataParticulars,
+    pointData,
+    isPointForCustomers) async {
   return makePDF(title, companySettings, settings, information, particular,
-          invoiceHead, form, dataParticulars)
+          invoiceHead, form, dataParticulars, pointData, isPointForCustomers)
       .then((value) => savePreviewPDF(value, title));
 }
 
@@ -1873,7 +1959,9 @@ Future<pw.Document> makePDF(
     var particular,
     String invoiceHead,
     form,
-    dataParticulars) async {
+    dataParticulars,
+    pointData,
+    isPointForCustomers) async {
   double oldBalance = 0, balance = 0;
   var bill = information;
   dataParticulars = jsonDecode(bill['particular']);
@@ -2361,6 +2449,25 @@ Future<pw.Document> makePDF(
                             : pw.Container(),
                       ],
                     ),
+                    isPointForCustomers
+                        ? pw.Column(
+                            children: [
+                              pw.SizedBox(
+                                height: 5,
+                              ),
+                              pw.Text(
+                                  'Point Earned : ${(pointData.isNotEmpty ? pointData[0][0]['point'].toString() : '0')}'),
+                              pw.SizedBox(
+                                height: 5,
+                              ),
+                              pw.Text(
+                                  'Total Point     : ${(pointData.isNotEmpty ? pointData[0][0]['total'].toString() : '0')}'),
+                              pw.SizedBox(
+                                height: 5,
+                              ),
+                            ],
+                          )
+                        : pw.Container(),
                     oldBalance > 0 || balance > 0
                         ? pw.Container(
                             padding:

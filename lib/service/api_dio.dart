@@ -7595,6 +7595,109 @@ class DioService {
     }
     return ret;
   }
+
+  Future<List<dynamic>> findPoint(id, entryNo, type) async {
+    List<dynamic> ret = [];
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'collectionPoint/find/$dataBase',
+          queryParameters: {
+            'entryNo': entryNo,
+            'id': id,
+            'fyId': currentFinancialYear.id,
+            'type': type
+          });
+
+      if (response.statusCode == 200) {
+        if (response.data != null && response.data.isNotEmpty) {
+          ret = List<dynamic>.from(response.data.map((item) {
+            return {'point': item['Point'], 'total': item['Total']};
+          }).toList());
+        } else {
+          ret = [];
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
+  Future<List<dynamic>> getPointByEntryAndLedger(id, entryNo) async {
+    List<dynamic> ret = [];
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'collectionPoint/point/$dataBase',
+          queryParameters: {
+            'entryNo': entryNo,
+            'id': id,
+            'fyId': currentFinancialYear.id
+          });
+
+      if (response.statusCode == 200) {
+        if (response.data != null && response.data.isNotEmpty) {
+          ret = List<String>.from(response.data
+              .map((item) => item['SerialNO'].toString())
+              .toList());
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
+
+  Future<List<dynamic>> getPointByLedger(id) async {
+    List<dynamic> ret = [];
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      final response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'collectionPoint/point/$dataBase',
+          queryParameters: {
+            'id': id,
+          });
+
+      if (response.statusCode == 200) {
+        if (response.data != null && response.data.isNotEmpty) {
+          ret = List<String>.from(response.data
+              .map((item) => item['SerialNO'].toString())
+              .toList());
+        }
+      } else {
+        debugPrint('Unexpected error Occurred!');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return ret;
+  }
 }
 
 class DataJson {

@@ -2010,24 +2010,25 @@ class _RPVoucherState extends State<RPVoucher> {
         accountId = information['LedCode'].toString();
         acId = information['LedCode'];
         var particular = null;
+        oldVoucher = true;
         if (isMultiRvPv) {
-          // for (var part in particulars) {
-          //   particularList.add(RpVoucherParticularModel(
-          //       id: part['LedCode'],
-          //       name: part['LedName'],
-          //       amount: double.tryParse(part['Amount'].toString()),
-          //       discount: double.tryParse(part['Discount'].toString()),
-          //       total: double.tryParse(part['Total'].toString()),
-          //       narration: part['Narration'].toString(),
-          //       balance: '0',
-          //       phone: ''));
-          //   ledData = LedgerModel(id: 0, name: '');
-          //   isSelected = false;
-          //   //   amount = double.tryParse(part['Amount'].toString());
-          //   //   discount = double.tryParse(part['Discount'].toString());
-          //   //   total = double.tryParse(part['Total'].toString());
-          //   //   narration = part['Narration'].toString();
-          // }
+          for (var part in particulars) {
+            particularList.add(RpVoucherParticularModel(
+                id: part['LedCode'],
+                name: part['LedName'],
+                amount: double.tryParse(part['Amount'].toString()),
+                discount: double.tryParse(part['Discount'].toString()),
+                total: double.tryParse(part['Total'].toString()),
+                narration: part['Narration'].toString(),
+                balance: '0',
+                phone: ''));
+            ledData = LedgerModel(id: 0, name: '');
+            isSelected = false;
+            //   amount = double.tryParse(part['Amount'].toString());
+            //   discount = double.tryParse(part['Discount'].toString());
+            //   total = double.tryParse(part['Total'].toString());
+            //   narration = part['Narration'].toString();
+          }
         } else {
           var part1 = particulars[0];
           ledData = LedgerModel(id: part1['LedCode'], name: part1['LedName']);

@@ -4601,72 +4601,138 @@ class _SaleState extends State<Sale> {
                             if (value.isNotEmpty) {
                               bool cartQ = false;
                               setState(() {
-                                if (totalItem > 0) {
-                                  double cartS = 0, cartQt = 0;
-                                  for (var element in cartItem) {
-                                    if (element.uniqueCode ==
-                                        product.productId) {
-                                      cartQt += (element.quantity *
-                                              element.unitValue) +
-                                          element.free;
-                                      cartS = element.stock;
+                                if (oldBill) {
+                                  if (totalItem > 0) {
+                                    double cartS = 0, cartQt = 0;
+                                    for (var element in cartItem) {
+                                      if (element.uniqueCode ==
+                                          product.productId) {
+                                        cartQt += (element.quantity *
+                                                element.unitValue) +
+                                            element.free;
+                                        cartS = product.quantity;
+                                      }
                                     }
-                                  }
-                                  if (cartS > 0) {
-                                    if (cartS <
-                                        cartQt +
-                                            double.tryParse(value) *
-                                                unitValue) {
-                                      cartQ = true;
+                                    if (cartS > 0) {
+                                      if (cartS <
+                                          double.tryParse(value) * unitValue) {
+                                        cartQ = true;
+                                      }
                                     }
-                                  }
-                                }
 
-                                outOfStock = isLockQtyOnlyInSales
-                                    ? (double.tryParse(value) * (unitValue) + freeQty) >
-                                            (_autoVariantSelect
-                                                ? _autoStockVariant.fold(
-                                                    0.0,
-                                                    (a, b) =>
-                                                        a +
-                                                        double.parse(b.quantity
-                                                            .toString()))
-                                                : product.quantity)
-                                        ? true
-                                        : cartQ
+                                    outOfStock = isLockQtyOnlyInSales
+                                        ? (double.tryParse(value) * (unitValue) +
+                                                    freeQty) >
+                                                (_autoVariantSelect
+                                                    ? _autoStockVariant.fold(
+                                                        0.0,
+                                                        (a, b) =>
+                                                            a +
+                                                            double.parse(b
+                                                                .quantity
+                                                                .toString()))
+                                                    : product.quantity)
                                             ? true
-                                            : false
-                                    : negativeStock
-                                        ? false
-                                        : salesTypeData.type == 'SALES-O' ||
-                                                salesTypeData.type == 'SALES-Q'
-                                            ? isStockProductOnlyInSalesQO
-                                                ? (double.tryParse(value) * (unitValue) +
-                                                            freeQty) >
-                                                        (_autoVariantSelect
-                                                            ? _autoStockVariant.fold(
-                                                                0.0,
-                                                                (a, b) =>
-                                                                    a +
-                                                                    double.parse(b.quantity
-                                                                        .toString()))
-                                                            : product.quantity)
+                                            : cartQ
+                                                ? true
+                                                : false
+                                        : negativeStock
+                                            ? false
+                                            : salesTypeData.type == 'SALES-O' ||
+                                                    salesTypeData.type ==
+                                                        'SALES-Q'
+                                                ? isStockProductOnlyInSalesQO
+                                                    ? (double.tryParse(value) *
+                                                                    (unitValue) +
+                                                                freeQty) >
+                                                            (_autoVariantSelect
+                                                                ? _autoStockVariant.fold(
+                                                                    0.0,
+                                                                    (a, b) =>
+                                                                        a +
+                                                                        double.parse(
+                                                                            b.quantity.toString()))
+                                                                : product.quantity)
+                                                        ? true
+                                                        : cartQ
+                                                            ? true
+                                                            : false
+                                                    : false
+                                                : (double.tryParse(value) * (unitValue) + freeQty) > (_autoVariantSelect ? _autoStockVariant.fold(0.0, (a, b) => a + double.parse(b.quantity.toString())) : cartS)
                                                     ? true
                                                     : cartQ
                                                         ? true
-                                                        : false
-                                                : false
-                                            : (double.tryParse(value) * (unitValue) +
-                                                        freeQty) >
-                                                    (_autoVariantSelect
-                                                        ? _autoStockVariant.fold(
-                                                            0.0, (a, b) => a + double.parse(b.quantity.toString()))
-                                                        : product.quantity)
-                                                ? true
-                                                : cartQ
-                                                    ? true
-                                                    : false;
-                                calculateSub();
+                                                        : false;
+                                    calculateSub();
+                                  }
+                                } else {
+                                  if (totalItem > 0) {
+                                    double cartS = 0, cartQt = 0;
+                                    for (var element in cartItem) {
+                                      if (element.uniqueCode ==
+                                          product.productId) {
+                                        cartQt += (element.quantity *
+                                                element.unitValue) +
+                                            element.free;
+                                        cartS = element.stock;
+                                      }
+                                    }
+                                    if (cartS > 0) {
+                                      if (cartS <
+                                          cartQt +
+                                              double.tryParse(value) *
+                                                  unitValue) {
+                                        cartQ = true;
+                                      }
+                                    }
+                                  }
+
+                                  outOfStock = isLockQtyOnlyInSales
+                                      ? (double.tryParse(value) * (unitValue) + freeQty) >
+                                              (_autoVariantSelect
+                                                  ? _autoStockVariant.fold(
+                                                      0.0,
+                                                      (a, b) =>
+                                                          a +
+                                                          double.parse(b.quantity
+                                                              .toString()))
+                                                  : product.quantity)
+                                          ? true
+                                          : cartQ
+                                              ? true
+                                              : false
+                                      : negativeStock
+                                          ? false
+                                          : salesTypeData.type == 'SALES-O' ||
+                                                  salesTypeData.type ==
+                                                      'SALES-Q'
+                                              ? isStockProductOnlyInSalesQO
+                                                  ? (double.tryParse(value) * (unitValue) + freeQty) >
+                                                          (_autoVariantSelect
+                                                              ? _autoStockVariant.fold(
+                                                                  0.0,
+                                                                  (a, b) =>
+                                                                      a +
+                                                                      double.parse(b
+                                                                          .quantity
+                                                                          .toString()))
+                                                              : product
+                                                                  .quantity)
+                                                      ? true
+                                                      : cartQ
+                                                          ? true
+                                                          : false
+                                                  : false
+                                              : (double.tryParse(value) * (unitValue) + freeQty) >
+                                                      (_autoVariantSelect
+                                                          ? _autoStockVariant.fold(0.0, (a, b) => a + double.parse(b.quantity.toString()))
+                                                          : product.quantity)
+                                                  ? true
+                                                  : cartQ
+                                                      ? true
+                                                      : false;
+                                  calculateSub();
+                                }
                               });
                             }
                           },

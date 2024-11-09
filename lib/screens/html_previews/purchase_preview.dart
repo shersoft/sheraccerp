@@ -607,10 +607,18 @@ class _PurchasePreviewShowState extends State<PurchasePreviewShow> {
       "words": ((companySettings.sCurrency.isEmpty
                   ? ' Rupees '
                   : companySettings.sCurrency) +
-              NumberToWord().convertDouble('en',
-                  double.tryParse(dataInformation['GrandTotal'].toString())) +
-              'Only') ??
-          ' ',
+              ' ' +
+              (companySettings.secondFont.isEmpty
+                  ? (NumberToWord().convertDouble(
+                          'en',
+                          double.tryParse(
+                              dataInformation['GrandTotal'].toString())) +
+                      'Only')
+                  : NumberToWord().convertDouble(
+                      companySettings.secondFont,
+                      double.tryParse(
+                          dataInformation['GrandTotal'].toString()))) ??
+          ' '),
       "purchaseExpense": ' ',
       "vehicle": ' ',
       "destination": ' ',

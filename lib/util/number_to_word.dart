@@ -17,12 +17,31 @@ class NumberToWord {
           firstNumber == 0 ? zeroWord(locale) : convertInt(locale, firstNumber);
       numberInCharacters += (secondNumber == 0
           ? ""
-          : " and  ${convertInt(locale, secondNumber)}");
+          : " ${getLocalAnd(locale)}  ${convertInt(locale, secondNumber)}");
       return numberInCharacters;
     } catch (e) {
       e.toString();
       return '';
     }
+  }
+
+  String getLocalAnd(String locale) {
+    var str = '';
+    switch (locale) {
+      case 'en':
+        str = 'and';
+        break;
+      case 'ar':
+        str = 'و';
+        break;
+      case 'ml':
+        str = 'ഉം';
+        break;
+      default:
+        str = ' ';
+        break;
+    }
+    return str;
   }
 
   String zeroWord(String locale) {
