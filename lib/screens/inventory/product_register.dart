@@ -75,6 +75,7 @@ class _ProductRegisterState extends State<ProductRegister> {
   List<UnitDetailModel> unitDetail = [];
   String isItemName = '';
   XFile image;
+  List<XFile> productDetailImages;
 
   @override
   void initState() {
@@ -815,7 +816,6 @@ class _ProductRegisterState extends State<ProductRegister> {
                 controller: brandController,
               ),
               const Divider(),
-              const Text('Selling Rates'),
               Visibility(
                   visible: isOtherDetailsInProduct,
                   child: Column(
@@ -886,6 +886,7 @@ class _ProductRegisterState extends State<ProductRegister> {
                       ),
                     ],
                   )),
+              const Text('Selling Rates'),
               const Divider(),
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 Expanded(
@@ -1477,63 +1478,91 @@ class _ProductRegisterState extends State<ProductRegister> {
   }
 
   addData(ProductRegisterModel value) {
-    setState(() {
-      productId = value.slno.toString();
-      pItemName = value.itemname;
-      itemNameController.text = value.itemname;
-      itemLocalNameController.text = value.regItemName;
-      pHSNCode = value.hsncode;
-      hsnController.text = value.hsncode;
-      pItemCode = value.itemcode;
-      itemCodeController.text = value.itemcode;
-      if (value.unitId > 0) {
-        unit = unitDataList.firstWhere((element) => element.id == value.unitId,
-            orElse: () => DataJson(id: value.unitId, name: ''));
-        unitController.text = unit.name;
-      }
-      if (value.mfrId > 0) {
-        mfr = mfrDataList.firstWhere((element) => element.id == value.mfrId,
-            orElse: () => DataJson(id: value.mfrId, name: ''));
-        mfrController.text = mfr.name;
-      }
-      if (value.catagoryId > 0) {
-        category = categoryDataList.firstWhere(
-            (element) => element.id == value.catagoryId,
-            orElse: () => DataJson(id: value.catagoryId, name: ''));
-        categoryController.text = category.name;
-      }
-      if (value.subcatagoryId > 0) {
-        subCategory = subCategoryDataList.firstWhere(
-            (element) => element.id == value.subcatagoryId,
-            orElse: () => DataJson(id: value.subcatagoryId, name: ''));
-        subCategoryController.text = subCategory.name;
-      }
-      if (value.brand > 0) {
-        brand = brandDataList.firstWhere((element) => element.id == value.brand,
-            orElse: () => DataJson(id: value.brand, name: ''));
-        brandController.text = brand.name;
-      }
-      cessController.text = value.cess.toString();
-      additionalCessController.text = value.adcessper.toString();
-      mrpController.text = value.mrp.toString();
-      active = value.active == 1 ? true : false;
-      wholeSaleController.text = value.wsrate.toString();
-      retailController.text = value.retail.toString();
-      spRetailController.text = value.sprate.toString();
-      branchController.text = value.branch.toString();
-      dropDownStockValuation = value.stockvaluation.trim().toUpperCase();
-      dropDownTypeOfSupply = value.typeofsupply.trim().toUpperCase();
-      packingController.text = value.packing.toString();
-      if (value.rackId > 0) {
-        rack = rackDataList.firstWhere((element) => element.id == value.rackId,
-            orElse: () => DataJson(id: value.rackId, name: ''));
-        rackController.text = rack.name;
-      }
-      reOrderLevelController.text = value.reorder.toString();
-      maxOrderLevelController.text = value.maxorder.toString();
+    productId = value.slno.toString();
+    pItemName = value.itemname;
+    itemNameController.text = value.itemname;
+    itemLocalNameController.text = value.regItemName;
+    pHSNCode = value.hsncode;
+    hsnController.text = value.hsncode;
+    pItemCode = value.itemcode;
+    itemCodeController.text = value.itemcode;
+    if (value.unitId > 0) {
+      unit = unitDataList.firstWhere((element) => element.id == value.unitId,
+          orElse: () => DataJson(id: value.unitId, name: ''));
+      unitController.text = unit.name;
+    }
+    if (value.mfrId > 0) {
+      mfr = mfrDataList.firstWhere((element) => element.id == value.mfrId,
+          orElse: () => DataJson(id: value.mfrId, name: ''));
+      mfrController.text = mfr.name;
+    }
+    if (value.catagoryId > 0) {
+      category = categoryDataList.firstWhere(
+          (element) => element.id == value.catagoryId,
+          orElse: () => DataJson(id: value.catagoryId, name: ''));
+      categoryController.text = category.name;
+    }
+    if (value.subcatagoryId > 0) {
+      subCategory = subCategoryDataList.firstWhere(
+          (element) => element.id == value.subcatagoryId,
+          orElse: () => DataJson(id: value.subcatagoryId, name: ''));
+      subCategoryController.text = subCategory.name;
+    }
+    if (value.brand > 0) {
+      brand = brandDataList.firstWhere((element) => element.id == value.brand,
+          orElse: () => DataJson(id: value.brand, name: ''));
+      brandController.text = brand.name;
+    }
+    cessController.text = value.cess.toString();
+    additionalCessController.text = value.adcessper.toString();
+    mrpController.text = value.mrp.toString();
+    active = value.active == 1 ? true : false;
+    wholeSaleController.text = value.wsrate.toString();
+    retailController.text = value.retail.toString();
+    spRetailController.text = value.sprate.toString();
+    branchController.text = value.branch.toString();
+    dropDownStockValuation = value.stockvaluation.trim().toUpperCase();
+    dropDownTypeOfSupply = value.typeofsupply.trim().toUpperCase();
+    packingController.text = value.packing.toString();
+    if (value.rackId > 0) {
+      rack = rackDataList.firstWhere((element) => element.id == value.rackId,
+          orElse: () => DataJson(id: value.rackId, name: ''));
+      rackController.text = rack.name;
+    }
+    reOrderLevelController.text = value.reorder.toString();
+    maxOrderLevelController.text = value.maxorder.toString();
 
-      isExist = true;
-    });
+    isExist = true;
+    if (isOtherDetailsInProduct) {
+      if (companySettings.sName == 'ALIK STORE') {
+        api.getProductImageEComm(productId).then((file) {
+          image = file;
+          setState(() {});
+        });
+      } else {
+        List<dynamic> bufferDynamic = value.photo.data;
+        List<int> bufferInt = bufferDynamic.map((e) => e as int).toList();
+        image = XFile.fromData(Uint8List.fromList(bufferInt));
+        setState(() {});
+      }
+      // if (companySettings.sName == 'ALIK STORE') {
+      api.getProductDetailImages(pItemName.toString()).then((imageData) {
+        try {
+          List<XFile> files = [];
+          for (Photo photo in imageData) {
+            List<dynamic> bufferDynamic = photo.data;
+            List<int> bufferInt = bufferDynamic.map((e) => e as int).toList();
+            XFile file = XFile.fromData(Uint8List.fromList(bufferInt));
+            files.add(file);
+          }
+          productDetailImages = files;
+          setState(() {});
+        } catch (e) {
+          debugPrint('productDetailImages..............${e.toString()}');
+        }
+      });
+      // }
+    }
 
     if (value.taxGroupName.isNotEmpty) {
       api
@@ -1545,6 +1574,8 @@ class _ProductRegisterState extends State<ProductRegister> {
         });
       });
     }
+
+    setState(() {});
   }
 
   final TextEditingController _textFieldController = TextEditingController();
@@ -1692,9 +1723,33 @@ class _ProductRegisterState extends State<ProductRegister> {
     );
   }
 
-  addImage() {
-    if (image == null) {
-      api.addProductImageEComm(itemCodeController.text, null);
-    } else {}
+  addImage() async {
+    if (companySettings.sName == 'ALIK STORE') {
+      if (image != null) {
+        api.addProductImageEComm(itemCodeController.text, image);
+      }
+    } else {
+      if (image != null) {
+        Uint8List imageData = await image.readAsBytes();
+        api.addProductImage(itemCodeController.text, imageData);
+      }
+    }
+    if (companySettings.sName == 'ALIK STORE') {
+      if (productDetailImages != null) {
+        var jsonData = [];
+        int index = 1;
+        for (XFile image in productDetailImages) {
+          Uint8List imageData = await image.readAsBytes();
+          jsonData.add({
+            'name': 'Image$index.jpg',
+            'itemId': itemNameController.text.toString(),
+            'image': imageData
+          });
+          index++;
+        }
+        var data = json.encode(jsonData);
+        api.addProductDetailImages(data);
+      }
+    }
   }
 }

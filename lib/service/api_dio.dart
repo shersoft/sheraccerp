@@ -7508,7 +7508,7 @@ class DioService {
   }
 
   Future<bool> addProductImageEComm(id, XFile image) async {
-    String fileName = image.name;
+    String fileName = image.path.toString();
     var imageFormat = 'jpg'.toLowerCase();
     try {
       var url = '$erpImageUploadUrl/upload-image/$id.$imageFormat';
@@ -7529,6 +7529,112 @@ class DioService {
       }
     } catch (e) {
       final errorMessage = e.toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
+  }
+
+  Future<XFile> getProductImageEComm(id) async {
+    XFile file;
+    var imageFormat = 'jpg'.toLowerCase();
+    try {
+      var url = '$erpImageUploadUrl/uploads/$id.$imageFormat';
+      final response = await dio.get(url);
+      if (response.statusCode == 200) {
+        file = XFile(url);
+        return file;
+      } else {
+        debugPrint('Failed to load data');
+        return file;
+      }
+    } catch (e) {
+      final errorMessage = e.toString();
+      debugPrint(errorMessage.toString());
+      return file;
+    }
+  }
+
+  Future<List<Photo>> getProductDetailImages(String productId) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    List<Photo> _items = [];
+    try {
+      Response response = await dio.get(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/getProductImageById/$dataBase',
+          queryParameters: {'id': productId});
+
+      if (response.statusCode == 200) {
+        var data = response.data;
+        if (data != null) {
+          for (var item in data) {
+            _items.add(Photo.fromMap(item['Image']));
+          }
+        }
+      } else {
+        debugPrint('Failed to load data');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+    }
+    return _items;
+  }
+
+  Future<bool> addProductImage(String productId, data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      Response response = await dio.put(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/addProductImage/$dataBase',
+          queryParameters: {'id': productId},
+          data: [data]);
+
+      if (response.statusCode == 200) {
+        debugPrint(response.data.toString());
+        return true;
+      } else {
+        debugPrint('Failed to load data');
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
+      debugPrint(errorMessage.toString());
+      return false;
+    }
+    return false;
+  }
+
+  Future<bool> addProductDetailImages(data) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String dataBase = 'cSharp';
+    dataBase = isEstimateDataBase
+        ? (pref.getString('DBName') ?? "cSharp")
+        : (pref.getString('DBNameT') ?? "cSharp");
+    try {
+      Response response = await dio.post(
+          pref.getString('api' ?? '127.0.0.1:80/api/') +
+              apiV +
+              'Product/addProductDetailImages/$dataBase',
+          data: [data]);
+
+      if (response.statusCode == 200) {
+        debugPrint(response.data.toString());
+        return true;
+      } else {
+        debugPrint('Failed to load data');
+        return false;
+      }
+    } catch (e) {
+      final errorMessage = DioExceptions.fromDioError(e).toString();
       debugPrint(errorMessage.toString());
       return false;
     }
