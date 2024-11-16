@@ -2,9 +2,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:cross_file/src/types/interface.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sheraccerp/models/company.dart';

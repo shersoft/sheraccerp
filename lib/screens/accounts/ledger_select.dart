@@ -321,7 +321,7 @@ class _LedgerSelectState extends State<LedgerSelect> {
     }
 
     if (otherRegRouteList.isNotEmpty) {
-      otherRegAreaDataList.addAll(otherRegRouteList);
+      otherRegRouteDataList.addAll(otherRegRouteList);
       if (routeId > 1) {
         areaModel = otherRegRouteDataList.firstWhere(
             (element) => element.id == routeId,

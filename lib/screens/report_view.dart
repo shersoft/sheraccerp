@@ -314,6 +314,7 @@ class _ReportViewState extends State<ReportView> {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
             var data = snapshot.data;
+            bool totalIsIn = false;
             if (widget.statement == 'Ledger_Report_Qty') {
               var filterItems = data;
               for (ReportDesign design in reportDesignList) {
@@ -365,8 +366,9 @@ class _ReportViewState extends State<ReportView> {
                 }
                 totalData[tableColumn[i]] = cell;
               }
-              if (totalData.isNotEmpty) {
+              if (totalData.isNotEmpty & !totalIsIn) {
                 data.add(totalData);
+                totalIsIn = true;
               }
               _data = data;
             } else {
@@ -1844,6 +1846,7 @@ class _ReportViewState extends State<ReportView> {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
             var data = snapshot.data;
+            bool totalIsIn = false;
             tableColumn = data[0].keys.toList();
             Map<String, dynamic> totalData = {};
             for (int i = 0; i < tableColumn.length; i++) {
@@ -1867,8 +1870,9 @@ class _ReportViewState extends State<ReportView> {
               }
               totalData[tableColumn[i]] = cell;
             }
-            if (totalData.isNotEmpty) {
+            if (totalData.isNotEmpty & !totalIsIn) {
               data.add(totalData);
+              totalIsIn = true;
             }
             _data = data;
             return Padding(
@@ -2175,6 +2179,7 @@ class _ReportViewState extends State<ReportView> {
         if (snapshot.hasData) {
           if (snapshot.data.isNotEmpty) {
             var data = snapshot.data;
+            bool totalIsIn = false;
             tableColumn = data[0].keys.toList();
             Map<String, dynamic> totalData = {};
             for (int i = 0; i < tableColumn.length; i++) {
@@ -2196,8 +2201,9 @@ class _ReportViewState extends State<ReportView> {
               }
               totalData[tableColumn[i]] = cell;
             }
-            if (totalData.isNotEmpty) {
+            if (totalData.isNotEmpty & !totalIsIn) {
               data.add(totalData);
+              totalIsIn = true;
             }
             _data = data;
             return Padding(
